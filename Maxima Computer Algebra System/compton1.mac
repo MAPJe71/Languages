@@ -1,0 +1,194 @@
+/* compton1.mac 
+        E. L. Woollett
+   woollett@charter.net 
+   April 15, 2011
+   */
+   
+" ======================================================"$
+ "  file compton1.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+ 
+" --------------------------------------------"$
+"   UNPOLARIZED LEPTON - PHOTON SCATTERING  "$
+ " for example : "$
+" ---------------------------------------------"$
+"  e(-,p1,m) + gamma(k1) --> e(-,p2,m) + gamma(k2) "$
+" ----------------------------------------------"$
+"    Arbitrary Frame Covariant Symbolic Methods  "$
+  " in an arb frame, D(k1,p1) = D(k2,p2) "$
+  "         and D(k1,p2) = D(k2,p1) "$
+ " In an arbitrary frame we can express everything "$ 
+ " in terms of m^2, D(k1,p1) and  D(k2,p1) "$
+ " with a view to then evaluating in the rest frame"$
+ " of the initial electron: p1 = (m,0,0,0) (lab frame) "$
+ 
+ " ---------------------------------------------"$
+
+  invar (D(p1,p1)=m^2,D(p2,p2)=m^2,
+         D(k1,k1) = 0, D(k2,k2) = 0,
+         D(p1,p2) = m^2 + D(k1,p1) - D(k2,p1),
+         D(k1,p2) = D(k2,p1),
+         D(k2,p2) = D(k1,p1),
+         D(k1,k2) = D(k1,p1) - D(k2,p1) )$
+         
+   m1sq : tr (p2+m,mu,p1-k2+m,nu,p1+m,nu,p1-k2+m,mu);
+   
+   m2sq : tr (p2+m,mu,p1+k1+m,nu,p1+m,nu,p1+k1+m,mu);
+ 
+   m1m2sq : tr (p2+m,mu,p1-k2+m,nu,p1+m,mu,p1+k1+m,nu);   
+   
+   m2m1sq : tr (p2+m,mu,p1+k1+m,nu,p1+m,mu,p1-k2+m,nu);
+   
+   m1m2sq - m2m1sq;
+   
+   " The interference terms are equal, so  "$
+   
+   " -----------------------------------------------"$
+   " Form the expression :"$
+  "  Mssq_unpol = m1sq/(u-m^2)^2 + m2sq/(s-m^2)^2 "$
+  "     + 2*m1m2sq/((u-m^2)*(s-m^2)),  "$
+  "     with u-m^2 = -2*D(k2,p1), s-m^2 = 2*D(k1,p1), "$
+  "        using u = (p1 - k2)^2, s = (p1 + k1)^2 "$
+  " ( we use sloppy notation p^2 for D(p,p) here )"$
+  " -----------------------------------------------"$
+   
+   Mssq_unpol : expand (m1sq/(4*D(k2,p1)^2) + m2sq/(4*D(k1,p1)^2)
+             - 2*m1m2sq/(4*D(k2,p1)*D(k1,p1) ) );
+             
+   " pull factor of 8 out of definition "$
+             
+   Mssq_unpol8 : expand (Mssq_unpol/8);  
+
+  "---------------------------------------------------------"$
+  "         LAB FRAME EVALUATION UNPOLARIZED                "$
+  "          rest frame of initial electron                 "$
+  " --------------------------------------------------------"$
+  assume (m > 0, k > 0, kp > 0, th >= 0, th <= %pi )$
+  
+  comp_def ( p1( m,0,0,0),
+           k1( k,0,0,k),
+           k2 (kp,kp*sin(th),0,kp*cos(th)),
+           p2 (m+k-kp,-kp*sin(th),0,k-kp*cos(th)) )$          
+  
+  
+  " use conservation of 4-momentum to find kp "$
+  
+  kp_rule : solve (
+          VP (p1+k1-k2,p1+k1-k2) = ev_invar (D(p2,p2)),   kp );
+          
+  " To compare results, only replace kp in terms 1-5 "$
+  " leave kp alone in terms 6-7 "$
+  " D_sub (e,[D1,D2,..] uses noncov on each D(p1,p2) in list"$
+          
+  M1t5 : take_parts (Mssq_unpol8,1,5);
+  
+  M6t7 : take_parts (Mssq_unpol8,6,7);
+  
+  M6t7 : D_sub (M6t7,[D(k1,p1),D(k2,p1)]);    
+  
+  M1t5 : D_sub (M1t5,[D(k1,p1),D(k2,p1)]);  
+     
+  M1t5 : trigsimp (ev (M1t5,kp_rule));
+  
+  " ts is our alternative trigsimp function "$
+
+  M1t5 : ts (M1t5,th);
+  
+  " restore overall factor of 8 "$
+  
+  Mssq_unpol : 8*(M1t5 + M6t7);
+  
+  A : alpha^2*(kp/k)^2/(4*m^2);
+ 
+ " -------------------------------------- "$
+ " To get unpolarized differential cross section, "$
+ " divide sum over spins Mssq_unpol by 4 from average "$
+ " over spin of initial electron and initial photon. "$ 
+ 
+ dsigdo_lab_unpol : (A/4)*Mssq_unpol$
+ 
+ (display2d:true,display (dsigdo_lab_unpol),display2d:false)$
+ 
+ " which agrees with BLP (86.9) "$
+ 
+ "======================================================"$
+ "----UNPOLARIZED ELECTRONS, POLARIZED PHOTONS ------------"$
+ "------- rest frame of initial electron p1 ------------- "$
+ 
+ " Leave photon polarization 4-vectors e1,e2 in trace. "$
+ " replace p1 dot products using p1 rest frame choice."$
+ " replace p2 dot products with e1,e2 "$
+ "                 using 4-mom conservation relation. "$
+ " The D(p1,e1) and D(p1,e2) replacements depend on our "$
+ "               p1 rest frame choice."$
+ " Recall that D has property symmetric, so  "$
+ " D(a,b) = D(b,a). "$
+ 
+ invar (D(e1,e1) = -1,
+        D(k1,e1) = 0,
+        D(e2,e2) = -1,
+        D(k2,e2) = 0,
+        D(p1,e1) = 0,
+        D(p1,e2) = 0,
+        D(e1,p2) = -D(e1,k2),
+        D(e2,p2) = D(e2,k1))$ 
+ 
+  M1sq : tr (p2+m,e1,p1-k2+m,e2,p1+m,e2,p1-k2+m,e1);
+  
+  M2sq : tr (p2+m,e2,p1+k1+m,e1,p1+m,e1,p1+k1+m,e2);
+ 
+  M1m2sq : tr (p2+m,e1,p1-k2+m,e2,p1+m,e1,p1+k1+m,e2);
+ 
+  M2m1sq : tr (p2+m,e2,p1+k1+m,e1,p1+m,e2,p1-k2+m,e1);
+  
+  M2m1sq-M1m2sq;  
+ 
+  " The interference terms are equal, so  "$  
+  
+  Mssq_pol : expand (M1sq/(4*D(k2,p1)^2) + M2sq/(4*D(k1,p1)^2)
+             - 2*M1m2sq/(4*D(k2,p1)*D(k1,p1) ) ); 
+  
+  
+  " avoid use of noncov(D(e1,e2)) which would expand D(e1,e2)"$
+  " in terms of undefined components, by instead using ev"$
+  " or D_sub  for selected replacements. "$
+    
+  Mssq_pol : D_sub (Mssq_pol,[D(k1,p1),D(k2,p1)]);  
+    
+  Mssq_pol : pullfac (Mssq_pol,2);
+  
+  "To get electron unpolarized, photon polarized differential cross section,"$
+ " divide  Mssq_pol by 2 from average over helicity of initial electron. "$
+ 
+ dsigdo_lab_pol : (A/2)*Mssq_pol$
+ 
+ (display2d:true,display (dsigdo_lab_pol),display2d:false)$ 
+  
+  " which agrees with the Klein-Nishina form quoted by Weinberg (8.7.39)"$
+  
+  "============================================================"$
+ " Now assume unpolarized initial photon. Average  the "$
+ " polarized photon dsigdo(r,s) over the two possible values "$
+ " of r which specifies the transverse polarization "$
+ " vector of incident photon e1_vec. With n^mu = (1,0,0,0)"$
+ " D(e1,e2)^2 --> { dot3 (e1_vec,e2_vec) }^2 "$
+ " and sum (D(e1(r),e2(s))^2,r,1,2) --> 1 - {dot3(ku,e2_vec(s)}^2"$
+ " with ku = unit 3-vector along the z axis, dot3(a,b) = 3-vec dot prod. "$
+ " and dsigdo(s) = sum(dsigdo(r,s),r,1,2)/2 "$
+ " The overall result is recovered with: "$
+ 
+ dsigdo_s : subst (4*D(e1,e2)^2 = 2 - 2*dot3(ku,e2_vec)^2,dsigdo_lab_pol)$
+ 
+ (display2d:true,display (dsigdo_s),display2d:false)$ 
+ "---------------------------------------------------------"$
+ "  which agrees with Weinberg (8.7.40) "$
+ " Summing the above over the two possible values of "$
+ " final photon polarization s then leads to our "$
+ " unpolarized result above "$  
+  
+
+

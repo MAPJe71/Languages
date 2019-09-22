@@ -1,0 +1,193 @@
+%abc-2.0
+% Ave_Maria_Palestrina.abc    -*- abc -*-
+%
+% Written for abcpp, abcm2ps and abc2midi:
+% http://abcplus.sourceforge.net
+% Tested with abcm2ps-8.12.3 and abcMIDI-2016.07.20
+%
+% Edited by Guido Gonzato <guido dot gonzato at gmail dot com>
+% September 15, 2016
+%
+% To typeset this file:
+%       abcm2ps -O= -c Ave_Maria_Palestrina.abc
+% To make a MIDI file:
+%       abc2midi Ave_Maria_Palestrina.abc
+
+%%format choral
+%%pagescale 0.72
+
+X: 1
+T: Ave Maria
+C: Giovanni Pierluigi da Palestrina (1525 - 1594)
+M: C|
+L: 1/2
+Q: 1/2=120 " Moderato"
+%%staves [S A T B]
+%%MIDI program 1 53 % voice ooh
+%%MIDI program 2 53
+%%MIDI program 3 53
+%%MIDI program 4 53
+V: S clef=treble   name="Soprano" sname="S"
+V: A clef=treble   name="Alto"    sname="A"
+V: T clef=treble-8 name="Tenor"   sname="T"
+V: B clef=bass     name="Bass"    sname="B"
+K: Gm
+%
+U: h=!breath!
+%
+% 1 - 5
+%
+[V: S] !p!G4 |G2G2  |_A2G2   |z4           |c2Fc-|
+w: A-ve Ma-ri-a, a-ve Ma
+[V: A] !mf!E4|B,4   |C4      |(G4          |_A4) |
+w: A-ve Ma-ri -
+[V: T] !p!c4 |d3e   |(f3e/d/ |ed/c/de      |f3e  |
+w: A-ve Ma-ri --------- 
+[V: B] !p!C,4|G,2G,2|F,2C,C  |(C=B,/A,/B,)C|F,4  |
+w: A-ve Ma-ri-a, a-ve___ Ma- ri-
+%
+% 6 - 8
+%
+[V: S] c(B/A/ B/c/d-|dc/B/A2)|G4-  |
+w: -ri --------a,
+[V: A] G2zG         |FE(F2   |G>FED|
+w: a, gra-ti-a ple ----
+[V: T] d2)G2        |z4      |d2cB |
+w: -a, gra-ti-a 
+[V: B] G,2zG,       |B,CD2   |G,2z2|
+w: a, gra-ti-a ple-na,
+%
+% 9 - 11
+%
+[V: S] hG2!mf!B2           |AGA2  |G4       |
+w: _ gra-ti-a ple-na;
+% the following line is a workaround for abc2midi
+[V: A] E3/ D//C// B,/C/D/E/|FGF>E)|D4       |
+w: -----------na;
+[V: T] c2hd!p!B            |cedc- |cB/A/hBd-|
+w: ple-na, gra-ti-a ple ----na, Do-
+[V: B] z2G,2               |F,E,F,2|hG,2G,2 |
+w: gra-ti-a ple-na; Do-
+%
+% 12 - 13
+%
+[V: S] zG2F|(E3/ D//C// D)d-|
+w: Do-mi-nus, ----
+[V: A] z4  |z2G2            |
+w: Do- 
+[V: T] dcB2|c2G2            |
+w: -mi-nus te-cum
+[V: B] F,E,D,2|C,CB,G,      |
+w: mi-nus te-cum, Do-mi-nus
+%
+% 14 - 17
+%
+[V: S] dcB2    |c2G2-  |G2z2    |z2c2       |
+w: Do -mi-nus te-cum: be- 
+[V: A] FED2    |C2z2   |z2G2    |G2A2       |
+w: mi-nus te-cum: be-ne- di-
+[V: T] z2zg-   |g/f/e2d|(e3d/c/ |d)=ehff-   |
+w: Do ---mi-nus ---te-cum: be % hyphen must not stay here!
+[V: B] (B,C)G,2|zCC=B,|(C3B,/A,/|G,/F,/G,F,2|
+w: te -cum, Do-mi-nus te ------
+%
+% 18 - 23
+%
+[V: S] c2d2  |c4      |B2zc     |d3c     |BAG2- |hGGBA |
+w: ne-di-cta tu in mu-li-e-ri-bus,_ in mu-li-
+[V: A] G2FB- |BA/G/AF-|F=EF2    |zFG2-   |GFED  |hEEF2-|
+w: cta tu, be -ne --di -cta tu in mu -li-e-ri-bus, in mu
+[V: T] fedB  |f2f>e   |(d/c/B2)A|B2z2    |z4    |c2d2- |
+w: -ne-di-cta tu, be-ne-di --cta tu in mu
+[V: B] C,2)z2|F,2F,2  |G,2F,2   |B,,B,B,C|DDG,2 |z4    |
+w: cum be-ne-dic-ta tu in mu-li-e-ri-bus,
+%
+% 24 - 29
+%
+[V: S] (BA>hG)G-|G^FG2    |z2!mf!c2|BGA2 |G4          |zc2=B|
+w: e ----ri-bus et be-ne-di-ctus fru-ctus
+[V: A] FED2     |C2hD!mf!G|FDE2    |D4   |z2zG-       |GGG>F|
+w: -li-e-ri-bus, et be-ne-di-ctus fru -ctus ven -
+[V: T] dcB2     |A2G2     |z4      |g2fd |(e2d3/c//d//|e2)d2|
+w: -li-e-ri-bus et be-ne-di ----ctus
+[V: B] z4       |zCB,G,   |(A,B,C2)|G,2z2|zC2=B,      |C2A,2|
+w: et be-ne-di --ctus fru-ctus ven-tris
+%
+% 30 - 35
+%
+[V: S] c2c2 |"^rall."c2d2-|d(e2d             |c4) |=B2"^a tempo"z2|z!p!c2B|
+w: ven-tris tu-i,_ Je --sus. San-cta
+[V: A] =EFG2|A2B2-        |BGG2-             |G4  |zGFG           |E2D2-  |
+w: * tris tu- i, Je --sus._ San-cta Ma-ri-a,
+[V: T] zf2=e|fff2         |hB2(cd            |e4) |d2z2           |z2g2   |
+w: fru-ctus ven-tris tu-i, Je --sus. San-
+[V: B] CF,C2|hF,2(B,>A,   |G,/F,/E,/D,/C,=B,,|C,4)|hG,G,A,B,      |C2G,2  |
+w: tu-i Je-sus, Je --------sus. San-cta Ma-ri-a
+%
+% 36 - 41
+%
+[V: S] A(d2c)|hd2B2 |cBc2  |d4-         |d4      |z!pp!dcd|
+w: Ma-ri -a, re-gi-na coe-li_ dul-cis et
+[V: A] D2z2  |zF2G- |GF(GA)|hBFBA-      |A(G2^F) |G2z2    |
+w: * re gi -na coe -li, re-gi-na_ coe -li,
+[V: T] fge2  |hdB2e-|ede(f-|f/e/d/c/d>c |BA/G/A2)|hGgef   |
+w: cta Ma-ri-a, re-gi -na coe -----------li, dul-cis et
+[V: B] zB,C2 |B,2z2 |z2zD, |(B,>A,G,)^F,|(G,2D,2)|G,2z2   |
+w: re-gi-na re-gi --na coe -li
+%
+% 42 - 47
+%
+[V: S] B2hA2   |B2AB       |G2h^F!p!F |G^FG2  |hAABA|(Bc>hBB-   |
+w: pi-a, dul-cis et pi-a; o Ma-ter De-i, o Ma-ter De ---
+[V: A] z!pp!G2F|G(E>DD-    |DC)hDD    |DC(D=E)|F2D2   |zFFF     |
+w: dul-cis et pi ----a; o Ma-ter De__ i, o Ma-ter
+[V: T] g2d2-   |dBcB       |(BA/G/)hAA|BA(Bc) |F2zf   |dcd2     |
+w: pi-a,_ dul-cis et pi --a, o Ma-ter De -i, o Ma-ter De-
+[V: B] z4      |!pp!G,2F,G,|E,2D,2    |z4     |zF,G,F,|(G,A,B,2)|
+w: dul-cis et pi-a, o Ma-ter De__
+%
+% 48 - 53
+%
+[V: S] BA/G/A2)|B2z2   |B2BB    |e2d2-  |d2c2-|cBAA  |
+w: ----i o-ra pro no-bis_ pec -ca-to-ri-
+[V: A] F4      |hDDDD  |G2hFB   |BBB2   |hB2AG|(AG2^F|
+w: De-i, o-ra pro no-bis, o-ra pro no-bis pec-ca-to --
+[V: T] c4      |zBBB   |e2hdg   |ggf2   |ff2=e|fghdd |
+w: i, o-ra pro no-bis o-ra pro no-bis pec-ca-to-ri-bus, pec-
+[V: B] hF,4    |G,2G,G,|E,2hB,E,|E,E,B,2|B,2z2|z4    |
+w: i, o-ra pro no-bis, o-ra pro no-bis
+%
+% 54 - 59
+%
+[V: S] hGG2G         |cc=B2  |z=Bcc|e2hdd-|de2c-  |c(f3/e/d/c/|
+w: bus pec-ca-to-ri-bus, ut cum e-le-ctis te_ vi-de -a ---
+[V: A] G>=FED)       |C2D2   |zGGG |GAB2- |hB2E2  |_A4        |
+w: ----ri- bus, ut cum e-le-ctis te_ vi-de-
+[V: T] e(c/d/ e/f/g-)|g^fg2  |zdee |e2hf2 |g2c2   |c2(f>e     |
+w: ca-to -----ri-bus ut cum e-le-ctis te vi-de-a -
+[V: B] C3B,          |A,A,G,2|zG,CC|C2hB,2|G,2_A,2|F,2F,2     |
+w: pec-ca-to-ri-bus, ut cum e-le-ctis te vi de-a-
+%
+% 60 - 65
+%
+[V: S] B/A/G/A/ B/c/ d-|d/hc/c2=B)|c2z!f!=B|cce2   |dhd2e- |ec2(f- |
+w: -----------mus, ut cum e-le-ctis te vi -de-a
+[V: A] (G4             |EF)G2-    |G2zG    |GGGA   |hB4    |E2_A2- |
+w: a --mus,_ ut cum e-le-ctis te vi-de-
+[V: T] d/c/B/A/)hGB    |ccd2      |c2zd    |eee2   |hf2g2  |c2c2   |
+w: ----mus, te vi-de-a-mus, ut cum e-le-ctis te vi-de-
+[V: B] hG,3G,          |_A,A,G,2  |C,2zG,  |CCC2   |hB,2G,2|_A,2F,2|
+w: mus, te vi-de-a-mus, ut cum e-le-ctis, te vi-de-
+%
+% 66 - 71
+%
+[V: S] f/e/d/c/ B/A/G/A/|B/c/d>hdc |c=B/A/B2)|"^rall."c4-|c4-  |Hc4 |]
+w: ----------------- mus.__
+[V: A] A2(G2-           |G2EF)     |G4       |zG2_A      |AG_A2|HG4 |]
+w: - a ---mus te vi -de-a-mus.
+[V: T] (f>e d/c/B/A/)   |hGBcc     |d4       |hcc2f-     |f=ef2|H=e4|]
+w: a -----mus, te vi-de-a-mus, te vi -de-a-mus.
+[V: B] F,2G,2-          |hG,G,_A,A,|G,4      |C,2zF,     |CCF,2|HC,4|]
+w: a-mus_ te vi-de-a-mus, te vi-de-a-mus.
+%
+% End of file Ave_Maria_Palestrina.abc

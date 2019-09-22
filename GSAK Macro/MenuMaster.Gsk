@@ -1,0 +1,3077 @@
+###################################################################################
+# MacFileName    = MenuMaster.Gsk
+# MacVersion     = 1.05
+# DevVersion     = 1.05
+# MacAuthor      = Wayne (Red Roo)
+# MacDescription = A simple Menu system for macros with color
+# MacUrl         = http://gsak.net/board/index.php?act=ST&f=15&t=13000
+###################################################################################
+
+   NOERROR Commands=UPDATECHECK
+   UPDATECHECK Frequency=50
+
+   OPTION Explicit=YES
+   VERCHECK Version=7.7.4.36 (Please update to a later version of GSAK)
+
+#   INCLUDE File="\DevUser.Gsk" FileCheck=N
+
+###############################################################################
+#  Macro Notes...
+# ================
+# From any menu - Escape will always access the Exit button
+# Option Explicit is always set to No prior to calling a macro
+# Pressing <ALT> when selecting a macro to run will attempt to open the macro in the currently configured Macro Editor
+# Pressing <ALT>+R when on the Menu form will reset the form position to the center of screen 1.
+# Includes an option to set the scope of ALL variables in a called macro to Local - the default is Global
+# Initialise will display Button icons in V8 or higher.
+# The 'Swap Entries' routine now also swaps Macro Colors and Styles
+#
+###################################################################################
+#  Changes from version 1.03 ...
+# ===============================
+# Fixed Tab order for Macros 11 and 12 on the Configuration Form.
+# The colour of a current macro can now be retrieved and used for other macros.
+# Button icons (not macro buttons) have been added for Gsak V8 or higher.
+# The Color Picker form now includes a 'Swap Entries' routine.
+# The 'Swap Entries' routines now also swap Macro Color and Style values.
+# The Color Picker includes macro numbers to help simplify position swaps.
+#
+###################################################################################
+#  It'd be nice if...
+# ====================
+# Request to display icons instead of macro buttons - This is not going to happen.
+#
+####################################################################################
+
+   GOSUB Name=Initialise
+
+   WHILE TRUE
+     $MmFormExit = Form($MmFormA,"")
+     $MmFt=$_FormTop
+     $MmFl=$_FormLeft
+     $MmFormA=EditForm($MmFormA,"MmForm1","Top",$MmFt)
+     $MmFormA=EditForm($MmFormA,"MmForm1","Left",$MmFl)
+     BEGINCASE 
+       CASE $MmFormExit="MmExitBtn"
+         BREAK 
+       CASE $MmFormExit = "SystemExit"
+         CANCEL 
+       CASE $MmFormExit = "MmCfgColorBtn"
+         GOSUB Name=CfgMfColor
+       CASE $MmFormExit="MmBtn01"
+         $MmMacro=$MmF2File1
+         $MmVscope=$MmVscope1
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn02"
+         $MmMacro=$MmF2File2
+         $MmVscope=$MmVscope2
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn03"
+         $MmMacro=$MmF2File3
+         $MmVscope=$MmVscope3
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn04"
+         $MmMacro=$MmF2File4
+         $MmVscope=$MmVscope4
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn05"
+         $MmMacro=$MmF2File5
+         $MmVscope=$MmVscope5
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn06"
+         $MmMacro=$MmF2File6
+         $MmVscope=$MmVscope6
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn07"
+         $MmMacro=$MmF2File7
+         $MmVscope=$MmVscope7
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn08"
+         $MmMacro=$MmF2File8
+         $MmVscope=$MmVscope8
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn09"
+         $MmMacro=$MmF2File9
+         $MmVscope=$MmVscope9
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn10"
+         $MmMacro=$MmF2File10
+         $MmVscope=$MmVscope10
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn11"
+         $MmMacro=$MmF2File11
+         $MmVscope=$MmVscope11
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmBtn12"
+         $MmMacro=$MmF2File12
+         $MmVscope=$MmVscope12
+         GOSUB Name=RunMacro
+       CASE $MmFormExit="MmCfgBtn"
+         $MmFt=$_FormTop
+         $MmFl=$_FormLeft
+         GOSUB Name=DisplayConfigForm
+       CASE $MmFormExit="MmFreset"                                    # <ALT>+R has been pressed
+         $MmFormA=EditForm($MmFormA,"MmForm1","Top","")
+         $MmFormA=EditForm($MmFormA,"MmForm1","Left","")
+     ENDCASE 
+   ENDWHILE 
+
+   $MmFt=$_FormTop
+   $MmFl=$_FormLeft
+   GOSUB Name=SaveSettings
+
+   $MmBooleanValue = RemoveVar("$MmPrefix*")                          # Remove all variables prefixed with this macros' prefix
+
+#  The only variable left now is $line (a string variable created automatically by Gsak during the FileRead process) - which can't be deleted normally.
+
+   RETURN 
+###################################################################################
+############################   End  of  Macro   ###################################
+###################################################################################
+   BEGINSUB Name=SaveSettings
+     $MmF2File1=Replace($MmMacros,$MmInstall,$MmF2File1)
+     $MmF2File2=Replace($MmMacros,$MmInstall,$MmF2File2)
+     $MmF2File3=Replace($MmMacros,$MmInstall,$MmF2File3)
+     $MmF2File4=Replace($MmMacros,$MmInstall,$MmF2File4)
+     $MmF2File5=Replace($MmMacros,$MmInstall,$MmF2File5)
+     $MmF2File6=Replace($MmMacros,$MmInstall,$MmF2File6)
+     $MmF2File7=Replace($MmMacros,$MmInstall,$MmF2File7)
+     $MmF2File8=Replace($MmMacros,$MmInstall,$MmF2File8)
+     $MmF2File9=Replace($MmMacros,$MmInstall,$MmF2File9)
+     $MmF2File10=Replace($MmMacros,$MmInstall,$MmF2File10)
+     $MmF2File11=Replace($MmMacros,$MmInstall,$MmF2File11)
+     $MmF2File12=Replace($MmMacros,$MmInstall,$MmF2File12)
+     MACSETTINGS Type=S Vars=MmFl,MmFt,MmF2BCap1,MmF2BCap2,MmF2BCap3,MmF2BCap4,MmF2BCap5,MmF2BCap6,MmF2BCap7,MmF2BCap8,MmF2BCap9,MmF2BCap10,MmF2BCap11,MmF2BCap12,MmF2Desc1,MmF2Desc2,MmF2Desc3,MmF2Desc4,MmF2Desc5,MmF2Desc6,MmF2Desc7,MmF2Desc8,MmF2Desc9,MmF2Desc10,MmF2Desc11,MmF2Desc12,MmF2File1,MmF2File2,MmF2File3,MmF2File4,MmF2File5,MmF2File6,MmF2File7,MmF2File8,MmF2File9,MmF2File10,MmF2File11,MmF2File12,MmMfName,MmNewLeft,MmNewFolder,MmMfColor,MmMacCol01,MmMacStl01,MmMacCol02,MmMacStl02,MmMacCol03,MmMacStl03,MmMacCol04,MmMacStl04,MmMacCol05,MmMacStl05,MmMacCol06,MmMacStl06,MmMacCol07,MmMacStl07,MmMacCol08,MmMacStl08,MmMacCol09,MmMacStl09,MmMacCol10,MmMacCol11,MmMacCol12,MmMacStl10,MmMacStl11,MmMacStl12,MmMfHeading,MmVscope1,MmVscope2,MmVscope3,MmVscope4,MmVscope5,MmVscope6,MmVscope7,MmVscope8,MmVscope9,MmVscope10,MmVscope11,MmVscope12
+     GOSUB Name=ReBuildMacroNames
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=RunMacro
+     OPTION Explicit=NO
+
+     IF $_AltKey OR FileExists($MmMacro) OR At("?",$MmMacro)>0
+       IF $_AltKey
+         IF StrToBool(SysInfo("gsakini;TFMConfig;chkMacroEditor.Checked"))
+           $MmEditor=SysInfo("gsakini;TFMConfig;edtMacroEditor.FileName")
+         ELSE 
+           $MmEditor="$_exePath\MacroEditor.exe"
+         ENDIF 
+         IF FileExists($MmMacro)
+           RUNPGM Pgm=$MmEditor                 # Open the editor - the following delay should allow time to open other macros being edited
+           DELAY MS=500                         # 1/2 second delay then
+           RUNPGM Pgm=$MmEditor Parms=$MmMacro  # Pass the name of the macro to the editor
+           RETURN # Close MenuMaster
+         ELSE 
+           $MmMsg="ERROR - The file does not exist"+$_Newline+"$MmMacro"
+           MSGOK Msg=$MmMsg Caption="Somebody goofed"
+         ENDIF 
+       ELSE 
+         IF $MmVscope AND $_Version >= "7.7.2.37"
+           MACRO File=$MmMacro VarScope=Local
+         ELSE 
+           IF $MmVscope
+             $MmMsg="This version of Gsak does not support local variables" + $_NewLine + "ALL variables should be considered GLOBAL"
+             $MmMsg=$MmMsg+$_newline+$_newline+"To resolve this, update Gsak to v7.7.2.37 or later"
+             MSGOK Msg=$MmMsg Caption="Please Note"
+           ENDIF 
+           MACRO File=$MmMacro
+         ENDIF 
+       ENDIF 
+     ELSE 
+       IF $MmMacro=""
+         $MmMsg="There is no macro linked to this button"
+       ELSE 
+         $MmMsg="The macro linked to this button is not available for use."
+       ENDIF 
+       MSGOK Msg=$MmMsg
+     ENDIF 
+
+     OPTION Explicit=YES
+     SHOWSTATUS Msg="" Display=OFF
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=ReBuildMacroNames
+     $MmF2File1=Replace($MmInstall,$MmMacros,$MmF2File1)
+     $MmF2File2=Replace($MmInstall,$MmMacros,$MmF2File2)
+     $MmF2File3=Replace($MmInstall,$MmMacros,$MmF2File3)
+     $MmF2File4=Replace($MmInstall,$MmMacros,$MmF2File4)
+     $MmF2File5=Replace($MmInstall,$MmMacros,$MmF2File5)
+     $MmF2File6=Replace($MmInstall,$MmMacros,$MmF2File6)
+     $MmF2File7=Replace($MmInstall,$MmMacros,$MmF2File7)
+     $MmF2File8=Replace($MmInstall,$MmMacros,$MmF2File8)
+     $MmF2File9=Replace($MmInstall,$MmMacros,$MmF2File9)
+     $MmF2File10=Replace($MmInstall,$MmMacros,$MmF2File10)
+     $MmF2File11=Replace($MmInstall,$MmMacros,$MmF2File11)
+     $MmF2File12=Replace($MmInstall,$MmMacros,$MmF2File12)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=DisplayConfigForm
+     WHILE TRUE
+       $MmFormExit = Form($MmFormB,"")
+       BEGINCASE 
+         CASE $MmFormExit="SystemExit"
+           EXITSUB 
+         CASE $MmFormExit="MmSwapBtn"
+           GOSUB Name=SwapPositions
+         CASE $MmFormExit="MmCloneCopy"
+           GOSUB Name=DisplayCloneForm
+         CASE $MmFormExit="MmUpdater"
+           GOSUB Name=MacroUpdater
+         CASE $MmFormExit="MmExitFB"
+           BREAK 
+       ENDCASE 
+     ENDWHILE 
+     GOSUB Name=SetLabelCaptions
+     GOSUB Name=SetButtonCaptions
+     GOSUB Name=ReCenterLabel
+     GOSUB Name=SaveSettings
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=SwapPositions
+# 1 - Create macro code dynamically. # 2 - Save the dynamic code to a macro file. # 3 - Run the new macro
+     IF $MmSwapA <> "0" AND $MmSwapB<>"0"
+       $MmFiledata=""
+       
+       $MmTempStr="$MmSwapA;$MmSwapB"
+      
+# 1a - Swap Button captions
+       $MmFiledata=$MmFiledata+"$"+"MmTempCap=$"+"MmF2Bcap"+"$MmSwapA"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2Bcap"+"$MmSwapA=$"+"MmF2Bcap"+"$MmSwapB"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2Bcap"+"$MmSwapB=$"+"MmTempCap"+$_NewLine+$_NewLine
+# 1b - Swap Description text
+       $MmFiledata=$MmFiledata+"$"+"MmTempDesc=$"+"MmF2Desc"+"$MmSwapA"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2Desc"+"$MmSwapA=$"+"MmF2Desc"+"$MmSwapB"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2Desc"+"$MmSwapB=$"+"MmTempDesc"+$_NewLine+$_NewLine
+# 1c - Swap File names
+       $MmFiledata=$MmFiledata+"$"+"MmTempFile=$"+"MmF2File"+"$MmSwapA"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2File"+"$MmSwapA=$"+"MmF2File"+"$MmSwapB"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmF2File"+"$MmSwapB=$"+"MmTempFile"+$_NewLine+$_NewLine
+
+       $MmSwapA=Right("0"+$MmSwapA,2)
+       $MmSwapB=Right("0"+$MmSwapB,2)
+
+       DECLARE Var=$MmTempColor Type=String
+# 1d - Swap Color values ($MmMacCol**)
+       $MmFiledata=$MmFiledata+"$"+"MmTempColor=$"+"MmMacCol"+"$MmSwapA"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmMacCol"+"$MmSwapA=$"+"MmMacCol"+"$MmSwapB"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmMacCol"+"$MmSwapB=$"+"MmTempColor"+$_NewLine+$_NewLine
+
+       DECLARE Var=$MmTempStyle Type=String
+# 1e - Swap Style values ($MmMacSt**)
+       $MmFiledata=$MmFiledata+"$"+"MmTempStyle=$"+"MmMacStl"+"$MmSwapA"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmMacStl"+"$MmSwapA=$"+"MmMacStl"+"$MmSwapB"+$_NewLine
+       $MmFiledata=$MmFiledata+"$"+"MmMacStl"+"$MmSwapB=$"+"MmTempStyle"+$_NewLine+$_NewLine
+
+# 2 - Save $MmFiledata to a macro file
+       $MmTempFname="$_AppData\Temp\TempMacro.Gsk"
+       $MmTmpStr=PutFile($MmTempFname,$MmFiledata)
+# 3 - Run the new macro
+       MACRO File=$MmTempFname
+# 4 - Apply the Color and Style changes then Restore changed values
+       GOSUB Name=SetButtonCaptions
+       GOSUB Name=SetLabelCaptions       
+       GOSUB Name=SetLabelCS
+       $MmSwapA=Extract($MmTempStr,";",1)
+       $MmSwapB=Extract($MmTempStr,";",2)
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=ReadCtlFile
+     MACSETTINGS Type=R FileCheck=N File=$MmCtlFile
+     $MmFileList=Replace($MmInstall,$_AppData,$MmFileList)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=WriteCtlFile
+     $MmFileList=$_NewLine+Replace($_AppData,$MmInstall,$MmFileList)
+     MACSETTINGS Type=S Vars=MmFileList File=$MmCtlFile
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=DisplayCloneForm
+     $MmFormC=EditForm($MmFormC,"MmCurrentPrefix","Caption",$MmPrefix)
+     $MmFileList=""
+     GOSUB Name=ReadCtlFile
+     WHILE TRUE
+       $MmFormExit = Form($MmFormC,"")
+       BEGINCASE 
+         CASE $mmFormExit="MmPrefixCheck"
+           GOSUB Name=CheckPrefix
+         CASE $MmFormExit="MmExitWith"
+           IF $MmNewPrefix=""
+             MSGOK Msg="You must enter a Variable Prefix for the new macro"
+           ELSE 
+             IF FolderExists($MmNewFolder) AND $MmNewName<>""
+               IF Lower(Right($MmNewName,4))<>".Gsk"
+                 $MmNewName=$MmNewName+".Gsk"
+               ENDIF 
+               $MmFullName="$MmNewFolder\$MmNewName"
+               IF At($MmFullName,$MmFileList)=0
+                 $MmCntr=1
+                 $MmCntr2=1
+                 GOSUB Name=CloneFile
+                 $MmFileList=$MmFileList+"$MmNewFolder;$MmNewName;$MmFullName;$MmNewPrefix;$MmvV;$_NewLine"
+                 GOSUB Name=WriteCtlFile
+                 SHOWSTATUS Msg="" Display=OFF
+                 MSGOK Msg="MenuMaster has been cloned to $MmFullName ($MmNewPrefix)"
+               ELSE 
+                 MSGOK Msg="Sorry - this filename already exists - please choose a different name"
+               ENDIF 
+             ELSE 
+               MSGOK Msg="Please check the Folder name and/or the File name"
+             ENDIF 
+             BREAK 
+           ENDIF 
+         CASE $MmFormExit="MmExitWithout"
+           BREAK 
+       ENDCASE 
+     ENDWHILE 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=CheckPrefix
+     IF $MmNewPrefix<>""
+       IF Lower($MmNewPrefix) <> "child"
+         IF Lower($MmNewPrefix)=Lower($MmPrefix) OR RegEx(RegexEscape(";$MmNewPrefix;"),$MmFileList)
+           MSGOK Msg="This prefix has been used previously - use it with caution"
+         ELSE 
+           MSGOK Msg="This prefix is Ok to use."
+         ENDIF 
+       ELSE 
+         MSGOK Msg="Sorry - this prefix is Reserved"
+       ENDIF 
+     ELSE 
+       MSGOK Msg="Sorry - You must have a variable prefix."
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=CloneFile
+     $MmOldMacro=Sysinfo("MacroPath")+"\"+Sysinfo("MacroFile")
+     $MmMacData=GetFile($MmOldMacro)
+#        $MmMacData=Replace($MmPrefix,$MmNewPrefix,$MmMacData)
+     $MmMacData=""
+     $MmDataStatement=FALSE
+     SHOWSTATUS Msg="Processing $MmNewName  ($MmCntr2 of $MmCntr)" Width=350
+     FILEREAD File=$MmOldMacro
+       IF NOT($MmDataStatement)
+         $line=Replace($MmPrefix,$MmNewPrefix,$line)
+       ENDIF 
+       IF RegEx("Data",$line)                                         # Moved down from before 'IF NOT($MmDataStatement)' block
+         IF RegEx("VarName",$line)
+           IF RegEx("colorpicker",$line)
+             $MmDataStatement=TRUE
+           ENDIF 
+         ENDIF 
+       ENDIF 
+       $MmMacData=$MmMacData+$line+$_NewLine
+       IF $MmDataStatement AND RegEx(RegexEscape("<EndData>"),$line)
+         $MmDataStatement=FALSE
+       ENDIF 
+     ENDREAD 
+     $MmMacData=Replace($MmvN,$MmNewName,$MmMacData)
+     $MmResultStr=PutFile($MmFullName,$MmMacData)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=MacroUpdater            # Note: MmUpdater button is only displayed on MenuMaster.Gsk
+     $MmUpdatedFileList=""
+     IF FileExists($MmCtlFile)
+       $MmMsg="Re-Clone (update) all Child macros to this version;"
+       $MmMsg1="Continue and Update all Child Macros"
+       $MmMsg2="Cancel and exit"
+       CHOOSE MmMsg=$MmMsg Opt1=$MmMsg1 Opt2=$MmMsg2
+       IF $MmResult=2
+         EXITSUB 
+       ENDIF 
+       $MmFileList=""
+       GOSUB Name=ReadCtlFile
+       $MmCntr=RegExCount($_NewLine,$MmFileList)
+       $MmCntr2=1
+       WHILE $MmCntr2 <> $MmCntr
+         $MmCntr2=$MmCntr2+1
+         $MmData       =Extract($MmFileList,$_NewLine,$MmCntr2)
+         $MmNewFolder  =Extract($MmData,";",1)                      # Folder to write new file to
+         $MmNewName      =Extract($MmData,";",2)                      # New file name
+         $MmFullName   =Extract($MmData,";",3)                      # Fully qualified file name
+         $MmNewPrefix  =Extract($MmData,";",4)                      # Prefix for all variables
+         $MmFileVersion=Extract($MmData,";",5)                      # Version of the file being tested
+         IF FileExists($MmFullName)
+           IF Val($MmFileVersion) < Val($MmvV)
+             $MmTempStr=$MmNewName
+             GOSUB Name=CloneFile
+             $MmNewFileList=$MmNewFileList+"$MmNewFolder;$MmNewName;$MmFullName;$MmNewPrefix;$MmvV;$_NewLine"
+             $MmUpdatedFileList=$MmUpdatedFileList+$MmFullName+$_NewLine
+           ELSE 
+             $MmNewFileList=$MmNewFileList+$MmData+$_NewLine
+           ENDIF 
+         ENDIF 
+       ENDWHILE 
+       $MmFileList=$MmNewFileList
+       GOSUB Name=WriteCtlFile
+       SHOWSTATUS Msg="" Display=OFF
+       IF $MmUpdatedFileList<>""
+         $MmMsg="The following macros have been updated to version $MmvV $_NewLine$_NewLine"+$MmUpdatedFileList
+         MSGOK Msg=$MmMsg
+       ENDIF 
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=ReCenterLabel
+#    Get the main Form width
+     $MmCcontrol = RegExEscape("MmForm1")
+     $MmProperty = RegExEscape("Width")
+     $MmValue  = RegExSub("(?s)$MmCcontrol.*?$MmProperty.*?=(.*?\r\n)",$MmFormA,1,1)
+     $MmFwidth  = Val(AllTrim($MmValue))
+#    Get the Form Id label width
+     $MmCcontrol = RegExEscape("MmLbl100")
+     $MmProperty = RegExEscape("Width")
+     $MmValue = RegExSub("(?s)$MmCcontrol.*?$MmProperty.*?=(.*?\r\n)",$MmFormA,1,1)
+     $MmLblWidth  = Val(AllTrim($MmValue))
+#    Calculate a new position for the labels left edge and reposition it.
+     $MmNewLeft = NumToStr(Int(($MmFwidth/2) - 6.65*(Len($MmMfName))))
+     $MmFormA=EditForm($MmFormA,"MmLbl100","Left",$MmNewLeft)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=SetLabelCaptions
+     IF $MmMfColor <> "" AND $MmMfColor=NumToStr(Int(Val($MmMfColor)))
+       $MmFormA=EditForm($MmFormA,"MmForm1","Color",$MmMfColor)
+       $MmFormB=EditForm($MmFormB,"MmForm2","Color",$MmMfColor)
+       $MmFormA=EditForm($MmFormA,"MmLbl100","Color",$MmMfHeading)
+       $MmFormB=EditForm($MmFormB,"MmF2Label16","Color",$MmMfHeading)
+     ELSE 
+       $MmFormA=EditForm($MmFormA,"MmForm1","Color","11856126")
+     ENDIF 
+     IF $MmMfName<>""
+       $MmFormA=EditForm($MmFormA,"MmLbl100","Caption",$MmMfName)
+     ENDIF 
+     GOSUB Name=CheckLCapValues
+     $MmFormA=EditForm($MmFormA,"MmLbl01","Caption",$MmF2Desc1)
+     $MmFormA=EditForm($MmFormA,"MmLbl02","Caption",$MmF2Desc2)
+     $MmFormA=EditForm($MmFormA,"MmLbl03","Caption",$MmF2Desc3)
+     $MmFormA=EditForm($MmFormA,"MmLbl04","Caption",$MmF2Desc4)
+     $MmFormA=EditForm($MmFormA,"MmLbl05","Caption",$MmF2Desc5)
+     $MmFormA=EditForm($MmFormA,"MmLbl06","Caption",$MmF2Desc6)
+     $MmFormA=EditForm($MmFormA,"MmLbl07","Caption",$MmF2Desc7)
+     $MmFormA=EditForm($MmFormA,"MmLbl08","Caption",$MmF2Desc8)
+     $MmFormA=EditForm($MmFormA,"MmLbl09","Caption",$MmF2Desc9)
+     $MmFormA=EditForm($MmFormA,"MmLbl10","Caption",$MmF2Desc10)
+     $MmFormA=EditForm($MmFormA,"MmLbl11","Caption",$MmF2Desc11)
+     $MmFormA=EditForm($MmFormA,"MmLbl12","Caption",$MmF2Desc12)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=SetLabelCS                    # Reset macro label colors and styles
+     $MmFormA=EditForm($MmFormA,"MmLbl01","Color",$MmMacCol01)
+     $MmFormA=EditForm($MmFormA,"MmLbl02","Color",$MmMacCol02)
+     $MmFormA=EditForm($MmFormA,"MmLbl03","Color",$MmMacCol03)
+     $MmFormA=EditForm($MmFormA,"MmLbl04","Color",$MmMacCol04)
+     $MmFormA=EditForm($MmFormA,"MmLbl05","Color",$MmMacCol05)
+     $MmFormA=EditForm($MmFormA,"MmLbl06","Color",$MmMacCol06)
+     $MmFormA=EditForm($MmFormA,"MmLbl07","Color",$MmMacCol07)
+     $MmFormA=EditForm($MmFormA,"MmLbl08","Color",$MmMacCol08)
+     $MmFormA=EditForm($MmFormA,"MmLbl09","Color",$MmMacCol09)
+     $MmFormA=EditForm($MmFormA,"MmLbl10","Color",$MmMacCol10)
+     $MmFormA=EditForm($MmFormA,"MmLbl11","Color",$MmMacCol11)
+     $MmFormA=EditForm($MmFormA,"MmLbl12","Color",$MmMacCol12)
+#
+     $MmFormA=EditForm($MmFormA,"MmLbl01","Style",$MmMacStl01)
+     $MmFormA=EditForm($MmFormA,"MmLbl02","Style",$MmMacStl02)
+     $MmFormA=EditForm($MmFormA,"MmLbl03","Style",$MmMacStl03)
+     $MmFormA=EditForm($MmFormA,"MmLbl04","Style",$MmMacStl04)
+     $MmFormA=EditForm($MmFormA,"MmLbl05","Style",$MmMacStl05)
+     $MmFormA=EditForm($MmFormA,"MmLbl06","Style",$MmMacStl06)
+     $MmFormA=EditForm($MmFormA,"MmLbl07","Style",$MmMacStl07)
+     $MmFormA=EditForm($MmFormA,"MmLbl08","Style",$MmMacStl08)
+     $MmFormA=EditForm($MmFormA,"MmLbl09","Style",$MmMacStl09)
+     $MmFormA=EditForm($MmFormA,"MmLbl10","Style",$MmMacStl10)
+     $MmFormA=EditForm($MmFormA,"MmLbl11","Style",$MmMacStl11)
+     $MmFormA=EditForm($MmFormA,"MmLbl12","Style",$MmMacStl12)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=SetButtonCaptions
+     GOSUB Name=CheckBCapValues
+     $MmFormA=EditForm($MmFormA,"MmBtn01","Caption",$MmF2BCap1)
+     $MmFormA=EditForm($MmFormA,"MmBtn02","Caption",$MmF2BCap2)
+     $MmFormA=EditForm($MmFormA,"MmBtn03","Caption",$MmF2BCap3)
+     $MmFormA=EditForm($MmFormA,"MmBtn04","Caption",$MmF2BCap4)
+     $MmFormA=EditForm($MmFormA,"MmBtn05","Caption",$MmF2BCap5)
+     $MmFormA=EditForm($MmFormA,"MmBtn06","Caption",$MmF2BCap6)
+     $MmFormA=EditForm($MmForma,"MmBtn07","Caption",$MmF2BCap7)
+     $MmFormA=EditForm($MmFormA,"MmBtn08","Caption",$MmF2BCap8)
+     $MmFormA=EditForm($MmForma,"MmBtn09","Caption",$MmF2BCap9)
+     $MmFormA=EditForm($MmFormA,"MmBtn10","Caption",$MmF2BCap10)
+     $MmFormA=EditForm($MmFormA,"MmBtn11","Caption",$MmF2BCap11)
+     $MmFormA=EditForm($MmFormA,"MmBtn12","Caption",$MmF2BCap12)
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=CheckLCapValues
+     IF Alltrim($MmF2Desc1) = ""
+       $MmF2Desc1=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc2)=""
+       $MmF2Desc2=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc3)=""
+       $MmF2Desc3=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc4)=""
+       $MmF2Desc4=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc5)=""
+       $MmF2Desc5=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc6)=""
+       $MmF2Desc6=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc7)=""
+       $MmF2Desc7=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc8)=""
+       $MmF2Desc8=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc9)=""
+       $MmF2Desc9=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc10)=""
+       $MmF2Desc10=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc11)=""
+       $MmF2Desc11=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2Desc12)=""
+       $MmF2Desc12=$MmDefaultStrValue
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=CheckBCapValues
+     IF Alltrim($MmF2BCap1) = ""
+       $MmF2BCap1=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap2) = ""
+       $MmF2BCap2=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap3) = ""
+       $MmF2BCap3=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap4) = ""
+       $MmF2BCap4=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap5) = ""
+       $MmF2BCap5=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap6) = ""
+       $MmF2BCap6=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap7) = ""
+       $MmF2BCap7=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap8) = ""
+       $MmF2BCap8=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap9) = ""
+       $MmF2BCap9=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap10) = ""
+       $MmF2BCap10=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap11) = ""
+       $MmF2BCap11=$MmDefaultStrValue
+     ENDIF 
+     IF Alltrim($MmF2BCap12) = ""
+       $MmF2BCap12=$MmDefaultStrValue
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=CfgMfColor                            # Configure Main Form Colors
+# Modify the main form to display the browser and new controls
+     $MmAction="Yes"
+     GOSUB Name=DisplayMacroNumbers
+     $MmFormA=EditForm($MmFormA,"MmCfgColorBtn","Visible","No")
+     $MmFormA=EditForm($MmFormA,"MmCfgBtn","Visible","No")
+     $MmFormA=EditForm($MmFormA,"MmExitBtn","Visible","No")
+     $MmFormA=EditForm($MmFormA,"MmForm1","Width","733")
+     $MmFormA=EditForm($MmFormA,"MmGetNextColor","Visible","Yes")
+     $MmFormA=EditForm($MmFormA,"Groupbox1","Visible","Yes")
+     GOSUB Name=InstallColorPicker
+     $MmFormA = EditForm($MmFormA,"MmBrowser1","url",$MmUrl)
+
+     $MmCcfMoved=FALSE
+     $MmCfgNum=Val($_FormLeft)
+     IF $MmCfgNum > 233
+       $MmFormA=EditForm($MmFormA,"MmForm1","Left",NumToStr($MmCfgNum-233))
+       $MmCcfMoved=TRUE
+     ENDIF 
+# Now redisplay the modified main form
+     WHILE TRUE
+       $MmFormExit = Form($MmFormA,"")
+       BEGINCASE 
+         CASE $MmFormExit="SystemExit"
+           BREAK 
+         CASE $MmFormExit="MmExitColor"
+           BREAK 
+         CASE $MmFormExit="MmSwapBtn"
+           GOSUB Name=SwapPositions
+         CASE $MmFormExit="MmGetNextColor"
+           $MmGetColor=TRUE
+         CASE $MmFormExit="MmUpdateColor"
+           $MmRgbColor=$MmLabelColor
+           IF $MmRgbColor <> ""
+             GOSUB Name=GetRgbColors
+             $MmFormA=EditForm($MmFormA,"MmLbl100","Color",$MmNewColor)
+             $MmMfHeading=$MmNewColor
+           ENDIF 
+           $MmRgbColor=$MmBgColor
+           IF $MmRgbColor <> ""
+             GOSUB Name=GetRgbColors
+             $MmFormA=EditForm($MmFormA,"MmForm1","Color",$MmNewColor)
+             $MmFormB=EditForm($MmFormB,"MmForm2","Color",$MmNewColor)
+             $MmMfColor=$MmNewColor
+           ENDIF 
+         CASE $MmFormExit="MmBtn01"
+           $MmText="MmLbl01"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol01=$MmNewColor
+           ENDIF 
+           $MmMacStl01=$MmNewStyle
+         CASE $MmFormExit="MmBtn02"
+           $MmText="MmLbl02"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol02=$MmNewColor
+           ENDIF 
+           $MmMacStl02=$MmNewStyle
+         CASE $MmFormExit="MmBtn03"
+           $MmText="MmLbl03"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol03=$MmNewColor
+           ENDIF 
+           $MmMacStl03=$MmNewStyle
+         CASE $MmFormExit="MmBtn04"
+           $MmText="MmLbl04"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol04=$MmNewColor
+           ENDIF 
+           $MmMacStl04=$MmNewStyle
+         CASE $MmFormExit="MmBtn05"
+           $MmText="MmLbl05"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol05=$MmNewColor
+           ENDIF 
+           $MmMacStl05=$MmNewStyle
+         CASE $MmFormExit="MmBtn06"
+           $MmText="MmLbl06"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol06=$MmNewColor
+           ENDIF 
+           $MmMacStl06=$MmNewStyle
+         CASE $MmFormExit="MmBtn07"
+           $MmText="MmLbl07"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol07=$MmNewColor
+           ENDIF 
+           $MmMacStl07=$MmNewStyle
+         CASE $MmFormExit="MmBtn08"
+           $MmText="MmLbl08"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol08=$MmNewColor
+           ENDIF 
+           $MmMacStl08=$MmNewStyle
+         CASE $MmFormExit="MmBtn09"
+           $MmText="MmLbl09"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol09=$MmNewColor
+           ENDIF 
+           $MmMacStl09=$MmNewStyle
+         CASE $MmFormExit="MmBtn10"
+           $MmText="MmLbl10"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol10=$MmNewColor
+           ENDIF 
+           $MmMacStl10=$MmNewStyle
+
+         CASE $MmFormExit="MmBtn11"
+           $MmText="MmLbl11"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol11=$MmNewColor
+           ENDIF 
+           $MmMacStl11=$MmNewStyle
+         CASE $MmFormExit="MmBtn12"
+           $MmText="MmLbl12"
+           GOSUB Name=ChangeTextColor
+           IF $MmNewColor<>""
+             $MmMacCol12=$MmNewColor
+           ENDIF 
+           $MmMacStl12=$MmNewStyle
+       ENDCASE 
+     ENDWHILE 
+     $MmFormA=EditForm($MmFormA,"MmCfgColorBtn","Visible","Yes")
+     $MmFormA=EditForm($MmFormA,"MmCfgBtn","Visible","Yes")
+     $MmFormA=EditForm($MmFormA,"MmExitBtn","Visible","Yes")
+     $MmFormA=EditForm($MmFormA,"MmGetNextColor","Visible","No")
+     $MmFormA=EditForm($MmFormA,"Groupbox1","Visible","No")
+     $MmFormA=EditForm($MmFormA,"MmForm1","Width","500")
+     IF $MmCcfMoved
+       $MmFormA=EditForm($MmFormA,"MmForm1","Left",NumToStr($MmCfgNum))
+     ENDIF 
+     $MmAction="No"
+     GOSUB Name=DisplayMacroNumbers
+     GOSUB Name=SaveSettings
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=ChangeTextColor
+
+     IF $MmGetColor                                    # Get the color of the next button pressed
+       $MmGetColor=FALSE
+       BEGINCASE 
+         CASE $MmFormExit="MmBtn01"
+           $MmDecimal=$MmMacCol01
+           $MmStyle=Upper($MmMacStl01)="BOLD"
+         CASE $MmFormExit="MmBtn02"
+           $MmDecimal=$MmMacCol02
+           $MmStyle=Upper($MmMacStl02)="BOLD"
+         CASE $MmFormExit="MmBtn03"
+           $MmDecimal=$MmMacCol03
+           $MmStyle=Upper($MmMacStl03)="BOLD"
+         CASE $MmFormExit="MmBtn04"
+           $MmDecimal=$MmMacCol04
+           $MmStyle=Upper($MmMacStl04)="BOLD"
+         CASE $MmFormExit="MmBtn05"
+           $MmDecimal=$MmMacCol05
+           $MmStyle=Upper($MmMacStl05)="BOLD"
+         CASE $MmFormExit="MmBtn06"
+           $MmDecimal=$MmMacCol06
+           $MmStyle=Upper($MmMacStl06)="BOLD"
+         CASE $MmFormExit="MmBtn07"
+           $MmDecimal=$MmMacCol07
+           $MmStyle=Upper($MmMacStl07)="BOLD"
+         CASE $MmFormExit="MmBtn08"
+           $MmDecimal=$MmMacCol08
+           $MmStyle=Upper($MmMacStl08)="BOLD"
+         CASE $MmFormExit="MmBtn09"
+           $MmDecimal=$MmMacCol09
+           $MmStyle=Upper($MmMacStl09)="BOLD"
+         CASE $MmFormExit="MmBtn10"
+           $MmDecimal=$MmMacCol10
+           $MmStyle=Upper($MmMacStl10)="BOLD"
+         CASE $MmFormExit="MmBtn11"
+           $MmDecimal=$MmMacCol11
+           $MmStyle=Upper($MmMacStl11)="BOLD"
+         CASE $MmFormExit="MmBtn12"
+           $MmDecimal=$MmMacCol12
+           $MmStyle=Upper($MmMacStl12)="BOLD"
+       ENDCASE 
+       GOSUB Name=DecToRGB
+       GOSUB Name=GetStyle
+       EXITSUB 
+     ENDIF 
+
+     $MmRgbColor=$MmMacColor
+     IF $MmRgbColor <> ""
+       GOSUB Name=GetRgbColors
+       $MmFormA=EditForm($MmFormA,"$MmText","Color",$MmNewColor)
+     ENDIF 
+     GOSUB Name=GetStyle
+     $MmFormA=EditForm($MmFormA,"$MmText","Style",$MmNewStyle)
+   ENDSUB 
+###############################################################################
+   BEGINSUB Name=DisplayMacroNumbers
+  	 $MmCntr=0
+  	 WHILE $MmCntr<RegExCount(";",$MmCount)
+  	 	 $MmCntr=$MmCntr+1
+       $MmTempStr="MmLbl"+NumToStr($MmCntr+12)                           
+       $MmFormA=EditForm($MmFormA,"$MmTempStr","Visible",$MmAction)
+  	 ENDWHILE 
+   ENDSUB 
+###############################################################################
+   BEGINSUB Name=GetStyle
+     IF $MmStyle
+       $MmNewStyle="Bold"
+     ELSE 
+       $MmNewStyle=""
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=GetRgbColors                 # Return Red/Green/Blue decimal values
+     IF Left($MmRgbColor,1)="#"               # $MmRgbColor must begin with "#"
+       $MmHex=Substr($MmRgbColor,2,2)
+       GOSUB Name=hextodec
+       $MmRed=$MmDec
+       $MmHex=Substr($MmRgbColor,4,2)
+       GOSUB Name=hextodec
+       $MmGreen=$MmDec
+       $MmHex=Substr($MmRgbColor,6,2)
+       GOSUB Name=hextodec
+       $MmBlue=$MmDec
+       $MmNewColor=NumtoStr(RGBColor($MmRed,$MmGreen,$MmBlue))
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=DecToRGB                          # Mod - is the remainder of the division. Div - is the integer part of the result of the division.
+     $$MmVarDec=Val($MmDecimal)
+     $MmResultStr=""
+     $MmHTDSUBhexcodes="0123456789ABCDEF"
+     WHILE $$MmVarDec>16
+       $Mmx=Int($$MmVarDec/16)
+       $Mmy=$$MmVarDec-($Mmx*16)
+       $MmResultStr=$MmResultStr+Substr($MmHTDSUBhexcodes,$Mmy+1,1)
+       $$MmVarDec=$Mmx
+      ENDWHILE 
+     $MmResultStr=$MmResultStr+Substr($MmHTDSUBhexcodes,$Mmx+1,1)
+     $MmResultStr="#"+Left($MmResultStr+"000000",6)
+     $MmMacColor=$MmResultStr
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=hextodec
+     $MmHTDSUBnumDigits=len($MmHex)
+     IF $MmHTDSUBnumDigits = 0
+       $MmDec=-1                         # an error condition. no hex characters were passed
+     ELSE 
+       $MmHex=Upper($MmHex)
+       $MmDec=0
+       $MmHTDSUBhexcodes="0123456789ABCDEF"
+       $MmHTDSUBcounter=0
+       WHILE $MmHTDSUBcounter < $MmHTDSUBnumDigits
+         $MmDec=16*$MmDec + (AT(Substr($MmHex, $MmHTDSUBcounter, 1), $MmHTDSUBhexcodes)-1)
+         $MmHTDSUBcounter = $MmHTDSUBcounter + 1
+       ENDWHILE 
+     ENDIF 
+   ENDSUB #hextodec
+###################################################################################
+   BEGINSUB Name=InstallColorPicker                                    # Install and unzip the Color Picker file
+     $MmFileName = $_AppData + "\Temp\colorpicker.zip"
+     $MmResultStr = PutFile($MmFileName,MimeDecode($MmColorpicker))
+     IF Left($MmResultStr ,4) <> "*OK*"
+       PAUSE Msg="Sorry! For some reason I couldn't generate the colorpicker file"
+       CANCEL 
+     ELSE 
+       $MmFolder = $_AppData + "\Temp\"
+       $MmResultStr = ZipFile("unzip",$MmFileName,$MmFolder)
+       $MmUrl="file:///" + $_AppData + "\Temp\colorpicker.html"
+     ENDIF 
+   ENDSUB 
+###################################################################################
+   BEGINSUB Name=Initialise
+
+     $DevUser=FALSE
+     $MmNewLeft="250"
+     $MmMfName="Menu Master"
+     $MmGetColor=FALSE
+
+     $MmInstall="$Gsak$"
+     $MmMacros="$_AppData\Macros"
+
+     MACSETTINGS Type=R FileCheck=N
+
+     GOSUB Name=ReBuildMacroNames
+
+# Restore the form to its last position
+     IF $MmFl <> "" AND $MmFt<>""
+       $MmFormA=EditForm($MmFormA,"MmForm1","Top",$MmFt)
+       $MmFormA=EditForm($MmFormA,"MmForm1","Left",$MmFl)
+     ENDIF 
+
+     $MmPrefix="Mm"
+     $MmNewPrefix=""
+     $MmDefaultStrValue=" "
+     $MmCtlFile=Sysinfo("MacroPath")+"\MenuMasterCtl.Xml"
+
+# Set Macro Name and Version on the top line of the Form
+     $MmvN=Left(SysInfo("Macrofile"),AT(".",SysInfo("Macrofile"))-1)
+     $MmvN=Sysinfo("Macrofile")
+     $MmvV=AllTrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1))
+     $MmFormA=EditForm($MmFormA,"MmForm1","Caption","MenuMaster  v$MmvV - $MmvN ($MmPrefix)")
+
+# If this macro is Menu Master.Gsk and not a child/clone, display the Update button
+     IF $MmvN="Menu"+"Master"+".Gsk"
+       $MmFormB=EditForm($MmFormB,"MmUpdater","Visible","Yes")
+     ENDIF 
+
+# Check the main version number and re-apply form buttons where necessary
+     IF $_Version<"8.0.0.0"
+       $MmFormA=EditForm($MmFormA,"MmExitBtn","Caption","Exit")
+       $MmFormA=EditForm($MmFormA,"MmCfgBtn","Caption","Config Menu")
+       $MmFormA=EditForm($MmFormA,"MmCfgColorBtn","Caption","Color Menu")
+       $MmFormA=EditForm($MmFormA,"MmExitColor","Caption","Save and Exit")
+       $MmFormA=EditForm($MmFormA,"MmUpdateColor","Caption","Update Color")
+       $MmFormA=EditForm($MmFormA,"MmGetNextColor","Caption","Get Next Macro Color")
+       $MmFormB=EditForm($MmFormB,"MmExitFB","Caption","Save and Exit")
+     ENDIF 
+
+     GOSUB Name=SetLabelCaptions
+     GOSUB Name=SetLabelCS
+     GOSUB Name=SetButtonCaptions
+     GOSUB Name=ReCenterLabel
+
+
+   ENDSUB 
+##################################################################################
+
+#   DECLARE Var=$MmParms Type=String
+   DECLARE Var=$MmGetColor Type=Boolean
+   DECLARE Var=$MmAction Type=String
+
+# Macro button text strings
+   DECLARE Var=$MmF2BCap1 Type=String
+   DECLARE Var=$MmF2BCap2 Type=String
+   DECLARE Var=$MmF2BCap3 Type=String
+   DECLARE Var=$MmF2BCap4 Type=String
+   DECLARE Var=$MmF2BCap5 Type=String
+   DECLARE Var=$MmF2BCap6 Type=String
+   DECLARE Var=$MmF2BCap7 Type=String
+   DECLARE Var=$MmF2BCap8 Type=String
+   DECLARE Var=$MmF2BCap9 Type=String
+   DECLARE Var=$MmF2BCap10 Type=String
+   DECLARE Var=$MmF2BCap11 Type=String
+   DECLARE Var=$MmF2BCap12 Type=String
+# Macro description strings
+   DECLARE Var=$MmF2Desc1 Type=String
+   DECLARE Var=$MmF2Desc2 Type=String
+   DECLARE Var=$MmF2Desc3 Type=String
+   DECLARE Var=$MmF2Desc4 Type=String
+   DECLARE Var=$MmF2Desc5 Type=String
+   DECLARE Var=$MmF2Desc6 Type=String
+   DECLARE Var=$MmF2Desc7 Type=String
+   DECLARE Var=$MmF2Desc8 Type=String
+   DECLARE Var=$MmF2Desc9 Type=String
+   DECLARE Var=$MmF2Desc10 Type=String
+   DECLARE Var=$MmF2Desc11 Type=String
+   DECLARE Var=$MmF2Desc12 Type=String
+# Macro FileNames
+   DECLARE Var=$MmF2File1 Type=String
+   DECLARE Var=$MmF2File2 Type=String
+   DECLARE Var=$MmF2File3 Type=String
+   DECLARE Var=$MmF2File4 Type=String
+   DECLARE Var=$MmF2File5 Type=String
+   DECLARE Var=$MmF2File6 Type=String
+   DECLARE Var=$MmF2File7 Type=String
+   DECLARE Var=$MmF2File8 Type=String
+   DECLARE Var=$MmF2File9 Type=String
+   DECLARE Var=$MmF2File10 Type=String
+   DECLARE Var=$MmF2File11 Type=String
+   DECLARE Var=$MmF2File12 Type=String
+   DECLARE Var=$MmNewLeft Type=String
+   DECLARE Var=$MmNewPrefix Type=String
+   DECLARE Var=$MmPrefix Type=String
+   DECLARE Var=$MmInstall Type=String
+# Variables for Color Picker
+   DECLARE Var=$MmBgColor Type=String                     # Form Background color edit box
+   DECLARE Var=$MmLabelColor Type=String                  # Form Heading color edit box
+   DECLARE Var=$MmMacColor Type=String                    # Macro name color edit box
+   DECLARE Var=$MmStyle Type=Boolean                      # Macro font type (Normal/Bold) flag
+# Variables for GetRGBColor
+   DECLARE Var=$MmDecimal Type=String
+   DECLARE Var=$$MmVarDec Type=Numeric
+   DECLARE Var=$Mmx Type=Numeric
+   DECLARE Var=$Mmy Type=Numeric
+# Color variables
+#   DECLARE Var=$MmCopiedColor Type=String                 # Only good for one copy
+   DECLARE Var=$MmMacCol01 Type=String
+   DECLARE Var=$MmMacCol02 Type=String
+   DECLARE Var=$MmMacCol03 Type=String
+   DECLARE Var=$MmMacCol04 Type=String
+   DECLARE Var=$MmMacCol05 Type=String
+   DECLARE Var=$MmMacCol06 Type=String
+   DECLARE Var=$MmMacCol07 Type=String
+   DECLARE Var=$MmMacCol08 Type=String
+   DECLARE Var=$MmMacCol09 Type=String
+   DECLARE Var=$MmMacCol10 Type=String
+   DECLARE Var=$MmMacCol11 Type=String
+   DECLARE Var=$MmMacCol12 Type=String
+# Style variables
+   DECLARE Var=$MmMacStl01 Type=String
+   DECLARE Var=$MmMacStl02 Type=String
+   DECLARE Var=$MmMacStl03 Type=String
+   DECLARE Var=$MmMacStl04 Type=String
+   DECLARE Var=$MmMacStl05 Type=String
+   DECLARE Var=$MmMacStl06 Type=String
+   DECLARE Var=$MmMacStl07 Type=String
+   DECLARE Var=$MmMacStl08 Type=String
+   DECLARE Var=$MmMacStl09 Type=String
+   DECLARE Var=$MmMacStl10 Type=String
+   DECLARE Var=$MmMacStl11 Type=String
+   DECLARE Var=$MmMacStl12 Type=String
+# MACRO Scope variables
+   DECLARE Var=$MmVscope1 Type=Boolean
+   DECLARE Var=$MmVscope2 Type=Boolean
+   DECLARE Var=$MmVscope3 Type=Boolean
+   DECLARE Var=$MmVscope4 Type=Boolean
+   DECLARE Var=$MmVscope5 Type=Boolean
+   DECLARE Var=$MmVscope6 Type=Boolean
+   DECLARE Var=$MmVscope7 Type=Boolean
+   DECLARE Var=$MmVscope8 Type=Boolean
+   DECLARE Var=$MmVscope9 Type=Boolean
+   DECLARE Var=$MmVscope10 Type=Boolean
+   DECLARE Var=$MmVscope11 Type=Boolean
+   DECLARE Var=$MmVscope12 Type=Boolean
+
+   DECLARE Var=$MmFileName Type=String
+   DECLARE Var=$MmFolder Type=String
+   DECLARE Var=$MmUrl Type=String
+   DECLARE Var=$MmRgbColor Type=String
+   DECLARE Var=$MmDec Type=Numeric
+   DECLARE Var=$MmHex Type=String
+   DECLARE Var=$MmRed Type=Numeric
+   DECLARE Var=$MmBlue Type=Numeric
+   DECLARE Var=$MmGreen Type=Numeric
+   DECLARE Var=$MmMfHeading Type=String
+   DECLARE Var=$MmHTDSUBcounter Type=Numeric
+   DECLARE Var=$MmHTDSUBhexcodes Type=String
+   DECLARE Var=$MmHTDSUBnumDigits Type=Numeric
+   DECLARE Var=$MmNewColor Type=String
+   DECLARE Var=$MmText Type=String
+   DECLARE Var=$MmMacros Type=String
+   DECLARE Var=$MmEditor Type=String
+   DECLARE Var=$MmNewStyle Type=String
+   DECLARE Var=$MmCcfMoved Type=Boolean
+   DECLARE Var=$MmCfgNum Type=Numeric
+
+# General variables
+   DECLARE Var=$MmFormExit Type=String
+   DECLARE Var=$MmMsg Type=String
+   DECLARE Var=$MmMacro Type=String
+   DECLARE Var=$MmVscope Type=Boolean
+   DECLARE Var=$MmvN Type=String
+   DECLARE Var=$MmvV Type=String
+   DECLARE Var=$MmMfName Type=String
+   DECLARE Var=$MmMfColor Type=String
+   DECLARE Var=$MmResultStr Type=String
+   DECLARE Var=$MmNewFolder Type=String
+   DECLARE Var=$MmDefaultStrValue Type=String
+   DECLARE Var=$MmFileList Type=String
+   DECLARE Var=$MmCtlFile Type=String
+   DECLARE Var=$MmBooleanValue Type=Boolean
+
+# Macro Updater variables
+   DECLARE Var=$MmNewName Type=String
+   DECLARE Var=$MmCntr Type=Numeric
+   DECLARE Var=$MmCntr2 Type=Numeric
+   DECLARE Var=$MmData Type=String
+   DECLARE Var=$MmNewFileList Type=String
+   DECLARE Var=$MmFileVersion Type=String
+   DECLARE Var=$MmUpdatedFileList Type=String
+   DECLARE Var=$MmTempStr Type=String
+   DECLARE Var=$MmDataStatement Type=Boolean
+# User Choice variables
+#   DECLARE Var=$MmChoices Type=String
+   DECLARE Var=$MmMsg Type=String
+   DECLARE Var=$MmMsg1 Type=String
+   DECLARE Var=$MmMsg2 Type=String
+#   DECLARE Var=$MmMsg3 Type=String
+#   DECLARE Var=$MmMsg4 Type=String
+#   DECLARE Var=$MmMsg5 Type=String
+   DECLARE Var=$MmResult Type=Numeric
+#   DECLARE Var=$MmDelay Type=Numeric
+# Clone routine variables
+   DECLARE Var=$MmMacData Type=String
+   DECLARE Var=$MmOldMacro Type=String
+   DECLARE Var=$MmFullName Type=String
+# Swap routine variables
+   DECLARE Var=$MmFiledata Type=String
+   DECLARE Var=$MmTmpStr Type=String
+   DECLARE Var=$MmTempFname Type=String
+   DECLARE Var=$MmTempCap Type=String
+   DECLARE Var=$MmTempFile Type=String
+   DECLARE Var=$MmTempDesc Type=String
+# Re-Center variables
+   DECLARE Var=$MmCcontrol Type=String
+   DECLARE Var=$MmProperty Type=String
+   DECLARE Var=$MmValue Type=String
+   DECLARE Var=$MmLblWidth Type=Numeric
+   DECLARE Var=$MmFwidth Type=Numeric
+# Declare FormLeft, FormTop
+   DECLARE Var=$MmFl Type=String
+   DECLARE Var=$MmFt Type=String
+
+   DECLARE Var=$DevUser Type=Boolean
+
+###################################################################################
+<DATA> VarName=$MmCount
+0;1;2;3;4;5;6;7;8;9;10;11;12
+<ENDDATA>
+###################################################################################
+<DATA> VarName=$MmColorpicker
+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
+<ENDDATA>
+
+###################################################################################
+<DATA> VarName=$MmFormA
+#********************************************************************
+# Form generated by GSAK form designer on Wed 13-Feb-2013 16:49:37
+#********************************************************************
+
+Name = MmForm1
+  Type = Form
+  Color = 11856126
+  Height = 525
+  Top = 117
+  Width = 500
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 76
+  Left = 357
+  Top = 410
+  Visible = No
+  Width = 168
+  Taborder = 26
+
+Name = MmBtn01
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 53
+  Width = 100
+  Taborder = 1
+  Caption = Btn 01
+
+Name = MmLbl01
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 57
+  Width = 43
+  Caption = Lbl 01
+
+Name = MmBtn02
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 83
+  Width = 100
+  Taborder = 2
+  Caption = Btn 02
+
+Name = MmLbl02
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 87
+  Width = 43
+  Caption = Lbl 02
+
+Name = MmBtn03
+  Type = Button
+  Enter = Yes
+  Height = 25
+  Left = 38
+  Top = 113
+  Width = 100
+  Taborder = 3
+  Caption = Btn 03
+
+Name = MmLbl03
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 117
+  Width = 43
+  Caption = Lbl 03
+
+Name = MmBtn04
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 143
+  Width = 100
+  Taborder = 4
+  Caption = Btn 04
+
+Name = MmLbl04
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 147
+  Width = 43
+  Caption = Lbl 04
+
+Name = MmBtn05
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 173
+  Width = 100
+  Taborder = 5
+  Caption = Btn 05
+
+Name = MmLbl05
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 177
+  Width = 43
+  Caption = Lbl 05
+
+Name = MmBtn06
+  Type = Button
+  Height = 25
+  Left = 37
+  Top = 203
+  Width = 100
+  Taborder = 6
+  Caption = Btn 06
+
+Name = MmLbl06
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 207
+  Width = 43
+  Caption = Lbl 06
+
+Name = MmBtn07
+  Type = Button
+  Height = 25
+  Left = 37
+  Top = 233
+  Width = 100
+  Taborder = 7
+  Caption = Btn 07
+
+Name = MmLbl07
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 237
+  Width = 43
+  Caption = Lbl 07
+
+Name = MmBtn08
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 263
+  Width = 100
+  Taborder = 8
+  Caption = Btn 08
+
+Name = MmLbl08
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 168
+  Size = 10
+  Top = 267
+  Width = 43
+  Caption = Lbl 08
+
+Name = MmBtn09
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 293
+  Width = 100
+  Taborder = 9
+  Caption = Btn 09
+
+Name = MmLbl09
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 297
+  Width = 43
+  Caption = Lbl 09
+
+Name = MmBtn10
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 323
+  Width = 100
+  Taborder = 10
+  Caption = Btn 10
+
+Name = MmLbl10
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 327
+  Width = 43
+  Caption = Lbl 10
+
+Name = MmExitBtn
+  Type = Button
+  Escape = Yes
+  Height = 45
+  Left = 169
+  Top = 430
+  Width = 153
+  Taborder = 11
+  Caption = <img src="idx:1" align="middle"> Exit
+
+Name = MmLbl100
+  Type = Label
+  Color = 255
+  Font = OCR A Extended
+  Height = 25
+  Left = 10
+  Size = 18
+  Style = Bold
+  Top = 6
+  Width = 173
+  Caption = Menu Master
+
+Name = MmCfgBtn
+  Type = Button
+  Height = 27
+  Left = 48
+  Top = 422
+  Width = 80
+  Taborder = 12
+  Caption = <img src="idx:18" align="middle"> Config Menu
+
+Name = MmCfgColorBtn
+  Type = Button
+  Height = 27
+  Left = 47
+  Top = 454
+  Width = 80
+  Taborder = 14
+  Caption = <img src="idx:25" align="middle"> Color Menu
+
+Name = MmBrowser1
+  Type = Browser
+  Height = 300
+  Left = 502
+  Top = 7
+  Width = 240
+  Taborder = 15
+
+Name = MmExitColor
+  Type = Button
+  Escape = Yes
+  Height = 35
+  Left = 539
+  Top = 450
+  Width = 178
+  Taborder = 16
+  Caption = <img src="idx:4" align="middle">  Save and Exit  <img src="idx:21" align="middle">
+
+Name = MmLabel1
+  Type = Label
+  Height = 13
+  Left = 540
+  Top = 319
+  Width = 92
+  Caption = Background color
+
+Name = MmBgColor
+  Type = Edit
+  Height = 21
+  Left = 636
+  Top = 314
+  Width = 80
+  Taborder = 17
+
+Name = MmLabel2
+  Type = Label
+  Height = 13
+  Left = 540
+  Top = 340
+  Width = 74
+  Caption = Heading color
+
+Name = MmLabelColor
+  Type = Edit
+  Height = 21
+  Left = 636
+  Top = 337
+  Width = 80
+  Taborder = 18
+
+Name = MmLabel3
+  Type = Label
+  Height = 13
+  Left = 540
+  Top = 364
+  Width = 84
+  Caption = Macro text color
+
+Name = MmMacColor
+  Type = Edit
+  Height = 21
+  Left = 636
+  Top = 360
+  Width = 80
+  Taborder = 19
+
+Name = MmUpdateColor
+  Type = Button
+  Height = 27
+  Left = 540
+  Top = 412
+  Width = 177
+  Taborder = 20
+  Caption = <img src="idx:25" align="middle"> Update Colors
+
+Name = MmStyle
+  Type = Checkbox
+  Captionposition = Left
+  Height = 17
+  Left = 540
+  Top = 380
+  Width = 127
+  Taborder = 21
+  Caption = Bold Style
+
+Name = MmFreset
+  Type = Button
+  Height = 21
+  Left = 769
+  Top = 440
+  Width = 49
+  Taborder = 22
+  Caption = &Reset
+
+Name = MmBtn11
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 353
+  Width = 100
+  Taborder = 23
+  Caption = Btn 11
+
+Name = MmBtn12
+  Type = Button
+  Height = 25
+  Left = 38
+  Top = 383
+  Width = 100
+  Taborder = 24
+  Caption = Btn12
+
+Name = MmLbl11
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 357
+  Width = 43
+  Caption = Lbl 11
+
+Name = MmLbl12
+  Type = Label
+  Color = 16711680
+  Height = 16
+  Left = 167
+  Size = 10
+  Top = 387
+  Width = 43
+  Caption = Lbl 12
+
+Name = MmGetNextColor
+  Type = Button
+  Height = 27
+  Left = 165
+  Top = 430
+  Visible = No
+  Width = 177
+  Taborder = 25
+  Caption = <img src="idx:25" align="middle"> Get Next Macro Color
+
+Name = MmSwapBtn
+  Type = Button
+  Container = Groupbox1
+  Height = 21
+  Left = 46
+  Top = 48
+  Width = 75
+  Taborder = 0
+  Caption = Swap Entries
+
+Name = MmSwapA
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 7
+  Top = 23
+  Values = $MmCount
+  Width = 60
+  Taborder = 1
+
+Name = MmSwapB
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 100
+  Top = 23
+  Values = $MmCount
+  Width = 60
+  Taborder = 2
+
+Name = MmLbl13
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 59
+  Visible = No
+  Width = 15
+  Caption = 1
+
+Name = MmLbl14
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 89
+  Visible = No
+  Width = 15
+  Caption = 2
+
+Name = MmLbl15
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 119
+  Visible = No
+  Width = 15
+  Caption = 3
+
+Name = MmLbl16
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 149
+  Visible = No
+  Width = 15
+  Caption = 4
+
+Name = MmLbl17
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 180
+  Visible = No
+  Width = 15
+  Caption = 5
+
+Name = MmLbl18
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 210
+  Visible = No
+  Width = 15
+  Caption = 6
+
+Name = MmLbl19
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 239
+  Visible = No
+  Width = 15
+  Caption = 7
+
+Name = MmLbl20
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 270
+  Visible = No
+  Width = 15
+  Caption = 8
+
+Name = MmLbl21
+  Type = Label
+  Height = 17
+  Left = 15
+  Style = bold
+  Top = 300
+  Visible = No
+  Width = 15
+  Caption = 9
+
+Name = MmLbl22
+  Type = Label
+  Height = 17
+  Left = 12
+  Style = bold
+  Top = 331
+  Visible = No
+  Width = 22
+  Caption = 10
+
+Name = MmLbl23
+  Type = Label
+  Height = 17
+  Left = 12
+  Style = bold
+  Top = 360
+  Visible = No
+  Width = 22
+  Caption = 11
+
+Name = MmLbl24
+  Type = Label
+  Height = 17
+  Left = 12
+  Style = bold
+  Top = 390
+  Visible = No
+  Width = 22
+  Caption = 12
+
+<enddata>
+
+
+
+
+
+
+
+
+
+
+
+###################################################################################
+<DATA> VarName=$MmFormB
+#********************************************************************
+# Form generated by GSAK form designer on Tue 12-Feb-2013 08:11:25
+#********************************************************************
+
+Name = MmForm2
+  Type = Form
+  Caption = MenuMaster Configuration / Maintenance
+  Height = 591
+  Top = 20
+  Width = 776
+
+Name = MmGroupbox1
+  Type = Groupbox
+  Caption = Maintenance Options
+  Height = 96
+  Left = 20
+  Top = 440
+  Width = 373
+  Taborder = 38
+
+Name = MmMfName
+  Type = Edit
+  Height = 21
+  Left = 119
+  Top = 40
+  Width = 179
+  Taborder = 0
+
+Name = MmF2Label14
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 24
+  Top = 44
+  Width = 88
+  Caption = Main Form Name
+
+Name = MmF2Label1
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 95
+  Width = 89
+  Caption = Button / Macro 1
+
+Name = MmF2Label2
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 124
+  Width = 89
+  Caption = Button / Macro 2
+
+Name = MmF2Label3
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 155
+  Width = 89
+  Caption = Button / Macro 3
+
+Name = MmF2Label4
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 185
+  Width = 89
+  Caption = Button / Macro 4
+
+Name = MmF2Label5
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 212
+  Width = 89
+  Caption = Button / Macro 5
+
+Name = MmF2Label6
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 238
+  Width = 89
+  Caption = Button / Macro 6
+
+Name = MmF2Label7
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 267
+  Width = 89
+  Caption = Button / Macro 7
+
+Name = MmF2Label8
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 296
+  Width = 89
+  Caption = Button / Macro 8
+
+Name = MmF2Label9
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 324
+  Width = 89
+  Caption = Button / Macro 9
+
+Name = MmF2Label10
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 20
+  Top = 354
+  Width = 95
+  Caption = Button / Macro 10
+
+Name = MmF2Label11
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 133
+  Top = 70
+  Width = 63
+  Caption = Button Text
+
+Name = MmF2Label12
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 275
+  Top = 71
+  Width = 94
+  Caption = Macro Description
+
+Name = MmF2Label13
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 515
+  Top = 72
+  Width = 57
+  Caption = Macro File
+
+Name = MmF2BCap1
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 91
+  Width = 100
+  Taborder = 1
+
+Name = MmF2Desc1
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 91
+  Width = 180
+  Taborder = 2
+
+Name = MmF2File1
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 91
+  Width = 270
+  Taborder = 3
+
+Name = MmF2BCap2
+  Type = Edit
+  Height = 21
+  Left = 117
+  Top = 121
+  Width = 100
+  Taborder = 4
+
+Name = MmF2Desc2
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 120
+  Width = 180
+  Taborder = 5
+
+Name = MmF2File2
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 120
+  Width = 270
+  Taborder = 6
+
+Name = MmExitFB
+  Type = Button
+  Escape = Yes
+  Height = 35
+  Left = 498
+  Top = 490
+  Width = 131
+  Taborder = 37
+  Caption = <img src="idx:4" align="middle">  Save and Exit  <img src="idx:21" align="middle">
+
+Name = MmF2BCap3
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 151
+  Width = 100
+  Taborder = 7
+
+Name = MmF2Desc3
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 151
+  Width = 180
+  Taborder = 8
+
+Name = MmF2File3
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 151
+  Width = 270
+  Taborder = 9
+
+Name = MmF2BCap4
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 181
+  Width = 100
+  Taborder = 10
+
+Name = MmF2BCap5
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 208
+  Width = 100
+  Taborder = 13
+
+Name = MmF2BCap6
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 234
+  Width = 100
+  Taborder = 16
+
+Name = MmF2BCap7
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 263
+  Width = 100
+  Taborder = 19
+
+Name = MmF2BCap8
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 292
+  Width = 100
+  Taborder = 22
+
+Name = MmF2BCap9
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 320
+  Width = 100
+  Taborder = 25
+
+Name = MmF2BCap10
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 350
+  Width = 100
+  Taborder = 28
+
+Name = MmF2Desc4
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 181
+  Width = 180
+  Taborder = 11
+
+Name = MmF2Desc5
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 208
+  Width = 180
+  Taborder = 14
+
+Name = MmF2Desc6
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 234
+  Width = 180
+  Taborder = 17
+
+Name = MmF2Desc7
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 263
+  Width = 180
+  Taborder = 20
+
+Name = MmF2Desc8
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 292
+  Width = 180
+  Taborder = 23
+
+Name = MmF2Desc9
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 320
+  Width = 180
+  Taborder = 26
+
+Name = MmF2Desc10
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 350
+  Width = 180
+  Taborder = 29
+
+Name = MmF2File4
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 181
+  Width = 270
+  Taborder = 12
+
+Name = MmF2File5
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 208
+  Width = 269
+  Taborder = 15
+
+Name = MmF2File6
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 234
+  Width = 270
+  Taborder = 18
+
+Name = MmF2File7
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 263
+  Width = 270
+  Taborder = 21
+
+Name = MmF2File8
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 292
+  Width = 270
+  Taborder = 24
+
+Name = MmF2File9
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 320
+  Width = 270
+  Taborder = 27
+
+Name = MmF2File10
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 350
+  Width = 270
+  Taborder = 30
+
+Name = MmCloneCopy
+  Type = Button
+  Container = MmGroupbox1
+  Height = 30
+  Left = 253
+  Top = 15
+  Width = 100
+  Taborder = 3
+  Caption = Create Child Macro
+
+Name = MmF2Label16
+  Type = Label
+  Height = 20
+  Left = 292
+  Size = 12
+  Style = bold
+  Top = 9
+  Width = 162
+  Caption = Configuration Form
+
+Name = MmSwapBtn
+  Type = Button
+  Container = MmGroupbox1
+  Height = 25
+  Left = 68
+  Top = 62
+  Width = 100
+  Taborder = 0
+  Caption = Swap Entries
+
+Name = MmGb1Lbl1
+  Type = Label
+  Color = 16711680
+  Container = MmGroupbox1
+  Height = 13
+  Left = 55
+  Top = 20
+  Width = 32
+  Caption = Entry
+
+Name = MmSwapA
+  Type = Combobox
+  Container = MmGroupbox1
+  Display = 13
+  Height = 21
+  Left = 45
+  Top = 35
+  Values = $MmCount
+  Width = 50
+  Taborder = 1
+
+Name = MmSwapB
+  Type = Combobox
+  Container = MmGroupbox1
+  Display = 13
+  Height = 21
+  Left = 147
+  Top = 35
+  Values = $MmCount
+  Width = 50
+  Taborder = 2
+
+Name = MmUpdater
+  Type = Button
+  Container = MmGroupbox1
+  Height = 30
+  Left = 253
+  Top = 55
+  Visible = No
+  Width = 100
+  Taborder = 4
+  Caption = Update Children
+
+Name = MmGb1Lbl2
+  Type = Label
+  Color = 16711680
+  Container = MmGroupbox1
+  Height = 13
+  Left = 157
+  Top = 20
+  Width = 32
+  Caption = Entry
+
+Name = Label1
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 723
+  Top = 60
+  Width = 34
+  Caption = Local
+
+Name = Label2
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 715
+  Top = 73
+  Width = 51
+  Caption = Variables
+
+Name = MmVscope1
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 91
+  Width = 17
+  Taborder = 39
+
+Name = MmVscope2
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 122
+  Width = 17
+  Taborder = 40
+
+Name = MmVscope3
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 152
+  Width = 17
+  Taborder = 41
+
+Name = MmVscope4
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 184
+  Width = 17
+  Taborder = 42
+
+Name = MmVscope5
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 211
+  Width = 17
+  Taborder = 43
+
+Name = MmVscope6
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 238
+  Width = 17
+  Taborder = 44
+
+Name = MmVscope7
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 270
+  Width = 17
+  Taborder = 45
+
+Name = MmVscope8
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 296
+  Width = 17
+  Taborder = 46
+
+Name = MmVscope9
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 323
+  Width = 17
+  Taborder = 47
+
+Name = MmVscope10
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 351
+  Width = 17
+  Taborder = 48
+
+Name = MmF2File11
+  Type = File
+  Height = 21
+  Left = 436
+  Top = 378
+  Width = 270
+  Taborder = 33
+
+Name = MmF2File12
+  Type = File
+  Height = 21
+  Left = 435
+  Top = 405
+  Width = 270
+  Taborder = 36
+
+Name = MmF2Desc11
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 378
+  Width = 180
+  Taborder = 32
+
+Name = MmF2Desc12
+  Type = Edit
+  Height = 21
+  Left = 236
+  Top = 405
+  Width = 180
+  Taborder = 35
+
+Name = MmF2BCap11
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 378
+  Width = 100
+  Taborder = 31
+
+Name = MmF2BCap12
+  Type = Edit
+  Height = 21
+  Left = 116
+  Top = 405
+  Width = 100
+  Taborder = 34
+
+Name = Label3
+  Type = Label
+  Height = 13
+  Left = 20
+  Top = 382
+  Width = 95
+  Caption = Button / Macro 11
+
+Name = Label4
+  Type = Label
+  Height = 13
+  Left = 20
+  Top = 409
+  Width = 95
+  Caption = Button / Macro 12
+
+Name = MmVscope11
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 380
+  Width = 17
+  Taborder = 49
+
+Name = MmVscope12
+  Type = Checkbox
+  Height = 17
+  Left = 730
+  Top = 407
+  Width = 17
+  Taborder = 50
+
+<enddata>
+
+###################################################################################
+<DATA> VarName=$MmFormC
+#********************************************************************
+# Form generated by GSAK form designer on Tue 18-Aug-2009 10:53:03
+#********************************************************************
+
+Name = MmForm3
+  Type = Form
+  Caption = MenuMaster - Clone form
+  Color = 14145535
+  Height = 260
+  Top = 234
+  Width = 459
+
+Name = MmExitWithout
+  Type = Button
+  Escape = Yes
+  Height = 25
+  Left = 78
+  Top = 177
+  Width = 132
+  Taborder = 8
+  Caption = Quit without Cloning
+
+Name = MmExitWith
+  Type = Button
+  Height = 25
+  Left = 234
+  Top = 177
+  Width = 131
+  Taborder = 9
+  Caption = Clone and Exit
+
+Name = MmNewFolder
+  Type = Folder
+  Height = 21
+  Left = 157
+  Top = 31
+  Width = 255
+  Taborder = 10
+
+Name = MmF3Label1
+  Type = Label
+  Height = 13
+  Left = 30
+  Top = 34
+  Width = 117
+  Caption = Folder for the new macro
+
+Name = MmNewName
+  Type = Edit
+  Height = 21
+  Left = 157
+  Top = 64
+  Width = 255
+  Taborder = 11
+
+Name = MmF3Label2
+  Type = Label
+  Height = 13
+  Left = 30
+  Top = 67
+  Width = 116
+  Caption = Name for the new macro
+
+Name = MmF3Label3
+  Type = Label
+  Height = 13
+  Left = 30
+  Top = 99
+  Width = 104
+  Caption = Current Variable Prefix
+
+Name = MmCurrentPrefix
+  Type = Label
+  Color = -2147483640
+  Height = 13
+  Left = 157
+  Top = 100
+  Width = 61
+  Caption = .
+
+Name = MmF3Label4
+  Type = Label
+  Height = 13
+  Left = 30
+  Top = 127
+  Width = 92
+  Caption = New Variable Prefix
+
+Name = MmNewPrefix
+  Type = Edit
+  Height = 21
+  Left = 157
+  Top = 123
+  Width = 101
+  Taborder = 12
+
+Name = MmPrefixCheck
+  Type = Button
+  Height = 21
+  Left = 284
+  Top = 123
+  Width = 95
+  Taborder = 13
+  Caption = Check new prefix
+
+<ENDDATA>
+###############################################################################
+

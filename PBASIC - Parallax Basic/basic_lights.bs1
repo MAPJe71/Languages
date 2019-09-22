@@ -1,0 +1,109 @@
+' {$STAMP BS1}
+'TigersQuad.bs1  Flying on my quad 10/10/2012
+
+'>>>PORT ASSIGNMENTS:<<<
+'Port1 - Connect Rx to control modes (knob or slider)
+'Port2 - N/C
+'Port3 - Bottom Light
+'Port4 - Front Right Light
+'Port5 - Rear Right Light
+'Port6 - Rear Left Light
+'Port7 - Front Left Light
+
+SYMBOL  pulse = W1
+SYMBOL  loops = B1
+
+Init:
+DIRS = 248  'Set ports 3-7 to Outputs
+            'Ports 0-2 default to Inputs
+PINS = 0    'Clear the output ports
+PAUSE 1000
+
+Main:
+PULSIN 1,1,pulse
+IF pulse = 0 THEN main
+
+IF pulse > 187 THEN Rotate
+IF pulse > 175 THEN FlashSlow
+IF pulse > 163 THEN FlashFast
+IF pulse > 151 THEN FlashForward
+IF pulse > 139 THEN AllOn
+IF pulse > 127 THEN AllDim
+IF pulse > 115 THEN BottomLight
+IF pulse < 115 THEN clr
+GOTO main
+
+Clr:
+PINS = 0
+GOTO main
+
+BottomLight:
+PINS = 8
+GOTO main
+
+AllDim:
+PINS = 248
+PAUSE 3
+PINS = 0
+PAUSE 5
+GOTO main
+
+AllOn:
+PINS = 248
+GOTO main
+
+FlashForward:
+PINS = 104
+PAUSE 50
+PINS = 8
+PAUSE 50
+PINS = 152
+PAUSE 200
+PINS = 8
+PAUSE 300
+GOTO main
+
+FlashFast:
+PINS = 248
+PAUSE 100
+PINS = 8
+PAUSE 300
+GOTO main
+
+FlashSlow:
+PINS = 248
+PAUSE 400
+PINS = 8
+PAUSE 1000
+GOTO main
+
+Rotate:
+FOR loops = 1 TO 3
+PINS = 24
+PAUSE 100
+PINS = 40
+PAUSE 100
+PINS = 72
+PAUSE 100
+PINS = 136
+PAUSE 100
+NEXT
+'PINS = 0
+PAUSE 400
+
+FOR loops = 1 TO 3
+PINS = 136
+PAUSE 100
+PINS = 72
+PAUSE 100
+PINS = 40
+PAUSE 100
+PINS = 24
+PAUSE 100
+NEXT
+'PINS = 0
+PAUSE 400
+GOTO main
+
+
+END

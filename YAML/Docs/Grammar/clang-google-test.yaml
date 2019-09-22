@@ -1,0 +1,97 @@
+---
+Language:        Cpp
+# BasedOnStyle:  Google
+AccessModifierOffset: -1
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+#### NOTE: the following values after the colon are wrong without the change
+AlignConsecutiveDeclarations: false # comment after value
+AlignEscapedNewlinesLeft: true # comment after value
+AlignOperands:   yes # comment after value
+AlignTrailingComments: no # comment after value
+AllowAllParametersOfDeclarationOnNextLine: &default   # comment
+AllowShortBlocksOnASingleLine: *default   # comment
+#### END
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None # All     ####################
+AllowShortIfStatementsOnASingleLine: false # true ###################
+AllowShortLoopsOnASingleLine: false # true       ####################
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: true
+BinPackParameters: true
+BraceWrapping:                  # comment
+  AfterClass:      false        # comment
+  AfterControlStatement: true   # comment
+  AfterEnum:       false
+  AfterFunction:   false
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: true
+ColumnLimit:     0 # 80                          ####################
+CommentPragmas:  '^ IWYU pragma:'
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
+DerivePointerAlignment: true
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]  # comment
+IncludeCategories:               # comment
+  - Regex:           '^<.*\.h>'  # comment
+    Priority:        1                 # comment
+  - Regex:           '^<.*'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        3
+IncludeIsMainRegex: '([-_](test|unittest))?$'    # comment
+IndentCaseLabels: true
+IndentWidth:     2
+IndentWrappedFunctionNames: false
+JavaScriptQuotes: Leave
+JavaScriptWrapImports: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: false
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 200
+PointerAlignment: Left
+ReflowComments:  true
+SortIncludes:    true
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles:  false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard:        Auto
+TabWidth:        8
+UseTab:          Never
+...
+

@@ -1,0 +1,93 @@
+0 HEAD\r\n
+0 @I03@ INDI\r\n
+    1 NAME $+{BRMGVN}/$+{BRMSFX}$+{BRMSRN}/\r\n
+        2 GIVN $+{BRMGVN}\r\n
+        2 SPFX $+{BRMSFX}\r\n
+        2 SURN $+{BRMSRN}\r\n
+    1 SEX M\r\n
+    1 BIRT\r\n
+        2 DATE $+{BRMGEBDD}/$+{BRMGEBMM}/$+{BRMGEBYY}\r\n
+        2 PLAC $+{BRMGEBPLACE}\r\n
+    1 FAMC @F02@\r\n
+    1 FAMS @F01@\r\n
+0 @I04@ INDI\r\n
+    1 NAME $+{BRDGVN}/$+{BRDSFX}$+{BRDSRN}/\r\n
+        2 GIVN $+{BRDGVN}\r\n
+        2 SPFX $+{BRDSFX}\r\n
+        2 SURN $+{BRDSRN}\r\n
+    1 SEX F\r\n
+    1 BIRT\r\n
+        2 DATE $+{BRDGEBDD}/$+{BRDGEBMM}/$+{BRDGEBYY}\r\n
+        2 PLAC $+{BRDGEBPLACE}\r\n
+    1 FAMC @F03@\r\n
+    1 FAMS @F01@\r\n
+0 @I05@ INDI\r\n
+    1 NAME $+{VABGGVN}/$+{VABGSFX}$+{VABGSRN}/\r\n
+        2 GIVN $+{VABGGVN}\r\n
+        2 SPFX $+{VABGSFX}\r\n
+        2 SURN $+{VABGSRN}\r\n
+    1 SEX M\r\n
+    1 FAMS @F02@\r\n
+0 @I06@ INDI\r\n
+    1 NAME $+{MOBGGVN}/$+{MOBGSFX}$+{MOBGSRN}/\r\n
+        2 GIVN $+{MOBGGVN}\r\n
+        2 SPFX $+{MOBGSFX}\r\n
+        2 SURN $+{MOBGSRN}\r\n
+    1 SEX F\r\n
+    1 FAMS @F02@\r\n
+0 @I07@ INDI\r\n
+    1 NAME $+{VABDGVN}/$+{VABDSFX}$+{VABDSRN}/\r\n
+        2 GIVN $+{VABDGVN}\r\n
+        2 SPFX $+{VABDSFX}\r\n
+        2 SURN $+{VABDSRN}\r\n
+    1 SEX M\r\n
+    1 FAMS @F03@\r\n
+0 @I08@ INDI\r\n
+    1 NAME $+{MOBDGVN}/$+{MOBDSFX}$+{MOBDSRN}/\r\n
+        2 GIVN $+{MOBDGVN}\r\n
+        2 SPFX $+{MOBDSFX}\r\n
+        2 SURN $+{MOBDSRN}\r\n
+    1 SEX F\r\n
+    1 FAMS @F03@\r\n
+0 @F01@ FAM\r\n
+    1 HUSB @I03@\r\n
+    1 WIFE @I04@\r\n
+    1 MARR\r\n
+        2 TYPE $+{EV} van $+{BRMNM} en $+{BRDNM}\r\n
+        2 DATE $+{EVDD}/$+{EVMM}/$+{EVYY}\r\n
+        2 PLAC $+{EVPLACE}\r\n
+        2 NOTE @N10@\r\n:
+        2 SOUR @S00@\r\n
+            3 PAGE $+{CTYY} - akte $+{CTNUMMER}\r\n
+            3 DATA\r\n
+                4 DATE $+{CTDD}/$+{CTMM}/$+{CTYY}\r\n
+0 @F02@ FAM\r\n
+    1 HUSB @I05@\r\n
+        2 NOTE @N11@\r\n
+    1 WIFE @I06@\r\n
+        2 NOTE @N12@\r\n
+    1 CHIL @I03@\r\n
+    1 SOUR @S00@\r\n
+        2 PAGE $+{CTYY} - akte $+{CTNUMMER}\r\n
+        2 DATA\r\n
+            3 DATE $+{CTDD}/$+{CTMM}/$+{CTYY}\r\n
+0 @F03@ FAM\r\n
+    1 HUSB @I07@\r\n
+    1 WIFE @I08@\r\n
+    1 CHIL @I04@\r\n
+    1 SOUR @S00@\r\n
+        2 PAGE $+{CTYY} - akte $+{CTNUMMER}\r\n
+        2 DATA\r\n
+            3 DATE $+{CTDD}/$+{CTMM}/$+{CTYY}\r\n
+0 @S00@ SOUR\r\n
+    1 TITL $+{BRONNM}\r\n
+    1 AUTH $+{CTPLC}\r\n
+    1 PUBL BHIC-50-3954\r\n
+    1 ABBR $+{BRONTYPE} - $+{BRONCATLETTER} - $+{CTPLC}\r\n
+    1 REPO @R0000@\r\n
+        2 CALN $+{COLLGEBNM}\r\n
+0 @R0000@ REPO\r\n
+    1 NAME $+{REPONM}, $+{REPOPLCNM}\r\n
+0 @N10@ NOTE $+{CTOPM}\r\n:
+0 TRLR\r\n
+

@@ -1,0 +1,1101 @@
+// (c) Copyright 2009-2015 BMC Software, Inc.
+// All Rights Reserved.
+
+//
+// Contains pattern for retrieving databases and tables from Microsoft SQLServer
+//
+
+tpl $$TPLVERSION$$ module Microsoft.SQLServer_Extended;
+
+metadata
+    tkn_name := "Microsoft SQL Server - Database Detail Pattern";
+    origin := "TKU";
+    tree_path := 'Structured Data Management Software', 'Relational Database Management Systems', 'Microsoft SQL Server', 'Extended discovery';
+end metadata;
+
+// Import of Versions table
+from Microsoft.SQLServer_VersionTables import MSSQL_Ver_ToolsDirPath 1.0;
+from Common_Functions import functions 1.26; 
+
+configuration MSSQLExtended 5.0
+    """Configuration settings to control extended Microsoft SQLServer discovery"""
+    "Database names to ignore"
+    ignore_databases := [] ("");
+    
+    "Database names with substring to ignore"
+    ignore_databases_substring := [ 'ISALOG' ]; 
+
+    "Use secondary method by default to obtain list of databases"
+    default_to_secondary := false;
+
+    "Obtain database size"
+    get_database_size := false;
+
+    "Obtain database size by querying individual databases"
+    get_db_individ := false;
+
+    "Retrieve tables in each database"
+    retrieve_tables := false;
+
+    "Use file-based method by default to obtain list of databases"
+    file_db_discovery := false;
+
+end configuration;
+
+definitions MSSQLDetails 6.0
+    """Microsoft SQL Server Database Queries"""
+
+    type := sql_discovery;
+    group := "Microsoft SQL Server";
+
+    define showDatabasesSelect
+        """Return a list of defined databases through a SELECT statement"""
+
+        query := "SELECT name AS database_name FROM sys.databases";
+    end define;
+    
+    define showSpHelpDbAsSelect
+        """Emulates the sp_helpdb stored procedure as a SELECT statement returning a list of defined databases and db_size information"""
+
+        query := "SELECT name AS database_name, CAST(SizeInKBs AS BIGINT) AS database_size, dbs.database_id as dbid, state_desc AS status FROM sys.databases dbs JOIN ( SELECT database_id, CAST((SUM(size)* 8) as BIGINT) as SizeInKBs FROM sys.master_files GROUP BY database_id ) mfs ON dbs.database_id = mfs.database_id";
+
+    end define;
+
+    define showDatabasesSelect2000
+        """Return a list of defined databases through a SELECT statement on Microsoft SQL Server 2000"""
+
+        query := "SELECT name AS database_name FROM master..sysdatabases";
+    end define;
+
+    define showDatabaseSizes
+        """
+        Return a list of databases and their sizes in KB through a stored procedure
+        For this to work, the database user must have "membership in the public role in the master database"
+        See http://technet.microsoft.com/en-us/library/ms178568.aspx
+        """
+
+        query := "sp_helpdb";
+    end define;
+
+    define showIndividDatabaseSizes
+        """
+        Return a list of databases and their sizes in KB through a stored procedure
+        For this to work, the database user must have "membership in the public role in the database"
+        See http://technet.microsoft.com/en-us/library/ms178568.aspx
+        """
+
+        query := "sp_helpdb %db_name%";
+        parameters := db_name;
+    end define;
+
+    define showDatabasesSP
+        """Return a list of defined databases through a Stored Procedure"""
+
+        query := "sp_databases";
+    end define;
+
+    define showTables
+        """Return a list of defined tables within the given database"""
+
+        query := "SELECT TABLE_NAME, TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG = %db_name%";
+        parameters := db_name;
+    end define;
+end definitions;
+
+definitions localFunctions 1.6
+    '''
+    Local user functions for Microsoft SQL Server Extended Discovery
+
+    Change History:
+    2015-04-15 - Add getDBListFromCommand for TKU-2015-04-01
+    2015-04-20 - Updated getDBListFromCommand for TKU-2015-05-01
+    2015-07-14 - Updated getDBListFromCommand for TKU-2015-07-01
+    2015-09-01 - Updated execute_showDatabasesSelect_query and execute_showDatabasesSP_query for TKU-2015-09-01
+    2015-10-15 - Updated getDBListFromCommand for TKU-2015-10-01
+    2015-10-29 - Updated execute_showDatabasesSelect_query and execute_showDatabasesSP_query for TKU-2015-11-01
+    '''
+    
+    type := function;
+    
+    define execute_showDatabasesSelect_query(host,product_version,port,bind_address, db_host) -> all_dbs, db_sizes_in_dblist
+        '''
+        Use a SELECT statement through the Microsoft SQLServer provider to get database info
+
+        Due to architectural changes between SQL Server 2000 and 2005, a separate 
+        SQL Query, showDatabasesSelect2000, is executed for SQL Server 2000.
+           
+        For SQL Server 2005 onwards, either of the showSpHelpDbAsSelect or showDatabasesSelect 
+        SQL queries can be executed depending on whether we know we are going to 
+        need to need database size information later.  The SQL query within showDatabasesSelect 
+        is basically a subset of that within showSpHelpDbAsSelect.  Whereas showSpHelpDbAsSelect 
+        gathers database size information, showDatabasesSelect does not. 
+
+        We need either a db_host (and corresponding bind_address) or port information 
+        to run a query.  If we only have one we'll still attempt a query.  If we 
+        have neither we won't
+
+        Change History
+        2015-09-01 - DIP call should reference the host the database is running
+                     on, not the local host (QM001885706)
+        2015-09-29 - DIP call can use either db_host or port, but must have at 
+                     least one (QM001889817)
+        '''
+
+        all_dbs := none;
+        db_sizes_in_dblist := false;
+        short_version := regex.extract(product_version, regex '^(\d+)', raw '\1');
+
+        // Sanity check, either db_host and bind_address must both exist, or neither must exist
+        if db_host and not bind_address then
+            db_host := "";
+        end if;
+
+        if db_host and port then
+            log.info( "Attempting to retrieve database list from host %db_host.name% on IP: %bind_address%, port %port%, by employing a SELECT statement" );
+            if short_version = '2000' then
+                all_dbs := MSSQLDetails.showDatabasesSelect2000(endpoint := db_host,
+                                                                port     := port,
+                                                                address  := bind_address,
+                                                                database := "");                
+            else
+                if MSSQLExtended.get_database_size then
+                    all_dbs := MSSQLDetails.showSpHelpDbAsSelect(endpoint := db_host,
+                                                                 port     := port,
+                                                                 address  := bind_address,
+                                                                 database := "");                    
+                end if;
+                if all_dbs then
+                    db_sizes_in_dblist := true;
+                else
+                    all_dbs := MSSQLDetails.showDatabasesSelect(endpoint := db_host,
+                                                                port     := port,
+                                                                address  := bind_address,
+                                                                database := "");
+                end if;
+            end if;                                                                
+        elif db_host then
+            log.info( "Attempting to retrieve database list from host %db_host.name% on IP: %bind_address% by employing a SELECT statement" );
+            if short_version = '2000' then
+                all_dbs := MSSQLDetails.showDatabasesSelect2000(endpoint := db_host,
+                                                                address  := bind_address,
+                                                                database := "");
+            else                                     
+                if MSSQLExtended.get_database_size then
+                    all_dbs := MSSQLDetails.showSpHelpDbAsSelect(endpoint := db_host,
+                                                                 address  := bind_address,
+                                                                 database := "");                    
+                end if;
+                if all_dbs then
+                    db_sizes_in_dblist := true;
+                else
+                    all_dbs := MSSQLDetails.showDatabasesSelect(endpoint := db_host,
+                                                                address  := bind_address,
+                                                                database := "");
+                end if;
+            end if;
+        elif port then
+            log.info( "Attempting to retrieve database list from host %host.name%, port %port%, by employing a SELECT statement" );
+            if short_version = '2000' then
+                all_dbs := MSSQLDetails.showDatabasesSelect2000(endpoint := host,
+                                                                port  := port,
+                                                                database := "");
+            else                                     
+                if MSSQLExtended.get_database_size then
+                    all_dbs := MSSQLDetails.showSpHelpDbAsSelect(endpoint := host,
+                                                                 port  := port,
+                                                                 database := "");                    
+                end if;
+                if all_dbs then
+                    db_sizes_in_dblist := true;
+                else
+                    all_dbs := MSSQLDetails.showDatabasesSelect(endpoint := host,
+                                                                port  := port,
+                                                                database := "");
+                end if;
+            end if;
+        end if;    
+
+
+        return all_dbs, db_sizes_in_dblist;
+    end define;
+    
+    define execute_showDatabasesSP_query(host,port,bind_address, db_host) -> all_dbs, db_sizes_in_dblist
+        '''
+        Use a Stored Procedure through the Microsoft SQLServer provider to get database info
+
+        We need either a db_host (and corresponding bind_address) or port information 
+        to run a query.  If we only have one we'll still attempt a query.  If we 
+        have neither we won't
+
+        Change History
+        2015-09-01 - DIP call should reference the host the database is running on, 
+                     not the local host (QM001885706)
+        2015-09-29 - DIP call can use either db_host or port, but must have at 
+                     least one (QM001889817)
+        '''
+
+        // Sanity check, either db_host and bind_address must both exist, or neither must exist
+        if db_host and not bind_address then
+            db_host := "";
+        end if;
+        all_dbs := "";
+        db_sizes_in_dblist := false;
+
+        if db_host and port then
+            log.info( "Attempting to retrieve database list from host %db_host.name% on IP: %bind_address%, port %port%, by employing a Stored Procedure" ); 
+            all_dbs := MSSQLDetails.showDatabasesSP(endpoint := db_host,
+                                                    port     := port,
+                                                    address  := bind_address,
+                                                    database := ""); 
+        elif db_host then
+            log.info( "Attempting to retrieve database list from host %db_host.name% on IP: %bind_address% by employing a Stored Procedure" ); 
+            all_dbs := MSSQLDetails.showDatabasesSP(endpoint := db_host,
+                                                    address  := bind_address,
+                                                    database := ""); 
+        elif port then
+            log.info( "Attempting to retrieve database list from host %host.name% port %port%, by employing a Stored Procedure" ); 
+            all_dbs := MSSQLDetails.showDatabasesSP(endpoint := host,
+                                                    port     := port,
+                                                    database := ""); 
+        end if;
+
+        if all_dbs then
+            db_sizes_in_dblist := true;
+        end if;
+        return all_dbs, db_sizes_in_dblist;
+    end define;
+
+    define getDBListFromCommand(host, product_version, base_dir, servername, mssql) -> db_detail_nodes
+        '''This function runs the osql.exe command to obtain a list of databases
+        
+           Change History:
+           2015-04-20 - added new configuration option to exclude schema names based on substring
+           2015-07-14 - Better parsing of 'SELECT Name FROM sysdatabases' to allow for database names containing spaces (QM001882884)
+           2015-09-11 - Added an alternative connection option for clustered configuration (QM001886596)
+           2015-10-15- Added an alternative approach of tools_path extraction (QM001887767)(QM001887528)
+        '''
+
+        db_detail_nodes := [];
+        dbtype := "SQL Server Database";
+
+        // Find tools path    
+        short_version := regex.extract(product_version, regex '^(\d+)', raw '\1');
+        if not MSSQL_Ver_ToolsDirPath[short_version] then
+            log.debug("Cannot find tools path for "+short_version);
+            return  [];
+        end if;
+
+        tools_path := base_dir + MSSQL_Ver_ToolsDirPath[short_version] + '\\Tools\\Binn\\osql.exe';
+        tools_file := discovery.fileInfo(host, tools_path);
+        
+        if not tools_file then
+            registry_raw := "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Microsoft SQL Server\\" + MSSQL_Ver_ToolsDirPath[short_version] + "\\Tools\\ClientSetup\\Path";
+            reg_tools_path := discovery.registryKey(host, registry_raw);
+            if reg_tools_path and reg_tools_path.value then
+                reg_tools_path := reg_tools_path.value;
+            end if;
+            if reg_tools_path then
+                tools_path := "%reg_tools_path%osql.exe";
+            end if;
+        end if;
+        // Construct and run osql.exe command 
+        if mssql.bind_address and servername then
+            db_name_std := "%mssql.bind_address%\\%servername%";
+        elif mssql.bind_address then
+            db_name_std := "%mssql.bind_address%";
+        elif servername and not servername has subword 'mssqlserver' then
+            db_name_std := '%host.name%\\%servername%';
+        else
+            db_name_std := '%host.name%';
+        end if;
+        db_list_command := '"%tools_path%" -S %db_name_std% -E -Q "USE master; SELECT Name FROM sysdatabases" ';
+        log.debug('tool path -> %tools_path%\n >>>> %db_list_command%');
+        // Name                                                                          
+        // -------------------------------------------------- 
+        // master                                                                        
+        // tempdb                                                                        
+        // model                                                                         
+        // (3 rows affected)
+        ran_db_list_command := discovery.runCommand(host, db_list_command);
+
+        if not ran_db_list_command or not ran_db_list_command.result then
+            log.debug("Could not run osql.exe command");
+            return  [];
+        end if;
+
+        // Check osql.exe returned sensible output
+        if ran_db_list_command.result has subword "Could not continue scan" or ran_db_list_command.result has subword "The SELECT permission was denied" then
+            log.debug("The osql.exe command returned an error");
+            return  [];
+        end if;
+        
+        if not ran_db_list_command.result matches regex"^Name" then
+            log.debug('The output of the osql.exe command should start with "Name".  It does not.  Something has gone badly wrong');
+            return  [];
+        end if;
+        
+        // Remove header and footer lines from output
+        db_list_result := ran_db_list_command.result;
+        db_list_result := text.replace(db_list_result, 'Name', '');
+        
+        // regex '[^\-](\-+)[^\-]' appears twice as more than one such line needs to be removed
+        for regex_to_apply in [regex '(\(\d+\s+rows\s+affected\))', regex '[^\-](\-+)[^\-]', regex '[^\-](\-+)[^\-]'] do
+            text_to_remove := regex.extract(db_list_result, regex_to_apply, raw '\1');
+            db_list_result := text.replace(db_list_result, text_to_remove, '');
+        end for;
+
+        // Everything left is either a database name or a newline character:
+        // master                                                                        
+	    // tempdb                                                                        
+	    // model 
+        // Extract the list of database names some of which may contain space characters
+        db_list_result := text.replace(db_list_result, '\r\n', '***###***');
+        db_list_result := text.replace(db_list_result, '\r', '***###***');
+        db_list_result := text.replace(db_list_result, '\n', '***###***');
+        db_list := text.split(db_list_result, '***###***');
+
+        // Create database details nodes for every database we have found
+        for database in db_list do
+            db := database; // This allows us to modify the loop variable later on
+            if db matches regex '^\s*$' then
+                continue;
+            end if;
+            db := text.strip(db);
+            if not db in mssql.db_list then
+                log.debug('FOUND DB: %db%');
+                
+                // Is this a database we should ignore?
+                ignore := false;
+                for ignore_database in MSSQLExtended.ignore_databases do
+                    if text.lower(db) = text.lower(ignore_database) then
+                        ignore := true;
+                        break;
+                    end if;
+                end for;
+                if not ignore then
+                    for schema_substring in MSSQLExtended.ignore_databases_substring do
+                        if db has substring '%schema_substring%' then
+                            ignore := true;
+                            break;
+                        end if;
+                    end for;
+                end if;
+                if ignore then
+                    log.info( "Ignoring %db% in %mssql.name%" );
+                    continue;
+                end if;                    
+                    
+                mssql.dbs := '%mssql.dbs% '+ db;
+                mssql.db_list := mssql.db_list + [db];
+    
+                // Create Database Detail node                               
+                db_lower := text.lower(db);
+                det_key := "%mssql.key%/%dbtype%/%db_lower%";
+                det_name := "%dbtype% %db%";
+                db_detail := model.DatabaseDetail(key := det_key, 
+                                                  name := det_name,
+                                                  instance := db,
+                                                  short_name := db,
+                                                  logical_database_type := dbtype,
+                                                  type := dbtype                                                                   
+                                                 );
+                model.setRemovalGroup(db_detail, "MSSQL_db_detail_nodes");
+                list.append(db_detail_nodes,db_detail);                                    
+                log.info("%host.name%: DatabaseDetail Node created for %db%");
+
+            end if;
+        end for;
+
+        return db_detail_nodes;
+    end define;
+end definitions;
+
+#IFADDM 11.0+
+pattern DatabasesAndTables 4.22
+#ELSE
+pattern DatabasesAndTables 4.21
+#ENDIFADDM
+ """
+    Obtain information about defined databases in Microsoft SQLServer
+ 
+    Supported Platforms:
+    Windows
+ 
+    Change History:
+    2009-12-15 - Added SELECT statement as a first method, to retrieve DB list. 
+                 Stored Procedure employed as secondary method.
+    2010-02-08 - showDatabasesSelect query updated to return results in the same 
+                 format as showDatabasesSP query (issue #12881)
+    2010-08-23 - Database queries will now either use port discovered by the core 
+                 pattern or will use the default port provided by the user as part 
+                 of DB credentials (#13314).
+    2011-01-05 - Added support to query database via the IP address it is listening 
+                 on even if this is different to the IP address the host was scanned 
+                 on. Requirement is that this information is obtained by the core 
+                 MS SQL pattern and that if IP address is obtained the port is also 
+                 obtained by the core pattern.        
+    2011-05-13 - Added function to obtain database size and store it (in KB) as 
+                 part of DB detail node
+                 Added option to use secondary method (stored procedure) by default 
+                 to obtain list of databases
+    2011-07-04 - Database Detail nodes representing SQL Server databases had incorrect 
+                 type assigned to them (SQL Database Schema instead of SQL Server 
+                 Database) - #14824        
+    2011-07-29 - Added attributes to DatabaseDetail node to allow CMDB sync to BMC_DataBase
+    2011-10-07 - Database name in DatabaseDetail key made lower case.
+               - Code to create DatabaseDetail nodes from directory listing or command 
+                 moved here from Microsoft.SQLServer pattern module.
+               - An attempt is now made to extract data directory from Registry 
+                 before trigger process path (QM001720658).
+               - ignore_databases list is now additionally applied to the list of 
+                 databases obtained from directory listing or command.
+    2011-10-26 - List of databases can now be obtained via a WMI Query.
+               - File based method of getting list of databases became the last 
+                 of the four methods.
+               - Added explicit database query to get list of databases for MS SQL 
+                 Server 2000 (QM001723934)
+    2011-12-29 - Pattern handles correctly database filenames that contain a space (QM001731729)
+    2012-02-20 - Prevents a null database detail node being appended to db_details 
+                 list (ISS03893644).
+    2012-02-28 - WMI queries now partially handles named instances and searches 
+                 for both PerfFormattedData and PerfRawData.
+    2012-03-07 - Now correctly handles database filenames containing a '$' (ISS03896866)
+    2012-06-26 - Configuration option added to enable file-based database discovery (RFE QM001755885)
+               - File-based database discovery now creates Detail nodes instead of 
+                 DatabaseDetail nodes (RFE QM001755885)
+               - db_details variable has been renamed current_dbdetail_nodes.
+    2012-08-15 - Fixed active command for database listing when default (MSSQLSERVER) 
+                 instance is discovered (zilla #16357);
+                 Fixed active command issue(zilla #14395);
+    2012-08-22 - Modified the log.info messages issued for each table's detail node 
+                 creation into one info and one debug log (ISS03965492)
+    2012-10-16 - SQL query to obtain database list updated to support both case 
+                 insensitive and case sensitive setups (QM001768511)
+    2013-02-06 - Fix for defect QM001780980 - Added node management code to the 
+                 detail nodes.
+    2013-10-09 - Remove creation of "SQL Database Table" DatabaseDetail nodes to 
+                 a separate pattern
+    2013-10-17 - Better handling of database sizes (Bug QM001806429)
+    2014-02-03 - Underscore removed from servername in WMI query call (QM001817079)
+    2014-02-21 - Better handling of output for osql command (QM001818651 & TKU-2146)
+    2014-03-06 - Illegal dollar character removed from servername in WMI query call (TKU-2155)
+    2014-05-27 - Better handling of special characters (_, $) within servername 
+                 in WMI query call (Esc 054580)
+    2014-07-22 - Amalgamated variables used to handle database sizes as failing 
+                 to work for showDatabaseSizes query (QM001855629)
+               - Added short_name attribute to Detail and DatabaseDetail nodes
+               - Moved primary and secondary Stored Procedure calls into functions (QM001855629)
+               - Now executes alternative Stored Procedure call if first (primary 
+                 or secondary) fails (QM001855629)
+               - use_select_for_dblist flag renamed to db_sizes_in_dblist (QM001855629)
+    2015-03-02 - Allow for cases where showDatabasesSelect does not return all databases, 
+                 and show showDatabasesSP does not return all database sizes (QM001871852)
+    2015-04-02 - Updated to avoid ECA Error (QM001877183)
+    2015-04-15 - Better checking of output of osql.exe (QM001878047)
+    2015-04-16 - Fixed potential ECA issue where extra_dbs was being appended to 
+                 all_dbs with a value of none (TKU-3889)
+    2015-04-20 - added new configuration option to exclude schema names based on substring
+    2015-06-11 - Fix syntax error (Escalation 075627)
+    2015-06-19 - showIndividDatabaseSizes uses a variety of field names to mean 
+                 the same thing (QM0018881677)
+                 We now handle a greater variety of field names (QM001881675)
+    2015-07-20 - Corrected pattern to use dbs table rather than all_dbs (Esc 075569)
+    2015-09-01 - DIP call should reference the host the database is running on, not 
+                 the local host (QM001885706)
+#IFADDM 11.0+
+    2015-10-16 - Add cluster awareness support - obtain host being scanned
+                 based on the DA rather than the MSSQL Server SI.
+#ENDIFADDM
+    2015-10-29 - Improve handling of database queries where bind_address is missing (QM001889817)
+    """
+
+    metadata
+        publishers := 'Microsoft';
+        products := 'SQL Server';
+        publisher_synonyms := 'MS';
+        categories := 'Relational Database Management Systems';
+        urls := 'http://www.microsoft.com/sql/';
+    end metadata;
+
+    overview
+        tags TKU, RDBMS, Database, SQL, DIP, Microsoft, TKU_2015_11_01;
+    end overview;
+
+    constants
+      dbtype := "SQL Server Database";
+      dbfiletype := "SQL Server Database File";
+    end constants;
+
+    triggers
+        // Trigger on Microsoft SQLServer SI
+        on mssql := SoftwareInstance created, confirmed where 
+                    type = 'Microsoft SQL Server';
+    end triggers;
+
+    body 
+        db_host := "";
+        db_sizes_in_dblist := false;
+        dbs := table();
+        all_dbs := none;
+        all_db_sizes := [];
+#IFADDM 11.0+
+        da = discovery.access();
+        host := model.host(da);
+#ELSE
+        host := model.host(mssql);
+#ENDIFADDM
+        port := '';
+        edition := "";
+        product_version := "";
+        bind_address := '';
+                                        
+        if mssql.instance then
+            servername := mssql.instance;
+        else
+            servername := "";
+        end if;
+    
+        // Get the port
+        if mssql.port then
+            port := mssql.port;
+        end if;
+    
+        // Get IP DB is listening on, if not listening on all IPs
+        if mssql.bind_address then
+            bind_address := mssql.bind_address;
+            db_host := functions.identify_host_perform_search(host, bind_address);
+        end if;
+
+        if mssql.edition then
+            edition := mssql.edition;
+        end if;
+
+        if mssql.product_version then
+            product_version := mssql.product_version;
+        end if;   
+
+        // Get host info
+
+        if not MSSQLExtended.default_to_secondary then
+            // Primary SQL Query to obtain the list of databases
+            all_dbs, db_sizes_in_dblist := localFunctions.execute_showDatabasesSelect_query(host, product_version, port, bind_address, db_host);
+            if not all_dbs or (MSSQLExtended.get_database_size and not db_sizes_in_dblist) then
+                // Secondary SQL Query.
+                // We run this if the primary query failed to get anything, or if the primary query got databases but no sizes
+                log.info( "Did not obtain list of databases in %mssql.name% through the SELECT statement" );
+                extra_dbs, db_sizes_in_dblist := localFunctions.execute_showDatabasesSP_query(host,port,bind_address, db_host);
+                if extra_dbs then
+                    if all_dbs then
+                        all_dbs := all_dbs + extra_dbs;
+                    else
+                        all_dbs := extra_dbs;
+                    end if;
+                end if;
+            end if;
+        else
+            // Secondary SQL Query to obtain the list of databases
+            all_dbs, db_sizes_in_dblist := localFunctions.execute_showDatabasesSP_query(host,port,bind_address, db_host);
+            if not all_dbs then
+                // Primary SQL Query to obtain the list of databases
+                all_dbs, db_sizes_in_dblist := localFunctions.execute_showDatabasesSelect_query(host, product_version, port, bind_address, db_host);
+            end if;
+        end if;
+    
+        if not all_dbs then
+            log.info( "Failed to get list of databases from database query in %mssql.name%" );
+            all_dbs := [];
+        end if;
+    
+        // Set up table dbs, key is the list of dbs we are interested in, value is db_size (if we know it)
+        for row in all_dbs do
+
+            // Is this a database we should ignore?
+            ignore := false;
+            for ignore_database in MSSQLExtended.ignore_databases do
+                if text.lower(row.database_name) = text.lower(ignore_database) then
+                    ignore := true;
+                    break;
+                end if;
+            end for;
+            if not ignore then
+                for schema_substring in MSSQLExtended.ignore_databases_substring do
+                    if row.database_name has substring '%schema_substring%' then
+                        ignore := true;
+                        break;
+                    end if;
+                end for;
+            end if;
+            if ignore then
+                log.info( "Ignoring %row.database_name% in %mssql.name%" );
+                continue;
+            end if; 
+
+            // If we have a database_size either create a new record or update an 
+            // existing one
+            // If we don't have a database_size only create a new record, don't 
+            // update an existing one that may contain size information
+            if row.database_size then
+                dbs[row.database_name] := row.database_size;
+                log.debug('%row.database_name% assigned database size %row.database_size%');
+            elif not row.database_name in dbs then
+                dbs[row.database_name] := "";
+                log.debug('%row.database_name% assigned no size');
+            end if;
+        end for;
+
+        // If we haven't got the size of the database already, there are two other methods to try
+        if MSSQLExtended.get_database_size and not db_sizes_in_dblist then
+            if dbs and MSSQLExtended.get_db_individ then
+                // With the get_db_individ configuration setting enabled,
+                // an attempt is made to loop through the list of database names,
+                // requesting such database size information one database at a time.
+                for database_name in dbs do
+                    if database_name and not dbs[database_name] then
+                        individ_db_sizes := "";
+                        if db_host and bind_address and port then
+                            log.info( "Attempting to retrieve database sizes from host %db_host.name% on IP: %bind_address%, port %port%, by employing a stored procedure" );
+                            individ_db_sizes := MSSQLDetails.showIndividDatabaseSizes(endpoint := db_host,
+                                                                                      port     := port,
+                                                                                      address  := bind_address,
+                                                                                      database := "",
+                                                                                      db_name  := database_name);
+                        elif db_host and bind_address then
+                            log.info( "Attempting to retrieve database sizes from host %db_host.name% on IP: %bind_address%, by employing a stored procedure" );
+                            individ_db_sizes := MSSQLDetails.showIndividDatabaseSizes(endpoint := db_host,
+                                                                                      address  := bind_address,
+                                                                                      database := "",
+                                                                                      db_name  := database_name);
+                        elif port then
+                            log.info( "Attempting to retrieve database sizes from host %host.name%, port %port%, by employing a stored procedure" );
+                            individ_db_sizes := MSSQLDetails.showIndividDatabaseSizes(endpoint := host,
+                                                                                      port     := port,
+                                                                                      database := "",
+                                                                                      db_name  := database_name);
+                        end if;
+                        if not individ_db_sizes then
+                            continue;
+                        end if;
+
+                        for row2 in individ_db_sizes do
+                            if row2.database_size then
+                                db_size := row2.database_size;
+                            elif row2.db_size then
+                                db_size := row2.db_size;
+                            else
+                                db_size := "";
+                            end if;
+                            
+                            if db_size matches regex "MB$" then
+                                log.debug('%db_size%');
+                                db_size := regex.extract(db_size, regex '^\s*(\d+)(?:\.\d+)?\s*MB$', raw '\1');
+                                log.debug('%db_size%');
+                                if db_size then
+                                    db_size := text.toNumber(db_size);
+                                    log.debug('%db_size%');
+                                    if db_size then
+                                        db_size := db_size * 1024;
+                                        log.debug('%db_size%');
+                                    end if;
+                                end if;
+                            elif db_size matches regex "GB$" then
+                                log.debug('%db_size%');
+                                db_size := regex.extract(db_size, regex '^\s*(\d+)(?:\.\d+)?\s*GB$', raw '\1');
+                                log.debug('%db_size%');
+                                if db_size then
+                                    db_size := text.toNumber(db_size);
+                                    log.debug('%db_size%');
+                                    if db_size then
+                                        db_size := db_size * 1048576;
+                                        log.debug('%db_size%');
+                                    end if;
+                                end if;
+                            end if;
+
+                            if db_size then
+                                db_size := text.toNumber(db_size);
+                                if row2.database_name then
+                                    dbs[row2.database_name] := db_size;
+                                elif row2.db_name then
+                                    dbs[row2.db_name] := db_size;
+                                elif row2.name then
+                                    dbs[row2.name] := db_size;
+                                end if;
+                            end if;  
+                        end for;
+                    end if;
+                end for;
+            else
+                // With the get_db_individ configuration setting disabled,
+                // an attempt is made to request database size information for all databases at once.
+                all_db_sizes := "";
+                if port and bind_address and db_host then
+                    log.info( "Attempting to retrieve database sizes from host %db_host.name% on IP: %bind_address%, port %port%, by employing a stored procedure" );
+                    all_db_sizes := MSSQLDetails.showDatabaseSizes(endpoint := db_host,
+                                                                   port     := port,
+                                                                   address  := bind_address,
+                                                                   database := "");
+                elif bind_address and db_host then
+                    log.info( "Attempting to retrieve database sizes from host %db_host.name% on IP: %bind_address%, by employing a stored procedure" );
+                    all_db_sizes := MSSQLDetails.showDatabaseSizes(endpoint := db_host,
+                                                                   address  := bind_address,
+                                                                   database := "");
+                elif port then
+                    log.info( "Attempting to retrieve database sizes from host %host.name%, port %port%, by employing a stored procedure" );
+                    all_db_sizes := MSSQLDetails.showDatabaseSizes(endpoint := host,
+                                                                   port     := port,
+                                                                   database := "");
+                end if;
+                
+                if all_db_sizes then
+                    for row in all_db_sizes do
+                        if row.database_size then
+                            if row.database_name then
+                                dbs[row.database_name] := row.database_size;
+                            elif row.db_name then
+                                dbs[row.db_name] := row.database_size;
+                            end if;
+                        end if;
+                    end for;
+                end if;
+            end if;
+        end if;
+
+        // For each database create a node to represent it   
+        mssql.dbs := '';
+        mssql.db_list := [];
+    
+        current_dbdetail_nodes := [];
+        current_detail_nodes := [];
+    
+        // For each database create a node to represent it
+        for db in dbs do
+            db_name_lower := text.lower(db);
+            db_detail := model.DatabaseDetail(key  := "%mssql.key%/%dbtype%/%db_name_lower%", 
+                                              name := "%dbtype% %db%",
+                                              type := dbtype,                                       
+                                              instance := db,
+                                              short_name := db,
+                                              logical_database_type := dbtype,                                         
+                                              db_size_kb := dbs[db]);
+            model.setRemovalGroup(db_detail, "MSSQL_db_detail_nodes");
+            model.rel.Detail(Detail := db_detail, ElementWithDetail := mssql);
+        end for;
+        if dbs then
+            log.info("Databases obtained from SQL Server query, no need to try other methods.  Stopping pattern");
+            stop;
+        end if;
+
+        // WMI Query
+        wmi_queries := [];
+        if servername and not servername has subword "MSSQLServer" then
+            for data_format in ['PerfRawData','PerfFormattedData'] do
+                if servername matches regex "[\$_]" then
+                    for special_characters in ['_$','_','$'] do
+                        if special_characters = '_$' then
+                            modified_servername := text.replace(text.replace(servername,'_',''),'$','');
+                        else
+                            modified_servername := text.replace(servername,special_characters,'');
+                        end if;
+                        if modified_servername <> servername then
+                            list.append(wmi_queries,"select Name from Win32_%data_format%_MSSQL%modified_servername%_MSSQL%modified_servername%Databases");
+                        end if;
+                    end for;
+                end if;
+                list.append(wmi_queries,"select Name from Win32_%data_format%_MSSQL%servername%_MSSQL%servername%Databases");
+            end for;
+        elif not servername and edition = "Express Edition" then
+            list.append(wmi_queries,"select Name from Win32_PerfRawData_MSSQLSQLEXPRESS_MSSQLSQLEXPRESSDatabases");            
+            list.append(wmi_queries,"select Name from Win32_PerfFormattedData_MSSQLSQLEXPRESS_MSSQLSQLEXPRESSDatabases");            
+        else
+            list.append(wmi_queries,"select Name from Win32_PerfFormattedData_MSSQLSERVER_SQLServerDatabases");
+            list.append(wmi_queries,"select Name from Win32_PerfRawData_MSSQLSERVER_SQLServerDatabases");
+        end if;
+        for wmi_query in wmi_queries do
+            wmi_results := discovery.wmiQuery(host, wmi_query, raw 'root\cimv2');
+            if wmi_results then
+                db_list := [];
+                for wmi_result in wmi_results do
+                    list.append(db_list,wmi_result.Name);
+                end for;
+                for db_name in db_list do
+                    log.debug('FOUND DB: %db_name%');
+                    
+                    // Is this a database we should ignore?
+                    ignore := false;
+                    for ignore_database in MSSQLExtended.ignore_databases do
+                        if text.lower(db_name) = text.lower(ignore_database) then
+                            ignore := true;
+                            break;
+                        end if;
+                    end for;
+                    if not ignore then
+                        for schema_substring in MSSQLExtended.ignore_databases_substring do
+                            if db_name has substring '%schema_substring%' then
+                                ignore := true;
+                                break;
+                            end if;
+                        end for;
+                    end if;
+                    if ignore then
+                        log.info( "Ignoring %db_name% in %mssql.name%" );
+                        continue;
+                    end if;   
+
+                    mssql.dbs := '%mssql.dbs% '+ db_name;
+                    mssql.db_list := mssql.db_list + [db_name];
+              
+                    // Create Database Detail node
+                    db_name_lower := text.lower(db_name);
+                    det_key := "%mssql.key%/%dbtype%/%db_name_lower%";
+                    det_name := "%dbtype% %db_name%";
+                    db_detail := model.DatabaseDetail(key := det_key, 
+                                                      name := det_name,
+                                                      instance := db_name,
+                                                      short_name := db_name,
+                                                      logical_database_type := dbtype,
+                                                      type := dbtype
+                                                     );
+                    model.setRemovalGroup(db_detail, "MSSQL_db_detail_nodes");
+                    list.append(current_dbdetail_nodes,db_detail);                    
+                    log.info("%host.name%: DatabaseDetail Node created for %db_name%");
+
+                end for;
+                break;
+            end if;
+        end for;
+    
+        // Obtain database list from command
+        if not all_dbs and not current_dbdetail_nodes and mssql.base_directory and product_version and servername then
+            current_dbdetail_nodes := localFunctions.getDBListFromCommand(host, product_version, mssql.base_directory, servername, mssql);
+        end if;
+    
+        // Now update the containment relationships from the SI to all of the 
+        // DatabaseDetail nodes together. This removes any relationships to ones that
+        // are no longer present (the old nodes and their child Detail nodes 
+        // will be removed automatically)
+        containment_rels := model.uniquerel.Detail(ElementWithDetail := mssql,
+                                                   Detail            := current_dbdetail_nodes,
+                                                   type              := dbtype
+                                                  );
+
+        if dbs then
+            // Now ensure that the provenance on any db query-derived relationships is correct.
+            row_index := 0;
+            for row in dbs do
+                inference.primary(
+                    inferred := containment_rels[row_index],
+                    evidence := row
+                );
+                row_index := row_index + 1;        
+            end for;
+        end if;    
+    
+        // Obtain database list from directory listing    
+        if not all_dbs and not current_dbdetail_nodes and MSSQLExtended.file_db_discovery then
+            // First thing - parse output of the listing of Data directory that contains *.mdf mssql db files        
+            if mssql.data_directory then
+                db_candidates := discovery.listDirectory(host, mssql.data_directory);
+                if db_candidates then
+                    db_list := [];
+                    for db_candidate in db_candidates do
+                        if db_candidate.name matches regex "(?i)\.mdf$" then                    
+                            list.append(db_list,db_candidate.name);
+                        end if;
+                    end for; 
+                    for db in db_list do
+                        db_name := regex.extract(db, regex '(?i)\b([\w\d\_\- \$]+)\.mdf\b', raw '\1');
+                        if db_name then
+                            db_name := text.strip(db_name); // strip off any spaces from front and back
+                            log.debug('FOUND DB: %db_name%');
+                            
+                            // Is this a database we should ignore?
+                            ignore := false;
+                            for ignore_database in MSSQLExtended.ignore_databases do
+                                if text.lower(db_name) = text.lower(ignore_database) then
+                                    ignore := true;
+                                    break;
+                                end if;
+                            end for;
+                            if not ignore then
+                                for schema_substring in MSSQLExtended.ignore_databases_substring  do
+                                    if db_name has substring '%schema_substring%' then
+                                        ignore := true;
+                                        break;
+                                    end if;
+                                end for;
+                            end if;
+                            if ignore then
+                                log.info( "Ignoring %db_name% in %mssql.name%" );
+                                continue;
+                            end if;  
+                    
+                            mssql.dbs := '%mssql.dbs% '+ db_name;
+                            mssql.db_list := mssql.db_list + [db_name];
+                   
+                            // Create Detail node
+                            db_name_lower := text.lower(db_name);
+                            det_key := "%mssql.key%/%dbfiletype%/%db_name_lower%";
+                            det_name := "%dbfiletype% %db_name%";
+                            detail := model.Detail(key := det_key, 
+                                                   name := det_name,
+                                                   instance := db_name_lower,
+                                                   short_name := db_name_lower,
+                                                   type := dbfiletype);
+                            model.setRemovalGroup(detail, "MSSQL_db_detail_nodes");
+                            list.append(current_detail_nodes,detail);                    
+                            log.info("%host.name%: Detail Node created for %db_name%");
+
+                        end if;
+                    end for;   
+                end if;
+            end if;
+        end if;
+                                              
+        // Now update the containment relationships from the SI to all of the 
+        // Detail nodes together. This removes any relationships to ones that
+        // are no longer present (the old nodes will be removed automatically)    
+        model.uniquerel.Detail(ElementWithDetail := mssql,
+                               Detail            := current_detail_nodes,
+                               type              := dbfiletype
+                              );
+
+    end body;
+end pattern;
+
+
+#IFADDM 11.0+
+pattern DatabaseTables 1.4
+#ELSE
+pattern DatabaseTables 1.3
+#ENDIFADDM
+    """
+    This pattern triggers on SQL Server Database DatabaseDetail nodes and adds child
+    DatabaseDetail nodes corresponding to the database tables
+ 
+    Supported Platforms:
+    Windows
+    
+    Change History:
+    2014-07-22 - Added short_name attribute to DatabaseDetail node
+    2015-09-01 - DIP call should reference the host the database is running on, not 
+                 the local host (QM001885706)
+#IFADDM 11.0+
+    2015-10-16 - Add cluster awareness support - obtain host being scanned
+                 based on the DA rather than the MSSQL Server SI.
+#ENDIFADDM
+    2015-10-29 - Improve handling of database queries where bind_address is missing (QM001889817)
+    """
+
+    metadata
+        publishers := 'Microsoft';
+        products := 'SQL Server';
+        publisher_synonyms := 'MS';
+        categories := 'Relational Database Management Systems';
+        urls := 'http://www.microsoft.com/sql/';
+    end metadata;
+
+    overview
+#IFADDM 11.0+
+        tags TKU, RDBMS, Database, SQL, DIP, Microsoft, TKU_2015_11_01;
+#ELSE
+        tags TKU, RDBMS, Database, SQL, DIP, Microsoft, TKU_2015_09_01;
+#ENDIFADDM
+    end overview;
+
+    constants
+        dbtype := "SQL Server Database";
+        tabletype := "SQL Database Table";
+    end constants;
+
+    triggers
+        on db_detail := DatabaseDetail created, confirmed where type = "SQL Server Database" 
+                                                            and instance matches regex ".";
+        // (Note: SQL Server Database nodes should always have an instance, the 
+        //        extra check is just a sanity check)
+    end triggers;
+
+    body
+        // Set variables
+        db_host := "";
+        tables := none;
+        table_details := [];
+
+        // If the configuraton has not been set to retrieve table information, stop immediately 
+        if not MSSQLExtended.retrieve_tables then
+            log.info( "Not configured to retrieve tables. Stopping");
+            stop;
+        end if;
+
+        // Get linked SI and host 
+        mssqls := search(in db_detail traverse Detail:Detail:ElementWithDetail:SoftwareInstance);
+        if size(mssqls) <> 1 or mssqls[0].type <> "Microsoft SQL Server" then
+            log.info("Having difficulties finding the Microsoft SQL Server SI related to "+db_detail.name+".  Stopping pattern");
+            stop;
+        end if;
+        mssql := mssqls[0];
+
+#IFADDM 11.0+
+        da := discovery.access();
+        host := model.host(da);
+#ELSE
+        host := model.host(mssql);
+#ENDIFADDM
+
+        // Find host that corresponds to bind address
+        if mssql.bind_address then
+            db_host := functions.identify_host_perform_search(host, mssql.bind_address);
+        end if;
+
+    
+        // Use Microsoft SQLServer provider to get table info
+        if mssql.bind_address and db_host and mssql.port then
+            tables := MSSQLDetails.showTables(endpoint := db_host,
+                                              port     := mssql.port,
+                                              address  := mssql.bind_address,
+                                              database := db_detail.instance,
+                                              db_name  := db_detail.instance);            
+        elif mssql.bind_address and db_host then
+            tables := MSSQLDetails.showTables(endpoint := db_host,
+                                              address  := mssql.bind_address,
+                                              database := db_detail.instance,
+                                              db_name  := db_detail.instance);            
+        elif mssql.port then
+            tables := MSSQLDetails.showTables(endpoint := host,
+                                              port     := mssql.port,
+                                              database := db_detail.instance,
+                                              db_name  := db_detail.instance);            
+        end if;
+
+        // Fail if no tables are returned
+        // (this could be because the call to the database failed completely, or 
+        // because the call succeeded but returned no results.  We give slightly 
+        // different error messages depending on the failure reason)
+        if tables = none then
+            log.info( "Failed to get list of tables for %db_detail.instance% in %mssql.name%" );
+            stop;
+        elif not tables then
+            log.info( "No tables for %db_detail.instance% in %mssql.name%" );
+            stop;
+        end if;
+
+                
+        // Create table details
+        log.info("Create database detail nodes for "+number.toText(size(tables))+" tables in %mssql.name% database %db_detail.instance%");
+        for t in tables do
+            // Create DatabaseDetail node for table
+            tab := model.DatabaseDetail(key  := "%mssql.key%/%dbtype%/%db_detail.instance%/%t.table_name%", 
+                                        name := "%tabletype% %t.table_name%",
+                                        short_name := t.table_name,
+                                        type := tabletype 
+                                       );
+            log.debug("Created a DatabaseDetail node of type %tabletype% attached to DatabaseDetail node with name %db_detail.name%");
+            model.setRemovalGroup(tab, "MSSQL_table_details");
+            list.append(table_details, tab);            
+
+        end for;
+
+        // Link to triggering DatabaseDetail node
+        table_containment_rels := model.uniquerel.Containment(Container := db_detail, Contained := table_details, type := tabletype); 
+    end body;
+end pattern;
+

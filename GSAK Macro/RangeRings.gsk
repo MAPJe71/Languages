@@ -1,0 +1,1291 @@
+################################################################################ 
+#                                 Range Rings                                  #
+#              Create rings around up to 4 points at various distances         #
+#              and display them in Google Earth or Garmin Mapsource            #
+#                               by DocDiTTo 2010                               # 
+#                                                                              # 
+#                                                                              #
+# MacDescription = Range Ring Drawing Tool for Google Earth and Mapsource      #
+# MacFileName = RangeRings.gsk       																	  			 #
+# MacAuthor = DocDiTTo                                                         #
+# MacVersion=1.1																															 #
+# MacUrl=http://gsak.net/board/index.php?showtopic=15164											 #
+################################################################################
+
+# You can do triangulation if you know 3 points and 3 bearings, or trilateration
+# if you know 3 points and 3 distances.  A Mapsource compatible GPX file containing
+# tracklogs is created.  Open it in Mapsource in order to view the lines on a map
+# and easily obtain the coordinates of where those lines meet.  A Google Earth KML
+# file may also be created and displayed in Google Earth if you don't have Mapsource.
+
+# For triangulation, set the start and end bearings to the same number.  Set the 
+# distance to whatever is required, jut make sure it's "long enough".  One single
+# line will be drawn if the start and end bearings are the same.  It will start
+# at the coordinates provided and extend the specified distance.
+
+# For trilateration, you need a starting point and a distance.  Set the starting
+# bearing to 0 and the ending bearing to 360.  In this case, a circle of track points
+# will be created with a line from the center point.  With 3 points and 3 circles
+# you can see whether they overlap and if so, at what point(s).
+
+# History
+
+# Version 1.0
+#  - Private release for testing only, limited functionality
+
+# Version 1.1
+#  - Added a 4th coordinate box so 4 range rings can be plotted
+#  - Added the capability to create a KML and launch Google Earth to view rings
+#  - Added much higher precision values to bearing list (.1 and .25 degrees)
+#  - Added extremely low precision values to bearing list (60 and 90 degrees)
+#  - Added checks to make sure coord strings aren't blank before plotting
+#  - First public release
+
+## EDIT THE PATHS BELOW FOR YOUR SYSTEM!
+## EDIT THE PATHS BELOW FOR YOUR SYSTEM!
+
+
+#Full path and filename of Mapsource.exe
+	$MapSourceExePath="C:\Garmin\Mapsource.exe"
+	
+# Full path and filename of the GPX file we'll need to write
+  $GPXFilePath=$_AppData+"\Macros\Rangerings.gpx"	
+  
+# Full path and filename of the KML file we'll need to write
+  $KMLFilePath=$_AppData+"\Macros\Rangerings.kml"	
+  
+# Full path and filename of GPSBabel
+	$BabelPath=$_ExePath+"\gpsbabel.exe"
+	
+#Full path and filename of GoogleEarth.exe
+	$GoogleEarthPath="C:\Program Files\Google\Google Earth\client\GoogleEarth.exe"
+	
+ 
+GOSUB Name=ResetForm
+GOSUB Name=LoadSettings
+WHILE True # Infinite loop to redisplay form as required
+  $FormExit = form($form,"")
+  BEGINCASE
+    Case $FormExit = "DelayExit"
+      #MsgOk msg="Form exit via Delay"
+      break
+    Case $FormExit = "SystemExit"
+      #MsgOk msg="Form exit via red X button on form"
+      break
+    Case $FormExit = "btnCancel"
+      #MsgOk msg="Form exit from the cancel button"
+      break
+    Case $FormExit = "btnGrabA"
+    	$edtCoordA = gcalc($d_Latitude + " " +$d_Longitude,"FormatMinutes")
+    	$edtDescA = $d_name  
+    Case $FormExit = "btnGrabB"
+    	$edtCoordB = gcalc($d_Latitude + " " +$d_Longitude,"FormatMinutes") 
+    	$edtDescB = $d_name  
+    Case $FormExit = "btnGrabC"
+    	$edtCoordC = gcalc($d_Latitude + " " +$d_Longitude,"FormatMinutes")
+    	$edtDescC = $d_name  
+    Case $FormExit = "btnGrabD"
+    	$edtCoordD = gcalc($d_Latitude + " " +$d_Longitude,"FormatMinutes")
+    	$edtDescD = $d_name  
+    Case $FormExit = "btnGo"
+    	$DegreeIncrement = val($cmbPrecision)
+    	$csv = "LAT,LON"+$_Newline
+    		IF $cbAddToDB
+    	 	 	IF not(YesNo("Warning! You're about to add a LOT of waypoints to your current database.  Are you SURE?","Confirmation"))
+    	  		$cbAddToDB = False
+    	  	ENDIF
+    	  ENDIF
+    	GOSUB Name=AddGPXHeader
+      If $cbIncludeA and not(isempty(alltrim($edtCoordA))) and not(isempty(alltrim($edtDistA)))  
+      	 Gosub Name=PlotA
+      Endif
+      If $cbIncludeB and not(isempty(alltrim($edtCoordB))) and not(isempty(alltrim($edtDistB)))
+      	 Gosub Name=PlotB
+      EndIf
+      If $cbIncludeC and not(isempty(alltrim($edtCoordC))) and not(isempty(alltrim($edtDistC)))
+      	 Gosub Name=PlotC
+      EndIf
+      If $cbIncludeD and not(isempty(alltrim($edtCoordD))) and not(isempty(alltrim($edtDistD)))
+      	 Gosub Name=PlotD
+      EndIf
+      GOSUB Name=AddGPXFooter
+      $memo1 = $csv
+      $memo3 = $gpx
+      IF $cbDisplayResults
+      	$FormExit = form($formDisplay,"")
+      ENDIF
+      GOSUB name=ShowGPXInMapsource #writes GPX and optionally launches mapsource
+      IF $cbRunGoogleEarth
+      	GOSUB Name=RunGoogleEarth
+      ENDIF
+    Case $FormExit = "btnReset"
+    	GOSUB Name=ResetForm
+    Case $FormExit = "btnLast"
+    	goto position=bottom
+    	GOSUB Name=RefreshGrid
+    Case $FormExit = "btnNext"
+    	goto position=next onerror=ignore
+    	GOSUB Name=RefreshGrid
+    Case $FormExit = "btnFirst"
+    	goto position=top onerror=ignore
+    	GOSUB Name=RefreshGrid
+    Case $FormExit = "btnPrevious"
+    	goto position=previous	
+    	GOSUB Name=RefreshGrid
+    Case $FormExit = "btnPlusFive"
+    	goto position=5 onerror=ignore
+    	GOSUB Name=RefreshGrid 
+    Case $FormExit = "btnMinusFive"
+    	goto position=-5 onerror=ignore   	
+    	GOSUB Name=RefreshGrid
+  ENDCASE
+ENDWHILE
+GOSUB Name=SaveSettings
+
+BEGINSUB Name=RefreshGrid
+	speedmode status=off
+	speedmode status=on
+ENDSUB
+
+BEGINSUB Name=PlotA
+	$Centerpoint  = $edtCoordA
+  $Distance = val($edtDistA)
+  $StartBearing = val($edtStartA)
+  $StopBearing =  val($edtStopA)
+  $Label = "A"
+  $Units = $cmbUnitsA
+  $csv = $csv + "Circle A" + $_Newline
+  $GPXTrackColor = "Blue"
+  $WptName="CircleA"
+  $WptComment = "CircleA"
+  $WptDesc = "CircleA"
+  $WptSymbol = "Navaid, Blue"
+  Gosub Name=GenPoints
+ENDSUB
+
+BEGINSUB Name=PlotB
+	$Centerpoint  = $edtCoordB
+  $Distance = val($edtDistB)
+  $StartBearing = val($edtStartB)
+  $StopBearing =  val($edtStopB)
+  $Label = "B"
+  $Units = $cmbUnitsB
+  $csv = $csv + "Circle B" + $_Newline
+  $GPXTrackColor = "Green"
+  $WptName="CircleB"
+  $WptComment = "CircleB"
+  $WptDesc = "CircleB"
+  $WptSymbol = "Navaid, Green"
+  Gosub Name=GenPoints
+ENDSUB
+
+BEGINSUB Name=PlotC
+	$Centerpoint  = $edtCoordC
+  $Distance = val($edtDistC)
+  $StartBearing = val($edtStartC)
+  $StopBearing =  val($edtStopC)
+  $Label = "C"
+  $Units = $cmbUnitsC
+  $csv = $csv + "Circle C" + $_Newline
+  $GPXTrackColor = "Red"
+  $WptName="CircleC"
+  $WptComment = "CircleC"
+  $WptDesc = "CircleC"
+  $WptSymbol = "Navaid, Red"
+  Gosub Name=GenPoints
+ENDSUB
+
+BEGINSUB Name=PlotD
+	$Centerpoint  = $edtCoordD
+  $Distance = val($edtDistD)
+  $StartBearing = val($edtStartD)
+  $StopBearing =  val($edtStopD)
+  $Label = "D"
+  $Units = $cmbUnitsD
+  $csv = $csv + "Circle D" + $_Newline
+  $GPXTrackColor = "Yellow"
+  $WptName="CircleD"
+  $WptComment = "CircleD"
+  $WptDesc = "CircleD"
+  $WptSymbol = "Navaid, Amber"
+  Gosub Name=GenPoints
+ENDSUB
+
+BEGINSUB Name=ResetForm
+	#A    
+	$edtCoordA  =""
+	$edtDistA = ""
+	$edtStartA = "0"
+	$edtStopA = "360"
+	$Label = "A"
+	$cmbUnitsA = "Feet"
+	$edtDescA = ""
+
+	#B
+	$edtCoordB   =""
+	$edtDistB = ""
+	$edtStartB = "0"
+	$edtStopB = "360"
+	$Label = "B"
+	$cmbUnitsB = "Feet"
+	$edtDescB = ""
+           
+	#C
+	$edtCoordC  = ""
+	$edtDistC = ""
+	$edtStartC = "0"
+	$edtStopC = "360"
+	$Label = "C"
+	$cmbUnitsC = "Feet"
+	$edtDescC = ""
+	
+	#D
+	$edtCoordD  = ""
+	$edtDistD = ""
+	$edtStartD = "0"
+	$edtStopD = "360"
+	$Label = "D"
+	$cmbUnitsD = "Feet"
+	$edtDescD = ""
+	
+	# Other settings
+	$memo1 = ""
+	$csv = ""
+	$gpx = ""
+	$kml = ""
+	$cbIncludeA = True
+	$cbIncludeB = True
+	$cbIncludeC = True
+	$cbIncludeD = True
+	$cmbPrecision = "0.5"
+	$cbAddToDB = False
+	$cbAddCenters = False
+	$cbRunMapsource = True
+	$rbHighAccuracy = True
+ENDSUB
+
+BEGINSUB Name=GenPoints
+	BEGINCASE
+		Case $Units = "Feet"
+			$Units = "F"
+		Case $Units = "Yards"
+			$Units = "Y"
+		Case $Units = "Miles"
+			$Units = "M"
+		Case $Units = "Meters"
+			$Units = "T"
+		Case $Units = "Kilometers"
+			$Units = "K"
+	ENDCASE
+	transaction action=begin
+	$Sdata = $Centerpoint
+	$Coordstr = Gcalc($SData,"FormatDegrees")
+	GOSUB Name=AddGPXwaypoint
+	# add gpx track header here
+	GOSUB Name=AddGPXTrackHeader
+	# Add the center point to our database
+	GOSUB Name=AddGPXTrackPoint
+	IF $cbAddCenters
+		$csv = $csv + $Coordstr +$_Newline
+		IF $cbAddToDB
+				Addnew
+				$d_latitude = extract($Coordstr,";",1)
+				$d_longitude = extract($Coordstr,";",2)
+				$d_Name = $Label+"_Center"
+				$d_CacheID = "ACENT"
+				$d_ShortDescription = $Label+"CENTER"
+		ENDIF
+	ENDIF	
+	
+	# Now calculate our bearing points
+	$Bearing = $StartBearing
+	IF $StopBearing > 360
+		$StopBearing = 360
+		msgok msg=Warning: Invalid Stop bearing for Point $Label (Stop Bearing > 360) *Changed to 360*
+	ENDIF
+	IF $Bearing <0
+		$Bearing = 0
+		msgok msg=Warning: Invalid Start bearing for Point $Label (Start Bearing < 0) *Changed to 0*
+	ENDIF
+	IF $Bearing > $StopBearing
+		$Bearing = $StopBearing
+		msgok msg=Warning: Start bearing greater than Stop Bearing for Point $Label *Changed to equal Stop Bearing*
+	ENDIF
+	WHILE $Bearing <= $StopBearing
+		 showstatus msg=Adding point $label bearing $Bearing
+		 $Sdata = replace(";"," ",$Centerpoint)+";"+NumToStr($Bearing)+";"+NumToStr($Distance)+";"+$Units
+		 BEGINCASE
+		 CASE $rbGreatCircle=True
+		  	$CoordStr = Gcalc($SData,"Project")
+		 CASE $rbHighAccuracy=True
+		 	 	$CoordStr = Gcalc($SData,"ProjectHigh")
+		 ENDCASE
+		 	#msgok msg=$sdata "==>" $coordstr
+		 $csv = $csv + $Coordstr +$_Newline
+		 GOSUB Name=AddGPXTrackPoint
+		 IF $cbAddToDB
+					Addnew
+ 					$d_latitude = extract($Coordstr,";",1)
+					$d_longitude = extract($Coordstr,";",2)
+ 					$d_code = $Label+numtostr($Bearing)
+ 					$d_CacheID = $Label+numtostr($Bearing)
+ 					$d_ShortDescription = numtostr($Bearing)
+ 					$d_Name = $Label+numtostr($Bearing)
+ 			ENDIF
+ 		$Bearing = $Bearing + $DegreeIncrement
+	ENDWHILE 
+	transaction action=end
+	showstatus display=off
+	GOSUB Name=AddGPXTrackFooter
+ENDSUB
+
+#beginsub name=ShowInMapsourceAsCSV
+	# The Coords in Memo1 are separated with semicolons and we need to change them to commas.
+#	$csv = Replace(";",",",$csv,True)
+#	SET $Data = PutFile($DataFilePath,$csv)
+#	IF Left($Data,7) = "*Error*"
+#	  Pause Msg="$Data"
+#	  Cancel
+#	ENDIF
+#	$parms = " -p "+$_Quote+$_Quote+" -w -i unicsv -f "+$_Quote+$DataFilePath+$_Quote
+#	$parms = $parms + " -x transform,trk=wpt,del=n -o gdb,ver=1 -F "+$_Quote+$GDBFilePath+$_Quote
+#	RUNPGM PGM=$BabelExePath Parms=$parms Wait=Yes
+#	$Parms = $_Quote+$GDBFilePath+$_Quote 
+#	RUNPGM PGM=$MapsourceExePath Parms=$Parms WAIT=No
+	#gpsbabel.exe -p "" -w -i unicsv -f "C:\DeLorme Docs\Navigation\triang.txt" -x transform,trk=wpt,del=n -o gdb,ver=1 -F "C:\DeLorme Docs\Navigation\triangle.gdb"
+#endsub
+
+
+# View circles in Google Earth
+# You must have created the GPX file first for this to work  
+BEGINSUB Name=RunGoogleEarth
+	#ConvertGPXtoKML 
+	$parms=" -i gpx -f "+$GPXFilePath +" -o kml -F "+$KMLFilePath 
+	RUNPGM pgm=$BabelPath parms=$parms Wait=Yes Hide=No
+	$parms = $_Quote + $KMLFilePath + $_Quote
+	#RUNPGM pgm="$GoogleEarthPath"
+	RUNPGM pgm="$GoogleEarthPath" parms=$parms Wait=No Hide=No
+ENDSUB
+
+
+# This routine saves a GPX file with our track data and attempts to open it
+# in Garmin's Mapsource program.
+BEGINSUB name=ShowGPXInMapsource
+	# GPX file in Memo2 needs to be written to disk and opened with Masource
+	SET $Data = PutFile($GPXFilePath,$gpx)
+	IF Left($Data,7) = "*Error*"
+	  Pause Msg="$Data"
+	  Cancel
+	ENDIF
+  IF $cbRunMapsource
+		$Parms = $_Quote+$GPXFilePath+$_Quote 
+		RUNPGM PGM=$MapsourceExePath Parms=$Parms WAIT=No
+	ENDIF 
+ENDSUB
+
+# SaveSettings saves the user settings and macro data
+BEGINSUB Name=SaveSettings
+	$SaveVars="edtCoordA,edtDistA,edtStartA,edtStopA,cmbUnitsA,edtDescA,cbIncludeA,"
+	$SaveVars = $SaveVars + "edtCoordB,edtDistB,edtStartB,edtStopB,cmbUnitsB,edtDescB,"
+	$SaveVars = $SaveVars + "cbIncludeB,edtCoordC,edtDistC,edtStartC,edtStopC,cmbUnitsC,"
+	$SaveVars = $SaveVars + "edtDescC,cbIncludeC,cbAddCenters,cmbPrecision,cbDisplayResults,"
+	$SaveVars = $SaveVars + "edtCoordD,edtDistD,edtStartD,edtStopD,cmbUnitsD,edtDescD,cbIncludeD,cbRunGoogleEarth,cbRunMapsource"
+	MacSettings Type=S Vars=$SaveVars
+ENDSUB
+
+# LoadSettings restores the last saved settings and data
+BEGINSUB Name=LoadSettings
+	MacSettings Type=R FileCheck=N
+ENDSUB
+
+# AddGPXHeader -- creates variable $gpx and writes to it a Topografix 1.1 compatible GPX header.
+# This should be called first when creating a GPX file.
+# Note that a Mapsource compatible GPX file requires all waypoints to be written first, before any
+# track points.  Therefore, track data is stored in $GPXTracks rather than written to the $gpx file
+# directly.  $GpxTracks is added to the $gpx variable right before the GPXfooter is written in.
+BEGINSUB Name=AddGPXHeader
+	$gpx = "<?xml version="+$_Quote+"1.0"+$_Quote+" encoding="+$_Quote+"UTF-8"
+	$gpx = $gpx + $_Quote+" standalone="+$_Quote+"no"+$_Quote+" ?>"+$_Newline
+	$gpx = $gpx + "<gpx xmlns="+$_Quote+"http://www.topografix.com/GPX/1/1"+$_Quote
+	$gpx = $gpx + " creator="+$_Quote+"GSAK Trilaterate Macro"+$_Quote+" version="+$_Quote+"1.1"+$_Quote
+	$gpx = $gpx + " xmlns:xsi="+$_Quote+"http://www.w3.org/2001/XMLSchema-instance"
+	$gpx = $gpx + $_Quote+" xsi:schemaLocation="+$_Quote
+	$gpx = $gpx + "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"+$_Quote+">"+$_Newline+$_Newline
+	$gpxTracks = ""
+ENDSUB
+
+# AddGPXFooter -- writes a Topografix compatible Footer to the $gpx variable
+# This should be called last, after all other data is written to the GPX file
+# Because the tracks must be written AFTER all the waypoints we save track data 
+# in $gpsTracks.  This data is added to $gps just before the footer is.
+BEGINSUB Name=AddGPXFooter
+	$gpx = $gpx + $gpxTracks
+	$gpx = $gpx + "</gpx>"
+ENDSUB
+
+# AddGPXTrackHeader -- writes a Topografix compatible Track Header to the $gpxTracks variable
+# This should be called when adding any new track to the GPX, before trackpoints are added.
+# You can change the color of the track by setting $GPXTrackColor to "White", "Red", "Blue"
+# etc before you call this routine.
+BEGINSUB Name=AddGPXTrackHeader
+	if not(VarExists("GPXTrackColor"))
+  	$GPXTrackColor = "White" 
+  Endif
+	$gpxTracks = $gpxTracks + "  <trk>" + $_newline
+	$gpxTracks = $gpxTracks + "	 <name>"+$label+"</name>"+$_Newline
+  $gpxTracks = $gpxTracks + "	 <extensions>"+$_Newline+"		<gpxx:TrackExtension xmlns:gpxx="+$_Quote
+	$gpxTracks = $gpxTracks + "http://www.garmin.com/xmlschemas/GpxExtensions/v3"+$_Quote+">"+$_Newline
+	$gpxTracks = $gpxTracks + "		  <gpxx:DisplayColor>"+$GPXTrackColor+"</gpxx:DisplayColor>"+$_Newline
+	$gpxTracks = $gpxTracks + "		</gpxx:TrackExtension>"+$_Newline
+  $gpxTracks = $gpxTracks + "	 </extensions>"+$_Newline+"	 <trkseg>"
+ENDSUB
+
+# AddGPXTrackPoint -- writes a Topografix compatible Track point record to the $gpx variable
+# This should be called after calling AddGPXTrackHeader.  This function can be called repeatedly
+# for each track point that needs to be added.  When done adding track points, call AddGPXTrackFooter
+BEGINSUB Name=AddGPXTrackPoint
+	$gpxTracks = $gpxTracks + $_Newline + "		<trkpt lat="+$_quote+extract($Coordstr,";",1)
+	$gpxTracks = $gpxTracks + $_quote+" lon="+$_quote+extract($Coordstr,";",2)+$_quote+"/>"
+ENDSUB
+
+# AddGPXTrackFooter -- writes a Topografix compatible Track footer to the $gpx variable
+# Call this after you're done writing track points with AddGPXTrackPoint
+BEGINSUB Name=AddGPXTrackFooter
+	$gpxTracks = $gpxTracks + $_Newline + "	 </trkseg>"+$_Newline+"  </trk>"+$_Newline+$_Newline
+ENDSUB
+
+# AddGPXWaypoint -- Writes a Topografix compatible waypoint into the $gpx variable.
+# Note that some variables need to be set up before calling this routine:  
+# $Coordstr should contain the lat & long coordinates in degrees decimal format
+# seperated by a semi-colon.
+# $WptName = the text name of the waypoint
+# $WptComment = text comment for the waypoint
+# $WptDesc = text description of the waypoint
+# $WptSymbol = Symbol of the waypoint (ie "Triangle, Green" or "Waypoint")
+
+BEGINSUB Name=AddGPXwaypoint
+	$time= sqlite("sql","select strftime('%Y-%m-%dT%H:%M:%SZ', 'now')")
+	$gpx = $gpx + $_Newline + "	<wpt lat="+$_quote+extract($Coordstr,";",1)+$_quote+" lon="+$_quote+extract($Coordstr,";",2)+$_quote+">"+ $_Newline
+	#  need time in correct format here!!!  
+	$gpx = $gpx + " 	<time>"+$time+"</time>"+$_Newline
+	$gpx = $gpx + "		<name>" + $WptName + "</name>" + $_newline 
+	$gpx = $gpx + "		<cmt>" + $WptComment + "</cmt>" + $_newline 
+	$gpx = $gpx + "		<desc>" + $WptDesc + "</desc>" + $_newline 
+	$gpx = $gpx + "		<sym>" + $WptSymbol + "</sym>" + $_newline 
+	$gpx = $gpx + "		<extensions>" + $_Newline
+  $gpx = $gpx + "		    <gpxx:WaypointExtension xmlns:gpxx="+$_Quote+"http://www.garmin.com/xmlschemas/GpxExtensions/v3"+$_Quote+">" + $_Newline
+  $gpx = $gpx + "		      <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>" + $_Newline
+  $gpx = $gpx + "		    </gpxx:WaypointExtension>" + $_Newline
+  $gpx = $gpx + "		</extensions>" + $_Newline
+  $gpx = $gpx + "	</wpt>" + $_Newline
+ENDSUB
+
+
+
+
+ <Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Thu 01-Apr-2010 13:45:26
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Range Ring / Triangulation Tool
+  Height = 457
+  Width = 746
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Point A
+  Height = 121
+  Left = 8
+  Top = 8
+  Width = 353
+  Taborder = 0
+
+Name = GroupBox2
+  Type = Groupbox
+  Caption = Point B
+  Height = 121
+  Left = 365
+  Top = 8
+  Width = 353
+  Taborder = 1
+
+Name = GroupBox3
+  Type = Groupbox
+  Caption = Point C
+  Height = 121
+  Left = 8
+  Top = 128
+  Width = 353
+  Taborder = 2
+
+Name = Groupbox4
+  Type = Groupbox
+  Caption = Cache Grid Navigator
+  Height = 57
+  Left = 8
+  Top = 249
+  Width = 353
+  Taborder = 5
+
+Name = GroupBox5
+  Type = Groupbox
+  Caption = Point D
+  Height = 121
+  Left = 365
+  Top = 128
+  Width = 353
+  Taborder = 6
+
+Name = Groupbox6
+  Type = Groupbox
+  Caption = Output Options
+  Height = 72
+  Left = 8
+  Top = 305
+  Width = 711
+  Taborder = 7
+
+Name = Groupbox7
+  Type = Groupbox
+  Caption = Point Projection Options
+  Height = 57
+  Left = 365
+  Top = 249
+  Width = 353
+  Taborder = 8
+
+Name = edtCoordA
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 80
+  Top = 16
+  Width = 185
+  Taborder = 0
+
+Name = Label1
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 8
+  Top = 19
+  Width = 56
+  Caption = Coordinates
+
+Name = edtDistA
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 80
+  Top = 41
+  Width = 81
+  Taborder = 1
+
+Name = Label2
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 8
+  Top = 45
+  Width = 42
+  Caption = Distance
+
+Name = cmbUnitsA
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 168
+  Top = 41
+  Values = Feet;Yards;Miles;Meters;Kilometers
+  Width = 81
+  Taborder = 2
+
+Name = edtStartA
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 80
+  Top = 67
+  Width = 81
+  Taborder = 3
+
+Name = Label3
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 8
+  Top = 71
+  Width = 61
+  Caption = Start Bearing
+
+Name = Label4
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 184
+  Top = 71
+  Width = 61
+  Caption = Stop Bearing
+
+Name = edtStopA
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 256
+  Top = 68
+  Width = 81
+  Taborder = 4
+
+Name = Label5
+  Type = Label
+  Container = GroupBox2
+  Height = 13
+  Left = 8
+  Top = 19
+  Width = 56
+  Caption = Coordinates
+
+Name = Label6
+  Type = Label
+  Container = GroupBox2
+  Height = 13
+  Left = 8
+  Top = 45
+  Width = 42
+  Caption = Distance
+
+Name = Label7
+  Type = Label
+  Container = GroupBox2
+  Height = 13
+  Left = 8
+  Top = 71
+  Width = 61
+  Caption = Start Bearing
+
+Name = Label8
+  Type = Label
+  Container = GroupBox2
+  Height = 13
+  Left = 184
+  Top = 71
+  Width = 61
+  Caption = Stop Bearing
+
+Name = edtCoordB
+  Type = Edit
+  Container = GroupBox2
+  Height = 21
+  Left = 80
+  Top = 16
+  Width = 185
+  Taborder = 0
+
+Name = edtDistB
+  Type = Edit
+  Container = GroupBox2
+  Height = 21
+  Left = 80
+  Top = 41
+  Width = 81
+  Taborder = 1
+
+Name = cmbUnitsB
+  Type = Combobox
+  Container = GroupBox2
+  Height = 21
+  Left = 168
+  Top = 41
+  Values = Feet;Yards;Miles;Meters;Kilometers
+  Width = 81
+  Taborder = 2
+
+Name = edtStartB
+  Type = Edit
+  Container = GroupBox2
+  Height = 21
+  Left = 80
+  Top = 67
+  Width = 81
+  Taborder = 3
+
+Name = edtStopB
+  Type = Edit
+  Container = GroupBox2
+  Height = 21
+  Left = 256
+  Top = 68
+  Width = 81
+  Taborder = 4
+
+Name = Label9
+  Type = Label
+  Container = GroupBox3
+  Height = 13
+  Left = 8
+  Top = 20
+  Width = 56
+  Caption = Coordinates
+
+Name = Label10
+  Type = Label
+  Container = GroupBox3
+  Height = 13
+  Left = 8
+  Top = 46
+  Width = 42
+  Caption = Distance
+
+Name = Label11
+  Type = Label
+  Container = GroupBox3
+  Height = 13
+  Left = 8
+  Top = 72
+  Width = 61
+  Caption = Start Bearing
+
+Name = Label12
+  Type = Label
+  Container = GroupBox3
+  Height = 13
+  Left = 184
+  Top = 72
+  Width = 61
+  Caption = Stop Bearing
+
+Name = edtCoordC
+  Type = Edit
+  Container = GroupBox3
+  Height = 21
+  Left = 80
+  Top = 17
+  Width = 185
+  Taborder = 0
+
+Name = edtDistC
+  Type = Edit
+  Container = GroupBox3
+  Height = 21
+  Left = 80
+  Top = 42
+  Width = 81
+  Taborder = 1
+
+Name = cmbUnitsC
+  Type = Combobox
+  Container = GroupBox3
+  Height = 21
+  Left = 168
+  Top = 42
+  Values = Feet;Yards;Miles;Meters;Kilometers
+  Width = 81
+  Taborder = 2
+
+Name = edtStartC
+  Type = Edit
+  Container = GroupBox3
+  Height = 21
+  Left = 80
+  Top = 68
+  Width = 81
+  Taborder = 3
+
+Name = edtStopC
+  Type = Edit
+  Container = GroupBox3
+  Height = 21
+  Left = 256
+  Top = 69
+  Width = 81
+  Taborder = 4
+
+Name = btnGo
+  Type = Button
+  Height = 25
+  Left = 280
+  Top = 384
+  Width = 75
+  Taborder = 3
+  Caption = Go
+
+Name = btnReset
+  Type = Button
+  Height = 25
+  Left = 368
+  Top = 384
+  Width = 75
+  Taborder = 4
+  Caption = Reset Form
+
+Name = cbIncludeA
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 280
+  Top = 43
+  Width = 65
+  Taborder = 5
+  Caption = Enabled
+
+Name = cbIncludeB
+  Type = Checkbox
+  Container = GroupBox2
+  Height = 17
+  Left = 280
+  Top = 43
+  Width = 65
+  Taborder = 5
+  Caption = Enabled
+
+Name = cbIncludeC
+  Type = Checkbox
+  Container = GroupBox3
+  Height = 17
+  Left = 280
+  Top = 44
+  Width = 65
+  Taborder = 5
+  Caption = Enabled
+
+Name = edtDescA
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 80
+  Top = 93
+  Width = 257
+  Taborder = 6
+
+Name = Label13
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 8
+  Top = 95
+  Width = 53
+  Caption = Description
+
+Name = Label14
+  Type = Label
+  Container = GroupBox2
+  Height = 13
+  Left = 8
+  Top = 96
+  Width = 53
+  Caption = Description
+
+Name = edtDescB
+  Type = Edit
+  Container = GroupBox2
+  Height = 21
+  Left = 80
+  Top = 93
+  Width = 257
+  Taborder = 6
+
+Name = Label15
+  Type = Label
+  Container = GroupBox3
+  Height = 13
+  Left = 8
+  Top = 98
+  Width = 53
+  Caption = Description
+
+Name = edtDescC
+  Type = Edit
+  Container = GroupBox3
+  Height = 21
+  Left = 80
+  Top = 94
+  Width = 257
+  Taborder = 6
+
+Name = btnGrabA
+  Type = Button
+  Container = Groupbox1
+  Height = 21
+  Left = 266
+  Top = 15
+  Width = 75
+  Taborder = 7
+  Caption = Grab Current
+
+Name = btnGrabC
+  Type = Button
+  Container = GroupBox3
+  Height = 21
+  Left = 266
+  Top = 15
+  Width = 75
+  Taborder = 7
+  Caption = Grab Current
+
+Name = btnGrabB
+  Type = Button
+  Container = GroupBox2
+  Height = 21
+  Left = 266
+  Top = 15
+  Width = 75
+  Taborder = 7
+  Caption = Grab Current
+
+Name = btnFirst
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 8
+  Top = 20
+  Width = 57
+  Taborder = 0
+  Caption = First
+
+Name = btnPrevious
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 109
+  Top = 20
+  Width = 59
+  Taborder = 1
+  Caption = Previous
+
+Name = btnNext
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 188
+  Top = 19
+  Width = 58
+  Taborder = 2
+  Caption = Next
+
+Name = btnLast
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 288
+  Top = 19
+  Width = 57
+  Taborder = 3
+  Caption = Last
+
+Name = btnMinusFive
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 70
+  Top = 20
+  Width = 33
+  Taborder = 4
+  Caption = -5
+
+Name = btnPlusFive
+  Type = Button
+  Container = Groupbox4
+  Height = 25
+  Left = 251
+  Top = 19
+  Width = 33
+  Taborder = 5
+  Caption = +5
+
+Name = Label18
+  Type = Label
+  Container = GroupBox5
+  Height = 13
+  Left = 8
+  Top = 20
+  Width = 56
+  Caption = Coordinates
+
+Name = Label19
+  Type = Label
+  Container = GroupBox5
+  Height = 13
+  Left = 8
+  Top = 46
+  Width = 42
+  Caption = Distance
+
+Name = Label20
+  Type = Label
+  Container = GroupBox5
+  Height = 13
+  Left = 8
+  Top = 72
+  Width = 61
+  Caption = Start Bearing
+
+Name = Label21
+  Type = Label
+  Container = GroupBox5
+  Height = 13
+  Left = 184
+  Top = 72
+  Width = 61
+  Caption = Stop Bearing
+
+Name = Label22
+  Type = Label
+  Container = GroupBox5
+  Height = 13
+  Left = 8
+  Top = 98
+  Width = 53
+  Caption = Description
+
+Name = edtCoordD
+  Type = Edit
+  Container = GroupBox5
+  Height = 21
+  Left = 80
+  Top = 17
+  Width = 185
+  Taborder = 0
+
+Name = edtDistD
+  Type = Edit
+  Container = GroupBox5
+  Height = 21
+  Left = 80
+  Top = 42
+  Width = 81
+  Taborder = 1
+
+Name = cmbUnitsD
+  Type = Combobox
+  Container = GroupBox5
+  Height = 21
+  Left = 168
+  Top = 42
+  Values = Feet;Yards;Miles;Meters;Kilometers
+  Width = 81
+  Taborder = 2
+
+Name = edtStartD
+  Type = Edit
+  Container = GroupBox5
+  Height = 21
+  Left = 80
+  Top = 68
+  Width = 81
+  Taborder = 3
+
+Name = edtStopD
+  Type = Edit
+  Container = GroupBox5
+  Height = 21
+  Left = 256
+  Top = 69
+  Width = 81
+  Taborder = 4
+
+Name = cbIncludeD
+  Type = Checkbox
+  Container = GroupBox5
+  Height = 17
+  Left = 280
+  Top = 44
+  Width = 65
+  Taborder = 5
+  Caption = Enabled
+
+Name = edtDescD
+  Type = Edit
+  Container = GroupBox5
+  Height = 21
+  Left = 80
+  Top = 94
+  Width = 257
+  Taborder = 6
+
+Name = btnGrabD
+  Type = Button
+  Container = GroupBox5
+  Height = 21
+  Left = 266
+  Top = 15
+  Width = 75
+  Taborder = 7
+  Caption = Grab Current
+
+Name = cbDisplayResults
+  Type = Checkbox
+  Container = Groupbox6
+  Height = 17
+  Left = 26
+  Top = 45
+  Width = 169
+  Taborder = 0
+  Caption = Display Results Form
+
+Name = cbAddCenters
+  Type = Checkbox
+  Container = Groupbox6
+  Height = 17
+  Left = 26
+  Top = 30
+  Width = 169
+  Taborder = 1
+  Caption = Add Center Points to Output
+
+Name = cbRunMapsource
+  Type = Checkbox
+  Container = Groupbox6
+  Height = 17
+  Left = 362
+  Top = 15
+  Width = 169
+  Taborder = 2
+  Caption = Display results in Mapsource
+
+Name = cbAddToDB
+  Type = Checkbox
+  Container = Groupbox6
+  Height = 17
+  Left = 26
+  Top = 16
+  Width = 287
+  Taborder = 3
+  Caption = Add projected points to current database
+
+Name = cmbPrecision
+  Type = Combobox
+  Container = Groupbox7
+  Height = 21
+  Left = 101
+  Top = 19
+  Values = 0.1;0.25;0.5;1;2;3;4;5;10;15;20;30;45;60;90
+  Width = 57
+  Taborder = 0
+
+Name = rbGreatCircle
+  Type = Radiobutton
+  Container = Groupbox7
+  Height = 17
+  Left = 255
+  Top = 32
+  Width = 81
+  Taborder = 1
+  Caption = Great Circle
+
+Name = rbHighAccuracy
+  Type = Radiobutton
+  Container = Groupbox7
+  Height = 17
+  Left = 255
+  Top = 18
+  Width = 90
+  Taborder = 2
+  Caption = High Accuracy
+
+Name = Label16
+  Type = Label
+  Container = Groupbox7
+  Height = 13
+  Left = 8
+  Top = 22
+  Width = 86
+  Caption = Bearing Increment
+
+Name = Label17
+  Type = Label
+  Container = Groupbox7
+  Height = 13
+  Left = 173
+  Top = 22
+  Width = 75
+  Caption = Calculate using:
+
+Name = Label23
+  Type = Label
+  Container = Groupbox7
+  Height = 13
+  Left = 24
+  Top = 35
+  Width = 46
+  Caption = (Degrees)
+
+Name = cbRunGoogleEarth
+  Type = Checkbox
+  Container = Groupbox6
+  Height = 17
+  Left = 362
+  Top = 32
+  Width = 175
+  Taborder = 4
+  Caption = Display results in Google Earth
+
+<enddata>
+
+
+<Data> VarName=$formDisplay
+#********************************************************************
+# Form generated by GSAK form designer on Thu 11-Feb-2010 14:54:47
+#********************************************************************
+
+Name = Form2
+  Type = Form
+  Height = 471
+  Width = 601
+
+Name = Memo3
+  Type = Memo
+  Height = 369
+  Left = 8
+  Scrollbars = Both
+  Top = 24
+  Width = 377
+  Wrap = No
+  Taborder = 8
+
+Name = btnClose
+  Type = Button
+  Height = 25
+  Left = 232
+  Top = 400
+  Width = 137
+  Taborder = 9
+  Caption = Close
+
+Name = Memo1
+  Type = Memo
+  Height = 369
+  Left = 392
+  Scrollbars = Vertical
+  Top = 24
+  Width = 185
+  Taborder = 10
+
+Name = Label1
+  Type = Label
+  Height = 13
+  Left = 8
+  Top = 8
+  Width = 189
+  Caption = GPX Output (Topografix 1.1 Compatible)
+
+Name = Label2
+  Type = Label
+  Height = 13
+  Left = 392
+  Top = 8
+  Width = 113
+  Caption = Delimited Output (LAT; LON)
+
+<enddata>
+
+
+
+
+
+
+
+
+

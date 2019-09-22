@@ -1,0 +1,74 @@
+
+Function TestFunction(ByVal IntInput As Integer) As Integer
+
+	Dim IntCounter1 As Integer = 42
+	Dim IntCounter As Integer
+	Dim PosTest As Position = P(1.2, 4.3, 4.5) 'the "," should be displayed normal, but without "," in Suffix 1 the number is not detected
+
+	For IntCounter = 1 To (IntCounter1 + 3) 'the "1" in IntCounter1 should be no number
+		If (IntCounter = 13) Then
+			Exit For '"For" should be not used as open folding
+		End If
+	Next IntCounter
+
+	'comment
+	Rem Comment
+	Call Remove '"Remove" should be not displayed as comment
+
+	LetZ PosCarrier = PosZ(PosPart)
+
+	SngInternal = (PosZ(PosPart) + PosZ(PosCarrier)) 'first "PosZ" is not detected
+
+	Select Case IntCounter
+		Case 1
+		Case 13
+		Case Else '"Else" should be not used as open folding
+	End Select
+	
+	If (IntCounter = 42) Then
+		Exit Function '"Function" should be not used as open folding
+	Else
+		IntCounter = 47
+	End If
+
+	IntReturn = ShowDebug(12, "show debug1 as test", "two, three")
+
+	TestFunction = IntCounter
+
+End Function
+
+
+Sub TestSub(ByRef IntOutput As Integer)
+
+	Dim SngInternal As Single
+
+	If (IO[IntOutput] = On) Then '"IO" should be shown as in the next line
+		Reset IO[IntOutput]
+	Else
+		Set IO[IntOutput]
+		Exit Sub '"Sub" should be not used as open folding
+	End If
+	Wait (ArrayInput(IntSegment - 1, IntPosition - 1) = On), IntTimeout '"On" should be displayed like in line 41
+	Wait (IO[Input] = On), IntTimeout '"IO" should be detected
+
+	If (IntTest = False) Then
+		IntReturn = True
+	Else
+		IntReturn = False
+	End If
+
+	If (TestFunction() = False) Then '"False" should be displayed as keyword
+		IntReturn = True
+	Else
+		IntReturn = False
+	End If
+
+	If (IntTest = False) Then
+		IntReturn = True
+	Else
+		IntReturn = False
+	End If
+
+	SngInternal = 42.123
+
+End Sub

@@ -1,0 +1,146 @@
+/* file MSQcomp.mac
+
+   Maxima by Example, Ch. 12
+   Edwin L. Woollett
+   April 15, 2011  */
+
+/* comparison  code loaded by  moller3.mac */
+
+
+  
+  
+  disp (" MSQcomp() to compare matrix trace, symbolic trace
+  methods for square of polarized amplitudes
+  with square of spinor amplitudes. This is an
+  automated comparison, assuming A_spinor is
+  globally defined and also global sv1,sv2,sv3,sv4.
+  To see progress details, set details to true.")$
+        
+     details:false$     
+
+ /************************************************************/    
+  
+ MSQcomp () :=
+   
+   block(        
+   
+   if not details then (disp (" each case comparison could take 2 plus minutes ")),
+       
+       A_spinor_th : fr_ao2 (A_spinor,th),
+    
+        A_spSQ : E_pm (A_spinor_th^2),
+    
+       if details then display (A_spSQ),
+    
+    
+   M1n_m : trigsimp (E_pm (mcon ( m_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu)*
+                 m_tr (S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),
+                 
+     if details then (disp ("M1n_m"), display (M1n_m)),
+                 
+        
+  M1n_s : trigsimp (E_pm (mcon ( nc_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu)*
+                 nc_tr (S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),    
+                 
+     if details then (disp ("M1n_s"),display (M1n_s)),
+                 
+       
+    M1n_diff : M1n_s - M1n_m,
+    
+    if details then print ("  M1n_s - M1n_m = ",M1n_diff),
+    
+    if M1n_diff # 0 then (
+            disp ("M1n symbolic  method # matrix method disagree "),
+            return (M1n_diff)),
+    
+    
+    
+   M2n_m : trigsimp (E_pm (mcon ( m_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu)*
+                m_tr (S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),                
+                
+    if details then disp ("M2n_m"),
+                
+      
+  M2n_s : trigsimp (E_pm (mcon ( nc_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu)*
+                nc_tr (S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),    
+                
+    if details then disp ("M2n_s"),      
+    
+    M2n_diff : M2n_s - M2n_m,
+    
+    if details then print ("  M2n_s - M2n_m = ",M2n_diff),
+    
+    if M2n_diff # 0 then (
+            disp ("M2n symbolic  method # matrix method disagree "),
+            return (M2n_diff)),
+    
+    M12n_m : trigsimp (E_pm (mcon ( m_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,
+                         nu,S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu),mu,nu))),
+                         
+    
+                                       
+    if details then   display (M12n_m),
+            
+    
+    M12n_s : trigsimp (E_pm (nc_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,
+                         nu,S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu))),
+                         
+                                           
+    if details then display (M12n_s),
+                                               
+          
+    M12n_diff : M12n_s - M12n_m,
+    
+    if details then print ("  M12n_s - M12n_m = ",M12n_diff),
+    
+    if M12n_diff # 0 then (
+            disp ("M21n symbolic  method # matrix method disagree "),
+            return (M12n_diff)),
+    
+    
+    
+    M21n_m : trigsimp (E_pm (mcon ( m_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,
+                      nu,S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu),mu,nu))),
+                                   
+    if details then display (M21n_m),
+        
+      
+    M21n_s : trigsimp (E_pm (nc_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,
+                         nu,S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu))),
+                                   
+    if details then display (M21n_s),
+    
+      
+    
+    
+    M21n_diff : M21n_s - M21n_m,
+    
+    if details then print ("  M21n_s - M21n_m = ",M21n_diff),
+    
+    if M21n_diff # 0 then (
+            disp ("M21n symbolic  method # matrix method disagree "),
+            return (M21n_diff)),
+    
+    
+    
+    MfiSQ : expand (M1n_m/t_th^2 + M2n_m/u_th^2 - M12n_m/(t_th*u_th)
+                 - M21n_m/(t_th*u_th)),
+                 
+    MfiSQ : trigsimp (MfiSQ),    
+    
+    
+    MSQ_diff : trigsimp (MfiSQ - A_spSQ),
+    
+    if MSQ_diff = 0 then disp (" agreement ")
+      
+     else  disp (" no agreement "),
+     
+     display ([sv1,sv2,sv3,sv4]))$
+    
+    
+    
+    
+    
+    
+    
+    

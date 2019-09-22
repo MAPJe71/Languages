@@ -1,0 +1,30 @@
+<Language name="Javascript" imagelistpath="c:\oren\Notepad++\plugins\Config\FunctionsIcons.bmp">
+	<CommList param1="/\*" param2="\*/" />
+	<Group name="FUNCTION" subgroup="Methods" icon="18" child="4" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="\{" keywords="">
+		<Rules regexbeg="function\s+" regexfunc='["\w_]+' regexend="\s*\(.*\)" bodybegin="\{" bodyend="\}" sep="" />
+		<Rules regexbeg="^\s*" regexfunc='["\w_.]+' regexend="\s*[=:]\s*function\s*\([\w_mce_markeramp;=',\s]*\)" bodybegin="\{" bodyend="\}" sep=";" />
+		<Rules regexbeg="^\s*var\s*" regexfunc='["\w_.]+' regexend="\s*[=:]\s*function\s*\([\w_mce_markeramp;=',\s]*\)" bodybegin="\{" bodyend="\}" sep=";" />
+	</Group>
+	<Group name="Classes" subgroup="Prototype" icon="25" child="19" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="\{" keywords="">
+		<Rules regexbeg="^" regexfunc="[a-zA-Z_- $.]+" regexend=".prototype+.=" bodybegin="\{" bodyend="\}" sep="" />
+	</Group>
+	<Group name="Methods" subgroup="" icon="36" child="11" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+		<Rules regexbeg="this\.+" regexfunc="[\w_].*+.=.*." regexend="function+\(.*+\)" bodybegin="\{" bodyend="\}" sep="" />
+		<Rules regexbeg="^\s*" regexfunc=".[\w_.]+" regexend=".=.\{" bodybegin="\{" bodyend="\}" sep="" />
+	</Group>
+	<Group name="Prototype" subgroup="" icon="32" child="35" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="\<if\>|\<else\>|\<return\>|\<new\>">
+		<Rules regexbeg="^\s*,*" regexfunc=".[\w_]+" regexend=":\s*function\s*\(.*\)$" bodybegin="\{" bodyend="\}" sep="" />
+	</Group>
+	<Group name="VisitWeb" subgroup="Prototype" icon="34" child="35" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="\{" keywords="">
+		<Rules regexbeg="^VisitWeb[.]+" regexfunc="[a-zA-Z0-9_- ]+" regexend="" bodybegin="\{" bodyend="\}" sep="" />
+	</Group>
+	<Group name="objects" subgroup="objects-props" icon="17" child="29" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+		<Rules regexbeg="^" regexfunc="[a-zA-Z0-9_.]+*\s*[^={()]*" regexend="=* {" bodybegin="\{" bodyend="\}" sep="" />
+	</Group>
+	<Group name="objects-props" subgroup="" icon="14" child="14" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+		<Rules regexbeg="[^*@]*" regexfunc="[A-Z_]+:\s*'*[\w_-]*'*" regexend="," bodybegin="" bodyend="$" sep="" />
+	</Group>
+	<Group name="test" subgroup="" icon="32" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+		<Rules regexbeg="orizen" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+	</Group>
+</Language>

@@ -1,0 +1,230 @@
+-------------------------------------------------------------------------------
+----  LIST_EX.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about LIST_EX.kl
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----            FROM                        Sec 3-B
+----    Conditions:
+----    Data types:
+----            ARRAY OF STRING             Sec 2
+----            BOOLEAN                     Sec 2, 3
+----            INTEGER                     Sec 2, 3
+----            STRING                      Sec 2
+----    Directives:
+----            %COMMENT                    Sec 1
+----            %NOLOCKGROUP                Sec 1
+----    Built-in Functions & Procedures:
+----            ABS                         Sec 4-A
+----            ARRAY_LEN                   Sec 4-C&D
+----            CNV_INT_STRSec 4-A
+----            FILE_LIST                   Sec 4-C
+----            LOAD                        Sec 4-B
+----            LOAD_STATUSSec 4-B
+----            PROG_LIST                   Sec 4-D
+----            ROUND                       Sec 4-A
+----            SUB_STR                     Sec 4-A
+----    Statements:
+----           FOR .... ENDFOR              Sec 3-B
+----           IF...THEN...ENDIF            Sec 4-A,B,C,D
+----           ROUTINE                      Sec 3-A,B,C
+----           REPEAT...UNTIL               Sec 4-C,D
+----           RETURN                       Sec 3-A
+----           WRITE                        Sec 3-B; 4-A,B
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B; 4
+----            CONST                       Sec 2
+----            CR                          Sec 3-B; 4-A,B
+----            END                         Sec 3-A,B, 4-B
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+----    Operators:
+----            MOD                         Sec 3-A
+----            /                           Sec 3-A
+----            *                           Sec 3-A
+----    Devices Used:
+----            FLPY:                       Sec 4-C
+----    Basic Concepts:
+----         Semi-colon(;) as statement separator
+----         Nested IF..THEN..ELSE..IF..THEN..ELSE..ENDIF..ENDIF structure
+----         Concatenation of STRINGS using '+'
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM LIST_EX
+    %NOLOCKGROUP -- Don't lock any motion groups
+    %COMMENT = 'FILE_LIST'
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declarations
+-------------------------------------------------------------------------------
+CONST
+    INCREMENT   = 13849
+    MODULUS     = 65536
+    MULTIPLIER  = 25173
+VAR
+    pr_cases    : STRING[6]  -- psuedo random number converted to string
+    prg_nm      : STRING[50] -- Concatenated program name
+    loaded      : BOOLEAN    -- Used to see if program is loaded
+    initi       : BOOLEAN    -- Used to see if variables initialized
+    indx1       : INTEGER    -- FOR loop index
+    cases,                   -- Random number returned
+    max_number,              -- Maximum random number
+    seed        : INTEGER    -- Seed for generating a random number
+    file_spec   : STRING[20] -- File specification for FILE_LIST
+    n_files     : INTEGER    -- Number of files returned from FILE_LIST
+    n_skip      : INTEGER    -- Number to skip for FILE_LIST & PROG_LIST
+    format      : INTEGER    -- Format of returned names
+                             -- For FILE_LIST & PROG_LIST
+    ary_nam     : ARRAY[9] OF STRING[20] -- Returned names
+                                         -- from FILE_LIST & PROG_LIST
+    prog_name   : STRING[10] -- Program names to list from PROG_LIST
+    prog_type   : INTEGER    -- Program types to list form PROG_LIST
+    n_progs     : INTEGER    -- Number of programs returned from PROG_LIST
+    status      : INTEGER    -- Status of built-in procedure call
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  RANDOM Declaration
+---                 Creates a pseudo-random number and returns the number.
+-------------------------------------------------------------------------------
+ROUTINE random(seed : INTEGER) : REAL
+BEGIN
+    seed = (seed * MULTIPLIER + INCREMENT) MOD MODULUS
+    RETURN(seed/65535.0)
+END random
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  DISPL_LIST  Declaration
+----                Display maxnum elements of ary_nam.
+-------------------------------------------------------------------------------
+ROUTINE displ_list(maxnum :INTEGER)
+BEGIN
+    FOR indx1=1 TO maxnum DO ;
+        WRITE (ary_nam[indx1],cr);
+    ENDFOR
+    -- Notice the use of the semi-colon, which allows multiple statements
+    -- on a line.
+END displ_list
+
+-------------------------------------------------------------------------------
+----  Section 3-C:  TP_CLS  Declaration
+----                This routine is from ROUT_EX.KL and will
+----                clear the TP USER menu screen and force it to be visible.
+-------------------------------------------------------------------------------
+ROUTINE tp_cls FROM rout_ex
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- LIST_EX
+    tp_cls                -- Use routine from the rout_ex.kl file
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Generate a pseudo random number, convert INTEGER to STRING
+-------------------------------------------------------------------------------
+    max_number = 255 ; -- So the random number is 0..255
+    seed       = 259 ;
+    WRITE ('Manupulating String',cr)
+    cases = ROUND(ABS((random(seed)*max_number))) -- Call random then take the
+                                                  -- absolute value of the number
+                                                  -- returned and round off the
+                                                  -- number.
+    CNV_INT_STR(cases, 1, 0, pr_cases)  -- Convert cases to its
+                                        -- ascii representation
+    pr_cases =  SUB_STR(pr_cases, 2,3)  -- get at most 3 characters,
+                                        -- starting at the second
+                                        -- character, since first
+                                        -- character is ablank.
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Build a program name from the number and try to load it
+-------------------------------------------------------------------------------
+    --- Build a random program name to show the manipulation of
+    --- STRINGS and INTEGERs.
+    prg_nm = 'MYPROG' + pr_cases + '.PC' -- Concatenate the STRINGs together
+                                         -- which create a program name
+
+    --- Verify that the program is not already loaded
+    WRITE ('Checking load status of ',prg_nm,cr)
+    LOAD_STATUS(prg_nm, loaded, initi)
+    IF (NOT loaded) THEN             -- The program is not loaded
+        WRITE ('Loading ', prg_nm,cr)
+        LOAD(prg_nm, 0, status)      -- Load in the program
+        IF (status =  0 ) THEN       -- Verify load is successful
+            WRITE ('Loading ', 'MYPROG' + pr_cases + '.VR', cr)
+            LOAD('MYPROG' + pr_cases + '.VR', 0, status) -- Load the .vr file
+            IF (status <> 0 ) THEN   -- Loading variables failed
+                WRITE ('Loading of', 'MYPROG' + pr_cases + '.VR', ' failed',cr)
+                WRITE ('Status = ',status);
+            ENDIF
+        ELSE                         -- Load of program failed
+            IF (status = 10003) THEN -- File does not exist
+                WRITE (prg_nm, ' file does not exist',cr)
+            ELSE
+                WRITE ('Loading of ',prg_nm, ' failed',cr,'Status = ',status);
+            ENDIF
+        ENDIF
+    ELSE                           -- The program is already loaded
+        IF (NOT initi) THEN        -- Variables not initialized
+            WRITE ('Loading ','MYPROG' + pr_cases + '.VR',cr)
+            LOAD('MYPROG' + pr_cases + '.VR', 0, status) -- Load in variables
+            IF (status <> 0 ) THEN -- Load of variables failed
+                WRITE ('Loading of ', 'MYPROG' + pr_cases + '.VR', ' failed',cr)
+                WRITE ('Status = ',status);
+            ENDIF
+        ENDIF
+    ENDIF
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Check the file listing of the drive FLPY: and display them
+-------------------------------------------------------------------------------
+    --- Display a directory listing of files on the Flpy:
+    file_spec = 'FLPY:*.*' -- All files in FLPY: drive
+    n_skip    = 0          -- First time do not skip any files
+    format    = 3          -- Return list in filename.filetype format
+    WRITE ('Doing File list',cr)
+    REPEAT -- UNTIL all files have been listed
+        FILE_LIST(file_spec, n_skip, format, ary_nam, n_files, status)
+        IF (status <>0 ) THEN             -- Error occurred
+            WRITE ('FILE_LIST builtin failed with Status = ',status,cr)
+        ELSE
+            displ_list(n_files)           -- Write the names to the TP USER menu
+            n_skip = n_skip + n_files     -- Skip the files we already got.
+        ENDIF
+    UNTIL (ARRAY_LEN(ary_nam) <> n_files) -- When n_files does not equal
+                                          -- declared size of ary_name then
+                                          --  all files have been listed.
+
+-------------------------------------------------------------------------------
+----  Section 4-D:  Show the programs loaded in controller
+-------------------------------------------------------------------------------
+    --- Display the list of programs loaded on the controller
+    prog_name = '*' -- All program names should be listed
+    prog_type = 6   -- Only PC type files should be listed
+    n_skip    = 0   -- First time do not skip any file
+    format    = 2   -- Return list in  filename.filetype format
+    WRITE ('Doing Program list',cr)
+    REPEAT -- UNTIL all programs have been listed
+        PROG_LIST(prog_name, prog_type, n_skip, format, ary_nam, n_progs, status)
+        -- The program names are stored in ary_nam
+        -- n_progs is the number of program names stored in ary_nam
+        IF (status <>0 )THEN
+            WRITE ('PROG_LIST builtin failed with Status = ',status,cr)
+        ELSE
+            displ_list(n_progs)           -- Display the current list
+            n_skip = n_skip + n_progs     -- Skip the programs already listed
+        ENDIF
+    UNTIL (ARRAY_LEN(ary_nam) <> n_progs) -- When n_files does not equal the
+                                          -- declared size of ary_name then all
+                                          -- programs have been listed.
+
+END LIST_EX

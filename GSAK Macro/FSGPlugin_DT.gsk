@@ -1,0 +1,123 @@
+#*******************************************
+# MacDescription = FSG Plugin - generates a list of up to 81 caches on the way to a filled D/T-matrix
+# MacFileName = FSGPlugin_DT.gsk
+# MacAuthor = VeeN
+# MacVersion=1.00
+# MacUrl=
+#*******************************************
+
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_DT</plugin>"
+ENDIF
+
+SHOWSTATUS msg="Macro FSGPlugin_DT running" Width=350
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitVariables
+
+$x = 1
+$difficulty = 1
+SHOWSTATUS msg="FSGPlugin_DT - Getting first 81 caches"
+$MyOut = $divstyle
+$MyOut = $MyOut + "Difficulty and Terrain</div>"
+$MyOut = $MyOut + $htmlTableStart
+
+WHILE $difficulty <= 5
+	$terrain  = 1
+        $MyOut = $MyOut + "<tr><td align='center'><B>$difficulty</B></td>"
+	WHILE $terrain <= 5
+	    $_sql = "Select FoundByMeDate, difficulty, terrain, Code, Name, lLogid,CacheType from AllFinds where difficulty=$difficulty and terrain = $terrain order by ldate asc, usersort asc, llogid asc limit 1"
+	    $line = Sqlite("sql",$_sql)
+            $MyOut = $MyOut + "<td align='center' bgcolor=#FFFFFF>"
+	    if $line = ""
+	       $date   = " ;-)"
+	       $name   = "musis este trosku hladat"
+	       $CType  = "?"
+	       GOSUB Name=StripCodeType
+	       $MyOut = $MyOut + "$TypeImage"
+	    else
+	       $date   = Extract($line,";",1)
+	       $date   = Right($date,2)+"."+SubStr($line,6,2)+". "+Left($line,4) 
+	       $diffS  = Replace(",",".",NumToStr(Val(Extract($line,";",2))))
+	       $terr   = Replace(",",".",NumToStr(Val(Extract($line,";",3))))
+	       $code   = Extract($line,";",4)
+	       $name   = Extract($line,";",5)
+	       $lLogid = Extract($line,";",6)
+	       $CType  = Extract($line,";",7)
+	       GOSUB Name=StripCodeType
+	       $MyOut = $MyOut + "$TypeImage<br><font size='1'>$code</font>"
+	    endif		
+            $MyOut = $MyOut + "</td>"	
+	    $terrain = $terrain+0.5
+	    $x = $x + 1
+	ENDWHILE
+        $MyOut = $MyOut + "</tr>"
+	$difficulty = $difficulty+0.5
+ENDWHILE
+$MyOut = $MyOut + "</table>"
+$p_FSGData = $MyOut
+
+BEGINSUB Name=InitVariables
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+ENDSUB
+
+BEGINSUB Name=DeclareVariables
+	Declare Var=$x Type=Numeric
+	Declare Var=$difficulty Type=Numeric	
+	Declare Var=$terrain Type=Numeric
+	Declare Var=$work Type=String
+	Declare Var=$MyOut Type=String
+	Declare Var=$line Type=String
+	Declare Var=$date Type=String
+	Declare Var=$diffS Type=String
+	Declare Var=$terr Type=String
+	Declare Var=$lLogid Type=String	
+	Declare Var=$Types Type=String
+	Declare Var=$Typenums Type=String
+	Declare Var=$thistype Type=String
+	Declare Var=$TypeImage Type=String
+	Declare Var=$lastdate Type=Date
+	Declare Var=$LogDateDate Type=Date
+	Declare Var=$CType Type=String
+	Declare Var=$tempN Type=Numeric
+ENDSUB
+
+BEGINSUB Name=StripCodeType
+	$tempN = At($CType,$Types)
+	$thistype = Extract($Typenums, "," , $tempN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' title='$name $date' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' title='$name $date' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' title='$name $date' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB
+
+<data> varname=$divstyle
+<div style='width:740px; background: #666699; font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;; background: #CCCCD4; color: black'>
+<enddata>
+
+<data> varname=$htmlTableStart
+<table>
+ <tr>
+  <td></td>
+  <td></td>
+  <td colspan='10' align='center'><B>Terrain</B></td>
+ </tr>
+ <tr>
+  <td rowspan='10' width='91' valign='middle' align='center'><B>Difficulty</B></td>
+  <td></td>
+  <td align='center'><B>1</B></td>
+  <td align='center'><B>1.5</B></td>
+  <td align='center'><B>2</B></td>
+  <td align='center'><B>2.5</B></td>
+  <td align='center'><B>3</B></td>
+  <td align='center'><B>3.5</B></td>
+  <td align='center'><B>4</B></td>
+  <td align='center'><B>4.5</B></td>
+  <td align='center'><B>5</B></td>
+ </tr>
+<enddata>

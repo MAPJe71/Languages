@@ -1,0 +1,219 @@
+#*******************************************
+# MacDescription = FSG Plugin - Distance by Day 
+# MacFileName = FSGPlugin_DistanceByDay.gsk
+# MacAuthor = Menipe
+# MacVersion=2.00
+# MacUrl=http://gsak.net/board/index.php?act=ST&f=7&t=17762
+#*******************************************
+
+# Based on 'FindStatGen3.gsk' from 'Lignumaqua', expanding on the numTotalDistance subroutine.
+#
+# Purpose:
+#	To display a table of the distance by day for caches. 
+#
+# Syntax:
+# 	<plugin>FSGPlugin_DistanceByDay?sectionheading=true&num=xxxx&exclude=YYYY-MM-DD,YYYY-MM-DD,YYYY-MM-DD&distance=xxxx&count=xxxx</plugin> 
+#
+# URL:
+#       http://gsak.net/board/index.php?act=Attach&type=post&id=139953
+#
+# Changes
+#  V1.00  09-12-11  Initial release
+#  V1.01  09-13-11  Added parameter to limit the output, and to display heading.  Fixed table headings.
+#  V1.02  09-14-11  Added parameter to exclude dates
+#  V1.03  09-14-11  Added parameter to restrict distance
+#  V1.04  09-14-11  Added parameter to restrict cache counts
+#  V1.05  09-14-11  Updated code to include code to handle section heading.
+#  V1.06  09-14-11  Updated code to display distance in miles or kilometers
+#----------------------------------------------------------------------------------------------
+#  V2.00  09-14-11  Added option to display map and cleaned up code
+#  
+#
+
+# Make sure we aren't being called directly
+IF $_MacroLevel = 1
+	RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly
+ENDIF
+
+SHOWSTATUS msg="Macro FSGPlugin_DistanceByDay running" Width=350
+
+GOSUB Name=DeclareVariables
+
+GOSUB Name=InitVariables
+
+GOSUB Name=GetParameters
+
+IF $ShowHeading
+	GOSUB Name=SectionHead
+ENDIF
+
+$ExcludeDates=" t1.ldate NOT IN ('" + Replace(",","','",$ExcludeDates) + "')"
+
+GOSUB Name=CreateTempTables
+
+$tmpS = Sysinfo("Distance")
+
+# Get the list of caches by day found 
+$_sql = "SELECT sum(g_Distance(t1.latitude,t1.longitude,t2.latitude,t2.longitude,'$tmpS')) FROM allfindstemp AS t1, allfindstemp AS t2 where t1.rowid = t2.rowid - 1"
+$work = Sqlite("sql",$_sql)
+
+$_sql = "SELECT t1.ldate, sum(g_Distance(t1.latitude,t1.longitude,t2.latitude,t2.longitude,'$tmpS')) AS dist, count(*)+1 as cacheCount FROM allfindstemp AS t1, allfindstemp AS t2 WHERE t1.rowid = t2.rowid - 1 AND t1.ldate = t2.ldate AND $ExcludeDates GROUP BY t1.lDate ORDER BY dist DESC"
+$status=Sqlite("sql",$_sql)
+
+#Initialize Variables
+$LogTotal = $_SqlRows
+	
+# Initialize Some of the output data
+$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf 
+
+# Column Heads
+$out = $out + "<tr>" + $_CrLf
+$out = $out + "<td style='$stTab2cHead'><b>$Lang32</b></td>" + $_CrLf 
+$out = $out + "<td style='$stTab2cHead'><b>$Lang37</b></td>" + $_CrLf 
+$out = $out + "<td style='$stTab2cHead'><b>Distance ("+ $distunits + ")</b></td>" + $_CrLf 
+$out = $out + "<td style='$stTab2cHead'><b>$LangForm73</b></td>" + $_CrLf 
+$out = $out + "</tr>" + $_CrLf 
+
+$count = 1
+
+If $NumberResults > 0
+	IF $LogTotal > $NumberResults
+		If $NumberResults < $LogTotal
+			$LogTotal = $NumberResults
+		ENDIF
+	ENDIF
+ENDIF
+
+WHILE $count <= $LogTotal
+	$GetMilestone = Extract($status,$_CrLf ,$count)
+
+	$FindDate = Extract($GetMilestone,";",1)
+	$CacheDistance = Str(Val(Extract($GetMilestone,";",2)),10,1)
+	$CacheCount = Extract($GetMilestone,";",3)
+
+	IF Val($CacheDistance) >= $RestrictDistance
+		IF Val($CacheCount) >= $RestrictCacheCount
+			$out = $out + "<tr>" + "$_CrLf " 
+			$out = $out + "<td style='$st2c2'>$FindDate</td>" + $_CrLf 
+			$out = $out + "<td style='$st2c2'>$CacheCount</td>" + $_CrLf
+			$out = $out + "<td style='$st2c1'>$CacheDistance</td>" + $_CrLf
+
+			$tmpS = " <a href ='#' onclick=" + Quote("document.getElementById('distdaymap-$FindDate').style.display = (getElementById('distdaymap-$FindDate').style.display != 'none' ? 'none' : '');return false;") + "> <img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>" + $CR
+			$out = $out + "<td style='$st2c1'><center>$tmpS</center></td>" + $_CrLf
+
+			$out = $out + "</tr>" + $_CrLf
+			GOSUB Name=DisplayMap
+		ENDIF
+	ENDIF
+
+	$count = $count + 1
+ENDWHILE # Process rows
+
+$out = $out + "</table>" + $_CrLf 
+
+GOSUB Name=CleanupTempTables
+
+SHOWSTATUS msg="Macro FSGPlugin_DistanceByDay finished" Width=350
+$p_FSGData = $out
+#---------------------------------------------------------------------
+
+BEGINSUB Name=DisplayMap
+	$_sql = "SELECT latitude || ',' || longitude FROM AllFinds WHERE lDate = '$FindDate'"
+	$statusMap = Sqlite("sql",$_sql)
+	$statusMap = Replace($CR,"|",$statusMap)
+	$tmpS = "&markers=color:blue|" + $statusMap + "&path=color:0xff0000ff|weight:3|" + $statusMap
+		
+	$out = $out + "<tr id='distdaymap-$FindDate' style='display:none'><td colspan='4'><center><div style='width:600px; border:2px outset blue'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?size=600x400&$tmpS&sensor=false'></a></div></center></td></tr>" + $CR
+ENDSUB #DisplayMap
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+	$out = $out + "<br /><br />" + $CR
+
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead;'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+	$out = $out + "    $Lang119" + $CR + "</div><br />" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB Name=DeclareVariables
+	Declare Var=$DistanceByDayStatusMsg Type=String
+	Declare Var=$FindDate Type=String
+	Declare Var=$CacheDistance Type=String
+	Declare Var=$CacheCount Type=String
+
+	Declare Var=$statusMap Type=String
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$NumberResults Type=Numeric
+	Declare Var=$ExcludeDates Type=String
+	Declare Var=$RestrictDistance Type=Numeric
+	Declare Var=$RestrictCacheCount Type=Numeric
+
+	Declare Var=$Parms Type=String
+ENDSUB #DeclareVariables
+
+BEGINSUB Name=GetParameters
+	$Parms = $_MacroParms
+	$count = RegExCount("&",$Parms)
+	$i = 1
+	WHILE $i <= $count+1
+		$Text1 = extract($Parms,"&",$i)
+		$Text2 = upper($Text1)
+
+		IF (AT("NUM", $Text2) = 1)
+			$Text2 = upper(extract($Text1,"=",2))
+			$NumberResults=Val($Text2)
+		ENDIF
+
+		IF (AT("SECTIONHEADING", $Text2) = 1)
+			$Text2 = upper(extract($Text1,"=",2))
+			IF $Text2 = "TRUE"
+				$ShowHeading=TRUE
+			ELSE
+				$ShowHeading=FALSE
+			ENDIF
+		ENDIF
+
+		IF (AT("COUNT", $Text2) = 1)
+			$Text2 = upper(extract($Text1,"=",2))
+			$RestrictCacheCount=Val($Text2)
+		ENDIF
+
+		IF (AT("DISTANCE", $Text2) = 1)
+			$Text2 = upper(extract($Text1,"=",2))
+			$RestrictDistance=Val($Text2)
+		ENDIF
+
+		IF (AT("EXCLUDE", $Text2) = 1)
+			$Text2 = upper(extract($Text1,"=",2))
+			$ExcludeDates=$Text2
+		ENDIF
+
+		$i = $i+1
+	ENDWHILE
+ENDSUB #GetParameters
+
+BEGINSUB Name=InitVariables
+	$p_FSGData = ""
+	$out = ""
+	$ShowHeading=TRUE
+
+	IF $maxtablewidth=0
+		$maxtablewidth = 750
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=CleanupTempTables
+	$_sql = "DROP TABLE IF EXISTS Allfindstemp"
+	$status = Sqlite("sql",$_sql)
+ENDSUB
+
+BEGINSUB Name=CreateTempTables
+	GOSUB Name=CleanupTempTables
+
+	$_sql = "CREATE TEMP TABLE AllFindstemp AS select * from Allfinds"
+	$status = Sqlite("sql",$_sql)
+ENDSUB

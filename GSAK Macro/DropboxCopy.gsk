@@ -1,0 +1,1074 @@
+################################################################################
+# The purpose of this macro is to use DropBox as a repositry so that you can   #
+# use it to update your databases and macros between your own PC's with out    #
+# having to use a USB stick and sneaker-net to move the data back and forth.   #
+#                                                                              #
+# Thanks to lignumaqua (and others) for his origonal concept macro...          #
+#______________________________________________________________________________#
+#                                                                              # 
+# This macro is Open Source and comes with no warranty implied, or otherwise.  # 
+#______________________________________________________________________________#
+# MacVersion = 1.0.5                                                           #
+# MacDescription = Copy Databases and macros to and from Dropbox               #
+# MacFileName = Dropboxcopy.gsk                                                    #                   
+# MacAuthor = Big Wolf                                                         #
+# MacURL = http://gsak.net/board/index.php?showtopic=24442&view=getnewpost     #
+#                                                                              #
+# Version History:                                                             #
+#                                                                              #
+# V1.0.5 23-02-13   A) Slight tweek to the main form                           #
+#                   B) fixed wrong name in the MacFileName field               #
+#                   C) Changed the GSAK data path to the more generic $_dbpath #
+#                   D) Bug fix re macros not saving whne only 1 db was chosen  #
+#                                                                              #
+# V1.0.2 23-02-13   A) First release                                           #
+#                                                                              #
+################################################################################
+
+GOSUB Name=Declare Variables         #Declare variables used
+GOSUB Name=Initalise Variables       #Set macro variables
+GOSUB name=CheckVersions             #Check various versions
+GOSUB Name=GSAKdbs  								 #populate checklist control
+GOSUB Name=DropBoxdbs 					     #populate checklist control
+GOSUB Name=CheckXMLFile              #restore saved settings
+GOSUB Name=CheckUpdatesAuto          #Then check to see if update is available
+
+
+WHILE TRUE # Infinite loop to redisplay form as required
+     $FormExit = Form($form,"")
+     GOSUB Name=SaveControlValues
+     
+     BEGINCASE   
+         
+       CASE ($FormExit = "btnCancel") OR ($FormExit = "DelayExit")  OR ($FormExit = "SystemExit")        
+           BREAK  #break out as data now exported
+         
+         
+       CASE ($FormExit = "btnRestore")       	
+       	   GOSUB Name=UpdateFromDropbox    
+       	   IF $breakloop
+		       	   BREAK	 	  
+       	   ENDIF 
+       	
+       CASE ($FormExit = "btnUpload")   	
+       	   GOSUB Name=SendToDropbox 
+       	   IF $breakloop
+		       	   #test to close after upload       	   
+		       	   IF $chkExit
+		       	   	 EXIT
+		       	   ELSE
+		       	   	  BREAK	 
+		       	   ENDIF	  
+       	   ENDIF 
+       	
+       	CASE ($FormExit = "btnAbout")   
+       	   GOSUB Name=DisplayAbout
+       	   
+       	CASE ($FormExit = "btnCheckver")
+       	   GOSUB Name=CheckUpdates
+       	      
+       	CASE $chkGSall
+       		 $chkGSall=FALSE
+       	   $GSAKlistBox=$GSAKdbs
+       	
+       	CASE $chkGSnone
+       		 $chkGSnone=FALSE
+       	   $GSAKlistBox=""
+       	
+       	CASE $chkDBall
+       		 $chkDBall=FALSE
+       	   $DroplistBox=$DropBoxdbs
+       	
+       	CASE $chkDBnone
+       		 $chkDBnone=FALSE
+       	   $DroplistBox=""   
+            
+     ENDCASE
+ENDWHILE
+
+
+
+
+
+###########################################
+#                                         #
+#             End of Macro                #
+#                                         #
+###########################################
+
+ 
+  
+ 
+####### Subroutines #########
+
+
+
+#--------------------------------------------------------------------------------
+BEGINSUB Name=GSAKdbs 
+#-------------------------------------------------------------------------------- 
+$ToMacro=$_AppData + "\macros"
+$DirData = dir($_dbPath+"\sqlite.db3","SPF")
+
+$lc=RegExCount("\n", $DirData) #get line count
+
+$values=""
+$x=1
+repeat
+  $dirdat=Extract($DirData,$_newline,$x)
+  $slcount=RegExCount("\\",$dirdat)
+  $DirPos=RegExPos("\\", $dirdat,$slcount-1 )+1
+  $EndPos=RegExPos("\\", $dirdat,$slcount )
+  $values=$values+Substr( $dirdat, $DirPos, $EndPos-$DirPos)+";"
+ 
+  $x=$x+1
+until $x>$lc
+$GSAKdbs=$values
+
+$Form = EditForm($Form,"GSAKlistBox","Values",$values)
+ENDSUB
+
+
+#--------------------------------------------------------------------------------
+BEGINSUB Name=DropBoxdbs 
+#-------------------------------------------------------------------------------- 
+
+# Get Dropbox path
+$Dropbox = GetEnvV("APPDATA") + "\Dropbox\host.db"
+$Dropboxfile = GetFile($Dropbox)
+$Dropboxpath = MimeDecode(Extract($Dropboxfile,Chr(10),RegExCount("\n",$Dropboxfile) + 1))
+
+$DirData = dir($Dropboxpath + "\GSAK\data\sqlite.db3","SPF")
+
+$lc=RegExCount("\n", $DirData) #get line count
+
+$values=""
+$x=1
+repeat
+  $dirdat=Extract($DirData,$_newline,$x)
+  $slcount=RegExCount("\\",$dirdat)
+  $DirPos=RegExPos("\\", $dirdat,$slcount-1 )+1
+  $EndPos=RegExPos("\\", $dirdat,$slcount )
+  $values=$values+Substr( $dirdat, $DirPos, $EndPos-$DirPos)+";"
+ 
+  $x=$x+1
+until $x>$lc
+
+$Dropboxdbs=$values
+
+$Form = EditForm($Form,"DroplistBox","Values",$values)
+ENDSUB
+
+
+#--------------------------------------------------------------------------------
+BEGINSUB Name=UpdateFromDropbox     
+#-------------------------------------------------------------------------------- 
+#Swap to tempdb
+$CurrDB = $_CurrentDatabase
+$TempDB = "XX_TempDB_XX"
+If DataBaseExists($TempDB) 
+ Database Name=$TempDB Action=DELETE
+ENDIF
+Database Name=$TempDB Action=Create
+Database Name=$TempDB 
+
+# Get Dropbox path
+$Dropbox = GetEnvV("APPDATA") + "\Dropbox\host.db"
+$Dropboxfile = GetFile($Dropbox)
+$Dropboxpath = MimeDecode(Extract($Dropboxfile,Chr(10),RegExCount("\n",$Dropboxfile) + 1))
+$Exclude = ""
+
+#Macros
+$BatFile = $_Install + "\babel.bat"
+$FromMacro  = $Dropboxpath + "\GSAK\macros"
+$ToMacro=$_AppData + "\macros"
+IF $chkIncMacroDB
+    $BatData="ROBOCOPY " + Quote($FromMacro) + " " + Quote($ToMacro) + " *.*  /S /XO" + $_NewLine
+ELSE
+	  $BatData=""
+ENDIF	    	
+
+#Databases
+IF Len($droplistBox)=0   
+	#no databases selected
+ELSE
+	$selected=RegExCount(";", $droplistBox)+1
+	IF $selected =1
+		  $From=$Dropboxpath + "\GSAK\data\"+ $droplistBox
+		  $To= $_dbpath + "\" + $droplistBox
+		  #MSGOK msg=$to
+		  $BatData=$BatData+"ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.*  /S /XO" + $_NewLine
+	ELSE
+			IF $droplistBox + ";" = $Dropboxdbs   #All databases selected so just copy the entire folder
+				  $From = $Dropboxpath + "\GSAK\data"
+	        $To  = $_dbPath
+				  
+				  $Exclude = $_dbPath + "\GrabbedImages"   #exclude the grabbed images folder
+				  $BatData=$BatData + "ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.* /XD " + Quote($Exclude)  + " /S /XO" + $_NewLine          
+	    ELSE
+					REPEAT 
+					  $dirtoexport=Extract($droplistBox,";",$selected)
+						$From=$Dropboxpath + "\GSAK\data\"+ $dirtoexport
+						$To= $_dbpath + "\" + $dirtoexport
+					  $BatData=$BatData+"ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.*  /S /XO" + $_NewLine
+					  
+					  $selected=$selected-1
+					UNTIL $selected=0
+			ENDIF		
+  ENDIF
+ENDIF
+
+#$BatData=$BatData+"pause"+$_NewLine
+
+#run the batch file
+IF Len($BatData) > 0
+	$breakloop=TRUE
+	$result = PutFile($BatFile, $BatData)
+	FILEOPEN File="$BatFile" Wait=yes
+ELSE
+	$breakloop=FALSE
+	MSGOK msg=Nothing selected to copy from DropBox
+ENDIF		
+
+#Go back to origonal DB
+DataBase Name=$CurrDB
+Database Name=$TempDB Action=DELETE
+
+ENDSUB
+
+
+#--------------------------------------------------------------------------------
+BEGINSUB Name=SendToDropbox     
+#-------------------------------------------------------------------------------- 
+# Get Dropbox path
+$Dropbox = GetEnvV("APPDATA") + "\Dropbox\host.db"
+$Dropboxfile = GetFile($Dropbox)
+$Dropboxpath = MimeDecode(Extract($Dropboxfile,Chr(10),RegExCount("\n",$Dropboxfile) + 1))
+
+#Macros
+$FromMacro= $_AppData + "\macros"
+$ToMacro  = $Dropboxpath + "\GSAK\macros"
+$BatFile = $_Install + "\babel.bat"
+IF $chkIncMacroGS
+    $BatData="ROBOCOPY " + Quote($FromMacro) + " " + Quote($ToMacro) + " *.*  /S /XO" + $_NewLine
+ELSE
+	  $BatData=""
+ENDIF	    	
+
+#Databases
+IF Len($GSAKlistBox)=0   
+	#no databases selected
+ELSE
+	$selected=RegExCount(";", $GSAKlistBox)+1
+	IF $selected =1
+		  $From= $_dbpath + "\" + $GSAKlistBox
+		  $To=$Dropboxpath + "\GSAK\data\"+ $GSAKlistBox
+		  #MSGOK msg=$to
+		  $BatData=$BatData + "ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.*  /S /XO" + $_NewLine
+	ELSE		
+			IF $GSAKlistBox + ";" = $GSAKdbs   #All databases selected so just copy the entire folder
+				  $From = $_dbPath
+          $To  = $Dropboxpath + "\GSAK\data"
+				  
+				  $Exclude = $_dbPath + "\GrabbedImages"   #exclude the grabbed images folder
+				  $BatData=$BatData + "ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.* /XD " + Quote($Exclude)  + " /S /XO" + $_NewLine          
+			ELSE	
+					REPEAT 
+					  $dirtoexport=Extract($GSAKlistBox,";",$selected)
+						$From= $_dbpath + "\" + $dirtoexport
+					  $To=$Dropboxpath + "\GSAK\data\"+ $dirtoexport
+					  $BatData=$BatData+"ROBOCOPY " + Quote($From) + " " + Quote($To) + " *.*  /S /XO" + $_NewLine
+					  
+					  $selected=$selected-1
+					UNTIL $selected=0
+			ENDIF		
+  ENDIF
+ENDIF
+
+#$BatData=$BatData+"pause"+$_NewLine
+
+#run the batch file
+IF Len($BatData) > 0
+	$breakloop=TRUE
+	$result = PutFile($BatFile, $BatData)
+	FILEOPEN File="$BatFile" Wait=yes
+ELSE
+	$breakloop=FALSE
+	MSGOK msg=Nothing selected to upload
+ENDIF		
+
+
+ENDSUB
+
+
+#--------------------------------------------------------------------------------
+BEGINSUB Name=CheckVersions     
+#--------------------------------------------------------------------------------  
+VERCHECK Version=7.7.0.0 (You can find the latest version of GSAK at http://gsak.net)
+
+$CurrentVersion=MacHeader("MacVersion")
+$frmcaption="Dropbox Copy v"+$CurrentVersion
+$Form = EditForm($Form,"form1","Caption",$frmcaption)
+ENDSUB
+
+
+#----------------------------------------------------
+BEGINSUB Name=Initalise Variables
+#----------------------------------------------------
+$MacroLatestVersion="http://www.rumach.com/version/dbcversion.txt?random="
+$MacroVerCheck="Dropbox copy: Version Check"
+$MacroLibraryURL="http://gsak.net/board/index.php?showtopic=24442&view=getnewpost"
+$SC_VarsList="chkExit,chkIncMacroGS,chkIncMacroDB,DroplistBox,GSAKlistBox,chk22,LastCheck"
+$MN=sysinfo("MacroFile")  #Get MacroName
+
+ENDSUB
+
+
+#----------------------------------------------------
+BEGINSUB Name=SaveControlValues
+#----------------------------------------------------
+MacSettings Type=S Vars=$SC_VarsList
+
+ENDSUB
+
+
+#----------------------------------------------------
+BEGINSUB Name=CheckUpdates
+#----------------------------------------------------
+
+IF SysInfo("Internet")="yes"   #check there is an internet connection
+
+		$old_chk22=$chk22
+		SHOWSTATUS msg="Checking for updates, please wait..." Width=400
+		$FormUpdate = EditForm($FormUpdate,"form7","Caption",$MacroVerCheck)
+
+		#create pseudo unique string to force a download rather than use any cached copy
+		$psuinque=DateToString($_today) + Replace(":","",time(),true)
+		$result = GetUrl($MacroLatestVersion+$psuinque)
+		SHOWSTATUS Msg="Done" Display=off  Width=400
+
+		IF Len($result) < 15
+			$tmpN = 10000*Val(Extract($result,".",1)) + 100*Val(Extract($result,".",2)) + Val(Extract($result,".",3))
+			$tmpN1 = 10000*Val(Extract($CurrentVersion,".",1)) + 100*Val(Extract($CurrentVersion,".",2)) + Val(Extract($CurrentVersion,".",3))
+			# MSGOK msg="$tmpN, $tmpN1"
+			IF $tmpN > $tmpN1
+				$tmpS = "You currently have  v$CurrentVersion  but  v$result  is available."
+				$FormUpdate = Editform($FormUpdate,"UpdateText","caption","$tmpS")
+				$FormUpdate = Editform($FormUpdate,"UpdateCaption","Color","213")
+				$FormUpdate = Editform($FormUpdate,"UpdateCaption","Caption","Update Avilable")
+				$FormUpdate = Editform($FormUpdate,"GetUpdate","Caption","Get Update")
+				$FormUpdate = Editform($FormUpdate,"GetUpdate","Visible","Yes")
+				WHILE True # Infinite loop to redisplay form as required 
+				  $FormExit = form($FormUpdate,"") 
+				  # store the current screen position of the form within it
+	  			$FormUpdate = EditForm($FormUpdate,"Form7","Top",$_FormTop)
+	  			$FormUpdate = EditForm($FormUpdate,"Form7","Left",$_FormLeft)
+				  BeginCase 
+				    Case $FormExit = "GetUpdate" 
+				      # open Web page
+						  WEB URL=$MacroLibraryURL
+						  CANCEL #ends the macro and returns to the GSAK GUI so that the new version can be downloaded. 			
+				      break 
+				    OtherWise
+              break 
+				  EndCase 
+				EndWhile   		
+			ELSE
+			  IF $tmpN1>$tmpN 
+			  	$tmpS = "This macro is newer than the one in the macro library."
+				  $FormUpdate = Editform($FormUpdate,"UpdateText","caption","$tmpS")
+				  $FormUpdate = Editform($FormUpdate,"UpdateCaption","Color","4227327")
+				  $FormUpdate = Editform($FormUpdate,"UpdateCaption","Caption","Beta v$CurrentVersion in use")
+				  $FormUpdate = Editform($FormUpdate,"GetUpdate","Caption","Downgrade")
+				  $FormUpdate = Editform($FormUpdate,"GetUpdate","Visible","Yes")
+				  WHILE True # Infinite loop to redisplay form as required 
+					  $FormExit = form($FormUpdate,"") 
+					  # store the current screen position of the form within it
+		  			$FormUpdate = EditForm($FormUpdate,"Form7","Top",$_FormTop)
+		  			$FormUpdate = EditForm($FormUpdate,"Form7","Left",$_FormLeft)
+					  BeginCase 
+					    Case $FormExit = "GetUpdate" 
+					      # open Web page
+							  WEB URL=$MacroLibraryURL
+							  CANCEL #ends the macro and returns to the GSAK GUI so that the new version can be downloaded. 			
+					      break 
+					    OtherWise
+	              break 
+					   EndCase 
+				  ENDWHILE   		  			
+			  ELSE	
+			  	 $tmpS = "You currently have v$CurrentVersion which is the latest version."
+				   $FormUpdate = Editform($FormUpdate,"UpdateText","caption","$tmpS")
+				   $FormUpdate = Editform($FormUpdate,"UpdateCaption","Color","32768")
+				   $FormUpdate = Editform($FormUpdate,"UpdateCaption","Caption","Latest Version")
+				   $FormUpdate = Editform($FormUpdate,"GetUpdate","Visible","No")
+				   $FormExit = form($FormUpdate,"") 
+
+			  ENDIF
+			ENDIF
+		ELSE
+				MSGOK msg=Error getting latest version number.  Caption=Version Check
+		ENDIF
+
+		IF $old_chk22=$chk22
+					 #Just the same so do nothing
+				ELSE
+					 #$chk22 changed so save the value	 
+				
+						GOSUB Name=SaveControlValues
+			       IF $chk22  #if set 
+						  GOSUB Name=CheckUpdatesAuto     #check to see if update is available
+						ELSE
+						  $form = EditForm($form,"lblupdate","Visible","No")  
+						ENDIF
+			ENDIF
+		
+ELSE
+	MSGOK Msg=Unable to check the version as no Internet connection detected.  Caption=Version Check
+ENDIF
+
+ENDSUB
+
+#----------------------------------------------------
+BEGINSUB Name=CheckUpdatesAuto
+#----------------------------------------------------
+IF $chk22    #Then check to see if update is available
+		
+		$LatestVersion="Random string to check"
+		
+		IF (SysInfo("Internet")="yes") # internet is active 
+		
+			 #create pseudo unique string to force a download rather than use the browsers cached copy
+		   $psuinque=DateToString($_today) + Replace(":","",time(),true)
+		
+			 $LatestVersion = GetUrl($MacroLatestVersion+$psuinque)
+		
+			 	IF Len($LatestVersion) < 15
+		
+			 		#save todays date to the dat file to store last checked date
+			    $LastCheck=DateToString($_Today)
+			    
+			    GOSUB Name=SaveControlValues
+		
+					$tmpN = 10000*Val(Extract($LatestVersion,".",1)) + 100*Val(Extract($LatestVersion,".",2)) + Val(Extract($LatestVersion,".",3))
+					$tmpN1 = 10000*Val(Extract($CurrentVersion,".",1)) + 100*Val(Extract($CurrentVersion,".",2)) + Val(Extract($CurrentVersion,".",3))
+					#MSGOK msg="$tmpN, $tmpN1"
+					BEGINCASE
+		          CASE  $tmpN > $tmpN1	#New Version Available				 
+									$tmpS = "(  )"
+									$form = EditForm($form,"btnCheckver","Caption","<FONT color="+ Quote("clred")+">New Version</FONT>")
+
+									
+					    CASE $tmpN1 > $tmpN   #Beta Version
+									$tmpS = "( Beta Version )"
+									$form = EditForm($form,"btnCheckver","Caption","<FONT color="+ Quote("#FF8040")+">Beta Version</FONT>")
+
+									
+					    CASE $tmpN1 = $tmpN   #Current version
+									$form = EditForm($form,"btnCheckver","Caption","<FONT color="+ Quote("clblack")+">Update Check</FONT>")									
+									
+					ENDCASE
+		
+				ELSE
+						MSGOK msg=Error getting latest version number.    Caption=Version Check
+				ENDIF
+		ELSE
+			MSGOK Msg=Unable to check as no Internet connection detected.  Caption=Version Check
+		ENDIF
+		
+ENDIF
+
+ENDSUB
+
+
+#----------------------------------------------------
+BEGINSUB Name=CheckXMLFile
+#----------------------------------------------------
+#Build the name of the dat file to store the form data in
+#This will have the same path and name as the macro but will end in .dat
+
+$datafile=sysinfo("macropath")+ "\" +substr($MN,1,len($MN)-4)+ ".xml"
+# Does the data file already exist?
+IF (FileExists($datafile))
+   # Yes? Read config values  
+   MacSettings Type=R FileCheck=N       #Restore settings from the xml file
+ELSE
+	  #set default values
+	  $chk22=TRUE
+	  $LastCheck=""
+	  $chkExit = FALSE
+		$chkIncMacroGS = FALSE
+		$chkIncMacroDB = FALSE
+		
+ENDIF	   
+ENDSUB
+
+
+#---------------------------------------------------- 
+BEGINSUB Name=DisplayAbout
+#----------------------------------------------------
+$frmAbout = EditForm($frmAbout,"lblAbout1","Caption",$MN + ":-     v" + $CurrentVersion)
+
+IF $LastCheck=""
+    $frmAbout = EditForm($frmAbout,"lblaboutLastRun","Caption","Last update check:-   Not checked")
+ELSE 
+    $frmAbout = EditForm($frmAbout,"lblaboutLastRun","Caption","Last update check:-   "+DateFormAt( StringToDate($LastCheck)))
+ENDIF 
+
+$memAbourtxt = "The purpose of this macro is to use DropBox as a repositry so that you can "
+$memAbourtxt=$memAbourtxt + "use it to update your databases (and macros) between all your own PC's without "
+$memAbourtxt=$memAbourtxt + "having to use a USB stick."
+
+WHILE TRUE # Infinite loop to redisplay form as required
+
+	$FormExit4 = Form($frmAbout,"")
+	BEGINCASE        
+	  CASE $FormExit4 = "SystemExit"
+	     #exit x pressed
+	     BREAK              
+	  
+	  CASE $FormExit4 = "btnAboutOk"
+	      BREAK
+	      
+	  CASE $FormExit4 = "btnAboutWWW"
+	        WEB URL="http://www.bigwolf.co.uk"   
+	ENDCASE
+	  
+	ENDWHILE
+    
+
+ENDSUB
+#----------------------------------------------------
+BEGINSUB Name=Declare Variables
+#----------------------------------------------------
+#*******************************************************
+#   Variable declarations for
+#   C:\Users\Angus\AppData\Roaming\gsaktt\Macros\DropboxCopy.gsk
+#
+#   Generated 23/02/2013 on GSAKVariables.gsk Rev V0.31
+#
+#*******************************************************
+
+
+#Option Explicit=Yes
+
+Declare Var=$BatData Type=String
+Declare Var=$BatFile Type=String
+Declare Var=$breakloop Type=Boolean
+Declare Var=$chk22 Type=Boolean
+Declare Var=$chkDBall Type=Boolean
+Declare Var=$chkDBnone Type=Boolean
+Declare Var=$chkExit Type=Boolean
+Declare Var=$chkGSall Type=Boolean
+Declare Var=$chkGSnone Type=Boolean
+Declare Var=$chkIncMacroDB Type=Boolean
+Declare Var=$chkIncMacroGS Type=Boolean
+Declare Var=$CurrDB Type=String
+Declare Var=$CurrentVersion Type=String
+Declare Var=$datafile Type=String
+Declare Var=$dirdat Type=String
+Declare Var=$DirData Type=String
+Declare Var=$DirPos Type=Numeric
+Declare Var=$dirtoexport Type=String
+Declare Var=$Dropbox Type=String
+Declare Var=$Dropboxdbs Type=String
+Declare Var=$Dropboxfile Type=String
+Declare Var=$Dropboxpath Type=String
+Declare Var=$DroplistBox Type=String
+Declare Var=$EndPos Type=Numeric
+Declare Var=$Exclude Type=String
+Declare Var=$Form Type=String
+Declare Var=$FormExit Type=String
+Declare Var=$FormExit4 Type=String
+Declare Var=$FormUpdate Type=String
+Declare Var=$frmAbout Type=String
+Declare Var=$frmcaption Type=String
+Declare Var=$From Type=String
+Declare Var=$FromMacro Type=String
+Declare Var=$GSAKdbs Type=String
+Declare Var=$GSAKlistBox Type=String
+Declare Var=$LatestVersion Type=String
+Declare Var=$lc Type=Numeric
+Declare Var=$MacroLatestVersion Type=String
+Declare Var=$MacroLibraryURL Type=String
+Declare Var=$MacroVerCheck Type=String
+Declare Var=$memAbourtxt Type=String
+Declare Var=$MN Type=String
+Declare Var=$old_chk22 Type=Boolean
+Declare Var=$psuinque Type=String
+Declare Var=$result Type=String
+Declare Var=$SC_VarsList Type=String
+Declare Var=$selected Type=Numeric
+Declare Var=$slcount Type=Numeric
+Declare Var=$TempDB Type=String
+Declare Var=$tmpN Type=Numeric
+Declare Var=$tmpN1 Type=Numeric
+Declare Var=$tmpS Type=String
+Declare Var=$To Type=String
+Declare Var=$ToMacro Type=String
+DECLARE Var=$values Type=String
+Declare Var=$wolf Type=String
+Declare Var=$x Type=Numeric
+
+
+
+ENDSUB 
+
+
+######### Forms #########
+
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Sat 23-Feb-2013 23:39:30
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Dropbox Copy
+  Height = 271
+  Width = 399
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = GSAK
+  Height = 198
+  Left = 5
+  Top = 6
+  Width = 185
+  Taborder = 4
+
+Name = Groupbox2
+  Type = Groupbox
+  Caption = DropBox
+  Height = 198
+  Left = 201
+  Top = 6
+  Width = 185
+  Taborder = 5
+
+Name = btnCancel
+  Type = Button
+  Height = 25
+  Left = 309
+  Top = 211
+  Width = 75
+  Taborder = 2
+  Caption = Cancel
+
+Name = chkExit
+  Type = Checkbox
+  Captionposition = Left
+  Height = 20
+  Left = 6
+  Top = 214
+  Width = 101
+  Taborder = 3
+  Caption = Exit after Upload
+
+Name = chkGSnone
+  Type = Checkbox
+  Container = Groupbox1
+  Exitonchange = Yes
+  Height = 20
+  Left = 138
+  Top = 6
+  Width = 24
+  Taborder = 0
+  Caption = -
+
+Name = chkGSall
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox1
+  Exitonchange = Yes
+  Height = 20
+  Left = 113
+  Top = 6
+  Width = 24
+  Taborder = 1
+  Caption = +
+
+Name = chkIncMacroGS
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox1
+  Height = 20
+  Left = 30
+  Top = 136
+  Width = 124
+  Taborder = 2
+  Caption = Include Macros
+
+Name = GSAKlistBox
+  Type = Checklistbox
+  Columns = 0
+  Container = Groupbox1
+  Height = 103
+  Left = 11
+  Top = 28
+  Values = Option1;Option2;Option3;Option4;Option5;Option6;Option7;Option8
+  Width = 156
+  Taborder = 3
+
+Name = btnUpload
+  Type = Button
+  Container = Groupbox1
+  Height = 25
+  Left = 48
+  Top = 161
+  Width = 75
+  Taborder = 4
+  Caption = Upload
+
+Name = Label1
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 60
+  Top = 9
+  Width = 51
+  Caption = Select all
+
+Name = chkIncMacroDB
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox2
+  Height = 20
+  Left = 31
+  Top = 136
+  Width = 124
+  Taborder = 0
+  Caption = Include Macros
+
+Name = chkDBnone
+  Type = Checkbox
+  Container = Groupbox2
+  Exitonchange = Yes
+  Height = 20
+  Left = 147
+  Top = 6
+  Width = 24
+  Taborder = 1
+  Caption = -
+
+Name = chkDBall
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox2
+  Exitonchange = Yes
+  Height = 20
+  Left = 122
+  Top = 6
+  Width = 24
+  Taborder = 2
+  Caption = +
+
+Name = DroplistBox
+  Type = Checklistbox
+  Columns = 0
+  Container = Groupbox2
+  Height = 103
+  Left = 15
+  Top = 27
+  Values = Option1;Option2;Option3;Option4;Option5;Option6;Option7;Option8
+  Width = 156
+  Taborder = 3
+
+Name = btnRestore
+  Type = Button
+  Container = Groupbox2
+  Height = 25
+  Left = 62
+  Top = 162
+  Width = 75
+  Taborder = 4
+  Caption = Download
+
+Name = HTMLabel2
+  Type = Label
+  Container = Groupbox2
+  Height = 17
+  Left = 67
+  Top = 10
+  Width = 51
+  Caption = Select all
+
+Name = btnCheckver
+  Type = Button
+  Height = 25
+  Left = 210
+  Top = 211
+  Width = 82
+  Taborder = 6
+  Caption = Version Check
+
+Name = btnAbout
+  Type = Button
+  Height = 25
+  Left = 116
+  Top = 211
+  Width = 75
+  Taborder = 7
+  Caption = About
+
+<enddata>
+
+
+
+
+
+
+
+
+
+<Data> VarName=$formUpdate
+
+Name = Form7
+  Type = Form
+  Height = 146
+  Width = 306
+
+Name = UpdateOK
+  Type = Button
+  Height = 25
+  Left = 215
+  Top = 83
+  Width = 75
+  Taborder = 8
+  Caption = Close
+
+Name = GetUpdate
+  Type = Button
+  Height = 25
+  Left = 215
+  Top = 7
+  Width = 75
+  Taborder = 9
+  Caption = Get Update
+
+Name = UpdateCaption
+  Type = Label
+  Color = 16711680
+  Height = 20
+  Left = 9
+  Size = 12
+  Style = bold
+  Top = 8
+  Width = 136
+  Caption = Update Available
+
+Name = UpdateText
+  Type = Label
+  Height = 15
+  Left = 7
+  Size = 9
+  Top = 37
+  Width = 260
+  Caption = You have version xx.xx.xx but yy.yy.yy is available
+
+Name = chk22
+  Type = Checkbox
+  Height = 17
+  Left = 121
+  Top = 85
+  Width = 15
+  Taborder = 10
+
+Name = Label1
+  Type = Label
+  Height = 13
+  Left = 7
+  Top = 77
+  Width = 104
+  Caption = Check version status
+
+Name = Label2
+  Type = Label
+  Height = 13
+  Left = 7
+  Top = 92
+  Width = 80
+  Caption = when the macro starts
+
+<enddata>
+
+
+
+<Data> VarName=$frmAbout
+#********************************************************************
+# Form generated by GSAK form designer on Sat 23-Feb-2013 22:48:49
+#********************************************************************
+
+Name = frmAbout
+  Type = Form
+  Caption = About
+  Color = 14607076
+  Height = 191
+  Width = 379
+
+Name = btnAboutOk
+  Type = Button
+  Height = 25
+  Left = 146
+  Top = 129
+  Width = 75
+  Taborder = 10
+  Caption = OK
+
+Name = wolf
+  Type = Image
+  File = wolf.gif
+  Height = 86
+  Left = 272
+  Source = Macro
+  Top = 5
+  Width = 85
+
+Name = lblAbout1
+  Type = Label
+  Height = 13
+  Left = 10
+  Top = 5
+  Width = 34
+
+Name = btnAboutWWW
+  Type = Button
+  Height = 25
+  Left = 263
+  Top = 99
+  Width = 102
+  Taborder = 11
+  Caption = www.bigwolf.co.uk
+
+Name = memAbourtxt
+  Type = Memo
+  Color = 14607076
+  Height = 71
+  Left = 8
+  Readonly = Yes
+  Top = 53
+  Width = 246
+  Wrap = Yes
+  Taborder = 12
+
+Name = lblaboutLastRun
+  Type = Label
+  Height = 13
+  Left = 11
+  Top = 25
+  Width = 97
+  Caption = Last update check
+
+<enddata>
+
+
+
+####### Mime Data #########
+
+
+
+<data> VarName=$wolf
+R0lGODlhVwBXAPcAAP///9TQyElKO1JTQklMQFpbSUFDOUxQQjk6MkFBM1RZSmNhTDtAOUNJQURHO2tp
+U2NkUTM4MTIzKktSSTk4KmtsWlpZQ1JVSWpjS3t1WnJsUlxgTHVyW1tiUiswKllUQNDMxGFdSVFMOlNa
+UYR8YmVoU5WLc1NQPIyEbGJbQkhDMmJoWmNrYrSee5yLbGhlUUA7KzI0L62be21oTXNqTCoqIDg8OMfE
+vDw+MzEwJHFuWWptYlxjWkA9L1VXRJ2SfFtUPGxyaqSTc4t+YouLfYuFc3tyVHR0Yn19c1lcUXt2YmFl
+WTc0KJSJbIuCZJOMfMWrhSktKJOFar6mhMC8tIR6XKWjm4RzU66adYSFep6RdLWmlMzIwDxCP3N1apR9
+W6uWdKSUe5OEZbeifEBFP0lOR25xW315YqOdk3x7bEtHM6yejcatipyNcWxiRLy4s8PAuIR9apSTi4uM
+gzQ5N3VxVWxxYkdFOLakhK6klZyTg3V6c83JwrOupoSDdc60kqSKY7a0rFBVUU5QPKWXg82yi3pqTVFL
+NJybk3JjSYN1Wp2Xi4l1Vq2cg315Xaymn4x7W7ykfLWkjb6pir2vnaGfmpyHY5GOhGlcQ62ro9W0i253
+dDAtISQpI62ijdCwg5uCW3lsUYp/a6SQbsCxpNW3k1hWS4uGed++lKOdiiUlG6WLaufOx6KPcn6Bd0E+
+LENMR5yOe5V/YrOgg19lYqSbhbOcdGVgRMqzn5KQgt67jnR5bZaDXb+phZmHanBuYqqOZd/LxiswL15X
+PDQ2K09OQMayl4x6Vaehk4aBbWFdU2Zxa6qSbdq4jb6rlquYeWVvaZx8VWJWQLesmHhvV01ZUGpuaSUs
+KEVRSoJ/c3t1alZdV4NvUru1r0dALJN8VpF2TtC3qnp+eLKfiqOGXceyi7SXbC0uIktXTdTCw1hdWtS/
+uLugfVZPM4+JdVdRNV9TN1tnXY+Ia4N3YJCHcDU+PGt4dJaWkYeIgYOFgMOoh7qgdzYzJMSqfYN4VDtG
+QSH5BAEAAAAALAAAAABXAFcAAAj/AAMIHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNqpMiFC4iNCkFQ
+yXQDpMM+OjSQQAbHJEE4iI5YOAFhEReXCUG8gKHiEKYZeXAiWiBCRY8eAkR44YPzoJUEOSRIgCEixZOP
+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
+<enddata>
+
+
+
+
+
+
+

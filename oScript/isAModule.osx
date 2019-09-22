@@ -1,0 +1,18 @@
+
+// This function returns TRUE if the specified module is loaded, and FALSE otherwise
+function Boolean isAModule (string moduleName)
+    dynamic module=$Kernel.ModuleSubsystem.GetItem(moduleName)
+ 
+    // if the module is loaded
+    if (IsDefined(module))
+        return true
+    else
+        return false
+    end
+end
+
+if (.isAModule("directory"))
+    echo("Directory module installed")
+else
+    echo("Directory module NOT installed")
+end

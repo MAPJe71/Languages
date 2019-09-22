@@ -1,0 +1,33 @@
+<!--
+	## User defined AutoCompletion API for AutoCAD Linetype files ##
+	** Depends of ACAD-Linetype.xml user defined Highlights lang
+	
+	Author:..........: RDD 1340 GFK
+	Last revision:...: 29.01.2017
+	Version:.........: 1.3
+	License:.........: GPLv2
+	Download:........: https://github.com/rddim/notepad-plus-plus-autocad/releases/latest
+-->
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<AutoComplete>
+		<KeyWord name="a=" /> <!-- absolute rotation -->
+		<KeyWord name="r=" /> <!-- relative rotation -->
+		<KeyWord name="s=" /> <!-- scale -->
+		<KeyWord name="u=" /> <!-- ?! -->
+		<KeyWord name="x=" /> <!-- X offset -->
+		<KeyWord name="y=" /> <!-- Y offset -->
+		<KeyWord name="A," />
+		<KeyWord name="STANDARD," />
+		<KeyWord name="AMZIGZAG,ltypeshp.shx," />
+		<KeyWord name="BAT,ltypeshp.shx," />
+		<KeyWord name="BOX,ltypeshp.shx," />
+		<KeyWord name="CIRC1,ltypeshp.shx," />
+		<KeyWord name="TRACK1,ltypeshp.shx," />
+		<KeyWord name="ZIG,ltypeshp.shx," />
+		<KeyWord name="BOX,AMZIGZAG.shx," />
+		<KeyWord name="CIRCLE,AeccLand.shx," />
+		<KeyWord name="STONE,AeccLand.shx," />
+		<KeyWord name="TREE,AeccLand.shx," />
+	</AutoComplete>
+</NotepadPlus>

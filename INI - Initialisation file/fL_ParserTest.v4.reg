@@ -1,0 +1,70 @@
+REGEDIT4
+
+; Add a key
+[HKEY_LOCAL_MACHINE\SOFTWARE\TEST1]
+
+; Remove Key
+[-HKEY_LOCAL_MACHINE\SOFTWARE\TEST2]
+
+; Add a value (Name and Data)
+[HKEY_LOCAL_MACHINE\SOFTWARE\TEST3]
+@="data of default value"
+"TextValue"="Data"
+"NumericValue"=dword:0000000F
+
+; REG_SZ
+"BinaryValue1"=hex(1):41,00,42,00,43,00,44,00,45,00,61,00,62,00,63,00,64,00,65,00
+
+; REG_EXPAND_SZ
+"BinaryValue2"=hex(2):63,6d,64,2e,65,78,65
+
+; REG_BINARY
+"BinaryValue3"=hex(3):63,6d,64,2e,65,78,65
+
+; REG_DWORD (== REG_EDIT_LITTLE_ENDIAN)
+"BinaryValue4"=hex(4):10
+
+; REG_DWORD_BIG_ENDIAN
+"BinaryValue5"=hex(5):63,6d,64,2e,65,78,65
+
+; REG_LINK
+;"BinaryValue6"=hex(6):
+
+; REG_MULTI_SZ
+"BinaryValue7"=hex(7):63,6d,64,2e,65,78,65
+
+; REG_RESOURCE_LIST
+;"BinaryValue8"=hex(8):
+
+; REG_FULL_RESOURCE_DESCRIPTOR
+;"BinaryValue9"=hex(9):
+
+; REG_RESOURCE_REQUIREMENTS_LIST
+;"BinaryValueA"=hex(A):
+
+; REG_QWORD
+;"BinaryValueB"=hex(B):
+
+; Remove a value (Name and Data)
+[HKEY_LOCAL_MACHINE\SOFTWARE\TEST4]
+@=-
+"TextValue"=-
+"NumericValue"=-
+
+"BinaryValue1"=-
+"BinaryValue2"=-
+"BinaryValue3"=-
+"BinaryValue4"=-
+"BinaryValue5"=-
+"BinaryValue6"=-
+"BinaryValue7"=-
+"BinaryValue8"=-
+"BinaryValue9"=-
+"BinaryValueA"=-
+"BinaryValueB"=-
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\TEST5]
+@=
+
+[HKEY_CURRENT_USER\SOFTWARE\TEST6]
+@=

@@ -1,0 +1,26 @@
+
+	cat <<LMR >> /etc/apache2/apache2.conf
+	#
+	<Directory /var/www/>
+	Options Indexes FollowSymLinks
+	AllowOverwrite All
+	Require all granted
+	</Directory>
+	LMR
+	#
+	systemctl restart apacke2.services
+
+# Enable SEO mods:
+
+	a2enmod deflate && a2enmod headers
+	cat <<ME >> /etc/apache2/apache2.conf
+	#
+	<ifmodule mod_expires.c>
+	<Filematch "\.(jpg|jpeg|png|gif|js|css|cwf|ico|woff|mp3)$">
+	ExpiresActive on
+	ExpiresDefault "access plus 8 days"
+	</Filemathc>
+	</ifmodule>
+	ME
+	#
+

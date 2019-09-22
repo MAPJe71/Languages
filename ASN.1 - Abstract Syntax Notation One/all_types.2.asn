@@ -1,0 +1,243 @@
+AllTypes DEFINITIONS ::= BEGIN
+
+Boolean ::= BOOLEAN
+
+Boolean2 ::= BOOLEAN (FALSE)
+
+Boolean3 ::= BOOLEAN (TRUE, ...)
+
+boolean BOOLEAN ::= TRUE
+
+boolean2 BOOLEAN ::= FALSE
+
+Integer ::= INTEGER
+
+Integer2 ::= INTEGER (1..99)
+
+Integer3 ::= INTEGER (1..2 | 9..10)
+
+Integer4 ::= INTEGER ((1..2 UNION 4..5) ^ SIZE (4))
+
+Integer5 ::= INTEGER {a(-1), b(0), c(1)}
+
+Integer6 ::= INTEGER (4..7, ...)
+
+Real ::= REAL
+
+Real2 ::= REAL (1.0..2.0)
+
+Real3 ::= REAL (1..2)
+
+Real4 ::= REAL (1...2)
+
+Real5 ::= REAL (1. ..2)
+
+Real6 ::= REAL (-20.0 .. -10.0)
+
+Real7 ::= [UNIVERSAL 0] REAL
+
+Real8 ::= [APPLICATION 0] REAL
+
+Real9 ::= [PRIVATE 0] REAL
+
+Real10 ::= REAL (WITH COMPONENTS {
+                     mantissa (-16777215..16777215),
+                     base (2),
+                     exponent (-149..104)
+                 })
+
+Bitstring ::= BIT STRING
+
+Bitstring2 ::= BIT STRING (SIZE (9))
+
+Bitstring3 ::= BIT STRING (SIZE (5..7))
+
+Bitstring4 ::= BIT STRING { a(0), b(1), c(2) }
+
+Bitstring5 ::= BIT STRING { a(0), b(1), c(2) } (SIZE (2..3))
+
+Bitstring6 ::= BIT STRING (SIZE (1..2), ...)
+
+bitstring BIT STRING ::= '10001000 1001'B
+
+bitstring2 BIT STRING ::= '01234567 89ABCD EF'H
+
+Octetstring ::= OCTET STRING
+
+Octetstring2 ::= OCTET STRING (SIZE (2))
+
+Octetstring3 ::= OCTET STRING (SIZE (3))
+
+Octetstring4 ::= OCTET STRING (SIZE (3..7))
+
+Octetstring5 ::= OCTET STRING (SIZE (4 | 9))
+
+Null ::= NULL
+
+Objectidentifier ::= OBJECT IDENTIFIER
+
+Enumerated ::= ENUMERATED { one(1) }
+
+Enumerated2 ::= ENUMERATED { one(1), two(2), ..., three(3) }
+
+Utf8string ::= UTF8String
+
+Sequence ::= SEQUENCE {}
+
+Sequence2 ::= SEQUENCE {
+  a INTEGER DEFAULT 0
+}
+
+Sequence3 ::= SEQUENCE {
+  a BOOLEAN,
+  ...
+}
+
+Sequence4 ::= SEQUENCE {
+  a BOOLEAN,
+  ...,
+  [[
+  b BOOLEAN
+  ]]
+}
+
+Sequence5 ::= SEQUENCE {
+  a BOOLEAN,
+  ...,
+  [[
+  b BOOLEAN
+  ]],
+  ...
+}
+
+Sequence6 ::= SEQUENCE {
+  a BOOLEAN,
+  ...,
+  [[
+  b BOOLEAN
+  ]],
+  ...,
+  c BOOLEAN
+}
+
+Sequence7 ::= SEQUENCE {
+  a BOOLEAN,
+  ...,
+  [[
+  b BOOLEAN
+  ]],
+  [[
+  c BOOLEAN
+  ]],
+  ...,
+  d BOOLEAN
+}
+
+Sequence8 ::= SEQUENCE {
+  a BOOLEAN,
+  ...,
+  ...
+}
+
+Sequence9 ::= SEQUENCE {
+    a INTEGER,
+    b BOOLEAN OPTIONAL
+}
+
+Sequence10 ::= SEQUENCE {
+    c Sequence9 (WITH COMPONENTS {..., b ABSENT}),
+    d Sequence9,
+    ...
+}
+
+Sequence11 ::= Sequence10 (WITH COMPONENTS {
+    c (WITH COMPONENTS {a (32)}) OPTIONAL,
+    d
+})
+
+-- Recursive
+Sequence12 ::= SEQUENCE {
+    a SEQUENCE OF Sequence12 OPTIONAL
+}
+
+List ::= SEQUENCE OF INTEGER
+
+Sequence13 ::= SEQUENCE {
+    a [0] IMPLICIT List OPTIONAL,
+    b [1] IMPLICIT List OPTIONAL
+}
+
+Sequence14 ::= SEQUENCE {
+    a [0] INTEGER,
+    b [1] Choice,
+    c [2] Sequence9,
+    d [3] CHOICE {
+        a BOOLEAN
+    }
+}
+
+Sequence15 ::= SEQUENCE {
+    a Bitstring4 DEFAULT {a, b},
+    b Bitstring4 DEFAULT '110'B,
+    c Bitstring4 DEFAULT 'C'H
+}
+
+Sequence16 ::= Sequence9 (WITH COMPONENTS { b PRESENT })
+
+Sequence17 ::= Sequence9 (WITH COMPONENTS { b ABSENT })
+
+Sequence18 ::= Sequence9 (Sequence16 | Sequence17)
+
+Set ::= SET {}
+
+Set2 ::= SET {
+  a INTEGER DEFAULT 1
+}
+
+Choice ::= CHOICE {
+    a INTEGER
+}
+
+choice CHOICE { foo A } ::= foo : bar
+
+foo INTEGER ::= 1
+
+Numericstring ::= NumericString
+
+Printablestring ::= PrintableString
+
+Ia5string ::= IA5String
+
+Ia5string2 ::= IA5String (FROM ("a".."f" | "0".."9"))
+
+Ia5string3 ::= IA5String ("foo" | "bar" | "fie" | "...")
+
+Ia5string4 ::= IA5String (SIZE (1) ^ FROM ("0".."2"))
+
+ia5string IA5String ::= { 1, 2 }
+
+ia5string2 IA5String ::= { 1, 2, 3, 4 }
+
+Universalstring ::= UniversalString
+
+Visiblestring ::= VisibleString
+
+Generalstring ::= GeneralString
+
+Bmpstring ::= BMPString
+
+Teletexstring ::= TeletexString
+
+Graphicstring ::= GraphicString
+
+Utctime ::= UTCTime
+
+GeneralizedTime1 ::= GeneralizedTime
+
+SequenceOf ::= SEQUENCE OF INTEGER
+
+SetOf ::= SET OF INTEGER
+
+Any ::= ANY
+
+END

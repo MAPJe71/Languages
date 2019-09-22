@@ -1,0 +1,6 @@
+<Language name="XQuery" imagelistpath="">
+	<CommList param1="(:" param2=":)" />
+	<Group name="FUNCTION" subgroup="" icon="0" child="0" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="\{" keywords="">
+		<Rules regexbeg="function[\s&amp;]+" regexfunc='[&quot;\w_-]+' regexend="\s*\(.*\)" bodybegin="\{" bodyend="\}" sep=";" />
+	</Group>
+</Language>

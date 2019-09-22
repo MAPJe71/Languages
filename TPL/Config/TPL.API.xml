@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<NotepadPlus>
+	<AutoComplete>
+		<Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";"/>    
+		<KeyWord name="access" func="yes" >
+			<Overload retVal="" descr="Returns the DiscoveryAccess node for the source node" >
+				<Param name="source " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="aged"/>
+		<KeyWord name="allProcesses" func="yes" >
+			<Overload retVal="" descr="Returns a list of all processes corresponding to the &#x0a;directly discovered data source node" >
+				<Param name="source " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="anchorRemovalGroup" func="yes" >
+			<Overload retVal="" descr="Specify an anchor node for a named removal group" >
+				<Param name="node " />		                
+				<Param name="[group name] " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="and"/>
+		<KeyWord name="append" func="yes" >
+			<Overload retVal="" descr="Appends further values to a list" >
+				<Param name="list " />		                
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="as"/>
+		<KeyWord name="associate" func="yes" >
+			<Overload retVal="" descr="Create associate inference relationship(s) from the &#x0a;specified node(s) to the inferred node" >
+				<Param name="inferred_node " />		                
+				<Param name="associate " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="at"/>
+		<KeyWord name="body"/>
+		<KeyWord name="binary"/>
+		<KeyWord name="binary.toHexString"/>
+		<KeyWord name="binary.toIPv4"/>
+		<KeyWord name="binary.toIPv6"/>
+		<KeyWord name="binary.toMACAddress"/>
+		<KeyWord name="binary.toWWN"/>
+        <KeyWord name="BMC_Application"/>
+        <KeyWord name="BMC_ApplicationService"/>
+        <KeyWord name="BMC_ApplicationSystem"/>
+        <KeyWord name="BMC_ApplicationSystemServices"/>
+        <KeyWord name="BMC_Cluster"/>
+        <KeyWord name="BMC_Component"/>
+        <KeyWord name="BMC_ComputerSystem"/>
+        <KeyWord name="BMC_ConcreteCollection"/>
+        <KeyWord name="BMC_DataBase"/>
+        <KeyWord name="BMC_Dependency"/>
+        <KeyWord name="BMC_DiskDrive"/>
+        <KeyWord name="BMC_HostedAccessPoint"/>
+        <KeyWord name="BMC_HostedSystemComponents"/>
+        <KeyWord name="BMC_Impact"/>
+        <KeyWord name="BMC_InIPSubnet"/>
+        <KeyWord name="BMC_IPConnectivitySubnet"/>
+        <KeyWord name="BMC_IPEndpoint"/>
+        <KeyWord name="BMC_LANEndpoint"/>
+        <KeyWord name="BMC_MFCouplingFacility"/>
+        <KeyWord name="BMC_MFSoftwareServer"/>
+        <KeyWord name="BMC_Mainframe"/>
+        <KeyWord name="BMC_NetworkPort"/>
+        <KeyWord name="BMC_OperatingSystem"/>
+        <KeyWord name="BMC_Printer"/>
+        <KeyWord name="BMC_Processor"/>
+        <KeyWord name="BMC_Product"/>
+        <KeyWord name="BMC_SoftwareServer"/>
+        <KeyWord name="BMC_StorageSubsystem"/>
+        <KeyWord name="BMC_Sysplex"/>
+        <KeyWord name="BMC_SystemResource"/>
+        <KeyWord name="BMC_TapeDrive"/>
+        <KeyWord name="BMC_Transaction"/>
+        <KeyWord name="BMC_VirtualSystemEnabler"/>
+		<KeyWord name="break"/>
+        <KeyWord name="BusinessApplicationInstance"/>
+		<KeyWord name="by"/>
+		<KeyWord name="children" func="yes" >
+			<Overload retVal="" descr="Returns a list of the child processes for the given &#x0a;DiscoveredProcess node" >
+				<Param name="process " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="closeDocument" func="yes" >
+			<Overload retVal="" descr="Closes the DOM object resulting from xpath.openDocument" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+        <KeyWord name="Cluster"/>
+        <KeyWord name="configuration"/>
+		<KeyWord name="constants"/>
+		<KeyWord name="continue"/>
+		<KeyWord name="contributor" func="yes" >
+			<Overload retVal="" descr="Create contributor inference relationship(s) from the &#x0a;specified node(s) to the inferred node, for attribute names specified in the contributes list" >
+				<Param name="inferred_node " />		                
+				<Param name="contributor " />		                
+				<Param name="contributes " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="created"/>
+		<KeyWord name="critical" func="yes" >
+			<Overload retVal="" descr="Log the given message with an critical level message" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="crossref"/>
+		<KeyWord name="current" func="yes" >
+			<Overload retVal="" descr="Returns the current time" >
+			</Overload>
+		</KeyWord>
+        <KeyWord name="DatabaseDetail"/>
+		<KeyWord name="debug" func="yes" >
+			<Overload retVal="" descr="Log the given message with a debug level message" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="default"/>
+		<KeyWord name="defined"/>
+        <KeyWord name="definition"/>
+        <KeyWord name="definitions"/>
+		<KeyWord name="del"/>
+		<KeyWord name="deleted"/>
+		<KeyWord name="delta" func="yes" >
+			<Overload retVal="" descr="Creates a time delta that can be added to or subtracted &#x0a;from a time" >
+				<Param name="days - keyword parameter representing days" />		                
+				<Param name="hours - keyword parameter representing hours" />		                
+				<Param name="minutes - keyword parameter representing minutes" />		                
+				<Param name="seconds - keyword parameter representing seconds" />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="deltaFromTicks" func="yes" >
+			<Overload retVal="" descr="Converts DCE ticks into a time delta" >
+				<Param name="ticks " />		
+			</Overload>
+		</KeyWord>
+		<KeyWord name="desc"/>
+		<KeyWord name="descendents" func="yes" >
+			<Overload retVal="" descr="Returns a list consisting of the children of the given &#x0a;DiscoveredProcess node, and recursively all of the children's children" >
+				<Param name="process " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="destruction" func="yes" >
+			<Overload retVal="" descr="When destroying a node, indicate that the source node was &#x0a;responsible for its destruction" >
+				<Param name="destroyed_node " />		                
+				<Param name="source " />		                
+			</Overload>
+		</KeyWord>
+        <KeyWord name="Detail"/>
+		<KeyWord name="detailContainer" func="yes" >
+			<Overload retVal="" descr="Returns the Software Component, Software Instance, or &#x0a;Business Application Instance node containing to the given node. The given node can be a Detail or DatabaseDetail." >
+				<Param name="node " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="discovery"/>
+		<KeyWord name="discovery.access"/>
+		<KeyWord name="discovery.allProcesses"/>
+		<KeyWord name="discovery.children"/>
+		<KeyWord name="discovery.descendents"/>
+		<KeyWord name="discovery.fileGet"/>	     
+		<KeyWord name="discovery.fileInfo"/>	     
+		<KeyWord name="discovery.listDirectory"/>	     
+		<KeyWord name="discovery.listRegistry"/>	     
+		<KeyWord name="discovery.parent"/>
+		<KeyWord name="discovery.process"/>
+		<KeyWord name="discovery.registryKey"/>
+		<KeyWord name="discovery.runCommand"/>
+		<KeyWord name="discovery.snmpGet"/>
+		<KeyWord name="discovery.snmpGetTable"/>
+		<KeyWord name="discovery.wmiQuery"/>
+		<KeyWord name="do"/>
+		<KeyWord name="elif"/>
+		<KeyWord name="else"/>
+		<KeyWord name="end"/>
+		<KeyWord name="error" func="yes" >
+			<Overload retVal="" descr="Log the given message with an error level message" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>		
+		<KeyWord name="evaluate" func="yes" >
+			<Overload retVal="" descr="Returns the result of evaluating the xpath expression &#x0a;against the XML string" >
+				<Param name="string " />		
+                <Param name="expression " />				
+			</Overload>
+		</KeyWord>
+        <KeyWord name="enumeration"/>
+		<KeyWord name="exists"/>		
+		<KeyWord name="expand"/>
+		<KeyWord name="explode"/>
+		<KeyWord name="external"/>
+		<KeyWord name="extract" func="yes" >
+			<Overload retVal="" descr="Returns the result of extracting the regular expression &#x0a;from the string, optionally with a substitution expression" >
+				<Param name="string " />		
+                <Param name="expression  " />								
+				<Param name="[, substitution] - optional " />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="extractAll" func="yes" >
+			<Overload retVal="" descr="Returns the result of extracting the regular expression &#x0a;from the string, optionally with a substitution expression" >
+				<Param name="string " />		
+                <Param name="pattern  " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="false"/>
+		<KeyWord name="fileGet" func="yes" >
+			<Overload retVal="" descr="Retrieves the specified file" >
+				<Param name="target " />		
+                <Param name="filename " />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="fileInfo" func="yes" >
+			<Overload retVal="" descr="Retrieves information about the specified file, but not the &#x0a;file content" >
+				<Param name="target " />		
+                <Param name="filename " />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="flags"/>
+		<KeyWord name="for"/>
+		<KeyWord name="formatLocal" func="yes" >
+			<Overload retVal="" descr="Formats a time into a human-readable string. &#x0a;With no format specification, the default BMC Atrium Discovery time representation is used" >
+				<Param name="datetime " />		                
+				<Param name="[format] " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="formatUTC" func="yes" >
+			<Overload retVal="" descr="Formats a time into a human-readable string. &#x0a;With no format specification, the default BMC Atrium Discovery time representation is used" >
+				<Param name="datetime " />		                
+				<Param name="[format] " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="from"/>
+		<KeyWord name="fromTicks" func="yes" >
+			<Overload retVal="" descr="Converts DCE ticks into a time" >
+				<Param name="ticks " />		
+			</Overload>
+		</KeyWord>
+        <KeyWord name="FunctionalComponent"/>
+        <KeyWord name="GenericElement"/>
+		<KeyWord name="has"/>
+		<KeyWord name="hash" func="yes" >
+			<Overload retVal="" descr="Returns a hashed form of the string, &#x0a;generated with the MD5 hash algorithm" >
+				<Param name="string " />		                										
+			</Overload>
+		</KeyWord>
+		<KeyWord name="host" func="yes" >
+			<Overload retVal="" descr="Returns the Host node corresponding to the given node. &#x0a;The given node can be any directly discovered data node, &#x0a;or a Software Instance or Business Application Instance" >
+				<Param name="string " />		                										
+			</Overload>
+		</KeyWord>
+        <KeyWord name="Host"/>
+        <KeyWord name="HostContainer"/>
+		<KeyWord name="identify"/>
+		<KeyWord name="if"/>
+		<KeyWord name="import"/>
+		<KeyWord name="in"/>
+		<KeyWord name="inference"/>
+		<KeyWord name="inference.associate"/>
+		<KeyWord name="inference.contributor"/>
+		<KeyWord name="inference.destruction"/>
+		<KeyWord name="inference.primary"/>
+		<KeyWord name="inference.relation"/>
+		<KeyWord name="inference.withdrawal"/>
+		<KeyWord name="info" func="yes" >
+			<Overload retVal="" descr="Log the given message with an info level message" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="is"/>
+		<KeyWord name="join" func="yes" >
+			<Overload retVal="" descr="Returns a string containing all items in a &#x0a;list of strings joined with the specified separator. " >
+				<Param name="string " />		
+                <Param name="separator " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="leftStrip" func="yes" >
+			<Overload retVal="" descr="Equivalent to text.strip(), &#x0a;but only strips from the left side of the string" >
+				<Param name="string " />		
+                <Param name="[, characters ] - optional " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="list"/>
+		<KeyWord name="list.append"/>
+		<KeyWord name="listDirectory" func="yes" >
+			<Overload retVal="" descr="Retrieves the directory listing of the directory &#x0a;specified by the path" >
+				<Param name="target " />		
+                <Param name="path " />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="listRegistry" func="yes" >
+			<Overload retVal="[DiscoveredRegistryEntry]" descr="Returns a list of the registry entries &#x0a;of the registry key specified by the key_path" >
+				<Param name="endpoint " />		
+                <Param name="key_path " />				
+			</Overload>
+		</KeyWord>				
+		<KeyWord name="locale"/>
+		<KeyWord name="log"/>
+		<KeyWord name="log.critical"/>
+		<KeyWord name="log.debug"/>
+		<KeyWord name="log.error"/>
+		<KeyWord name="log.info"/>
+		<KeyWord name="log.warn"/>
+		<KeyWord name="lower" func="yes" >
+			<Overload retVal="" descr="Returns the lower-cased version of the string argument" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="mail"/>
+		<KeyWord name="mail.send"/>
+		<KeyWord name="matches"/>
+		<KeyWord name="metadata"/>
+		<KeyWord name="model."/>
+		<KeyWord name="model.addContainment"/>
+		<KeyWord name="model.addDisplayAttribute"/>
+		<KeyWord name="model.anchorRemovalGroup"/>
+        <KeyWord name="model.BusinessApplicationInstance"/>
+        <KeyWord name="model.Cluster"/>
+        <KeyWord name="model.DatabaseDetail"/>
+        <KeyWord name="model.Detail"/>
+		<KeyWord name="model.destroy"/>
+		<KeyWord name="model.findPackages"/>
+        <KeyWord name="model.FunctionalComponent"/>
+        <KeyWord name="model.GenericElement"/>
+		<KeyWord name="model.host"/>
+		<KeyWord name="model.Host"/>
+        <KeyWord name="model.HostContainer"/>
+		<KeyWord name="model.rel."/>
+		<KeyWord name="model.removeDisplayAttribute"/>
+        <KeyWord name="model.RuntimeEnvironment"/>
+		<KeyWord name="model.setContainment"/>
+		<KeyWord name="model.setRemovalGroup"/>
+        <KeyWord name="model.SoftwareComponent"/>
+        <KeyWord name="model.SoftwareInstance"/>
+        <KeyWord name="model.Storage"/>
+		<KeyWord name="model.suppressRemovalGroup"/>
+		<KeyWord name="model.uniquerel."/>
+		<KeyWord name="model.withdraw"/>
+		<KeyWord name="modified"/>
+		<KeyWord name="module"/>
+		<KeyWord name="nodecount"/>
+		<KeyWord name="nodes"/>
+		<KeyWord name="none"/>
+		<KeyWord name="not"/>
+		<KeyWord name="number"/>
+		<KeyWord name="number.toText"/>
+		<KeyWord name="number.range"/>
+		<KeyWord name="on"/>
+		<KeyWord name="openDocument" func="yes" >
+			<Overload retVal="" descr="Returns the DOM object resulting from parsing the XML string. &#x0a;The DOM object returned is suitable for passing to xpath.evaluate" >
+				<Param name="XML String " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="or"/>
+		<KeyWord name="order"/>
+		<KeyWord name="ordinal" func="yes" >
+			<Overload retVal="" descr="Returns the ordinal value of the string argument. &#x0a;The string must be one character in length" >
+				<Param name="string " />		
+			</Overload>
+		</KeyWord>
+		<KeyWord name="out"/>
+		<KeyWord name="overrides"/>
+		<KeyWord name="overview"/>
+		<KeyWord name="parent" func="yes" >
+			<Overload retVal="" descr="Returns the parent process for the given &#x0a;DiscoveredProcess node" >
+				<Param name="process " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="parseLocal" func="yes" >
+			<Overload retVal="" descr="The time is converted according to the appliance's &#x0a;time zone and daylight saving setting" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="parseUTC" func="yes" >
+			<Overload retVal="" descr="The time is assumed to already be UTC, &#x0a;and is not adjusted for timezones or daylight saving time" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="pattern"/>
+		<KeyWord name="primary" func="yes" >
+			<Overload retVal="" descr="Create primary inference relationship(s) from the &#x0a;specified node(s) to the inferred node" >
+				<Param name="inferred_node " />		                
+				<Param name="primary " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="process" func="yes" >
+			<Overload retVal="" descr="Returns the process node corresponding to the source node" >
+				<Param name="source " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="processwith"/>
+		<KeyWord name="range" func="yes" >
+			<Overload retVal="" descr="Generate a list containing 0 to number - 1. &#x0a;If number is less than 1 the list will be empty" >
+				<Param name="string " />		
+			</Overload>
+		</KeyWord>
+		<KeyWord name="raw"/>
+		<KeyWord name="regex"/>
+		<KeyWord name="regex.extract"/>
+		<KeyWord name="regex.extractAll"/>
+		<KeyWord name="registryKey" func="yes" >
+			<Overload retVal="[DiscoveredRegistryValue]" descr="Retrieves a registry key &#x0a;from a Windows machine" >
+				<Param name="target " />		
+                <Param name="key " />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="rel"/>
+		<KeyWord name="related"/>
+		<KeyWord name="related.detailContainer"/>
+		<KeyWord name="related.host"/>
+		<KeyWord name="relation" func="yes" >
+			<Overload retVal="" descr="Create relation inference relationship(s) &#x0a;from the specified node(s) to the inferred relationship" >
+				<Param name="inferred_relationship " />		                
+				<Param name="source " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="relationship"/>
+		<KeyWord name="removal"/>
+		<KeyWord name="remove" func="yes" >
+			<Overload retVal="" descr="Removes the specified key from the specified table" >
+				<Param name="table " />		
+                <Param name="key " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="replace" func="yes" >
+			<Overload retVal="" descr="Returns a modified version of the string formed by &#x0a;replacing all occurrences of the string old with new" >
+				<Param name="string " />		
+                <Param name="old " />								
+				<Param name="new " />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="requires"/>
+		<KeyWord name="rightStrip" func="yes" >
+			<Overload retVal="" descr="Equivalent to text.strip, &#x0a;but only strips from the right side of the string" >
+				<Param name="string " />		
+                <Param name="[, characters ] - optional " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="runCommand" func="yes" >
+			<Overload retVal="[DiscoveredCommandResult]" descr="Returns a DiscoveredCommandResult node c&#x0a;ontaining the result of running the specified command" >
+				<Param name="target " />		
+                <Param name="command " />				
+			</Overload>
+		</KeyWord>
+        <KeyWord name="RuntimeEnvironment"/>
+		<KeyWord name="search"/>
+		<KeyWord name="send" func="yes" >
+			<Overload retVal="" descr="Sends an email" >
+				<Param name="recipients -  a single string containing an email address, or a list of email address strings" />
+				<Param name="subject -  the subject line to use in the email" />		                
+				<Param name="message - the message content" />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="setRemovalGroup" func="yes" >
+			<Overload retVal="" descr="Add the specified node or nodes to a named removal group" >
+				<Param name="node " />		                
+				<Param name="[group name] " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="shared"/>
+		<KeyWord name="show"/>
+		<KeyWord name="size" func="yes" >
+			<Overload retVal="" descr="Returns the number of items in the collection, &#x0a;where the collection is a list, or a set of nodes retrieved with a search expression" >
+				<Param name="collection " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="snmpGet" func="yes" >
+			<Overload retVal="[DiscoveredSNMP]" descr="Performs an SNMP query on the target" >
+				<Param name="target " />		
+                <Param name="oid_table " />								
+			</Overload>
+		</KeyWord>
+		<KeyWord name="snmpGetTable" func="yes" >
+			<Overload retVal="[DiscoveredSNMPRow]" descr="Performs an SNMP query that returns a &#x0a;table on the target" >
+				<Param name="target " />		
+                <Param name="oid_table " />								
+				<Param name="column_table " />
+			</Overload>
+		</KeyWord>
+        <KeyWord name="SoftwareComponent"/>
+        <KeyWord name="SoftwareInstance"/>
+		<KeyWord name="split" func="yes" >
+			<Overload retVal="" descr="Returns a list consisting of portions of the string split &#x0a;according to the separator string" >
+				<Param name="string " />		
+                <Param name="separator " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="step"/>
+		<KeyWord name="stop"/>
+        <KeyWord name="Storage"/>
+		<KeyWord name="strip" func="yes" >
+			<Overload retVal="" descr="Strips unwanted characters from the start and end of the given string" >
+				<Param name="string " />		
+                <Param name="[, characters ] - optional " />												
+			</Overload>
+		</KeyWord>
+		<KeyWord name="substring"/>
+		<KeyWord name="subword"/>
+		<KeyWord name="summary"/>
+		<KeyWord name="suppressRemovalGroup" func="yes" >
+			<Overload retVal="" descr="Suppress removal of the named removal group" >
+				<Param name="[group name] " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="sync"/>
+        <KeyWord name="sync.BMC_Application"/>
+        <KeyWord name="sync.BMC_ApplicationService"/>
+        <KeyWord name="sync.BMC_ApplicationSystem"/>
+        <KeyWord name="sync.BMC_ApplicationSystemServices"/>
+        <KeyWord name="sync.BMC_Cluster"/>
+        <KeyWord name="sync.BMC_Component"/>
+        <KeyWord name="sync.BMC_ComputerSystem"/>
+        <KeyWord name="sync.BMC_ConcreteCollection"/>
+        <KeyWord name="sync.BMC_DataBase"/>
+        <KeyWord name="sync.BMC_Dependency"/>
+        <KeyWord name="sync.BMC_DiskDrive"/>
+        <KeyWord name="sync.BMC_HostedAccessPoint"/>
+        <KeyWord name="sync.BMC_HostedSystemComponents"/>
+        <KeyWord name="sync.BMC_Impact"/>
+        <KeyWord name="sync.BMC_InIPSubnet"/>
+        <KeyWord name="sync.BMC_IPConnectivitySubnet"/>
+        <KeyWord name="sync.BMC_IPEndpoint"/>
+        <KeyWord name="sync.BMC_LANEndpoint"/>
+        <KeyWord name="sync.BMC_MFCouplingFacility"/>
+        <KeyWord name="sync.BMC_MFSoftwareServer"/>
+        <KeyWord name="sync.BMC_Mainframe"/>
+        <KeyWord name="sync.BMC_NetworkPort"/>
+        <KeyWord name="sync.BMC_OperatingSystem"/>
+        <KeyWord name="sync.BMC_Printer"/>
+        <KeyWord name="sync.BMC_Processor"/>
+        <KeyWord name="sync.BMC_Product"/>
+        <KeyWord name="sync.BMC_SoftwareServer"/>
+        <KeyWord name="sync.BMC_StorageSubsystem"/>
+        <KeyWord name="sync.BMC_Sysplex"/>
+        <KeyWord name="sync.BMC_SystemResource"/>
+        <KeyWord name="sync.BMC_TapeDrive"/>
+        <KeyWord name="sync.BMC_Transaction"/>
+        <KeyWord name="sync.BMC_VirtualSystemEnabler"/>
+		<KeyWord name="sync.crossref"/>
+		<KeyWord name="sync.external"/>
+		<KeyWord name="sync.rel"/>
+		<KeyWord name="sync.shared"/>
+		<KeyWord name="table"/>
+		<KeyWord name="table.remove"/>
+		<KeyWord name="tags"/>
+		<KeyWord name="taxonomy"/>
+		<KeyWord name="text"/>
+		<KeyWord name="text.hash"/>
+		<KeyWord name="text.join"/>
+		<KeyWord name="text.leftStrip"/>
+		<KeyWord name="text.lower"/>
+		<KeyWord name="text.ordinal"/>
+		<KeyWord name="text.replace"/>
+		<KeyWord name="text.rightStrip"/>
+		<KeyWord name="text.split"/>
+		<KeyWord name="text.strip"/>
+		<KeyWord name="text.toNumber"/>
+		<KeyWord name="text.upper"/>
+		<KeyWord name="then"/>
+		<KeyWord name="time"/>
+		<KeyWord name="time.current"/>
+		<KeyWord name="time.delta"/>
+		<KeyWord name="time.deltaFromTicks"/>
+		<KeyWord name="time.formatLocal"/>
+		<KeyWord name="time.formatUTC"/>
+		<KeyWord name="time.fromTicks"/>
+		<KeyWord name="time.parseLocal"/>
+		<KeyWord name="time.parseUTC"/>
+		<KeyWord name="time.toTicks"/>
+		<KeyWord name="toHexString" func="yes" >
+			<Overload retVal="" descr="Returns the given binary value as a hex string, &#x0a;that is, two hex digits per byte. &#x0a;If the value is invalid, for example, it is not a binary value, it returns none" >
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toIPv4" func="yes" >
+			<Overload retVal="" descr="Returns the given binary value as the text representation of an IPv4 address. &#x0a;If the value is invalid, for example, it is the wrong size, it returns none" >
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toIPv6" func="yes" >
+			<Overload retVal="" descr="Returns the given binary value as the text representation of a &#x0a;canonical IPv6 address. &#x0a;If the value is invalid, for example, it is the wrong size, it returns none" >
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toMACAddress" func="yes" >
+			<Overload retVal="" descr="Returns the given binary value as the text representation of a &#x0a;MAC address. &#x0a;If the value is invalid, for example, it is the wrong size, it returns none" >
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toNumber" func="yes" >
+			<Overload retVal="" descr="Converts its string argument into a number" >
+				<Param name="string  " />		
+                <Param name="[, base ] - optional " />								
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toText" func="yes" >
+			<Overload retVal="" descr="Converts the integer number to a text form" >
+				<Param name="number   " />		
+                <Param name="[ , base [ ( , width ] ] - optional " />								
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toTicks" func="yes" >
+			<Overload retVal="" descr="Converts a time or time delta into the DCE ticks format" >
+				<Param name="datetime " />		
+			</Overload>
+		</KeyWord>
+		<KeyWord name="toWWN" func="yes" >
+			<Overload retVal="" descr="Returns the given binary value as the text representation &#x0a;of a WWN value. &#x0a;If the value is invalid, for example, it is the wrong size, it returns none" >
+				<Param name="value " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="traverse"/>
+		<KeyWord name="triggers"/>
+		<KeyWord name="true"/>
+		<KeyWord name="unconfirmed"/>
+		<KeyWord name="unix_cmd"/>
+		<KeyWord name="upper" func="yes" >
+			<Overload retVal="" descr="Returns the upper-cased version of the string argument" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+        <KeyWord name="void"/>
+		<KeyWord name="warn" func="yes" >
+			<Overload retVal="" descr="Log the given message with an warn level message" >
+				<Param name="string " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="where"/>
+		<KeyWord name="windows_cmd"/>
+		<KeyWord name="with"/>
+		<KeyWord name="withdraw" func="yes" >
+			<Overload retVal="" descr="Removes the named attribute from the node" >
+				<Param name="node " />		                
+				<Param name="attribute " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="withdrawal" func="yes" >
+			<Overload retVal="" descr="Create withdrawal inference relationship(s) from the specified node(s) &#x0a;to the inferred node, indicating the withdrawal of the withdrawn attribute name" >
+				<Param name="inferred_node " />		                
+				<Param name="evidence " />		                
+				<Param name="withdrawn " />		                
+			</Overload>
+		</KeyWord>
+		<KeyWord name="wmiQuery" func="yes" >
+			<Overload retVal="[DiscoveredWMI]" descr="Performs a WMI query on a Windows machine" >
+				<Param name="target " />		
+                <Param name="query " />				
+				<Param name="namespace " />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="xpath"/>				
+		<KeyWord name="xpath.closeDocument"/>              
+		<KeyWord name="xpath.evaluate"/>              
+		<KeyWord name="xpath.openDocument"/>              
+	</AutoComplete>
+</NotepadPlus>

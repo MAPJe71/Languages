@@ -1,0 +1,10 @@
+function |TEST
+test1()
+{
+    |highlighted function name
+}
+
+function test2()
+{
+    | No highlight. (I guess regex is not correct to handle both)
+}

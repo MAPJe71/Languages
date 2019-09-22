@@ -1,0 +1,9 @@
+# local environment  variables
+SET varname=string value to the end of line
+# or
+SET varname="string value"
+
+# system (global) environment variables
+SYS-SET varname=string value to the end of line
+# or
+SYS-SET varname="string value"

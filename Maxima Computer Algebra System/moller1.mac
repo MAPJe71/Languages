@@ -1,0 +1,340 @@
+/* moller1.mac  
+   E.L. Woollett
+   woollett@charter.net
+   April 15, 2011.
+   High energy limit of:
+   e(-,p1,m) e(-,p2,m) --> e(-,p3,m) e(-,p4,m) elastic scatt
+     of identical fermions : Moller Scattering  */
+     
+ /* references 4-30-10  
+    Halzen and Martin, p. 119-121, p.129, dsigdo in terms of s, t, u Mandelstam variables
+    Griffith p 233
+    Renton p 157 - 159, dsigdo in terms of s,t,u
+    Peskin Schroeder p. 157-158, s,t,u
+    Bjorken and Drell RQM p 135 - 138, high energy limit explicit
+    Greiner and Reinhardt 2nd ed 130-137, dsigdo in terms of th/2
+         4th ed 131-139  simple formula in terms of th in he limit
+    BLP, Sec. 81.
+    G/R and BLP use Gaussian electromagnetic units.
+  */
+  
+  
+ " ======================================================"$
+ "  file moller1.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+ 
+ " ======================================================"$
+"              MOLLER SCATTERING                   "$
+" HIGH ENERGY LIMIT, CENTER OF MOMENTUM FRAME, NEGLECT MASSES "$
+"  e(-,p1,sv1) + e(-,p2,sv2) --> e(-,p3,sv3) + e(-,p4,sv4) "$
+
+" m = electron mass is set to zero."$
+" ------------------------------------------ "$
+  
+  
+  "NON-POLARIZED DIFFERENTIAL CROSS SECTION: SYMBOLIC METHODS"$
+  
+    " POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES, "$
+  " Using p1 + p2 = p3 + p4, s = (p1+p2)^2 = (p3+p4)^2 ,"$
+  "  t = (p1-p3)^2 = (p2-p4)^2,"$
+  "   and u = (p1-p4)^2 = (p2-p3)^2 "$
+  
+  " CASE HIGH ENERGY (HE) LIMIT E >> m  "$
+  " ---------------------------------------------"$
+  invar (D(p1,p1) = 0,
+         D(p1,p2) = s/2,
+         D(p1,p3) =  - t/2,
+         D(p1,p4) =  - u/2,
+         D(p2,p2) = 0,
+         D(p2,p3) =  - u/2,
+         D(p2,p4) =  - t/2,
+         D(p3,p3) = 0,
+         D(p3,p4) = s/2,
+         D(p4,p4) = 0)$
+  "------------------------------------------------------"$
+  " factor out -e^2 from Mfi, leaving Mfi = M1 - M2 "$
+  " With a sum over all helicities implied,"$
+  " |Mfi|^2 = M1n/t^2 + M2n/u^2 -M12n/(t*u) - M21n/(t*u) "$
+  " M1n = t^2 * M1*conj(M1), M2n = u^2 * M2*conj(M2) "$
+  " M12n = (t*u)*M1*conj(M2), M21n = (t*u)*M2*conj(M1), and: "$
+  
+  M1n : factor (Con ( tr (p3,mu,p1,nu)*tr (p4,mu,p2,nu), mu,nu));  
+  
+  M2n : factor (Con ( tr (p4,mu,p1,nu)*tr (p3,mu,p2,nu), mu,nu));
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+  " LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n : factor ( tr (p3,mu,p1,nu,p4,mu,p2,nu));
+  
+  M21n : factor ( tr (p4,mu,p1,nu,p3,mu,p2,nu));
+  
+  MfiSQ : pullfac(M1n/t^2 + M2n/u^2 - M12n/(t*u) - M21n/(t*u),8);
+  
+  " We have absorbed e^4 into A, with e^2 = 4*%pi*alpha "$    
+  
+  " Averaging over initial spins means we need to divide A by 4"$
+  " to get the unpolarized differential cross section (CM, HE)"$
+  
+  A : alpha^2/(4*s)$    
+  
+  dsigdo_unpol_CM_HE : (A/4)*MfiSQ;
+  
+  (display2d:true,display (dsigdo_unpol_CM_HE),display2d:false)$
+   " which agrees with Renton function of s,t, and u "$
+   " on page 159, Eq.(4.54) "$
+   
+  " CONVERSION TO EXPLICIT FUNCTION OF SCATTERING ANGLE "$
+
+ assume ( p > 0, th >= 0, th <= %pi )$
+   
+ comp_def ( p1( E,0,0,E),
+            p2( E,0,0,-E),
+            p3 (E,E*sin(th),0,E*cos(th)),
+            p4 (E,-E*sin(th),0,-E*cos(th)) )$
+             
+  s_th : VP (p1+p2,p1+p2);
+  
+  t_th : factor (VP (p1-p3,p1-p3));
+  
+  u_th : factor (VP (p1-p4,p1-p4));
+  
+  " To get an expression we can compare with Renton and G/R, "$
+  " work with one term at a time "$
+  
+  " sub_stu replaces s by s_th, t by t_th  "$
+  "  and u by u_th "$
+  
+  M1SQ : sub_stu (M1n/t^2);
+  
+  " convert to (th/2) form "$
+  
+  M1SQ : factor (ratsimp (to_ao2 (M1SQ,th)));
+  " ---------------- "$
+  
+  M2SQ : sub_stu (M2n/u^2);
+  
+  M2SQ : ratsimp (to_ao2(M2SQ,th));
+  
+  M2SQ : (factor (ratsubst (1-sin(th/2)^2,cos(th/2)^2,num (M2SQ))))/denom(M2SQ);
+  
+  " ---------------------- "$
+  
+  M12INT : -2* sub_stu ( M12n/(t*u) );
+  
+  M12INT : factor (M12INT);
+  
+  M12INT : subst([(cos(th)-1)=-2*sin(th/2)^2,(cos(th)+1) = 2*cos(th/2)^2],M12INT);
+  
+  " pull out a factor of 8 from each term. "$
+  
+  MfiSQ : pullfac (M1SQ + M2SQ + M12INT,8);
+  
+  dsigdo_unpol_CM_HE : (A/4)*MfiSQ;
+  
+  (display2d:true,display (dsigdo_unpol_CM_HE),display2d:false)$
+   " which agrees with Renton, page 159, Eq.(4.55) "$
+   " as well as G/R, page 138, Eq. (3-139) "$
+   "-------------------------------------------------"$
+   " Convert to simple function of th displayed by G/R "$
+   
+   MfiSQ : fr_ao2(MfiSQ,th);
+   
+   MfiSQ : factor (ratsimp (MfiSQ));
+   
+   dsigdo_unpol_CM_HE : (A/4)*MfiSQ;
+   
+   dsigdo_unpol_CM_HE : subst (s = s_th,dsigdo_unpol_CM_HE);
+  
+  (display2d:true,display (dsigdo_unpol_CM_HE),display2d:false)$
+   " which agrees with G/R, page 139, top. "$
+  " --------------------------------------------------"$
+  
+  " HE POLARIZED AMPLITUDES USING EXPLICIT DIRAC SPINORS "$
+  " ------------------------------------------------- "$
+
+  
+ " case HE RR --> RR, ie, (+1,+1) --> (+1,+1) polarized amplitude "$
+  
+ " Define the needed Dirac spinors and barred spinors."$
+  
+  (up1 : UU(E,E,0,0,1), up3b : sbar (UU(E,E,th,0,1)),
+       up2 : UU (E,E,%pi,0,1), up4b : sbar( UU (E,E,%pi-th,%pi,1)) )$
+       
+ " For example, following Halzen/Martin p. 120 ff :"$ 
+ " For helicity quantum numbers RR -> RR,  the amplitude Mfi"$
+ " (pulling out -e^2) has the form Mfi = M1 - M2 "$
+ " where M1 =  Mt/t and M2 =  Mu/u,  "$
+ " where t = (p1-p3)^2 and u = (p1-p4)^2, and "$
+  
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu),
+                    trigsimp (%%)  );  
+  
+  
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu),
+                    trigsimp (%%)  );  
+  
+  Mfi : Mt/t - Mu/u;  
+  
+  " Now replace s, t, and u by explicit functions of th "$ 
+  
+  Mfi : sub_stu (Mfi);
+  
+  Mfi_RR_RR : ts (Mfi,th);
+  
+   " Now automate production of HE polarized amplitudes "$
+   " as functions of t and u "$
+   
+  " Our definition of the amplitude does not include a factor of -e^2."$
+  
+
+ he_me (sp1v,sp2v,sp3v,sp4v) := 
+  block ([up1,up2,up3b,up4b,_mu%,Mt,Mu,temp],
+    up1 : UU(E,E,0,0,sp1v),
+    up3b : sbar (UU(E,E,th,0,sp3v)),
+    up2 : UU (E,E,%pi,0,sp2v),
+    up4b : sbar( UU (E,E,%pi-th,%pi,sp4v)),
+    
+    a13 : up3b.Gam[_mu%].up1,      
+    a24 : up4b.Gam[_mu%].up2,
+    Mt : (Con (a13*a24,_mu%),expand (trigsimp (%%)))/t,
+    
+    a14 : up4b.Gam[_mu%].up1,            
+    a23 : up3b.Gam[_mu%].up2,
+    Mu : ( Con (a14*a23, _mu%),expand (trigsimp (%%)))/u,
+    
+    temp : Mt - Mu,
+    
+    if temp # 0 then temp : pullfac (temp,-8*E^2),
+    temp )$
+    
+  " test he_me for the case already worked out above "$
+    
+  he_me (1,1,1,1);
+  
+  sub_stu (%);
+  
+  ts (%,th);
+  
+  " which agrees with our previous work."$
+  " ---------------------------------------- "$
+  " AN ALTERNATIVE PATH TO THE UNPOLARIZED CROSS SECTION "$
+  "  IS TO SUM THE ABSOLUTE VALUE SQUARED OF EACH "$
+  " OF THE POLARIZED AMPLITUDES, WHICH WE NOW DO."$
+  " The function Avsq(expr) is defined in dgmatrix.mac "$
+  " and computes the absolute value squared."$
+  "  (We could also use here abs(expr)^2 )"$
+  
+    " Each nonzero amplitude is proportional to 8*E^2*e^2"$
+    " here since we have not replaced t or u in the denominators"$
+    " by a function of th."$
+  " We have already pulled out -e^2 from our 'amplitude' def"$
+  " Pull out also the factor 8*E^2 temporarily here."$
+  
+   block ([sL,s1,s2,s3,s4,temp ], sL : [1,-1],
+    mssq : 0,
+    print ("  "),
+    print (" svp1 svp2  svp3  svp4     amplitude     "),
+    print ("  "),            
+    for s1 in sL do
+      for s2 in sL do
+        for s3 in sL do
+          for s4 in sL do (
+            temp :  expand (he_me (s1,s2,s3,s4)/(8*E^2) ),            
+            mssq : mssq + Avsq (temp),
+            print ("  "),
+            print (s1,s2,s3,s4," ",temp ) ),
+            
+    mssq : expand (fr_ao2 (mssq,th)) )$
+    " -------------------------------------- "$
+  mssq;
+  
+  mssq : sub_stu (mssq);
+  
+  mssq : factor (ratsimp (mssq));
+  
+  " restore (8*E^2)^2 = 64*E^4 to mssq "$
+  
+  mssq : 64*E^4*mssq;
+  
+  dsigdo_unpol_CM_HE : A*mssq/4;
+  
+  dsigdo_unpol_CM_HE : subst (s=s_th,%);
+  
+  (display2d:true,display (dsigdo_unpol_CM_HE),display2d:false)$
+  
+  " which agrees with the symbolic calculation."$
+  
+  " ================================  "$
+  
+  " SYMBOLIC POLARIZED AMPLITUDE SQUARED "$
+  " -----------------------------------------"$
+  " Instead of summing over helicities, insert helicity "$
+  " projection operators appropriate to the zero mass limit "$
+  " CASE RR --> RR "$
+  
+  
+  M1n : trigsimp (Con ( tr (S(1),p3,mu,S(1),p1,nu)*tr (S(1),p4,mu,S(1),p2,nu), mu,nu));  
+  
+  M2n : trigsimp (Con ( tr (S(1),p4,mu,S(1),p1,nu)*tr (S(1),p3,mu,S(1),p2,nu), mu,nu));
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+ " LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n : tr (S(1),p3,mu,S(1),p1,nu,S(1),p4,mu,S(1),p2,nu);
+  
+  M21n : tr (S(1),p4,mu,S(1),p1,nu,S(1),p3,mu,S(1),p2,nu);
+  
+  MfiSQ : M1n/t^2 + M2n/u^2 - M12n/(t*u) - M21n/(t*u);
+  
+  MfiSQ : sub_stu (MfiSQ);
+  
+  "  which is the square of the Dirac spinor amplitude found above "$
+  
+  
+  /*
+  
+  MfiSQ : pullfac(M1n/t^2 + M2n/u^2 - M12n/(t*u) - M21n/(t*u),8);
+  
+  " We have absorbed e^4 into A, with e^2 = 4*%pi*alpha "$
+  
+  */
+  
+ 
+
+  /*    arb energy case...
+  
+  
+       comp_def ( p1( E,0,0,p),
+             Sp1 (p/m,0,0,E/m),
+             p2( E,0,0,-p),
+             Sp2 (p/m,0,0,-E/m),
+             p3 (E,p*sin(th),0,p*cos(th)),
+             Sp3 (p/m,E*sin(th)/m,0,E*cos(th)/m),
+             p4 (E,-p*sin(th),0,-p*cos(th)),
+             Sp4 (p/m,-E*sin(th)/m,0,-E*cos(th)/m) )$ 
+             
+  
+  
+  Esub_fac (expr) := ( subst (E = sqrt(p^2+m^2),expr),                 
+                                            factor(%%) )$
+  E2_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+  
+  p2_Em (expr) := expand (ratsubst (E^2 - m^2,p^2,expr))$
+                                            
+                                            
+  (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       up2 : UU (E,p,%pi,0,1), up4b : sbar( UU (E,p,%pi-th,%pi,1)) )$
+       
+       
+               
+             
+   */

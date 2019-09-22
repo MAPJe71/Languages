@@ -1,0 +1,28 @@
+PROGRAM arm_check
+-- checks three arm positions and digital outputs
+VAR
+    perch, checkpt1, checkpt2, checkpt3 : POSITION
+    
+ROUTINE reset_all -- routine declaration
+-- resets outputs to off and returns arm to perch
+VAR
+    n : INTEGER
+BEGIN
+    FOR n := 21 TO 23 DO
+        $DOUT[n] := OFF
+    ENDFOR
+    MOVE TO perch
+END reset_all
+
+BEGIN -- main program
+    reset_all -- routine call
+    MOVE TO checkpt1
+    $DOUT[21] := ON
+    reset_all
+    MOVE TO checkpt2
+    $DOUT[22] := ON
+    reset_all
+    MOVE TO checkpt3
+    $DOUT[23] := ON
+    reset_all
+END arm_check

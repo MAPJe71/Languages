@@ -1,0 +1,8 @@
+Client ::= SEQUENCE {
+  nom PrintableString (SIZE (1..40)),
+  rue PrintableString (SIZE (1..50)) OPTIONAL,
+  codepostal NumericString (SIZE (10)),
+  ville PrintableString (SIZE (1..30)),
+  pays PrintableString (SIZE (1..20))
+          DEFAULT pays-pardefaut }
+  pays-pardefaut PrintableString ::= "France"

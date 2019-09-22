@@ -1,0 +1,149 @@
+Parameterization DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+IMPORTS
+
+    B2,
+    D2,
+    E2,
+    F2
+FROM Parameterization2;
+
+-- One parameter.
+A { B } ::= SEQUENCE {
+    a B
+}
+
+A-Boolean ::= A { BOOLEAN }
+
+A-Integer ::= A { INTEGER }
+
+-- Two parameters.
+B { A, B } ::= SEQUENCE {
+    a A,
+    b B OPTIONAL
+}
+
+B-BooleanInteger ::= B { BOOLEAN, INTEGER }
+
+-- Use a parameterized type (B) within a parameterized type (C).
+C { A } ::= CHOICE {
+    a A,
+    b B { A, INTEGER }
+}
+
+D ::= SEQUENCE {
+    a C { B-BooleanInteger },
+    b CHOICE {
+        c A { B { NULL, INTEGER } },
+        d B { NULL, INTEGER }
+    }
+}
+
+-- SEQUENCE, SEQUENCE OF and CHOICE mixed.
+E { A } ::= SEQUENCE (SIZE (0..5)) OF CHOICE {
+    a A,
+    b SEQUENCE {
+        c SEQUENCE OF B { A, BOOLEAN }
+    }
+}
+
+F ::= E { INTEGER }
+
+-- Value parameter in SIZE.
+G { INTEGER : a } ::= SEQUENCE (SIZE (0..a)) OF BOOLEAN
+
+H ::= G { 5 }
+
+i INTEGER ::= 1
+
+I ::= G { i }
+
+J { INTEGER : b } ::= SEQUENCE (SIZE (b)) OF BOOLEAN
+
+K ::= J { 3 }
+
+-- Value parameter in integer range.
+L { INTEGER : a, INTEGER : b } ::= INTEGER (a..b)
+
+M ::= L { 3, 9 }
+
+-- Both value and type parameter.
+N { INTEGER : a, B } ::= B (-5..a)
+
+O ::= N { -2, INTEGER }
+
+-- Multiple parameterized levels.
+P { A } ::= SEQUENCE {
+    a A
+}
+
+Q { A } ::= P { A }
+
+R ::= Q { INTEGER }
+
+-- Use imported type.
+S ::= B2 { BOOLEAN }
+
+A2 ::= BOOLEAN
+
+T ::= D2 { OCTET STRING }
+
+U ::= E2 { INTEGER }
+
+V ::= F2 { INTEGER }
+
+END
+
+
+Parameterization2 DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+IMPORTS
+
+    B3,
+    D3
+FROM Parameterization3;
+
+A2 ::= INTEGER
+
+B2 { A } ::= SEQUENCE {
+    a A,
+    b A2
+}
+
+C2 ::= INTEGER
+
+D2 { A } ::= SEQUENCE {
+    a A,
+    b C2
+}
+
+E2 { A } ::= SEQUENCE {
+    a A,
+    b B3 { A }
+}
+
+F2 { A } ::= D3 { A }
+
+END
+
+
+Parameterization3 DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+A3 ::= INTEGER
+
+B3 { A } ::= SEQUENCE {
+    a A,
+    b A3
+}
+
+C3 ::= OCTET STRING
+
+D3 { A } ::= C3 (CONTAINING A)
+
+END

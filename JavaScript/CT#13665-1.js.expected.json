@@ -1,0 +1,13 @@
+{
+	"root":"CT#13665-1.js",
+	"branches":[
+		{
+			"name":"Scene",
+			"leaves":[
+				"constructor",
+				"activate",
+				"deactivate"
+			]
+		}
+	]
+}

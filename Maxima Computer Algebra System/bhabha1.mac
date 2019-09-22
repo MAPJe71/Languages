@@ -1,0 +1,184 @@
+/* bhabha1.mac  
+   E. L. Woollett
+   woollett@charter.net   
+   April 15, 2011
+   
+   High energy limit of
+   e(-,p1,m) e(+,p2,m) --> e(-,p3,m) e(+,p4,m) elastic scatt
+     of an electron with a positron : Bhabha Scattering 
+     
+ references 
+   H. J. Bhabha, 1936
+
+   BLP QED, Sec. 81
+   B/D RQM, Sec. 7.9
+   G/R QED, Sec. 3.4
+   Renton EI, Sec. 4.3
+   Schwinger, PSF I, p. 306 - 309
+
+*/
+  
+  
+  
+  
+ " ======================================================"$
+ "  file bhabha1.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+    
+"             BHABHA SCATTERING                   "$
+" HIGH ENERGY LIMIT, CENTER OF MOMENTUM FRAME, NEGLECT MASSES "$
+"  e(-,p1,s1) + e(+,p2,s2) --> e(-,p3,s3) + e(+,p4,s4) "$
+
+" m = electron and positron mass is set to zero."$
+" ------------------------------------------ "$
+
+
+  "NON-POLARIZED DIFFERENTIAL CROSS SECTION: SYMBOLIC METHODS"$
+  
+    " POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES, "$
+  " Using p1 + p2 = p3 + p4, s = (p1+p2)^2 = (p3+p4)^2 ,"$
+  "  t = (p1-p3)^2 = (p2-p4)^2,"$
+  "   and u = (p1-p4)^2 = (p2-p3)^2 "$
+  
+  " CASE HIGH ENERGY (HE) LIMIT E >> m  "$
+  " ---------------------------------------------"$
+  invar (D(p1,p1) = 0,
+         D(p1,p2) = s/2,
+         D(p1,p3) =  - t/2,
+         D(p1,p4) =  - u/2,
+         D(p2,p2) = 0,
+         D(p2,p3) =  - u/2,
+         D(p2,p4) =  - t/2,
+         D(p3,p3) = 0,
+         D(p3,p4) = s/2,
+         D(p4,p4) = 0)$
+  "------------------------------------------------------"$
+  " With a sum over all helicities implied,"$
+  " |Mfi|^2 = M1n/t^2 + M2n/s^2 -M12n/(t*s) - M21n/(t*s) "$
+  " M1n = t^2 * M1*conj(M1), M2n = s^2 * M2*conj(M2) "$
+  " M12n = (t*s)*M1*conj(M2), M21n = (t*s)*M2*conj(M1), and: "$
+  
+  M1n : factor (Con ( tr (p3,mu,p1,nu)*tr(p2,mu,p4,nu), mu,nu));  
+  
+  M2n : factor (Con ( tr(p2,mu,p1,nu)*tr(p3,mu,p4,nu), mu,nu));
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+" LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n : factor ( tr (p3,mu,p1,nu,p2,mu,p4,nu));
+  
+  M21n : factor ( tr (p2,mu,p1,nu,p3,mu,p4,nu));
+  
+  MfiSQ : pullfac(M1n/t^2 + M2n/s^2 - M12n/(t*s) - M21n/(t*s),8);
+  
+  " We have absorbed e^4 into A, with e^2 = 4*%pi*alpha "$    
+  
+  " Averaging over initial spins means we need to divide A by 4"$
+  " to get the unpolarized differential cross section (CM, HE)"$
+  
+  A : alpha^2/(4*s)$    
+  
+  dsigdo_unpol_CM_HE : (A/4)*MfiSQ;
+  
+  (display2d:true,display (dsigdo_unpol_CM_HE),display2d:false)$
+   " which agrees with Renton's function of s,t, and u "$
+   " on page 159, Eq.(4.54) "$
+   
+  " CONVERSION TO EXPLICIT FUNCTION OF SCATTERING ANGLE "$
+
+ assume (E>0, th >= 0, th <= %pi )$
+   
+ comp_def ( p1( E,0,0,E),
+            p2( E,0,0,-E),
+            p3 (E,E*sin(th),0,E*cos(th)),
+            p4 (E,-E*sin(th),0,-E*cos(th)) )$
+             
+  s_th : VP (p1+p2,p1+p2);
+  
+  t_th : factor (VP (p1-p3,p1-p3));
+  
+  u_th : factor (VP (p1-p4,p1-p4));
+  
+  "  CONVERT FROM s, t, u TO th form  "$
+  "--------------------------------------------------"$  
+  MfiSQ_th : (sub_stu (MfiSQ),factor(%%));
+  
+  A_th : subst (s = s_th,A);  
+  
+  dsigdo_unpol_th : A_th*MfiSQ_th/4;
+  
+  (display2d:true, display (dsigdo_unpol_th), display2d:false)$
+  "------------------------------------------------------------"$
+  " which agrees with Renton, p. 160 "$
+  
+ " HIGH ENERGY POLARIZED AMPLITUDES USING EXPLICIT DIRAC SPINORS "$
+  " ------------------------------------------------- "$
+    t_th2 : to_ao2 (t_th,th);
+  
+  " dirac spinor amplitude given global s1,s2,s3,s4 "$
+  
+  dA() := (
+   
+    (up1 : UU(E,E,0,0,s1), up3b : sbar (UU(E,E,th,0,s3)),
+       vp2b : sbar (VV (E,E,%pi,0,s2)),vp4 :  VV (E,E,%pi-th,%pi,s4)),
+    
+    Mt : (a13 : up3b.Gam[_mu%].up1,      
+               a42 : vp2b.Gam[_mu%].vp4,
+            mcon(a13*a42,_mu%), expand (trigsimp (%%))),
+            
+    M1 : Mt/t_th2,
+            
+    Ms : (a12 : vp2b.Gam[_mu%].up1,            
+            a43 : up3b.Gam[_mu%].vp4,
+     mcon (a12*a43, _mu%),expand (trigsimp (%%))),
+     
+    M2 : Ms/s_th,
+    
+    M1 - M2 )$
+    
+    " example: RR --> RR "$
+    
+    [s1,s2,s3,s4]:[1,1,1,1]$
+    
+    dA();
+    
+    " Make table of polarized amplitudes. "$
+    " Accumulate sum mssq of square of amplitudes."$
+   
+    block ([sL,sv1,sv2,sv3,sv4,temp ], sL : [1,-1],
+    mssq : 0,
+    print ("  "),
+    print (" s1 s2  s3  s4     amplitude     "),
+    print ("  "),            
+    for sv1 in sL do
+      for sv2 in sL do
+        for sv3 in sL do
+          for sv4 in sL do (
+            [s1,s2,s3,s4] : [sv1,sv2,sv3,sv4],
+            temp :  dA(),
+           /* temp : E_pm (temp), */
+            mssq : mssq + Avsq (temp),
+            print ("  "),
+            print (s1,s2,s3,s4,"        ",temp ) ),
+            
+    /* mssq : E_pm (mssq), */
+            
+    mssq : expand (fr_ao2 (mssq,th)))$   
+    
+    " Sum of squares of polarized amplitudes:"$
+        
+    mssq;     
+    
+    " COMPARE WITH SYMBOLIC RESULT MfiSQ_th CALCULATED ABOVE"$
+  
+    trigsimp(mssq - MfiSQ_th);
+   
+   " WHICH SHOWS THEY ARE EQUIVALENT."$
+   
+   
+   
+  

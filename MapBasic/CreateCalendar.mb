@@ -1,0 +1,113 @@
+'*********************************************************************************************
+'**  CreateCalendar.mb
+'**  
+'**  
+'**  Author:		Egge-Jan Pollé
+'**  Date:			15 December 2011
+'**  Description:	See Note statement below
+'*********************************************************************************************
+Declare Sub Main
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Dim	iXMonth, iYMonth, iXDay, iYWeek, iMonth, iNumDays, iWeekDayCor, i, j As Integer,
+		dStartDay, dEndDay, dDay As Date,
+		oDay as Object
+
+	Note	"This application creates a (Non-Earth) point table, with each point having a date attached to it." + Chr$(10) + Chr$(10) +
+			"The dates are taken from 16 years - the current year, the 7 previous years and the 8 years to come." + Chr$(10) +
+			"The points are plotted in a calendar-like way, with 4 columns, each containing 4 years."
+
+	iXMonth = -160
+	iYMonth = 60
+
+	dStartDay = Year(CurDate()) - 7 + "0101"
+	dEndDay = Year(CurDate()) + 8 + "1231"
+
+	iNumDays = dEndDay - (dStartDay - 1) 'Total number of days in the selected years
+
+	Create Table "Calendar" (Date Date) file ApplicationDirectory$() + "Calendar.tab" TYPE NATIVE Charset "WindowsLatin1"
+	Create Map For Calendar CoordSys NonEarth Units "m" Bounds (0, 0) (1280, 1450)
+	'Please note: the Bounds of these table are set in such a way that the table can just contain the points for 16 years.
+	'If you want to increase the number of years, you will also have to change the Bounds
+
+	Set CoordSys NonEarth Units "m" Bounds (0, 0) (1280, 1450)
+
+	'Show the map, so that you will see the calendar being built
+	Map From Calendar
+		Position (0,0) Units "cm"
+		Width 12 Units "cm" Height 12 Units "cm"
+	Set Map
+		CoordSys NonEarth Units "m"
+		Center (640,725)
+		Zoom 1600 Units "m"
+		Preserve Zoom Display Zoom
+		Distance Units "m" Area Units "sq m" XY Units "m"
+		Distance Type Cartesian
+
+
+	Set ProgressBars Off
+
+	dDay = dStartDay
+	j= -1
+
+	For i = 1 to iNumDays
+		
+		'The Return Value of the Weekday() function is a SmallInt value from 1 to 7, inclusive; 1 represents Sunday.
+		'For this calendar Monday is the first day of the week (and Sunday the seventh) 
+		iWeekDayCor = Weekday(dDay) - 1
+		If iWeekDayCor = 0 Then
+			iWeekDayCor = 7
+		End If
+
+		If Day(dDay) = 1 Then
+
+			iMonth = Month(dDay)
+			Do Case iMonth
+				Case 1	'First month of the year (i.e. January)
+					Print Chr$(12)
+					Print "Creating Calendar for the year " + Year(dDay)
+					j = j + 1
+					If j Mod 4 = 0 Then 'Every 4 years: start a new column of years
+						iXMonth = iXMonth + 160
+						iYMonth = iYMonth + 1380
+					Else
+						iXMonth = iXMonth - 180
+						iYMonth = iYMonth - 140
+					End If
+				Case 4, 7, 10	'Every quarter: start a new row of months 
+					iXMonth = iXMonth - 180
+					iYMonth = iYMonth - 80
+				Case 2, 3, 5, 6, 8, 9, 11, 12
+					iXMonth = iXMonth + 90
+			End Case
+
+			iYWeek = iYMonth
+
+		End If
+
+		If iWeekDayCor = 1 Then 'Every Monday: start a new row of days
+			iYWeek = iYWeek - 10
+		End If
+
+		iXDay = iXMonth + 10*iWeekDayCor 'The position of the point depends on the day of the week
+
+		Set Style Symbol (33,255,2,"MapInfo Symbols",256,0)
+		Create Point Into Variable oDay (iXDay, iYWeek)
+		Insert Into Calendar (obj, Date) Values (oDay, dDay)
+		Commit Table Calendar
+
+		dDay = dDay + 1 'Ready for a new day
+
+	Next
+
+	Set ProgressBars On
+	
+	Print Chr$(12)
+	Print "Calendar Ready"
+
+End Sub Main
+
+'*********************************************************************************************

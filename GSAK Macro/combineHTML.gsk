@@ -1,0 +1,75 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Combine html files
+# MacAuthor = javapgmr
+# MacFileName = combineHTML.gsk	
+# MacUrl =
+#*******************************************
+
+GOSUB Name=Declare
+
+SET $macrohome = Sysinfo("MacroPath")
+SET $workf = "C:\gc.html"
+
+#SHOWSTATUS msg="Reading CacheStats" Width=350
+#SET $Data1 = GetFile("F:\Temp\CacheStats.htm")
+#IF Left($Data1,7) = "*Error*"
+#PAUSE Msg="$Data"
+#CANCEL
+#ENDIF
+
+SHOWSTATUS msg="Reading MyStats" Width=350 
+SET $Data2 = GetFile("C:\GSAK\html\stats1.html")
+IF Left($Data2,7) = "*Error*"
+Pause Msg="$Data"
+Cancel
+ENDIF
+
+SHOWSTATUS msg="Reading Personal" Width=350
+SET $Data3 = GetFile($macrohome + "\personal.html")
+IF Left($Data3,7) = "*Error*"
+Pause Msg="$Data"
+Cancel
+ENDIF
+
+SET $All = $Data2 + $Data3
+
+SHOWSTATUS msg="Writing GC.html" Width=350
+SET $Data = PutFile($workf,$All)
+IF Left($Data,7) = "*Error*"
+  Pause Msg="$Data"
+  Cancel
+ENDIF
+ 
+RUNPGM pgm="C:\Absolute HTML Compressor\ahc.exe" parms="C:\gc.html" -y+ -l+ -w+ -q+ -t+ -c+ -d+ -m+ -b+
+
+SHOWSTATUS msg="Reading GC.html" Width=350
+SET $GCData = GetFile($workf)
+IF Left($Data1,7) = "*Error*"
+Pause Msg="$Data"
+Cancel
+ENDIF
+
+CLIP DATA=$GCData
+
+#*******************************************************
+#   Variable declarations for
+#   combineHTML.gsk
+#
+#   Generated 10/07/2007 1:17:09 PM on GSAKVariables.gsk Rev V0.20 B11
+#
+#*******************************************************
+
+
+BEGINSUB Name=Declare
+Option Explicit=Yes
+
+Declare Var=$All Type=String
+Declare Var=$Data Type=String
+Declare Var=$Data1 Type=String
+Declare Var=$Data2 Type=String
+Declare Var=$Data3 Type=String
+Declare Var=$GCData Type=String
+Declare Var=$macrohome Type=String
+Declare Var=$workf Type=String
+ENDSUB

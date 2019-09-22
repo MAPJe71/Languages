@@ -1,0 +1,44 @@
+
+A file type consists of two characters that indicate what type of data a file 
+contains. A file type alwaysbegins with a period (.). Table 9-1 is an 
+alphabetical list of each available file type and its function.
+
+Table 9-1: File Type Descriptions
+
+    File Type   Description
+
+    .BMP        Bit map files contain bit map images used in robot vision systems.
+    .CF         KCL command files are ASCII files that contain a sequence of KCL 
+                    commands for a command procedure.
+    .CH         Condition handler files are used as part of the condition monitor 
+                    feature.
+    .DF         Default file are binary files that contain the default motion 
+                    instructions for each teach pendant programming.
+    .DG         Diagnostic files are ASCII files that provide status or diagnostic 
+                    information about various functions of the controller.
+    .DT         KAREL data file; An ASCII or binary file that can contain any data 
+                    that is needed by the user.
+    .IO         Binary files that contain I/O configuration data - generated when an 
+                    I/O screen is displayed and the data is saved.
+    .KL         KAREL source code files are ASCII files that contain the KAREL 
+                    language statements for a KAREL program.
+    .LS         KAREL listing files are ASCII files that contain the listing of a 
+                    KAREL language program and line number for each KAREL statement.
+    .MN         Mnemonic program files are supported in previous versions of KAREL.
+    .ML         Part model files contain part model information used in robot vision 
+                    systems.
+    .PC         KAREL p-code files are binary files that contain the p-code produced 
+                    by the translator upon translation of a .KL file.
+    .SV         System files are binary files that contain data for system variables 
+                    (SYSVARS.SV), mastering (SYSMAST.SV), servo parameters 
+                    (SYSSERVO.SV), and macros (SYSMACRO.SV).
+    .TP         Teach pendant program files are binary files that contain 
+                    instructions for teach pendant programs.
+    .TX         Text files are ASCII files that can contain system-defined text or 
+                    user-defined text.
+    .VR         Program variable files are binary files that contain variable data 
+                    for a KAREL program.
+    .VA         ASCII variable files are contain the listing of a variable file with 
+                    variable names, types, and contents.
+    .LS         Listing files are teach pendant programs, error logs, and 
+                    description histories in ASCII format.

@@ -1,0 +1,178 @@
+(?x-is)
+(?:
+    Bruidegom\R
+    (?<BRMNM>                                                                   # BRuidegoM NaMe
+        (?<BRMGVN>          (?:[A-Z][a-z]+ \x20)+   )                           # BRuidegoM GiVenName
+        (?<BRMSFX>          (?:[a-z]+ \x20)*        )                           # BRuidegoM
+        (?<BRMSRN>          [A-Z][a-z]+             )                           # BRuidegoM SuRName
+    )\R
+    (?:
+        [A-Z][a-z]*atum\R
+        (?<BRMGEBDD>\d{2}) - (?<BRMGEBMM>\d{2}) - (?<BRMGEBYY>\d{4})\R
+    |
+        [A-Z][a-z]*laats\R
+        (?<BRMGEBPLACE>     [A-Za-z'\-ë]*           )\R
+    )*
+|
+    Bruid\R
+    (?<BRDNM>
+        (?<BRDGVN>          (?:[A-Z][a-z]+ \x20)+   )
+        (?<BRDSFX>          (?:[a-z]+ \x20)*        )
+        (?<BRDSRN>          [A-Z][a-z]+             )
+    )\R
+    (?:
+        [A-Z][a-z]*atum\R
+        (?<BRDGEBDD>\d{2}) - (?<BRDGEBMM>\d{2}) - (?<BRDGEBYY>\d{4})\R
+    |
+        [A-Z][a-z]*laats\R
+        (?<BRDGEBPLACE>     [A-Za-z'\-ë]*           )\R
+    )*
+|
+    Vader\x20van\x20de\x20bruidegom\R
+    (?<VABGNM>
+        (?<VABGGVN>         (?:[A-Z][a-z]+ \x20)+   )
+        (?<VABGSFX>         (?:[a-z]+ \x20)*        )
+        (?<VABGSRN>         [A-Z][a-z]+             )
+    )\R
+|
+    Moeder\x20van\x20de\x20bruidegom\R
+    (?<MOBGNM>
+        (?<MOBGGVN>         (?:[A-Z][a-z]+ \x20)+   )
+        (?<MOBGSFX>         (?:[a-z]+ \x20)*        )
+        (?<MOBGSRN>         [A-Z][a-z]+             )
+    )\R
+|
+    Vader\x20van\x20de\x20bruid\R
+    (?<VABDNM>
+        (?<VABDGVN>         (?:[A-Z][a-z]+ \x20)+   )
+        (?<VABDSFX>         (?:[a-z]+ \x20)*        )
+        (?<VABDSRN>         [A-Z][a-z]+             )
+    )\R
+|
+    Moeder\x20van\x20de\x20bruid\R
+    (?<MOBDNM>
+        (?<MOBDGVN>         (?:[A-Z][a-z]+ \x20)+   )
+        (?<MOBDSFX>         (?:[a-z]+ \x20)*        )
+        (?<MOBDSRN>         [A-Z][a-z]+             )
+    )\R
+|
+    Erfgoedinstelling\R
+    (?<REPONM>
+        [A-Za-z\x20]*
+    )\R
+    (?:
+        [A-Z][a-z]*laats\x20[A-Za-z]*\R
+        (?<REPOPLCNM>       [A-Za-z'\-ë]*           )\R
+    |
+        Collectiegebied\R
+        (?<COLLGEBNM>       [A-Za-z\x20\-']*        )\R
+    )*
+|
+    Gebeurtenis\R
+    (?<EV>
+        (?<EVSMALL>         [A-Z][a-z]{3}           )
+        [a-z]*
+    )\R
+    (?:
+        [A-Z][a-z]*atum\R
+        (?<EVDD>\d{2}) - (?<EVMM>\d{2}) - (?<EVYY>\d{4})\R
+    |
+        [A-Z][a-z]*laats\R
+        (?<EVPLACE>         [A-Za-z'\-ë]*           )\R
+    )*
+|
+    Documenttype\R
+    (?<BRONNM>
+        (?<BRONTYPE>        BS                      )
+        \x20
+        (?<BRONCATLETTER>   [GHO]                   )
+        [a-z]*
+    )\R
+|
+    Archief\R
+    (?<ARCHNM>
+        (?<TOEGNR>          [0-9.]+                 )\R
+        Registratienummer\R
+        (?<INVNR>           [0-9.]+                 )
+    )\R
+|
+    Aktenummer\R
+    (?<CTNUMMER>            \d*                     )\R
+    (?:
+        Registratiedatum\R
+        (?<CTDD>\d{2}) - (?<CTMM>\d{2}) - (?<CTYY>\d{4})\R
+    |
+        Akteplaats\R
+        (?<CTPLC>           [A-Za-z'\-ë]*           )\R
+    |
+        Aktesoort\R
+        (?<CTSRT>           [A-Za-z]*               )\R
+    |
+        Opmerking\R
+        (?<CTOPM>           [A-Za-z]*               )\R
+    )*
+|
+    https?://
+    (?<WLNK>
+        (?<WST>     [a-z.]*/    )
+        (?<WPAG>    [a-z0-9/]*  )
+    )\R
+|
+    (?:Leeftijd|Boek)\R
+    [\w\x20\x27\-]+\R
+|
+    BS\x20(?:Huwelijk\x20met|Geboorte\x20van|Overlijden\x20van)\x20[\x20\w]+\R
+)+
+#
+#   named group         used in replace     meaning                                         remarks
+#   BRMNM               yes                 name of groom
+#   BRMGVN              yes                 given name of groom;                            subexpression in BRMNM
+#   BRMSFX              yes                 suffix of groom;                                subexpression in BRMNM
+#   BRMSRN              yes                 surname of groom;                               subexpression in BRMNM
+#   BRMGEBDAT           no                  date of birth groom;
+#   BRMGEBDD            yes                 day of birth groom;                             subexpression in BRMGEBDAT
+#   BRMGEBMM            yes                 month of birth groom;                           subexpression in BRMGEBDAT
+#   BRMGEBYY            yes                 year of birth groom;                            subexpression in BRMGEBDAT
+#   BRMGEBPLACE         yes                 place of birth groom;
+#
+#   the same kind of named expressions above for the bride: instead of BRM read BRD
+#
+#   named expression    used in replace     meaning                                         remarks
+#   VABGNM              no                  name of grooms father;
+#   VABGGVN             yes                 given name of grooms father;                    subexpression in VABGNM
+#   VABGSFX             yes                 suffix in name of grooms father;                subexpression in VABGNM
+#   VABGSRN             yes                 surname of grooms father;                       subexpression in VABGNM
+#
+#   the same kind of named expressions above for the grooms mother: instead of VABG read MOBG
+#   the same kind of named expressions above for the brides father: instead of VABG read VABD
+#   the same kind of named expressions above for the brides mother: instead of VABG read MOBD
+#
+#   named group         used in replace     meaning                                         remarks
+#   REPONM              yes                 name of reposition (archive)                    used in title of repo
+#   REPOACRONM          yes                 acronym for name of reposition;                 used in indentification of act, derived from REPONM
+#   REPOPLCNM           yes                 name of place of repo;
+#   COLLGEBNM           yes                 part of the collection of a repo;
+#   EV                  yes                 event
+#   EVDAT               no                  date of event                                   day month and year due to convention: index dd-mm-yyyy >> dd/mm/yyyy
+#   EVDD                yes                 day of event
+#   EVMM                yes                 month of event
+#   EVYY                yes                 year of event
+#   EVPLACE             yes                 name of place of event
+#   BRONNM              yes                 name of source
+#   BRONTYPE            yes                 type of source                                  civil or church registration, particular archive a.s.o.
+#   BRONCATLETTER       yes                 one character, G for Birth, O for death, H for marriage, D for christening, B for burial
+#   ARCHNM              no
+#   TOEGNR              yes                 number of global entry in archivesystem
+#   INVNR               yes                 subnumber of entry in archivesystem
+#   CTNUMMER            yes                 number that specifies (within the entry) the act from which the information is cited
+#   CTDAT               no                  the date the act is registrerd                  used for getting DD, MM and YYYY
+#   CTDD                yes                 day of registration                             see remarks on DATE before
+#   CTMM                yes                 month of registration
+#   CTYY                yes                 year of registration
+#   CTPLC               yes                 name of place where act is registered           can be different from place of event
+#   CTSRT               no                  item can occur in index, so the searchstring has to find this text.
+#   CTOPM               yes                 notation in act for instance groom is widower
+#   WLNK                yes                 weblink to site of reposition
+#   WPAG                yes                 specific page on site where index is found
+#
+

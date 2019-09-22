@@ -1,0 +1,18 @@
+{
+    "root":"CT#14494-3.bc",
+    "branches":[
+        {
+            "name":"choice.test.123"
+            "leaves":[
+                "before.choice",
+                "on.choice"
+            ]
+        },
+        {
+            "name":"functions"
+            "leaves":[
+                "func1"
+            ]
+        }
+    ]
+)

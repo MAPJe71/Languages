@@ -1,0 +1,531 @@
+
+(Version 42)
+(DocumentSummary)
+(GmmiToplevelDocument
+  (GmmiDocumentObject
+    (GmmiContainerObject
+      (GmmiObject "SCREEN_MAIN" 0
+        (Help "" "" "")
+        (GmmiPointMap)
+        (GmmiOptionTable
+          (GmmiVariables)
+          (GmmiScript "Sub Main{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "{&h09}Viewport.Open{&h0D}{&h0A}"
+            & "{&h09}Print {&h22}Main{&h22}{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "End Sub{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "Sub AnotherRoutine(X As String, Y As Long){&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "{&h09}'*  Do nothing but show an example comment line {&h22} ( )  ( ( ( ( }}} {&h7B}{&h7B} \\ ||| @@ && $$ %%{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "End Sub{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"))
+        (GmmiTabOrder -1)) (Color 3 8) (Color 3 5)
+      (Font "Arial" 0 -280 1 0)
+      (GmmiObjectPtrList
+        (GmmiRectShapeObject
+          (GmmiObject "MyRectangleObj" 0
+            (Help "" "This is a shape object." "")
+            (GmmiOptionTable
+              (GmmiScript "Sub ExampleSubroutine( x As Integer ){&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Dim dblX As Integer{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}MsgBox {&h22}x = {&h22} & CStr(x){&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}dblX = DoubleX(x){&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}MsgBox {&h22}Double x = {&h22} & CStr(dblX){&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "Function DoubleX( x As Integer ) As Integer{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}DoubleX = x * 2{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Return {&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Function{&h0D}{&h0A}"))
+            (GmmiTabOrder -1)) 2
+          (Extents
+            (Rect 1992 10728 3692 9428)
+            (Rect 2042 10678 3642 9478))
+          (Border (Color 1 &hffffffff) 100 1 0)
+          (Interior (Color 1 &hff0000ff) (Color 1 &hffffffff) 1)
+          (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+          (Size 800 600)
+          (Point 2842 10078) 0 0 0)
+        (GmmiEllipseShapeObject
+          (GmmiObject "MyEllipseObj" 0
+            (Help "" "This shape object is an ellipse" "")
+            (GmmiOptionTable
+              (GmmiVariables
+                (GmmiVariables "ObjectVariable01" "" 0)
+                (GmmiVariables "ObjectVariable2" "{&h22}Default Value{&h22}" 0))
+              (GmmiScript "Sub SubRoutine1{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Print {&h22}Code goes here{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "Sub SubRoutine2{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Print {&h22}Code goes here{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "Sub SubRoutine_3{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Print {&h22}Code goes here{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "Sub SubRoutine_Four4{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Print {&h22}Code goes here{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"))
+            (GmmiTabOrder -1)) 2
+          (Extents
+            (Rect 2172 7602 4022 6162)
+            (Rect 2178 7596 4016 6168))
+          (Border (Color 1 &hffff0000) 0 1 0)
+          (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+          (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+          (Size 919 714)
+          (Point 3097 6882) 0 0 -0)
+        (GmmiTextButtonObject
+          (GmmiObject "MyButtonObj" 0
+            (Help "" "This is a Button Object" "")
+            (GmmiOptionTable
+              (GmmiVariables
+                (GmmiVariables "ObjButtonVariable" "" 0)
+                (GmmiVariables "ObjectVariable1" "" 0)
+                (GmmiVariables "ObjectVariable2" "" 0))
+              (GmmiScript "{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "Sub OnMouseUp(x As Long, y As Long, flags As Long){&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09} MsgBox {&h22}Show this message when button is clicked{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}")
+              (GmmiOptionTable
+                (GmmiMouseUpEvent
+                  (GmmiEvent 2
+                    (GmmiInvokeScriptAction 0 "" "OnMouseUp"
+                      (GmmiParameterBlock 0)) ""))))
+            (GmmiTabOrder 0)) 23
+          (Extents
+            (Rect 6613 10634 8876 9388)
+            (Rect 6613 10634 8876 9388))
+          (Interior (Color 1 &hffc0c0c0) (Color 1 &hff000000) 1) 0 23
+          (Extents
+            (Rect 0 0 0 62525388)
+            (Rect 0 62525404 0 0))
+          (Font "Arial Narrow" 0 -720 1 0)
+          (Interior (Color 1 &hffffffff) (Color 1 &hffffffff) 1)
+          (Border (Color 1 &hff000000) 0 11 0) 9
+          (Point 7744 10011) "Press")
+        (GmmiTextObject
+          (GmmiObject "MyTextObject" 0
+            (Help "" "" "")
+            (Empty)
+            (GmmiTabOrder -1)) 23
+          (Extents
+            (Rect 6871 7201 12453 6343)
+            (Rect 6871 7201 12453 6343))
+          (Font "Arial Narrow" 0 -720 1 0)
+          (Interior (Color 1 &hffffffff) (Color 1 &hffffffff) 1)
+          (Border (Color 1 &hff000000) 0 11 0) 18
+          (Point 6871 7201) "This is just plain text.")
+        (GmmiArcObject
+          (GmmiObject "" 0
+            (Help "" "" "")
+            (GmmiOptionTable
+              (GmmiOptionTable
+                (GmmiExprAnnun 1
+                  (GmmiExprAnnunElement
+                    (GmmiExprAnim 3
+                      (GmmiExpr "{&h7B}$ZOOM_LEVEL} LT  100"))
+                    (GmmiOptionTable
+                      (GmmiInteriorAnnunAttr 0
+                        (Interior (Color 1 &hffff0000) (Color 1 &hffffffff) 1))))))
+              (GmmiScript "Sub CodeOnAnUnnamedObject{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "{&h09}Print {&h22}Only lazy developers do not name objects{&h22}{&h0D}{&h0A}"
+                & "{&h0D}{&h0A}"
+                & "End Sub{&h0D}{&h0A}"))
+            (GmmiTabOrder -1)) 2
+          (Extents
+            (Rect 7198 4953 9316 4094)
+            (Rect 7258 4893 9256 4154))
+          (Border (Color 1 &hffff0000) 0 1 0)
+          (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+          (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+          (Size 2118 1669)
+          (Point 8078 2394) 0.9809603047 0 0.6105452367 6 1.570796327 0)
+        (GmmiGroupObject
+          (GmmiContainerObject
+            (GmmiObject "GroupOfGroups" 0
+              (Help "" "" "")
+              (Empty)
+              (GmmiTabOrder -1))
+            (GmmiObjectPtrList
+              (GmmiGroupObject
+                (GmmiContainerObject
+                  (GmmiObject "groupOfRectangles1" 0
+                    (Help "" "" "")
+                    (Empty)
+                    (GmmiTabOrder -1))
+                  (GmmiObjectPtrList
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect01" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1536 5190 1860 4842)
+                        (Rect 1542 5184 1854 4848))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 1698 5016) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect2" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "{&h0D}{&h0A}"
+                            & "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1950 5190 2274 4842)
+                        (Rect 1956 5184 2268 4848))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2112 5016) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect3" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1536 4722 1860 4374)
+                        (Rect 1542 4716 1854 4380))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 1698 4548) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect4" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1950 4722 2274 4374)
+                        (Rect 1956 4716 2268 4380))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2112 4548) 0 0 0)) 0) 0
+                (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1))
+              (GmmiGroupObject
+                (GmmiContainerObject
+                  (GmmiObject "groupOfRectangles2" 0
+                    (Help "" "" "")
+                    (Empty)
+                    (GmmiTabOrder -1))
+                  (GmmiObjectPtrList
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect01" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2514 5190 2838 4842)
+                        (Rect 2520 5184 2832 4848))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2676 5016) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect2" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2928 5190 3252 4842)
+                        (Rect 2934 5184 3246 4848))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 3090 5016) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect3" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2514 4722 2838 4374)
+                        (Rect 2520 4716 2832 4380))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2676 4548) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect4" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2928 4722 3252 4374)
+                        (Rect 2934 4716 3246 4380))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 3090 4548) 0 0 0)) 0) 0
+                (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1))
+              (GmmiGroupObject
+                (GmmiContainerObject
+                  (GmmiObject "groupOfRectangles3" 0
+                    (Help "" "" "")
+                    (Empty)
+                    (GmmiTabOrder -1))
+                  (GmmiObjectPtrList
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect01" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1536 4224 1860 3876)
+                        (Rect 1542 4218 1854 3882))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 1698 4050) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect2" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1950 4224 2274 3876)
+                        (Rect 1956 4218 2268 3882))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2112 4050) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect3" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1536 3756 1860 3408)
+                        (Rect 1542 3750 1854 3414))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 1698 3582) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect4" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 1950 3756 2274 3408)
+                        (Rect 1956 3750 2268 3414))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2112 3582) 0 0 0)) 0) 0
+                (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1))
+              (GmmiGroupObject
+                (GmmiContainerObject
+                  (GmmiObject "groupOfRectangles4" 0
+                    (Help "" "" "")
+                    (Empty)
+                    (GmmiTabOrder -1))
+                  (GmmiObjectPtrList
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect01" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2514 4224 2838 3876)
+                        (Rect 2520 4218 2832 3882))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2676 4050) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect2" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2928 4224 3252 3876)
+                        (Rect 2934 4218 3246 3882))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 3090 4050) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect3" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2514 3756 2838 3408)
+                        (Rect 2520 3750 2832 3414))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 2676 3582) 0 0 0)
+                    (GmmiRectShapeObject
+                      (GmmiObject "rect4" 0
+                        (Help "" "" "")
+                        (GmmiOptionTable
+                          (GmmiScript "Sub Rectangle{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "{&h09}Print {&h22}This is code in a grouped object{&h22}{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"
+                            & "End Sub{&h0D}{&h0A}"
+                            & "{&h0D}{&h0A}"))
+                        (GmmiTabOrder -1)) 0
+                      (Extents
+                        (Rect 2928 3756 3252 3408)
+                        (Rect 2934 3750 3246 3414))
+                      (Border (Color 1 &hffff0000) 0 1 0)
+                      (Interior (Color 1 &hff008000) (Color 1 &hffffffff) 1)
+                      (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1) 0 0
+                      (Size 156 168)
+                      (Point 3090 3582) 0 0 0)) 0) 0
+                (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1))) 0) 0
+          (Interior (Color 1 &hff000000) (Color 1 &hff000000) 1))) 0
+      (GmmiBackdrop
+        (Border (Color 1 &hff000000) 0 11 0)
+        (Interior (Color 1 &hffc0c0c0) (Color 1 &hff000000) 1))))
+  (Point 100 100)
+  (Size 16000 12000) 100 "")
+(OleItems)

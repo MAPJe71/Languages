@@ -1,0 +1,17 @@
+!table
+!version 300
+!charset WindowsLatin1
+
+Definition Table
+  File "my_own_company_logo.png"
+  Type "RASTER"
+  (0,1) (0,0) Label "Pt 1",
+  (1,1) (1,0) Label "Pt 2",
+  (0,0) (0,1) Label "Pt 3"
+  CoordSys NonEarth Units "ft"
+  Units "ft"
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "4bbadab8-d03a-4b31-92f5-9d349a4c20f6"
+end_metadata

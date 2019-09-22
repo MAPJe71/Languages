@@ -1,0 +1,87 @@
+0 HEAD
+0 @I03@ INDI
+1 NAME Adrianus van den /Hoeven/
+2 GIVN Adrianus van den 
+2 SPFX 
+2 SURN Hoeven
+1 SEX M
+1 BIRT 2 DATE 03/03/1821
+2 PLAC Utrecht1 FAMC @F02@
+1 FAMS @F01@
+0 @I04@ INDI
+1 NAME Catharina Maria /Struning/
+2 GIVN Catharina Maria 
+2 SPFX 
+2 SURN Struning
+1 SEX F
+1 BIRT 2 DATE 10/08/1827
+2 PLAC 's-Hertogenbosch
+1 FAMC @F03@
+1 FAMS @F01@
+0 @I05@ INDI
+1 NAME Reijer van den /Hoeven/
+2 GIVN Reijer van den 
+2 SPFX 
+2 SURN Hoeven
+1 SEX M
+1 FAMS @F02@
+0 @I06@ INDI
+1 NAME Cornelia /Koppers/
+2 GIVN Cornelia 
+2 SPFX 
+2 SURN Koppers
+1 SEX F
+1 FAMS @F02@
+0 @I07@ INDI
+1 NAME Joannes Christoffel /Struning/
+2 GIVN Joannes Christoffel 
+2 SPFX 
+2 SURN Struning
+1 SEX M
+1 FAMS @F03@
+0 @I08@ INDI
+1 NAME Joanna /Lutkie/
+2 GIVN Joanna 
+2 SPFX 
+2 SURN Lutkie
+1 SEX F
+1 FAMS @F03@
+0 @F01@ FAM
+1 HUSB @I03@
+1 WIFE @I04@
+1 MARR
+2 TYPE Huwelijk van Adrianus van den Hoeven en Catharina Maria Struning
+2 DATE 06/06/1851
+2 PLAC 's-Hertogenbosch
+2 SOUR @S00@
+3 PAGE 1851 - akte 100
+3 DATA
+4 DATE 06/06/1851
+0 @F02@ FAM
+1 HUSB @I05@
+2 NOTE @N11@
+1 WIFE @I06@
+2 NOTE @N12@
+1 CHIL @I03@
+1 SOUR @S00@
+2 PAGE 1851 - akte 100
+2 DATA
+3 DATE 06/06/1851
+0 @F03@ FAM
+1 HUSB @I07@
+1 WIFE @I08@
+1 CHIL @I04@
+1 SOUR @S00@
+2 PAGE 1851 - akte 100
+2 DATA
+3 DATE 06/06/1851
+0 @S00@ SOUR
+1 TITL BS Huwelijk
+1 AUTH 's-Hertogenbosch
+1 PUBL BHIC-50-39541 ABBR BS - H - 's-Hertogenbosch1 ABBR BS - H - 's-Hertogenbosch
+1 REPO @R0000@
+2 CALN Noord-Brabant
+0 @R0000@ REPO
+1 NAME Brabants Historisch Informatie Centrum, 's-Hertogenbosch
+Boek
+Huwelijksregister 's-Hertogenbosch 1851

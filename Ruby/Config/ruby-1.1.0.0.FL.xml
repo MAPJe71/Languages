@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="36" id="ruby_function" />
+    </associationMap>
+    <parsers>
+      <parser
+          id="ruby_function" displayName="Ruby" version="1.0.1.0"
+          commentExpr="(?'SLC'#[^\r\n]*(?:\r?\n|$))|(?'MLC'(?&lt;=^|\r?\n)(?-i:=begin).*?\r?\n(?-i:=end)(?:\r?\n|$))" >
+        <function
+            mainExpr="
+            (?s:
+              \b
+              (?-i:def)
+              [\t ]+
+              (?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__)              )
+              (?:
+                [A-Za-z_]\w*[?!=]?
+                (?:[\t ]*\([^)]*\))?
+              |
+                (?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)
+                [\t ]*\([^)]*\)
+              )
+              .+?
+              (?-i:end)
+            )"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="(?s:\b(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\()?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\())" />
+            <nameExpr expr="(?m:\b(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?))(?=(?:\b|[\t ]*\()|.*$))" />
+            <nameExpr expr="[\t ]+(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?))" />
+            <nameExpr expr="(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?))" />
+          </functionName>
+        </function>
+      </parser>
+<!--
+keywords:
+  (?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__))
+
+~~~~~
+
+  (?:
+    (?'identifier1'[A-Za-z_]\w*[?!=]?)
+  |
+    (?'identifier2':{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)
+  )
+
+~~~~~
+
+  'alias' blank+ identifier blank+ identifier
+  'def' blank+ identifier [ '?' | '!' | '=' ] [ blank* '(' arguments ')' ]
+
+~~~~~
+
+  \b
+  (?-i:                           (?# non-capturing group, case sensitive     )
+    alias                         (?# match string literally "alias"          )
+  )
+  (?:
+    [\t ]+                        (?# 1+ blanks (tab and space)               )
+    (?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__))
+    (?:                           (?# non-capturing group                     )
+      [A-Za-z_]                   (?# )
+      \w*                         (?# 0+ ASCII character, digit or underscore )
+    )
+  ){2}
+  [^\r\n]*
+  (?:\r?\n|$)
+|
+  \b                              (?# )
+  (?-i:                           (?# non-capturing group, case sensitive     )
+    def                           (?# match string literally "def"            )
+  )
+  [\t ]+                          (?# 1+ blanks (tab and space)               )
+  (?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__))
+  (?:                             (?# non-capturing group                     )
+    [A-Za-z_]                     (?# )
+    \w*                           (?# 0+ ASCII character, digit or underscore )
+    [?!=]?                        (?# none or one of ?, ! and =               )
+    (?:                           (?# non-capturing group                     )
+      [\t ]*                      (?# 0+ blanks (tab and space)               )
+      \(                          (?# left parenthesis                        )
+      [^)]*                       (?# 0+ non-right parenthesis                )
+      \)                          (?# right parenthesis                       )
+    )?
+  | (?:                           (?# non-capturing group                     )
+      :{2}                        (?# matches ::                              )
+    | \*{1,2}                     (?# matches * and **                        )
+    | ![=~]?                      (?# matches !, != and !~                    )
+    | =(?:~|={1,2})?              (?# matches =, =~, == and ===               )
+    | [~+\-/%&|\^]                (?# matches ~, +, -, /, %, &, | and ^       )
+    | <(?:<|=>?)?                 (?# matches <, <<, <= and <=>               )
+    | >[>=]?                      (?# matches >, >> and >=                    )
+    | \[]=?                       (?# matches [] and []=                      )
+    )
+    [\t ]*                        (?# 0+ blanks (tab and space)               )
+    \(                            (?# left parenthesis                        )
+    [^)]*                         (?# 0+ non-right parenthesis                )
+    \)                            (?# right parenthesis                       )
+  )
+  .+?                             (?# 1+  lazy )
+  (?-i:                           (?# non-capturing group, case sensitive     )
+    end                           (?# match string literally                  )
+  )
+
+~~~~~
+
+            <nameExpr expr="
+(?s:
+  \b
+  (?-i:def)
+  [\t ]+
+  (?:
+    (?'identifier1'[A-Za-z_]\w*[?!=]?)
+    (?'toargs1'[\t ]*\()?
+  |
+    (?'identifier2':{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)
+    (?'toargs2'[\t ]*\()
+  )
+)
+" />
+            <nameExpr expr="
+(?m:
+  \b
+  (?-i:def)
+  [\t ]+
+  (?:
+    (?'identifier1'[A-Za-z_]\w*[?!=]?)
+  |
+    (?'identifier2':{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)
+  )
+  (?=
+    (?:
+      \b
+    |
+      [\t ]*\(
+    )
+  |
+    .*$
+  )
+)
+" />
+            <nameExpr expr="[\t ]+(?:(?'identifier1'[A-Za-z_]\w*[?!=]?)|(?'identifier2':{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?))" />
+            <nameExpr expr="(?:(?'identifier1'[A-Za-z_]\w*[?!=]?)|(?'identifier2':{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?))" />
+
+~~~~~
+
+\b(?-i:alias)(?:[\t ]+(?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__))(?:[A-Za-z_]\w*)){2}[^\r\n]*(?:\r?\n|$)|\b(?-i:def)[\t ]+(?!(?-i:alias|and|BEGIN|begin|break|case|class|def|defined\?|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|__FILE__|__LINE__))(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\([^)]*\)).+?(?-i:end)
+
+
+  \b
+  (?-i:alias)
+  (?:
+    [\t ]+
+    (?:
+      [A-Za-z_]
+      \w*
+    )
+  ){2}
+
+|
+
+  \b
+  (?-i:def)
+  [\t ]+
+  (?:
+    [A-Za-z_]
+    \w*
+    [?!=]?
+    (?:
+      [\t ]*
+      \(
+    )?
+  | (?:
+      :{2}
+    | \*{1,2}
+    | ![=~]?
+    | =(?:~|={1,2})?
+    | [~+\-/%&|\^]
+    | <(?:<|=>?)?
+    | >[>=]?
+    | \[]=?
+    )
+    [\t ]*
+    \(
+  )
+
+
+
+-->
+    </parsers>
+  </functionList>
+</NotepadPlus>

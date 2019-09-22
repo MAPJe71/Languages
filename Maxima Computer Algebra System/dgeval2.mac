@@ -1,0 +1,2058 @@
+/************************************************************************
+    dgeval2.mac is a package of Maxima functions which 
+    contains code for frame dependent calculations
+    and is part of the Dirac package.
+    
+    Copyright (C) 2010, 2011,  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+/* 
+     dgeval2.mac
+
+  functions:        
+ 
+     ipv
+     
+     
+     simp_VP1 calls mplusp, getppos1, rpl, VP1, mtimesp
+     
+     VP1 call is taken over by simp_VP1
+     
+     VP calls VP1
+     
+     pair_inlist
+     
+     invar
+     
+     invarR
+
+     invarRS
+
+     ev_invar
+
+     momRS
+
+     indexR
+
+      indexRS
+
+     ClearIndexR     
+     
+     comp_def1  called by comp_def.
+     
+     comp_def  calls pos, comp_def1
+     
+     uncomp_def  calls indexp, pos, remL1
+     
+     nc_tr  calls Gexpand, sumToList, NDfac, strip_ops2,
+             TR1, noncov.
+   
+     D_sub
+   
+     invar_flag
+   
+     prodToList2 calls mexptp
+   
+     inlist
+   
+     move
+   
+   get_matches  calls inlist
+   
+   remL2  calls remL1, called by econ11.
+   
+   econ11 calls NDfac, prodToList, opList, inlist, strip_ops2,
+            get_matches, remL1, gmatch, listToProd, rpl, mdivp
+            prodToList2, mexptp, pos, ipv.
+            
+            called by econ.
+   
+   econ  calls econ11
+   
+   
+   noncov1  calls inlist, NDfac, prodToList, opList, strip_ops2,
+              listToProd, VP.
+              
+              called by noncov.
+   
+   noncov calls sumToList, sum_eps, noncov1, 
+            and ( if stu_flag = true) sub_stu
+   
+   stu_flag  (default = false)
+   
+   sub_stu
+   
+   sum_eps1  calls NDfac and strip_ops
+   
+      sums over all dummy indices in eps4[n1,n2,n3,n4] from 0 thru 3
+      sum_eps1 expects to be called only by sum_eps
+      and sum_eps expects to be called only by noncov.
+      noncov calls sum_eps before calling noncov1.
+   
+   
+   
+   sum_eps    calls sumToList, NDfac, strip_ops2 and sum_eps1
+   
+                 called by noncov.
+   
+    
+ */
+    
+
+ 
+ 
+ 
+    /*************** ipv(p,q) ******************************/
+ 
+ 
+ ipv (_p%, _q%) := _p%[0]*_q%[0] - _p%[1]*_q%[1]  - _p%[2]*_q%[2] - _p%[3]*_q%[3]$
+ 
+   
+   /**************** simp_VP1 1-31-11 *********************************/
+ 
+ /* if we use declare (c1,scalar), then
+     VP(c1*p1 + p2,q) -- > c1*ipv(p1,q) + ipv(p2,q) 
+     */
+     
+     
+  simp_VP1 (_p1%,_p2%) :=  block ([inflag : true,%v,ppos,fac,aL,vk,rval],
+      /* disp ("simp_VP1 1-31-11 "),
+         display (_p1%,_p2%),
+      */          
+     
+    /* expand multiple term args  */
+    
+    %v : [_p1%,_p2%],
+    
+    if some ('mplusp,%v) then  (
+    ppos : apply ('getppos1,%v),
+    map ('lambda ([r],rpl (%v,ppos,r)), args (%v[ppos])),
+    map ('lambda ([rr], apply ('VP1,rr)), %%),
+    xreduce ("+", %%), return(%%))
+    
+    /* pull out constants and scalars here.
+      With inflag=true, the constant and
+      scalar factor is the first in
+      the list of args. See practice
+      below. */  
+  
+  else if some ('mtimesp,%v) then (
+    fac : 1,
+    aL : [],    
+    for vk in %v do      
+      if mtimesp (vk) then (
+        fac : fac*first (vk),
+        aL : cons (second (vk),aL))        
+      else aL : cons (vk,aL),
+    
+    return (fac*apply ('VP1, reverse(aL))))        
+   
+     
+  else (
+     rval : apply ('ipv,%v),
+     rval : trigsimp (rval),  
+     return (rval)))$
+ 
+ /************* end simp_VP1 1-31-11  ********************/
+
+ simplifying ('VP1, 'simp_VP1 )$
+  
+  VP (%a,%b) := (apply (VP1,[%a,%b]), expand(%%))$
+  
+  /*
+  
+  
+  (%i1) load(work);
+(%o1) "c:/work5/work.mac"
+(%i2) load(temp4);
+(%o2) "c:/work5/temp4.mac"
+(%i3) VP (p1,p2);
+(%o3) -p1[3]*p2[3]-p1[2]*p2[2]-p1[1]*p2[1]+p1[0]*p2[0]
+(%i4) declare ([c1,c2],scalar)$
+(%i5) VP (c1*p1,p2);
+(%o5) -p1[3]*p2[3]*c1-p1[2]*p2[2]*c1-p1[1]*p2[1]*c1+p1[0]*p2[0]*c1
+(%i6) VP (p1,p2+p3);
+(%o6) -p1[3]*p3[3]-p1[3]*p2[3]-p1[2]*p3[2]-p1[2]*p2[2]-p1[1]*p3[1]-p1[1]*p2[1]
+                  +p1[0]*p3[0]+p1[0]*p2[0]
+(%i7) VP (-p1,p2+p3);
+(%o7) p1[3]*p3[3]+p1[3]*p2[3]+p1[2]*p3[2]+p1[2]*p2[2]+p1[1]*p3[1]+p1[1]*p2[1]
+                 -p1[0]*p3[0]-p1[0]*p2[0]
+                 
+ */
+ 
+ 
+ /*********  end VP  **********************/
+ 
+ 
+   
+  
+  /* list invarR holds rules for replacement of invariants, eg.,
+        D(p1,p2) = p^2* cos(th)    */
+   
+     invarR : []$
+     
+     
+   /* list invarRS holds the left hand side of invarR rules in the form
+       of sublists, eg., [p1,p2]  */
+       
+     invarRS : []$
+     
+     
+   
+  pair_inlist (aL,pL) := 
+     block ([_pp%,jj,pairin],
+       /* disp (" pair_inlist"),
+         display (aL,pL),
+       */  
+       pairin : false,
+          
+       for jj thru length (aL) do (
+         _pp% : aL[jj],
+         /* display (jj,_pp%), */
+     
+         if ((pL = _pp% ) or (pL = reverse(_pp%))) then (
+           pairin : true,
+           return () ) ),
+       pairin )$
+
+
+
+
+
+   /************  invar 2-1-10 *******************/    
+       
+      invar ([v]) := 
+            block ([_vv%,_pp%,jj,_ppa%,kk,npp  ],
+        /*disp (" invar "),
+          display (v),
+         */
+       
+       for jj thru length (v) do (
+         _vv% : v[jj],
+          /* display (jj,_vv%),   */
+         
+         if op(_vv%) # "=" then (
+           
+           disp ("invar: syntax is invar (D(p1,p2) = a,...) "),
+           return () ),
+           
+         _pp% : lhs (_vv%),  
+          /* display (_pp%),  */
+         
+         if op(_pp%) # D then (
+           disp ("invar: syntax is invar (D(p1,p2) = a,...) "),
+           return () ),
+           
+         _ppa% : args(_pp%),
+          /* display (_ppa%),  */
+         
+         if length (_ppa%) # 2 then (
+           disp ("invar: two args required for each D"),
+           return () ),
+           
+         /* test1 : pair_inlist(invarRS, _ppa% ),
+            display (test1),
+          */
+          
+          
+         if pair_inlist (invarRS, _ppa%) then (
+           for kk thru length (invarRS) do
+             if _ppa% = invarRS[kk] then (npp:kk,return()),
+           invarR[npp] : _pp% = rhs (_vv%) )
+         
+         else  (
+           invarRS : cons (_ppa%, invarRS),
+           invarR : cons ( _pp% = rhs (_vv%), invarR ) ) ) /* ,       
+       display (invarR,invarRS) */ )$
+       
+    /********* end  invar 2-1-10 ****************/    
+         
+     
+     
+     
+         
+         
+     /******************* ev_invar (expr)  **************************/
+       
+  ev_invar(_expr%) := (ev (_expr%, invarR))$
+       
+           
+  /* global list momRS holds 4-momentum symbols for which assignments have
+     been made using comp_def
+     */
+     
+   momRS : []$
+     
+  /* global list indexR holds the index rules (eg., mu = 0) and
+           indexRS is a global list of index symbols for
+           which a rule has been assigned  */
+  
+  indexR : []$  
+  indexRS : []$
+  
+  /* ClearIndexR  resets indexR and indexRS to [] */
+  
+   ClearIndexR() := (indexR : [],indexRS : [], print(" ") )$
+   
+ 
+ 
+ /******* comp_def1 and comp_def  *******************/
+ 
+   comp_def1 (_a%,_a0%,_a1%,_a2%,_a3% ) := 
+        (arraysetapply (_a%,[0],_a0%),
+          arraysetapply (_a%,[1],_a1%),   
+          arraysetapply (_a%,[2],_a2%),
+          arraysetapply (_a%,[3],_a3%)  )$
+
+
+  /************* comp_def 1-6-10  *********************/
+  
+  /*
+      the syntax of comp_def is, for example,
+       comp_def ( p1(E,p,0,0 ), p2(M,0,0,0 ), p3(E,p*cos(th),p*sin(th),0 ),
+       p4 (M,0,0,0 ), mu(0), nu(1) ),
+        where the  four args of p1, say, are
+       the components of the four momentum assigned to the
+       four momentum labeled by p1,
+       and mu(0) means noncov1 should evaluate the given
+       expression using  mu = 0.
+       Each index assignment adds an element (mu = 0) to the
+       list indexR and an element (mu) to the list indexRS.
+       
+       comp_def uses array methods 
+       
+       calling comp_def a second time with a mu(3) arg
+         causes indexR element to be changed from
+         mu=0 to mu=3,
+         
+       and also allows one to change the definition of the 
+       components of a previously assigned fourvector.
+       
+examples from work4/dirac.tex intro. examples
+
+(%i27) assume(E > 0,th >= 0,th <= %pi)$
+(%i28) comp_def(p1(E,0,0,E),p2(E,0,0,-E),p3(E,E*sin(th),0,E*cos(th)),
+                 p4(E,-E*sin(th),0,-E*cos(th)))$
+(%i29) listarray(p1);
+(%o29) [E,0,0,E]
+(%i30) p1[0];
+(%o30) E
+(%i31) p1[3];
+(%o31) E
+(%i32) noncov(D(p1,p2));
+(%o32) 2*E^2
+(%i33) noncov(D(p2+p1,p2+p1));
+
+(%o33) 4*E^2
+(%i34) VP(p2+p1,p2+p1);
+(%o34) 4*E^2
+(%i35) factor(VP(p1-p3,p1-p3));
+(%o35) 2*(cos(th)-1)*E^2
+
+       
+  
+(%i2) comp_def ( p1(E,p,0,0 ),p2(M,0,0,0 ),
+                 p3(E,p*cos(th),p*sin(th),0 ),
+                 p4(M,0,0,0 ) );
+(%o2) done
+(%i3) arrays;
+(%o3) [gmet,p1,p2,p3,p4]
+                 
+(%i10) for jj:0 thru 3 do display (p3[jj])$
+p3[0] = E
+p3[1] = p*cos(th)
+p3[2] = p*sin(th)
+p3[3] = 0
+
+
+(%i14) listarray(p3);
+(%o14) [E,p*cos(th),p*sin(th),0 ]       
+(%i15) comp_def (mu(0),nu(1) );
+(%i16) indexR;
+(%o16) [nu = 1,mu = 0]
+(%i24) comp_def(p1(E1,q,0,0 ))$
+arrays = [p1,p2,p3,p4,gmet]
+indexR = []
+(%i25) listarray(p1);
+(%o25) [E1,q,0,0 ]
+
+
+  */
+  
+  /* comp_def calls pos and comp_def1  */
+           
+  comp_def ([v]) := 
+   block ( [lv,jj, _pp%, _ppn%, _ppa%, _ppl%, _ni% ],
+    /* disp ("comp_def"), */
+    lv : length (v),
+    /* display (v,lv), */
+    if lv = 0 then ( 
+      disp ("comp_def syntax example:
+      comp_def ( p1(E,p,0,0 ), p2(M,0,0,0 ),p3(E,p*cos(th),p*sin(th),0 ),
+       p4 (M,0,0,0 ), mu(0), nu(1) ) "),
+       return () ),
+       
+        
+    for jj thru lv do (
+      _pp% : v[jj],
+      /* display (jj,_pp%), */
+      _ppn% : op (_pp%),
+      _ppa% : args (_pp%),
+      if length (_ppa%) = 1 then (
+      
+          /* case index symbol assignment */
+        if lfreeof (indexRS,_ppn%) then (
+           indexRS : cons (_ppn%,indexRS),      
+          indexR : cons (_ppn% = _ppa%[1], indexR) )
+         else ( /* case index symbol already has been assigned:
+                   pos and rpl are list utilities defined in
+                   dgcon.mac  */
+           _ni% : pos (map ('lhs,indexR),_ppn%),
+           rpl (indexR,_ni%, _ppn% = _ppa%[1] ) ) )
+           
+            
+        /* case 4-momentum assignment */  
+       else (
+         /* display (_ppn%, _ppa%), */
+         if lfreeof (momRS,_ppn%) then momRS : cons (_ppn%, momRS),
+         _ppl% : cons (_ppn%,_ppa%),
+         /* display (_ppl%), */
+         apply ('comp_def1, _ppl%) ) )  )$
+      
+    /***************** end comp_def  ******************************/
+    
+    
+     /*
+   
+  (%i1) display2d:false$
+(%i2) [p1[0],p1[1],p2[0],p2[1]] : [E,p,M,q]$
+(%i3) arrays;
+(%o3) [p1,p2]
+(%i4) listarray(p1);
+(%o4) [E,p]
+(%i5) listarray(p2);
+(%o5) [M,q]
+*/
+ 
+    
+ /* uncomp_def (p1,mu) removes assignments of 4-vector p1 and index mu
+       index symbols must appear on the list indexL 
+       
+       
+(%i3) comp_def ( p1(E,p,0,0 ),p2(M,0,0,0 ),
+                 p3(E,p*cos(th),p*sin(th),0 ),
+                 p4(M,0,0,0 ), mu(0), nu(1) );
+momRS = [p4,p3,p2,p1]
+
+arrays = [gmet,p1,p2,p3,p4]
+
+indexRS = [nu,mu]
+
+indexR = [nu = 1,mu = 0]
+
+(%o3) done
+(%i4) listarray(p3);
+(%o4) [E,p*cos(th),p*sin(th),0 ]
+
+(%i5) uncomp_def (p3,nu);
+momRS = [p4,p2,p1]
+
+arrays = [gmet,p1,p2,p4]
+
+indexRS = [mu]
+
+indexR = [mu = 0]
+
+(%o5) done
+(%i6) p3[0];
+(%o6) p3[0]     
+       
+       
+  */
+  
+  /********** uncomp_def *************************/
+  /* uncomp_def calls indexp, pos, remL1 */
+ 
+   uncomp_def ([v]) := 
+    block ([lv,jj,_pp%,_ni%,pdeleteL],
+     lv : length (v),
+      pdeleteL : [],
+      
+     for jj thru lv do (
+       _pp% : v[jj],
+       
+       if indexp (_pp%) then (
+       
+         /* case remove index symbol */
+         _ni% : pos (map ('lhs,indexR), _pp% ),
+         /* display (_ni%), */
+         indexR : remL1 (indexR, _ni%),
+         /* display (indexR), */
+         _ni% : pos (indexRS, _pp% ),
+         /* display (_ni%), */
+         indexRS : remL1 (indexRS, _ni%)
+         /* ,display (indexRS)  */ )
+         
+         /* case remove momentum symbol definitions */
+         
+       else ( 
+         
+           _ni% : pos (momRS, _pp% ),
+         
+           momRS : remL1 (momRS, _ni%),
+           pdeleteL : cons (_pp%, pdeleteL) ) ), /* end jj do loop */
+           
+     if length (pdeleteL) > 0 then apply ('remarray, pdeleteL),
+           
+     display (momRS,arrays,indexRS,indexR) )$
+     
+   /************** end uncomp_def ***********************/
+   
+   
+ invar_flag : true$
+   
+ 
+ /**************** prodToList2(e) includes atoms *******************/
+ 
+ prodToList2(_ee%) := block ([%rL,%ee,%p,%pa,%e1,%e2,%k,%aadumb ],  
+    %rL : [],
+  
+   %ee : _ee% * %aadumb,  
+  
+   for %j thru length (%ee) do ( 
+      
+     %p : part (%ee,%j),
+     if %p # %aadumb then (
+               
+     if  mexptp (%p) then (          
+        %pa : args (%p),
+        %e1 : part (%pa,1),
+        %e2 : part (%pa,2),          
+        for %k thru %e2 do %rL : cons (%e1,%rL))
+                                 
+     else  %rL : cons (%p,%rL))),              
+   reverse (%rL))$
+   
+ /*
+ 
+ (%i9) prodToList2(a);
+(%o9) [a]
+(%i10) prodToList2(a*b);
+(%o10) [a,b]
+(%i11) prodToList2(a^2);
+(%o11) [a,a]
+(%i12) prodToList2(p[mu]*q[nu]);
+(%o12) [p[mu],q[nu]]
+(%i21) prodToList2(a*sin(th)*b*c^2*Gm(a,b));
+(%o21) [a,Gm(a,b),b,c,c,sin(th)]
+
+*/
+ 
+
+
+  inlist(_aL%,_x%) := not lfreeof (_aL%,_x%)$
+
+
+  /**** move element in position n to position m *********/  
+  /* called by econ_eps2
+      transferred from work4/dgcon.mac.
+      
+      returns [ fac,newL ] where fac is -1 for an
+     odd number of interchanges, +1 for an even
+     number of interchanges */
+    
+ move (_aL%,_n%,_m%) := 
+  block ( [la,eleft,emid,eright,newL,fac ],
+   la : length (_aL%),
+   fac : 1,
+   if _m% = _n% then return ([fac,_aL%]),
+   if _m% < _n% then (
+     if oddp (_n% - _m%) then fac : - fac,
+     eright : rest (_aL%,_n%),
+     eleft : rest (_aL%,-(la - _m% + 1)),
+     emid : rest ( rest (_aL%,-(la - _n% + 1)), _m% - 1 ),
+     newL : [ eright ],
+     newL : cons (emid, newL),    
+     newL : cons (_aL%[_n%],newL),
+     newL : cons (eleft,newL),
+     newL : flatten (newL) )
+   else ( /* case _m% > _n% */
+     if oddp (_m% - _n%) then fac : - fac,
+     eright : rest (_aL%,_m%),
+     eleft : rest (_aL%,-(la - _n% + 1)),
+     emid : rest ( rest (_aL%,-(la - _m% )), _n% ),
+     newL : [ eright ],     
+     newL : cons (_aL%[_n%],newL),
+     newL : cons (emid, newL),     
+     newL : cons (eleft,newL),
+     newL : flatten (newL) ),
+     [fac, newL] )$
+     
+ /******** end move *********************/     
+ 
+ 
+      
+   
+   
+   /*******  get_matches (aL,nn)  2-18-11 ********************/      
+     
+  
+  /* input list _aL% has the general form 
+       [ [a1,b1,c1,...],[a2,b2,c2,...], [a3,b3,c3,..], ....]
+  
+  
+      get_matches (_aL%,_n%)  returns:
+  
+          [] if no sublists in _aL% contain _n%
+          [ [2,1] ] if second sublist has first arg = _n%
+          [ [2,1],[3,2] ] if second sublist has first arg = _n%
+                   and third sublist has second arg = %n
+          [ [2,1],[2,2] ] if both the first and second arg
+            of the second sublist are equal to _n% 
+            
+(%i4) get_matches ([[n1,n2]],n1);
+(%o4) [[1,1]]
+(%i5) get_matches ([[n2,n1]],n1);
+(%o5) [[1,2]]
+(%i6) get_matches ([[n2,n1]],n3);
+(%o6) []
+(%i7) get_matches ([[n2,n1],[n3,n4]],n3);
+(%o7) [[2,1]]
+(%i8) get_matches ([[n2,n1],[n3,n3]],n3);
+(%o8) [[2,1],[2,2]]
+(%i9) get_matches ([[n2,n1],[n2,n4]],n2);
+(%o9) [[1,1],[2,1]]
+
+*/
+            
+    
+  
+  get_matches (_aL%,_n%) := block ([rtnL,j1,j2,psubL,_pp%  ],
+  
+    rtnL : [],
+    
+    for j1 thru length (_aL%) do (
+    
+     
+      psubL : part (_aL%,j1),
+      
+      if inlist (psubL,_n%) then
+      
+         for j2 thru length (psubL) do (
+         
+           _pp% : part (psubL,j2),
+            
+           if _pp% = _n% then rtnL : cons ([j1,j2],rtnL))),
+           
+    reverse (rtnL))$
+    
+    
+   /********* end get_matches *************************/
+   
+   
+   /************* remL2(aL,n1,n2)   2-19-11 ****************/
+   /* remove list elements n1 and n2  */
+   
+   
+   remL2 (%bL,%z1,%z2) := block ([y1,y2,%bbL],
+     
+     if %z1 = %z2 then (
+       disp ("remL2: %z's are the same"),
+       return (%bL)),
+       
+     if not integerp(%z1) or not integerp(%z2) then (
+       disp ("remL2: %z's must be integers "),
+       return (%bL)),
+   
+     %bbL : copy (%bL),
+     [y1,y2] : sort ([%z1,%z2]),
+     remL1 (%bbL,y1),
+     remL1 (%%,y2 - 1))$
+     
+ /*
+   
+(%i4) aL : [n1,n2,n3,n4,n5,n6,n7,n8,n9,n10]$
+(%i10) remL2 (aL,3,5);
+(%o10) [n1,n2,n4,n6,n7,n8,n9,n10]
+
+ */
+   
+   
+   
+
+
+  /*********** econ11(_e%,%n)   3-21-11 **************************/
+  
+  /* expects one term and one contraction index, which should appear
+     twice in the expression  */
+     
+  /* the most complicated and long-winded function in the
+     dirac2 package (which partly explains why one normally
+     would not use econ due to its slowness compared with
+     mcon), but which is useful for some contractions
+     between eps4's and as a double check of some
+     calculations.
+     
+     econ11 is called by econ.
+     
+     econ11 calls NDfac, prodToList, opList, inlist, strip_ops2,
+            get_matches, remL1, gmatch, listToProd, rpl, mdivp
+            prodToList2, mexptp, pos, ipv.   */
+            
+     
+
+   econ11 (_e%,%n) := block ([fac,en,oopL,blist,anerr, vk,targs,
+                        gmetL,eps4L,en1,en2,gmetArgs,matchL,
+                        numg11,numg21,temp,na,nb,fac1,ematchL,
+                        eps41,eps42,eps4Args, %mm,mp,
+                        found_%n,mpArgs,%e1,%e2,%e1a,
+                        nmp,%e1op,enL,enL1,rval,%s,%d,enL1,%ap,noplist ],
+                        
+       /* disp ("econ11 "), */
+      
+      [fac,en] : NDfac (_e%),
+      
+        /* display (fac,en),   */
+      
+      if atom(en)  then return (_e%),      
+      
+      oopL : prodToList (en),
+   
+        /* display (oopL), 
+   
+            disp (" gen op list "),
+        */
+   
+      oopL : opList (oopL),
+   
+        /*   display (oopL), */
+        
+      blist : [D,LI,UI,Eps,Gm],  /* these args are replaced by noncov */  
+      anerr : false,
+      for vk in oopL do 
+        if inlist (blist,vk) then (
+          anerr : true,
+          return ()),
+          
+      if anerr then (
+        disp (" econ11: You must use noncov before using econ"),
+         return (_e%)),
+      
+      
+      
+      
+         
+      /* look for %n's in any gmet's      */
+      
+      if inlist (oopL,gmet) then (
+      
+        [gmetL, en1] : strip_ops2 (en,gmet),       
+        
+        /* display (gmetL,en1),   */
+                     
+        gmetArgs : map ('args, gmetL),
+        
+        /* display (gmetArgs),   */
+             
+        matchL : get_matches (gmetArgs,%n),
+        
+         /* display (matchL),   */
+        
+        /* possible forms of matchL are:
+          [] if no gmet's contain %n
+          [ [2,1] ] if second gmet has first index = %n
+          [ [2,1],[3,2] ] if second gmet has first index = %n
+                   and third gmet has second index = %n
+          [ [2,1],[2,2] ] if both the first and second index
+            of the second gmet are equal to %n   */
+            
+       /* case both %n's are in the gmets */
+       
+       if length (matchL) = 2 then (
+       
+          numg11 : first (first (matchL)),
+          
+          numg21 : first (second (matchL)),
+          
+         /* display (numg11,numg21),  */
+          
+          /* subcase both %n's are in one sublist */
+          
+ /*
+ (%i1) map ('lambda([r],gmet[first(r),second(r)]),[[a,b]]);
+(%o1) [gmet[a,b]]
+(%i2) map ('lambda([r],gmet[first(r),second(r)]),[[a,b],[c,d]]);
+(%o2) [gmet[a,b],gmet[c,d]]
+(%i3) xreduce ("*",%);
+(%o3) gmet[a,b]*gmet[c,d]
+(%i4) xreduce ("*",%o1);
+(%o4) gmet[a,b]
+(%i5) xreduce ("*",map ('lambda([r],gmet[first(r),second(r)]),[[a,b],[c,d]]));
+(%o5) gmet[a,b]*gmet[c,d]
+(%i6) xreduce ("*",[]);
+(%o6) 1
+*/
+          
+          if numg21 = numg11 then (
+            gmetArgs : remL1 (gmetArgs,numg11),
+            temp : 4*fac*en1*xreduce ("*",map ('lambda ([r],gmet[first(r),second(r)]),gmetArgs)),            
+            temp : ev (temp),
+            return (temp))
+            
+           /* subcase one %n appears in two different sublists */
+           
+           else (
+            /*  disp (" %n in different gmet sublists"),  */
+           
+              na : second (gmatch ([part (gmetArgs,numg11)],%n)),
+              nb : second (gmatch ([part (gmetArgs,numg21)],%n)),
+             /* display (na,nb),  */
+              
+               gmetArgs : subst (%n = nb,remL1 (gmetArgs,numg21)), 
+              
+              /* display (gmetArgs,fac,en1),  */
+              temp : fac*en1*xreduce ("*",map ('lambda ([r],gmet[first(r),second(r)]),gmetArgs)),              
+              /* display (temp), */
+              temp : ev (temp),
+              return (temp)))
+         
+         /* case one %n is in the gmet's: by contracting on %n
+             we can use up this gmet and transfer an index
+             to the remaining product.  */     
+              
+       else if length (matchL) = 1 then (
+       
+          /* disp (" found one instance of index in a gmet"), */
+         
+           numg11 : first (first (matchL)),           
+           na : second (gmatch ([part (gmetArgs,numg11)],%n)),
+           gmetArgs : remL1 (gmetArgs,numg11),
+           temp : xreduce ("*",map ('lambda ([r],gmet[first(r),second(r)]),gmetArgs)),           
+           /* the factor en1 must contain the other %n */
+           temp : fac*temp*subst (%n = na,en1),
+           temp : ev (temp),           
+           return (temp))
+           
+           
+                  
+       else (  /* REDEFINE fac and en HERE */
+       
+         /* cases %n's are not in gmets: absorb passive gmet's into fac  
+                  and look for %n's in en1 --> en  */
+                        
+           fac : fac*listToProd (gmetL),
+           en : en1 )),  /* end case  oplist contains gmet's */
+           
+           
+           
+           
+       /* at this point no gmet's contained %n's so */
+      
+      /* look for %n's in eps4 factors in en;
+          all gmet factors are now in fac.  */
+      
+   
+      
+    if inlist (oopL,eps4) then (
+        /* disp (" econ11: case %n's inside eps4's "),
+            display (en),
+        */
+    
+       /* strip out all eps4 factors into list eps4L
+          and redefine (if there were gmet factors) en1.  */
+      
+        [eps4L, en1] : strip_ops2 (en,eps4),
+        /* display (eps4L,en1), */
+      
+        /* look for locations of index %n */
+             
+        eps4Args : map ('args, eps4L),
+        
+         /* display (eps4Args), */
+             
+        ematchL : get_matches (eps4Args,%n),
+        
+          /* display (ematchL),  */
+        
+        if length (ematchL) > 2 then (
+           disp ("econ11: more than two instances of contraction index %n"),
+           return (_e%)),
+           
+        if length (ematchL) = 2 then (
+          /* disp (" case two %n's are in separate eps4's"), */
+           
+          /* case the two %n's are in different eps4's: if the two %n's are
+             in the same eps4, then we should automatically get zero, but
+             we still enforce this here, just in case.  */
+          
+          numg11 : first (first (ematchL)),
+          
+          numg12 : second (first (ematchL)),
+          
+          /* display (numg11,numg12), */
+          
+          numg21 : first (second (ematchL)),
+          
+          numg22 : second (second (ematchL)),
+          
+          /* display (numg21,numg22), */
+          
+          if numg11 = numg21 then return (0),
+          
+          targs : part (eps4Args,numg11),
+          
+          targs : rpl (targs,numg12,%d),
+          
+          /* display (targs), */
+          
+          eps41 : eps4[first(targs),second(targs),third(targs),fourth(targs)],
+          /* display (eps41), */
+          
+          targs : part (eps4Args,numg21),
+          
+          targs : rpl (targs,numg22,%s),
+          
+          /* display (targs), */
+          
+          eps42 : eps4[first(targs),second(targs),third(targs),fourth(targs)],
+          /*  display (eps42), */
+          
+          eps4L : remL2 (eps4L,numg11,numg21),
+          /* disp(" new eps4L: "), 
+             display (eps4L),          
+           */
+          
+          temp  : sum (sum (gmet[%d,%s]*eps41*eps42,%d,0,3),%s,0,3),
+          
+          /* disp (" just the double sum over eps4 product "),
+             display (temp),
+           */
+          
+          temp : expand (fac*en1*listToProd (eps4L)*temp),
+          
+          temp : ev (temp),
+          
+          return (temp)  )
+          
+  /*
+  
+(%i11) args (eps4[n1,n2,n3,n4]);
+(%o11) [n1,n2,n3,n4]
+(%i12) op (eps4[n1,n2,n3,n4]);
+(%o12) eps4
+  */
+          
+          
+        else if length (ematchL) = 1 then (
+            /* 
+               one of the %n's is inside a eps4 factor and
+               the other is inside en1  */
+            numg11 : first (first (ematchL)),
+            eps41 : part(eps4L,numg11),
+            eps41 : subst (%n = %s,eps41),
+            eps4L : remL1 (eps4L,numg11),
+            en2 : subst (%n = %d,en1),
+            temp : expand (fac*listToProd (eps4L) *
+                       sum (sum (gmet[%s,%d]*en2*eps41,%d,0,3),%s,0,3)),
+            temp : ev (temp),
+            return (temp))
+              
+              
+        else (  /* REDEFINE fac and en HERE */
+        
+           fac : fac*listToProd (eps4L),
+           en : en1 )),
+           
+    /* at this point all gmet's and all eps4's are in fac
+       and the two %n's must be in en. Search for the first factor
+       which contains a %n, change this %n to %d, then multiply this
+       first factor by gmet[%d,%s]*remainder of en1(%n --> %s) and
+       sum over %s and %d. */
+       
+      /* disp ("econ11: search for %n "),
+         display (en),
+        */
+       
+     
+     /* not needed using NDfac at top:
+     
+         if mdivp (en)  then (
+          fac : fac/denom (en),
+          en : num (en) ),
+          
+      */                 
+       
+       /* prodToList2 keeps atoms  */
+       
+       enL1 : prodToList2 (en),
+       
+        /* display (enL1),  */
+            
+         /*  prodToList2 includes atoms */
+         
+       /* remove all atoms
+         from enL1 and put those atoms into fac,
+         arriving at list enL. */
+         
+     
+     enL : [],
+     
+     for %ap in enL1 do
+       if atom (%ap) then fac : fac*%ap
+        else enL : cons (%ap,enL),   
+        
+       /* display (enL), */
+       
+     noplist : opList(enL),
+       
+     if inlist (noplist,gmet) then (
+         disp("econ11: found gmet in wrong area"),
+         return (0)),
+         
+     if inlist (noplist,eps4) then (
+         disp ("econ11:  found eps4 in wrong area"),
+         return (0)),
+         
+         
+         
+            
+       found_%n : false,
+            
+       for %mm thru length (enL) do (            
+        /* display (%mm), */
+              
+         mp : part (enL,%mm),
+        /* display (mp), */
+              
+         if  not atom (mp) then (
+         
+           mpArgs : args (mp),
+         
+           if mexptp (mp) then (
+           /* case power */
+           
+ /*
+(%i2) args (p[mu]^2);
+(%o2) [p[mu],2]
+*/
+              
+              %e1 : part (mpArgs,1),
+              %e2 : part (mpArgs,2),
+              if (%e2 = 2 and not atom (%e1)) then (
+                %e1a : args (%e1),
+                
+                nmp : pos (%e1a,%n),
+                if nmp > 0 then (
+                  %e1op : op (%e1),
+                  found_%n : true,
+                  /* assume only possible carrier of lorentz index
+                     here is a four momentum symbol, this allows use of ipv
+                     (inner product vector) and the search for %n above could be
+                     simplified   */
+                  fac1 : ipv (%e1op,%e1op),
+                  enL1 : remL1 (enL,%mm),
+                  rval : expand (fac*fac1*listToProd (enL1)),
+                  rval : ev (rval),
+                  return())))
+                  
+                  
+           else (
+           
+ /*
+(%i3) args (p[mu]);
+(%o3) [mu]
+*/       
+              
+              if part (mpArgs,1) = %n then (
+                   fac1 : subst (%n = %d,mp),
+                   fac1 : fac1*subst (%n = %s,listToProd (remL1 (enL,%mm))),
+                   rval : expand (fac*sum (sum (gmet[%d,%s]*fac1,%s,0,3),%d,0,3)),
+                   rval : ev (rval),
+                   found_%n : true,
+                   return ())))),
+                   
+           if found_%n then return (rval)
+           else (
+             disp (" econ11: contraction pair not found "),
+             return (_e%)))$
+       
+        
+        /********* end econ11 ***********************************************/
+        
+        
+            
+ /*   econ11 examples:
+   
+   using up gmet's:
+   
+(%i10) econ11 (gmet[n1,n1],n1);
+(%o10) 4
+(%i13) econ11 (-3*gmet[n2,n2]*gmet[n1,n1]*p[n3],n1);
+(%o13) -12*gmet[n2,n2]*p[n3]
+
+
+(%i14) econ11 (gmet[n1,n2]*gmet[n2,n3],n2);
+(%o14) gmet[n2,n3]
+(%i15) econ11 (-3*p[n4]*gmet[n1,n2]*gmet[n2,n3],n2);
+(%o15) -3*gmet[n2,n3]*p[n4]
+
+(%i26) econ11 (gmet[n1,n2]*eps4[n2,n3,n4,n5],n2);
+(%o26) eps4[n1,n3,n4,n5]
+(%i27) econ11 (-3*p[n6]*gmet[n1,n2]*eps4[n2,n3,n4,n5],n2);
+(%o27) -3*eps4[n1,n3,n4,n5]*p[n6]
+(%i28) econ11 (gmet[n1,n2]*p[n2],n2);
+(%o28) p[n1]
+
+contraction index in one eps4:
+
+(%i36) econ11 (eps4[n1,n2,n3,n4]*p[n1],n1);
+(%o36) -p[3]*eps4[3,n2,n3,n4]-p[2]*eps4[2,n2,n3,n4]-p[1]*eps4[1,n2,n3,n4]
+                             +p[0]*eps4[0,n2,n3,n4]
+                             
+(%i37) econ11 (-3*gmet[n5,n6]*eps4[n1,n2,n3,n4]*p[n1],n1);
+(%o37) 3*p[3]*eps4[3,n2,n3,n4]*gmet[n5,n6]+3*p[2]*eps4[2,n2,n3,n4]*gmet[n5,n6]
+                                          +3*p[1]*eps4[1,n2,n3,n4]*gmet[n5,n6]
+                                          -3*p[0]*eps4[0,n2,n3,n4]*gmet[n5,n6]
+                                          
+(%i38) econ11 (-3*gmet[n5,n6]*eps4[n1,n2,n3,n4]*p[n1]*gmet[n7,n8],n1);
+(%o38) 3*p[3]*eps4[3,n2,n3,n4]*gmet[n5,n6]*gmet[n7,n8]
+        +3*p[2]*eps4[2,n2,n3,n4]*gmet[n5,n6]*gmet[n7,n8]
+        +3*p[1]*eps4[1,n2,n3,n4]*gmet[n5,n6]*gmet[n7,n8]
+        -3*p[0]*eps4[0,n2,n3,n4]*gmet[n5,n6]*gmet[n7,n8]
+        
+(%i39) econ11 (-3*gmet[n5,n6]*eps4[n1,n2,n3,n4]*p[n1]*
+               eps4[mu,nu,rh,la],n1);
+(%o39) -3*p[3]*eps4[3,n2,n3,n4]*eps4[la,mu,nu,rh]*gmet[n5,n6]
+        -3*p[2]*eps4[2,n2,n3,n4]*eps4[la,mu,nu,rh]*gmet[n5,n6]
+        -3*p[1]*eps4[1,n2,n3,n4]*eps4[la,mu,nu,rh]*gmet[n5,n6]
+        +3*p[0]*eps4[0,n2,n3,n4]*eps4[la,mu,nu,rh]*gmet[n5,n6]
+        
+        
+both contraction indices in eps4's
+
+(%i12) econ11 (eps4[n1,a,b,c]*eps4[n1,d,e,f],n1);
+(%o12) -eps4[3,a,b,c]*eps4[3,d,e,f]-eps4[2,a,b,c]*eps4[2,d,e,f]
+                                   -eps4[1,a,b,c]*eps4[1,d,e,f]
+                                   +eps4[0,a,b,c]*eps4[0,d,e,f]
+                                   
+(%i13) econ11 (eps4[a,n1,b,c]*eps4[n1,d,e,f],n1);
+(%o13) eps4[3,a,b,c]*eps4[3,d,e,f]+eps4[2,a,b,c]*eps4[2,d,e,f]
+                                  +eps4[1,a,b,c]*eps4[1,d,e,f]
+                                  -eps4[0,a,b,c]*eps4[0,d,e,f]
+
+
+
+*/
+
+/************* econ (e,mu,nu,...) 2-24-11  *************************/
+
+/*  The following definition of econ results is slower contractions of products
+    of nc_tr's, but has other features illustrated in the
+    introduction 
+    
+    econ calls econ11. */
+    
+
+econ (expr,[vL]) := 
+     block ( [_expr%,musum,%mu,rsum,jj,pp,ddummy,rzero:false ],
+       /* disp ("econ "),
+         display (expr,vL),
+        */
+       
+       _expr% : expand(expr),
+         
+       if atom (_expr%) then return (_expr%),       
+       
+       musum : _expr% + ddummy,       
+       
+       /* display (musum), */
+       
+       for %mu in vL do (
+         /* display (%mu,musum),  */
+       
+         rsum : 0,
+         
+         for jj thru length(musum) do (
+            /* display (jj),  */
+            pp : part (musum,jj),
+            /* display (pp),  */
+            if pp # ddummy then         
+             rsum : rsum + econ11(pp,%mu)),
+             
+         /* disp (" after jj do loop "),
+           display (rsum),
+          */
+        
+        if rsum = 0 then (
+          rzero : true,
+          return()),
+             
+        musum : expand (rsum) + ddummy /* , display (musum) */ ),      
+        
+        if rzero then return (0),
+        
+        /* disp (" at end of list of indices vL"),
+           display (musum),
+         */
+          
+        expand (musum) - ddummy )$ 
+        
+  
+  
+ 
+ /************* end econ (e,mu,nu,..)  2-24-11 *******************/
+ 
+ /*
+  general properties:
+  
+ (%i13) econ (gmet[mu,mu],mu);
+(%o13) 4
+
+(%i14) econ (gmet[n1,n1],n1);
+(%o14) 4
+  
+ (%i12) econ (gmet[mu,nu]*gmet[mu,nu],mu,nu);
+(%o12) 4
+
+(%i15) econ (gmet[n1,n1]*gmet[n2,n2],n1,n2);
+(%o15) 16
+(%i16) econ (gmet[n1,n1]*gmet[n2,n2],n2,n1);
+(%o16) 16
+
+(%i17) econ (gmet[n1,n2]*gmet[n2,n3],n2);
+(%o17) gmet[n1,n3]
+
+(%i18) econ (gmet[n1,n2]*p[n1],n1);
+(%o18) p[n2]
+(%i19) econ (gmet[n2,n1]*p[n1],n1);
+(%o19) p[n2]
+
+(%i20) econ (gmet[n1,n2]*eps4[n2,n3,n4,n5],n2);
+(%o20) eps4[n1,n3,n4,n5]
+
+(%i21) econ (eps4[n1,n2,n3,n4]*p[n1],n1);
+(%o21) -p[3]*eps4[3,n2,n3,n4]-p[2]*eps4[2,n2,n3,n4]-p[1]*eps4[1,n2,n3,n4]
+                             +p[0]*eps4[0,n2,n3,n4]
+                             
+(%i22) econ (eps4[n1,a,b,c]*eps4[n1,d,e,f],n1);
+(%o22) -eps4[3,a,b,c]*eps4[3,d,e,f]-eps4[2,a,b,c]*eps4[2,d,e,f]
+                                   -eps4[1,a,b,c]*eps4[1,d,e,f]
+                                   +eps4[0,a,b,c]*eps4[0,d,e,f]
+                                   
+  product of identical eps4's, contraction of all four indices
+                                   
+(%i23) econ(eps4[n1,n2,n3,n4]*eps4[n1,n2,n3,n4],n1,n2,n3,n4);
+(%o23) -24
+
+  product of eps4's, contraction of three indices
+  
+  (%i24) econ(eps4[n1,n2,n3,0]*eps4[n1,n2,n3,0],n1,n2,n3);
+(%o24) -6
+(%i25) econ(eps4[n1,n2,n3,0]*eps4[n1,n2,n3,1],n1,n2,n3);
+(%o25) 0
+(%i26) econ(eps4[n1,n2,n3,1]*eps4[n1,n2,n3,1],n1,n2,n3);
+(%o26) 6
+(%i27) econ(eps4[n1,n2,n3,2]*eps4[n1,n2,n3,2],n1,n2,n3);
+(%o27) 6
+(%i28) econ(eps4[n1,n2,n3,3]*eps4[n1,n2,n3,3],n1,n2,n3);
+(%o28) 6
+
+
+product of two eps4's, contraction of two indices:
+
+(%i29) econ(eps4[n1,n2,0,0]*eps4[n1,n2,0,0],n1,n2);
+(%o29) 0
+(%i30) econ(eps4[n1,n2,0,1]*eps4[n1,n2,0,1],n1,n2);
+(%o30) 2
+(%i31) econ11(eps4[n1,n2,0,1]*eps4[n1,n2,0,1],n1);
+(%o31) -eps4[0,1,3,n2]^2-eps4[0,1,2,n2]^2
+(%i32) econ11(eps4[0,1,3,n2]*eps4[0,1,3,n2],n2);
+(%o32) -1
+(%i33) econ11(eps4[0,1,2,n2]*eps4[0,1,2,n2],n2);
+(%o33) -1
+(%i34) econ(eps4[n1,n2,0,1]*eps4[n1,n2,0,1],n2,n1);
+(%o34) 2
+(%i35) econ(eps4[n1,n2,0,1]*eps4[n1,n2,1,0],n1,n2);
+(%o35) -2
+(%i36) econ(eps4[n1,n2,0,1]*eps4[n1,n2,1,0],n2,n1);
+(%o36) -2
+
+econ11 calls strip_ops2:
+
+(%i2) strip_ops2 (m^2*Sp1[mu]*gmet[mu,nu]*Sp2[nu]*E^2,gmet);
+(%o2) [[gmet[mu,nu]],m^2*Sp1[mu]*Sp2[nu]*E^2]
+(%i3) strip_ops2 (2*k*m^2*Sp1[mu]*gmet[mu,nu]*Sp2[nu]*p*E^2*M/m,gmet);
+(%o3) [[gmet[mu,nu]],2*k*m*Sp1[mu]*Sp2[nu]*p*E^2*M]
+
+(%i4) econ(2*Sp1[mu]*Sp2[nu]*E^2*Sp3[mu]*Sp4[nu]*M^2,mu);
+(%o4) -2*Sp1[3]*Sp3[3]*Sp2[nu]*Sp4[nu]*E^2*M^2
+       -2*Sp1[2]*Sp3[2]*Sp2[nu]*Sp4[nu]*E^2*M^2
+       -2*Sp1[1]*Sp3[1]*Sp2[nu]*Sp4[nu]*E^2*M^2
+       +2*Sp1[0]*Sp3[0]*Sp2[nu]*Sp4[nu]*E^2*M^2
+       
+(%i5) econ (%,nu);
+(%o5) 2*Sp1[3]*Sp2[3]*Sp3[3]*Sp4[3]*E^2*M^2
+       +2*Sp1[2]*Sp3[2]*Sp2[3]*Sp4[3]*E^2*M^2
+       +2*Sp1[1]*Sp3[1]*Sp2[3]*Sp4[3]*E^2*M^2
+       -2*Sp1[0]*Sp3[0]*Sp2[3]*Sp4[3]*E^2*M^2
+       +2*Sp2[2]*Sp4[2]*Sp1[3]*Sp3[3]*E^2*M^2
+       +2*Sp2[1]*Sp4[1]*Sp1[3]*Sp3[3]*E^2*M^2
+       -2*Sp2[0]*Sp4[0]*Sp1[3]*Sp3[3]*E^2*M^2
+       +2*Sp1[2]*Sp2[2]*Sp3[2]*Sp4[2]*E^2*M^2
+       +2*Sp1[1]*Sp3[1]*Sp2[2]*Sp4[2]*E^2*M^2
+       -2*Sp1[0]*Sp3[0]*Sp2[2]*Sp4[2]*E^2*M^2
+       +2*Sp2[1]*Sp4[1]*Sp1[2]*Sp3[2]*E^2*M^2
+       -2*Sp2[0]*Sp4[0]*Sp1[2]*Sp3[2]*E^2*M^2
+       +2*Sp1[1]*Sp2[1]*Sp3[1]*Sp4[1]*E^2*M^2
+       -2*Sp1[0]*Sp3[0]*Sp2[1]*Sp4[1]*E^2*M^2
+       -2*Sp2[0]*Sp4[0]*Sp1[1]*Sp3[1]*E^2*M^2
+       +2*Sp1[0]*Sp2[0]*Sp3[0]*Sp4[0]*E^2*M^2
+
+
+
+some examples from traceConEx.mac in work4:
+ 
+ (%i3) assume ( E > 0, th >= 0, th <= %pi )$
+(%i4) comp_def ( p1( E,0,0,E),
+            p2( E,0,0,-E),
+            p3 (E,E*sin(th),0,E*cos(th)),
+            p4 (E,-E*sin(th),0,-E*cos(th)) )$
+(%i5) listarray (p1);
+(%o5) [E,0,0,E]
+
+(%i15) econ11(p1[mu]*p3[nu]*gmet[mu,nu],mu);
+(%o15) p1[nu]*p3[nu]
+(%i16) econ11 (%,nu);
+(%o16) E^2-cos(th)*E^2
+
+(%i6) econ (nc_tr (p3,mu,p1,nu)*nc_tr (p4,mu,p2,nu), mu,nu);
+(%o6) 64*sin(th)^2*E^4+96*cos(th)^2*E^4+64*cos(th)*E^4+96*E^4
+(%i7) comp : 64*sin(th)^2*E^4+96*cos(th)^2*E^4+64*cos(th)*E^4+96*E^4$
+(%i8) comp - %o6;
+(%o8) 0
+
+(%i9) Mn_sq:(a12:nc_tr(S(1),p2,mu,S(1),p1,nu),
+               a34:nc_tr(S(1),p3,mu,S(1),p4,nu),econ(a12*a34,mu,nu),
+               factor(%%));
+(%o9) -16*(sin(th)^2-2*cos(th)-2)*E^4
+(%i10) comp : -16*(sin(th)^2-2*cos(th)-2)*E^4$
+(%i11) comp - %o9;
+(%o11) 0
+
+tr6 "looks" different than work4, but is the same after
+we do noncov
+
+(%i12) tr6:tr(G5,n1,n2,n3,n4,n5,n6);
+(%o12) -4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n6)+4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n6)
+                                       -4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n5)
+                                       -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n6)
+                                       +4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n6)
+                                       -4*%i*Eps(n1,n4,n5,n6)*Gm(n2,n3)
+(%i13) comp : 4*%i*Eps(n3,n2,n1,n4)*Gm(n5,n6)-4*%i*Eps(n3,n2,n1,n5)*Gm(n4,n6)
+                                       +4*%i*Eps(n3,n2,n1,n6)*Gm(n4,n5)
+                                       -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n6)
+                                       +4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n6)
+                                       -4*%i*Eps(n1,n4,n5,n6)*Gm(n2,n3)$
+(%i14) comp - tr6;
+(%o14) 4*%i*Eps(n3,n2,n1,n4)*Gm(n5,n6)+4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n6)
+                                      -4*%i*Eps(n3,n2,n1,n5)*Gm(n4,n6)
+                                      -4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n6)
+                                      +4*%i*Eps(n3,n2,n1,n6)*Gm(n4,n5)
+                                      +4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n5)
+(%i15) noncov(%);
+(%o15) 0
+
+likewise, tr8 is equivalent to work4 after noncov:
+
+(%i16) tr8:tr(G5,n1,n2,n3,n4,n5,n6,n7,n8);
+(%o16) -4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n6)*Gm(n7,n8)
+        +4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n6)*Gm(n7,n8)
+        -4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n5)*Gm(n7,n8)
+        -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n6)*Gm(n7,n8)
+        +4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n6)*Gm(n7,n8)
+        -4*%i*Eps(n1,n4,n5,n6)*Gm(n2,n3)*Gm(n7,n8)
+        +4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n7)*Gm(n6,n8)
+        -4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n7)*Gm(n6,n8)
+        +4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n5)*Gm(n6,n8)
+        +4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n7)*Gm(n6,n8)
+        -4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n7)*Gm(n6,n8)
+        +4*%i*Eps(n1,n4,n5,n7)*Gm(n2,n3)*Gm(n6,n8)
+        -4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n8)*Gm(n6,n7)
+        +4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n8)*Gm(n6,n7)
+        -4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n5)*Gm(n6,n7)
+        -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n8)*Gm(n6,n7)
+        +4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n8)*Gm(n6,n7)
+        -4*%i*Eps(n1,n4,n5,n8)*Gm(n2,n3)*Gm(n6,n7)
+        +4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n7)*Gm(n5,n8)
+        -4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n6)*Gm(n5,n8)
+        -4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n8)*Gm(n5,n7)
+        +4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n6)*Gm(n5,n7)
+        -4*%i*Gm(n1,n2)*Gm(n3,n4)*Eps(n5,n6,n7,n8)
+        +4*%i*Gm(n1,n3)*Gm(n2,n4)*Eps(n5,n6,n7,n8)
+        -4*%i*Gm(n1,n4)*Gm(n2,n3)*Eps(n5,n6,n7,n8)
+        +4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n8)*Gm(n5,n6)
+        -4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n7)*Gm(n5,n6)
+        +4*%i*Gm(n1,n2)*Gm(n3,n5)*Eps(n4,n6,n7,n8)
+        -4*%i*Gm(n1,n3)*Gm(n2,n5)*Eps(n4,n6,n7,n8)
+        +4*%i*Gm(n1,n5)*Gm(n2,n3)*Eps(n4,n6,n7,n8)
+        -4*%i*Gm(n1,n2)*Eps(n3,n6,n7,n8)*Gm(n4,n5)
+        +4*%i*Gm(n1,n3)*Eps(n2,n6,n7,n8)*Gm(n4,n5)
+        -4*%i*Eps(n1,n6,n7,n8)*Gm(n2,n3)*Gm(n4,n5)
+(%i17) length (tr8);
+(%o17) 33
+(%i18) comp : -4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n6)*Gm(n7,n8)
+         +4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n6)*Gm(n7,n8)
+         -4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n6)*Gm(n7,n8)
+         +4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n6)*Gm(n7,n8)
+         +4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n6)*Gm(n7,n8)
+         -4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n5)*Gm(n7,n8)
+         +4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n7)*Gm(n6,n8)
+         -4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n7)*Gm(n6,n8)
+         +4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n7)*Gm(n6,n8)
+         -4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n7)*Gm(n6,n8)
+         -4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n7)*Gm(n6,n8)
+         +4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n5)*Gm(n6,n8)
+         -4*%i*Eps(n1,n2,n3,n4)*Gm(n5,n8)*Gm(n6,n7)
+         +4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n8)*Gm(n6,n7)
+         -4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n8)*Gm(n6,n7)
+         +4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n8)*Gm(n6,n7)
+         +4*%i*Eps(n1,n2,n3,n5)*Gm(n4,n8)*Gm(n6,n7)
+         -4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n5)*Gm(n6,n7)
+         +4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n7)*Gm(n5,n8)
+         -4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n6)*Gm(n5,n8)
+         -4*%i*Eps(n1,n2,n3,n6)*Gm(n4,n8)*Gm(n5,n7)
+         +4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n6)*Gm(n5,n7)
+         -4*%i*Gm(n1,n2)*Gm(n3,n4)*Eps(n5,n6,n7,n8)
+         +4*%i*Gm(n1,n3)*Gm(n2,n4)*Eps(n5,n6,n7,n8)
+         -4*%i*Gm(n1,n4)*Gm(n2,n3)*Eps(n5,n6,n7,n8)
+         +4*%i*Eps(n1,n2,n3,n7)*Gm(n4,n8)*Gm(n5,n6)
+         -4*%i*Eps(n1,n2,n3,n8)*Gm(n4,n7)*Gm(n5,n6)
+         +4*%i*Gm(n1,n2)*Gm(n3,n5)*Eps(n4,n6,n7,n8)
+         -4*%i*Gm(n1,n3)*Gm(n2,n5)*Eps(n4,n6,n7,n8)
+         +4*%i*Gm(n1,n5)*Gm(n2,n3)*Eps(n4,n6,n7,n8)
+         -4*%i*Gm(n1,n2)*Eps(n3,n6,n7,n8)*Gm(n4,n5)
+         +4*%i*Gm(n1,n3)*Eps(n2,n6,n7,n8)*Gm(n4,n5)
+         -4*%i*Eps(n1,n6,n7,n8)*Gm(n2,n3)*Gm(n4,n5)$
+(%i19) comp - tr8;
+(%o19) 4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n6)*Gm(n7,n8)
+        -4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n6)*Gm(n7,n8)
+        +4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n6)*Gm(n7,n8)
+        +4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n6)*Gm(n7,n8)
+        -4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n6)*Gm(n7,n8)
+        +4*%i*Eps(n1,n4,n5,n6)*Gm(n2,n3)*Gm(n7,n8)
+        -4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n7)*Gm(n6,n8)
+        +4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n7)*Gm(n6,n8)
+        -4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n7)*Gm(n6,n8)
+        -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n7)*Gm(n6,n8)
+        +4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n7)*Gm(n6,n8)
+        -4*%i*Eps(n1,n4,n5,n7)*Gm(n2,n3)*Gm(n6,n8)
+        +4*%i*Gm(n1,n2)*Eps(n5,n4,n3,n8)*Gm(n6,n7)
+        -4*%i*Gm(n1,n3)*Eps(n5,n4,n2,n8)*Gm(n6,n7)
+        +4*%i*Gm(n2,n3)*Eps(n5,n4,n1,n8)*Gm(n6,n7)
+        +4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n8)*Gm(n6,n7)
+        -4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n8)*Gm(n6,n7)
+        +4*%i*Eps(n1,n4,n5,n8)*Gm(n2,n3)*Gm(n6,n7)
+(%i20) noncov(%);
+(%o20) 0
+
+
+
+
+
+*/
+
+ 
+
+    
+ /* new noncov1 code:
+          noncov calls sum_eps before calling noncov1. */
+ 
+ /************** noncov1  3-12-11 ***************************************/
+ /*  noncov1 replaces D(a,b) by VP(a,b), Gm(a,b) by gmet[a,b], 
+     UI(p,mu) by p[mu],
+     and LI(p,mu) by sum (gmet[mu,s]*p[s],s,0,3) 
+     noncov1 calls strip_ops2     */
+     
+ /* noncov1 calls inlist, NDfac, prodToList, opList, strip_ops2, 
+       listToProd, VP.
+       
+       called by noncov.  */
+     
+ 
+noncov1 (e) := block ([rrprod,err,oopL,aaL,vk,avk], 
+ 
+    /* disp (" noncov1  2-15-11 "),
+       display (e),
+     */
+     
+   if atom(e)  then return (e),
+   
+   /* pull out numerical factors and divisors
+     into rrprod */
+     
+   [rrprod,err] : NDfac (e),
+   
+   /*  disp (" after scalar_part "),
+   
+       display (rrprod,err),
+    */
+   
+   if atom(err)  then return (e),
+   
+   /* disp(" product to list "), */
+   
+   oopL : prodToList (err),
+   
+   /* display (oopL), 
+   
+      disp (" gen op list "),
+    */
+   
+   oopL : opList (oopL),
+   
+   /*   display (oopL), */
+   
+   /* combine any eps4 factors with rrprod
+      using strip_ops2 which preserves atomic factors
+       in expression err */
+   
+   if inlist (oopL,eps4) then (
+        
+     [aaL,err] : strip_ops2 (err,eps4),
+     
+      rrprod : rrprod*listToProd (aaL)),
+   
+   if atom(err)  then return (expand (err*rrprod)),
+     
+   if inlist (oopL,D) then (
+   
+      [aaL,err] : strip_ops2 (err,D),      
+       for vk in aaL do 
+          rrprod : rrprod * apply ('VP,args (vk))),
+       
+   if atom(err) then return (expand (err*rrprod)),
+     
+   if inlist (oopL,Gm) then (  
+   
+     /* disp (" strip Gm's "),     */
+   
+      [aaL,err] : strip_ops2 (err,Gm),
+      
+      /*  display (aaL,err),    */
+   
+       for vk in aaL do (
+          avk : args (vk),        
+          rrprod : rrprod * gmet [first (avk),second (avk)])),
+       
+   if atom(err) then return (expand (err*rrprod)),
+       
+   if inlist (oopL,UI) then (  
+   
+     [aaL,err] : strip_ops2 (err,UI),       
+     for vk in aaL do (
+       avk : args (vk),
+       rrprod : rrprod * first (avk) [ second (avk)])),
+       
+   if atom(err) then return (expand (err*rrprod)),
+     
+   if inlist (oopL,LI) then (  
+       
+      [aaL,err] : strip_ops2 (err,LI),       
+       for vk in aaL do (
+         avk : args (vk),
+         rrprod : rrprod * apply ('sum,[gmet [s,second (avk)] * first (avk) [s],s,0,3]))),
+       
+   expand (err*rrprod))$
+   
+/*
+   
+(%i14) noncov1 (D(a,b));
+(%o14) -a[3]*b[3]-a[2]*b[2]-a[1]*b[1]+a[0]*b[0]
+(%i27) noncov1 (3*%i*D(a,b)/7);
+(%o27) -3*%i*a[3]*b[3]/7-3*%i*a[2]*b[2]/7-3*%i*a[1]*b[1]/7+3*%i*a[0]*b[0]/7
+
+(%o4) "c:/work5/temp6.mac"
+(%i5) stu_flag;
+(%o5) false
+(%i6) noncov (D(a,b));
+(%o6) -a[3]*b[3]-a[2]*b[2]-a[1]*b[1]+a[0]*b[0]
+(%i7) noncov (3*%i*D(a,b)/7);
+(%o7) -3*%i*a[3]*b[3]/7-3*%i*a[2]*b[2]/7-3*%i*a[1]*b[1]/7+3*%i*a[0]*b[0]/7
+
+(%i23) noncov1 (Gm (n1,n2));
+(%o23) gmet[n1,n2]
+(%i4) noncov1 (-4*Gm (n1,n2)/m^2);
+(%o4) -4*gmet[n1,n2]/m^2
+
+(%i117) noncov1 (Gm (3,3));
+(%o117) -1
+(%i28) noncov1 (3*%i*Gm (n1,n2)/7);
+(%o28) 3*%i*gmet[n1,n2]/7
+
+(%i2) noncov1 (eps4 [n1,n2,n3,n4]);
+(%o2) eps4[n1,n2,n3,n4]
+(%i3) noncov1 (3*%i*eps4 [n1,n2,n3,n4]/7);
+(%o3) 3*%i*eps4[n1,n2,n3,n4]/7
+
+(%i25) noncov1 (UI(p,n1));
+(%o25) p[n1]
+(%i30) noncov1 (3*%i*UI(p,n1)/7);
+(%o30) 3*%i*p[n1]/7
+
+(%i26) noncov1 (LI (p,N1));
+(%o26) p[3]*gmet[3,N1]+p[2]*gmet[2,N1]+p[1]*gmet[1,N1]+p[0]*gmet[0,N1]
+(%i31) noncov1 (3*%i*LI (p,N1)/7);
+(%o31) 3*%i*p[3]*gmet[3,N1]/7+3*%i*p[2]*gmet[2,N1]/7+3*%i*p[1]*gmet[1,N1]/7
+                             +3*%i*p[0]*gmet[0,N1]/7
+                             
+(%i4) noncov1 (eps4[n1,n2,n3,n4]*D(a,b)*Gm (n5,n6)*UI(p,n7));
+(%o4) -a[3]*b[3]*eps4[n1,n2,n3,n4]*gmet[n5,n6]*p[n7]
+       -a[2]*b[2]*eps4[n1,n2,n3,n4]*gmet[n5,n6]*p[n7]
+       -a[1]*b[1]*eps4[n1,n2,n3,n4]*gmet[n5,n6]*p[n7]
+       +a[0]*b[0]*eps4[n1,n2,n3,n4]*gmet[n5,n6]*p[n7]
+
+*/
+  /******************** end noncov1(e)  2-15-11 ****************/       
+       
+ 
+   
+ 
+  
+/*********** noncov 4-9-11 *****************************/ 
+
+/*  noncov calls sumToList, sum_eps, noncov1, 
+      and (if stu_flag = true)  sub_stu  */
+      
+         
+   
+   noncov (expr) := 
+     block ( [ncL1,vnc1,ncsum,ncsum1,ncL2,vnc2,%qq,%qq1  ],       
+   
+      /* disp ("noncov  3-26-11 "),
+         display (expr),
+         */
+        /* disp("noncov: do sub_stu"), */
+      
+       if atom (expr) or constantp (expr)  then return (expr),       
+       
+       ncL1 : sumToList (expand (expr)),
+       
+       /* display (ncL1), */
+       
+       ncsum : 0,
+       /* display (ncsum), */
+       
+       for vnc1 in ncL1 do (
+        /*  display (vnc1), */
+         ncsum1 : sum_eps(vnc1),
+         ncL2 : sumToList (expand (ncsum1)),
+         for vnc2 in ncL2 do (
+            %qq : expand (noncov1 (vnc2)),
+            if stu_flag then (
+            %qq1 : sub_stu (%qq),
+            %qq : expand (%qq1)),
+            ncsum : ncsum + %qq )),
+       ncsum )$
+         
+       
+ /************ end noncov 4-9-11  ****************************/
+        
+   
+   
+/*  examples from work4/dirac.tex sample calculations
+
+(%i18) noncov(D(p,q));
+(%o18) -p[3]*q[3]-p[2]*q[2]-p[1]*q[1]+p[0]*q[0]
+(%i19) noncov(Gm(mu,nu));
+(%o19) gmet[mu,nu]
+(%i20) gmet[0,0];
+(%o20) 1
+(%i21) noncov(UI(p,mu));
+(%o21) p[mu]
+(%i22) noncov(LI(p,mu));
+(%o22) p[3]*gmet[3,mu]+p[2]*gmet[2,mu]+p[1]*gmet[1,mu]+p[0]*gmet[0,mu]
+(%i23) noncov(LI(p,N1)*Eps(N1,1,2,3));
+(%o23) p[0]
+
+
+
+(%i24) noncov(Eps(mu,nu,rh,la));
+(%o24) -eps4(la,mu,nu,rh)
+(%i25) eps4(mu,nu,rh,la);
+(%o25) -eps4(la,mu,nu,rh)
+(%i26) eps4[0,1,2,3];
+(%o26) 1
+
+(%i62) assume ( E > 0, th >= 0, th <= %pi )$
+(%i63) comp_def ( p1( E,0,0,E),
+            p2( E,0,0,-E),
+            p3 (E,E*sin(th),0,E*cos(th)),
+            p4 (E,-E*sin(th),0,-E*cos(th)) )$
+(%i64) listarray (p1);
+(%o64) [E,0,0,E]
+(%i65) noncov (D(p1+p2,p1+p2));
+(%o65) 4*E^2
+(%i66) noncov (D(p1,p2));
+(%o66) 2*E^2
+(%i67) factor (VP (p1-p3,p1-p3));
+(%o67) 2*(cos(th)-1)*E^2
+
+example of nc_tr(...) = noncov (tr(...))
+
+(%i74) tr(p3,mu,p1,nu);
+(%o74) 4*UI(p1,mu)*UI(p3,nu)+4*UI(p1,nu)*UI(p3,mu)-4*Gm(mu,nu)*D(p1,p3)
+(%i75) noncov(%);
+(%o75) 4*gmet[mu,nu]*cos(th)*E^2-4*gmet[mu,nu]*E^2+4*p1[mu]*p3[nu]
+                                +4*p3[mu]*p1[nu]
+(%i76) fac1 : nc_tr(p3,mu,p1,nu);
+(%o76) 4*gmet[mu,nu]*cos(th)*E^2-4*gmet[mu,nu]*E^2+4*p1[mu]*p3[nu]
+                                +4*p3[mu]*p1[nu]
+(%i77) noncov (D(p1,p3));
+(%o77) E^2-cos(th)*E^2
+
+(%i78) tr(p4,mu,p2,nu);
+(%o78) 4*UI(p2,mu)*UI(p4,nu)+4*UI(p2,nu)*UI(p4,mu)-4*Gm(mu,nu)*D(p2,p4)
+(%i79) noncov(%);
+(%o79) 4*gmet[mu,nu]*cos(th)*E^2-4*gmet[mu,nu]*E^2+4*p2[mu]*p4[nu]
+                                +4*p4[mu]*p2[nu]
+(%i80) fac2 : nc_tr(p4,mu,p2,nu);
+(%o80) 4*gmet[mu,nu]*cos(th)*E^2-4*gmet[mu,nu]*E^2+4*p2[mu]*p4[nu]
+                                +4*p4[mu]*p2[nu]
+                                
+
+
+
+
+
+*/
+ 
+  
+  
+  
+  stu_flag : false$
+   
+  /* The flag stu_flag set to true will cause noncov to 
+    replace s,t,u symbols using the function sub_stu  */
+              
+   sub_stu (expr) := (subst([t = t_th,s = s_th,u = u_th],expr),
+              trigsimp(%%),expand (%%) )$
+   
+  
+   unsub_stu (expr) := (subst (t_th=t,s_th=s,u_th=u))$
+  
+  
+   /************ sum_eps1 new 2-15-11
+              using strip_ops (e,eps4) to get the dummy indices */
+              
+  /* sums over all dummy indices in eps4[n1,n2,n3,n4] from 0 thru 3
+      sum_eps1 expects to be called only by sum_eps
+      and sum_eps expects to be called only by noncov.
+      noncov calls sum_eps before calling noncov1.
+      
+      "dummy indices" have dummyp(n) --> true and are automatically
+      generated as N1,N2,N3,...	by a symbolic trace calculation
+      involving G5's.
+      
+      You can check the highest dummy automatically declared
+      via:
+           (%i45) Nlast;
+           (%o45) 13
+           
+       which shows that N13 was the last dummy automatically created
+      
+      
+      
+     sum_eps1(expr) expects expr is one term of a previously
+     expanded expression. Use sum_eps(manyterms) for an expression
+     which is the sum of two or more terms.
+  */
+   
+   
+   sum_eps1(_ea%) := block ([fac,er,eL,err,nlist,nrlist,aneps4,aL,vk,%temp,%nval ],
+   
+     /*  disp (" sum_eps1 3-21-11"),   */
+      /* remove numerical factors and divisors */
+      
+     [fac,er] : NDfac (_ea%),
+      
+     /* ignore atoms and strip out eps4's */
+     [eL,err] : strip_ops (er,eps4),      
+      
+         /* nlist is list of dummy indices found in various eps4's
+            we need nlist to avoid repeating entries into nrlist  */
+            
+     nlist : [],
+     /* nrlist is list of range args for found dummies */
+     nrlist : [],     
+     
+     for aneps4 in eL do (
+       aL : args (aneps4),     
+       for vk in aL do          
+         if dummyp(vk) and lfreeof(nlist,vk) then (
+           nlist : cons (vk,nlist), 
+           nrlist : cons ([vk,0,3],nrlist))),     
+                 
+     if length (nlist) = 0 then return (_ea%),     
+     
+     %temp : copy (_ea%),     
+    
+    /* sum over all dummy index symbols found */
+    
+    for %nval in nrlist do
+      %temp : apply ('sum, cons (%temp,%nval)),
+        
+    expand (%temp))$
+    
+ /************ end sum_eps1 3-21-11 ********************/
+ 
+ 
+   
+ /*
+ 
+ (%i11) tr(G5,n1,n2,n3,n4);
+(%o11) -4*%i*Eps(n1,n2,n3,n4)
+(%i12) noncov(%);
+(%o12) -4*%i*eps4[n1,n2,n3,n4]
+(%i13) tr(G5,n2,n1,n3,n4);
+(%o13) -4*%i*Eps(n2,n1,n3,n4)
+(%i14) noncov(%);
+(%o14) 4*%i*eps4[n1,n2,n3,n4]
+
+
+-----------------------------------------
+four dummy index summation:
+
+(%i23) noncov(Eps(N1,N2,N3,N4)*Eps(N1,N2,N3,N4));
+(%o23) 24
+
+The correct 4 tensor contraction of a product
+of two 4 dim completely antisymmetric tensors is
+given by using econ, which does the contraction (lowering
+one of a pair of indices) before summing (these are NOT dummys):
+
+(%i23) econ(eps4[n1,n2,n3,n4]*eps4[n1,n2,n3,n4],n1,n2,n3,n4);
+(%o23) -24
+
+three dummy index summation:
+
+(%i24) noncov(Eps(N1,N2,N3,0)*Eps(N1,N2,N3,0));
+(%o24) 6
+
+(%i25) econ(eps4[n1,n2,n3,0]*eps4[n1,n2,n3,0],n1,n2,n3);
+(%o25) -6
+
+(%i28) noncov(Eps(N1,N2,N3,1)*Eps(N1,N2,N3,1));
+(%o28) 6
+(%i29) econ(eps4[n1,n2,n3,1]*eps4[n1,n2,n3,1],n1,n2,n3);
+(%o29) 6
+
+(%i25) noncov(Eps(N1,N2,N3,0)*Eps(N1,N2,N3,1));
+(%o25) 0
+(%i27) econ(eps4[n1,n2,n3,0]*eps4[n1,n2,n3,1],n1,n2,n3);
+(%o27) 0
+
+(%i26) noncov(Eps(N1,N2,N3,0)*Eps(N1,N2,N3,2));
+(%o26) 0
+(%i27) noncov(Eps(N1,N2,N3,0)*Eps(N1,N2,N3,3));
+(%o27) 0
+(%i28) noncov(Eps(N1,N2,N3,1)*Eps(N1,N2,N3,0));
+(%o28) 0
+(%i29) noncov(Eps(N1,N2,N3,2)*Eps(N1,N2,N3,0));
+(%o29) 0
+(%i30) noncov(Eps(N1,N2,N3,3)*Eps(N1,N2,N3,0));
+(%o30) 0
+
+two dummy index summation:
+
+(%i30) noncov(Eps(N1,N2,0,0)*Eps(N1,N2,0,0));
+(%o30) 0
+(%i31) econ(eps4[n1,n2,0,0]*eps4[n1,n2,0,0],n1,n2);
+(%o31) 0
+
+(%i32) noncov(Eps(N1,N2,0,1)*Eps(N1,N2,0,1));
+(%o32) 2
+(%i33) econ(eps4[n1,n2,0,1]*eps4[n1,n2,0,1],n1,n2);
+(%o33) 2
+
+(%i34) noncov(Eps(N1,N2,0,1)*Eps(N1,N2,1,0));
+(%o34) -2
+(%i35) econ(eps4[n1,n2,0,1]*eps4[n1,n2,1,0],n1,n2);
+(%o35) -2
+
+(%i36) noncov(Eps(N1,N2,0,2)*Eps(N1,N2,0,2));
+(%o36) 2
+(%i37) econ(eps4[n1,n2,0,2]*eps4[n1,n2,0,2],n1,n2);
+(%o37) 2
+
+(%i38) noncov(Eps(N1,N2,0,2)*Eps(N1,N2,2,0));
+(%o38) -2
+(%i39) econ(eps4[n1,n2,0,2]*eps4[n1,n2,2,0],n1,n2);
+(%o39) -2
+
+(%i40) noncov(Eps(N1,N2,1,0)*Eps(N1,N2,1,0));
+(%o40) 2
+(%i41) econ(eps4[n1,n2,1,0]*eps4[n1,n2,1,0],n1,n2);
+(%o41) 2
+
+
+
+                              
+  */
+  
+  
+    /************ sum_eps(expr=one or many terms) calls sum_eps1 for each term ***********/
+  
+  /* sum_eps calls strip_ops2,  replaces Eps by eps4 and then passes each
+      term to sum_eps1 for summation over dummy variables */
+      
+  
+ 
+ /************* sum_eps  3-21-11         ***************/
+ /* sum_eps uses strip_ops2   */
+ 
+  sum_eps (expr) := 
+     block ( [eexprL,rrsum,jk,%pp1,efac,%nsp,%EpsL,xyz,eps4fac,vk,nprod,temp],      
+         /* disp("sum_eps"),
+           display (expr),
+           */        
+         
+       if atom (expr) then return (expr),
+       
+       eexprL : sumToList (expand (expr)),
+       
+       rrsum : 0,
+       
+       for %pp1 in eexprL do (
+            /* pull out numerical factors and divisor */
+         
+           [efac,%nsp] : NDfac (%pp1),
+           
+             /* display (efac,%nsp),  */
+         
+           [%EpsL,xyz] : strip_ops2 (%nsp,Eps),
+           
+             /*  display (%EpsL,xyz), */
+           
+         
+           if length (%EpsL) = 0 then rrsum : rrsum + %pp1
+           
+           else (
+       
+             eps4fac : 1,
+           
+             for vk in %EpsL do (
+       
+           
+               temp : eps4[first(vk),second(vk),third(vk),fourth(vk)],
+       
+           
+               eps4fac : eps4fac*temp),
+       
+           
+               nprod : efac*xyz*eps4fac,
+       
+               temp : sum_eps1 (nprod),
+              
+               rrsum : rrsum + temp)),
+       
+      expand (rrsum))$
+  
+  /********** end sum_eps 3-21-11 ********************/ 
+       
+
+/************* new nc_tr  3-26-11 **************************/
+   /* nc_tr calls Gexpand, sumToList, NDfac, strip_ops2, TR1, noncov */
+   
+
+  nc_tr ([v1]) := block ([Gterms,expanL,vex,nctrsum,%e1,%e2,%n,%ncval,
+                     vex1,vex2,%fac,GL,anerr:false,Gargs ],
+      /* disp("nc_tr "),
+         display (v1), 
+       */
+     
+    
+    
+    if v1 = [1] then return (4),
+    
+    /* first do any possible expansions of multiple arg terms,
+        helicity projection operators, masses, scalars,
+         using Gexpand (G(a,b,c,..)) */
+    
+    Gterms : apply ('Gexpand, [ apply ('G,v1)]),
+    
+    /* now do noncov (tr(..)) of each term
+        of the expansion   */     
+    
+    expanL : sumToList (expand (Gterms)),
+    
+    /* %e1 : part(expanL,1),
+      %e2 : part (expanL,2),
+      display (%e1,%e2),
+    */
+    nctrsum : 0,
+    /* %n : 0, */
+    
+    for vex in expanL do (
+       /* %n : %n + 1, */
+       [%fac,vex1] : NDfac (vex),
+      
+      [GL,vex2] : strip_ops2 (vex1,G),
+      
+      if GL = [] then (
+        disp ("nc_tr: no G factor from Gexpand in term "),
+        anerr : true,
+        return ()),
+        
+      if length (GL) > 1 then (
+        disp ("nc_tr: more than one G factor in a term from Gexpand"),
+        anerr : true,
+        return ()),
+        
+      %fac : %fac*vex2,
+      Gargs : args (GL[1]),
+      /* display (fac,Gargs), */                           
+      %gval : expand (%fac*apply ('TR1,Gargs)),
+      /* if %n < 3 then 
+         display(%n,vex,%gval),     
+         */
+         
+      %ncval : noncov (%gval),
+      /* if %n < 3 then
+         display (%ncval),
+       */
+       
+      nctrsum : nctrsum + expand(%ncval)),
+      
+    if anerr then return (apply ('NC_TR_fail,v1)),
+    
+    nctrsum )$
+    
+    /*************** end  nc_tr 3-26-11 ******************************/
+    
+       
+   /****************** D_sub ***********************************/
+   
+  D_sub (expr,dlist) :=
+    block ([elist,jj],
+     elist : [],
+     for jj thru length (dlist) do (
+       pp : dlist[jj],
+       elist : cons (pp = noncov (pp),elist)),
+     elist : reverse (elist),
+     ev (expr,elist) )$
+     
+     
+   /************ end D_sub ******************/
+   

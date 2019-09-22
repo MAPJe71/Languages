@@ -1,0 +1,383 @@
+Rem 'https://moxie.build/Get-Started-with-Development-Examples/DevEx-ToDo-Node
+
+Rem 'Init
+    HttpNoCache
+    HttpsEnsure
+EndRem
+
+Rem 'Flow Control
+    [Pull]  Req.IsPost List.Edit Item.Edit Item.Del List.Del
+    
+    If      Req.isPost  : And List.Edit     : And Not Item.Edit : List.Edit.Proc    List.Edit
+    ElseIf                    List.Edit     : And Not Item.Edit : List.Edit.Show    List.Edit, ""
+    
+    ElseIf  Req.isPost  : And List.Edit     : And Item.Edit     : Item.Edit.Proc    List.Edit, Item.Edit
+    ElseIf                    List.Edit     : And Item.Edit     : Item.Edit.Show    List.Edit, Item.Edit, ""
+    
+    ElseIf  Req.isPost  : And Item.Del      : Item.Del.Proc     Item.Del
+    ElseIf                    Item.Del      : Item.Del.Show     Item.Del
+    
+    ElseIf Req.IsPost   : And List.Del      : List.Del.Proc     List.Del
+    ElseIf                    List.del      : List.Del.Show     List.Del
+    
+    Else                                    : List.All
+    End If
+EndRem
+
+
+Method List.All()
+    Rem 'Get our data
+        SetNew      "MemTab.Person.Alias", ($SessionUser)
+        Children    "ToDo.List"
+    EndRem
+    
+    Html "<div style='margin-bottom: 10px;'>"
+    HtmlAButton "MainBody", "Append", "<? i plus ?> Add List", "?List.Edit=*", "&default &md"
+    Html "</div>"
+
+    'Build a Panel with each List Item
+    ForEach         "Me.Output", "List.All.forList"
+End Method
+
+
+Method List.All.forList()
+    Rem 'Get data from top query
+        [New]   ListName    | ToDo.List.Name
+        [New]   List        | ToDo.List.Alias
+        If Not List Then Exit
+        Children                "ToDo.Item"
+    EndRem
+    
+    Rem 'Customize some fields
+        WorkWith        "ToDo.Item"
+            Build       "Name", ("<a href='?List.Edit=" & List & "&Item.Edit="), "Alias", "'>", "Name", "</a>", "Alias"
+            NewFields   "Delete"
+            Build       "Delete", ((NbSp$ 4) & "<a href='?Item.Del="), "Alias", "'><? i remove ?></a>", "Alias"
+        End WorkWith
+        
+        KeepFields      "ToDo.Item.", "Name DueDate Status Delete"
+        NameField       "ToDo.Item.Delete", "Delete"
+    EndRem
+    
+    Rem 'Build Panel
+        Prefix Html
+            "<div class='panel panel-default'>"
+            "   <div class='panel-heading'>"
+            ("      <h3 class='panel-title'>" & ListName & " </h3>")
+        End Prefix
+        
+        Html "  </div>"
+        Html "  <div class='panel-body'>"
+        
+        Html "      <div class='btn-group'>"
+        HtmlAButton "MainBody", "Append", "<? i edit ?> Edit List", ("?List.Edit=" & List), "&default &sm"
+        HtmlAButton "MainBody", "Append", "<? i trash ?> Delete List", ("?List.Del=" & List), "&default &sm"
+        Html "      </div>"
+        
+        HtmlAButton "MainBody", "Append", "<? i plus ?> Add Item", ("?Item.Edit=*&List.Edit=" & List), "&default &sm" 
+        
+        HtmlTable
+        
+        Html "  </div>"
+        Html "</div>"
+    EndRem
+End Method
+
+
+Method List.Edit.Show(pList, pAnyErr)
+    If pList = *
+        WorkWith            "ToDo.List"
+            Pull            "Request", "ToDo.List", "Name DueDate"
+            Rem 'Customize form
+                KeepFields  "ToDo.List.", "Name DueDate"
+                GetFieldDefs
+            EndRem
+        End WorkWith
+        
+    Else
+        List.IsMine pList                           'Security Check
+        LoadRecord          "ToDo.List", pList      'Get our data
+        
+        Rem 'Customize form
+            KeepFields      "ToDo.List.", "Name DueDate Created Modified"
+            GetFieldDefs
+        EndRem
+    End If
+    
+    If pAnyErr
+        WorkWith            "ToDo.List"
+            Pull            "Request", "ToDo.List.", "Name DueDate"
+        End WorkWith
+    End If
+    
+    Rem 'Apply err states
+        If pAnyErr
+            [Pull]          "List.Edit.Proc.Input", "Name.Err DueDate.Err"
+        Else
+            [New]           Name.Err DueDate.Err
+        End If
+        
+        mSetState           (Name.Err, "ToDo.List.Name")
+        mSetState           (DueDate.Err, "ToDo.List.DueDate")
+    EndRem
+    
+    HtmlForm        "<? i ok ?> Save"               'Put it on the page
+End Method
+
+
+Method List.Edit.Proc(pList)
+    If pList <> * 'Security Check
+        List.IsMine pList
+    End If
+    
+    Rem 'Validate data
+        [Pull]  "Request", "ToDo.List.", "Name DueDate"
+        [New]   AnyErr Name.Err DueDate.Err
+        
+        If Not Name                                 : AnyErr = "y" :    Name.Err = "y" : HtmlErr "<b>Oops,</b> please provide a name."          : End If
+        If DueDate : And Not (ValidDate$ DueDate)   : AnyErr = "y" : DueDate.Err = "y" : HtmlErr "<b>Oops,</b> please provide a valid Due Date" : End If
+        
+        If AnyErr
+            List.Edit.Show pList, "y"
+            Exit
+        End If
+    EndRem
+    
+    Name = MCase$ Name          'Data clean up
+    
+    Rem 'Save to database
+        If pList = *
+            SetNew              "MemTab.Person.Alias", ($SessionUser)
+            WorkWith            "ToDo.List"
+                SetNew          "Alias", *
+                Pull            "Name DueDate"
+                NewWithAttach   "Parent", "MemTab.Person"
+                FailIfRecError
+                [New]           nList | ToDo.List.Alias
+            End WorkWith
+        Else
+            WorkWith            "ToDo.List"
+                SetNew          "Alias", pList
+                Pull            "Name DueDate"
+                Backfill
+                    Update
+                End Backfill
+                FailIfRecError
+            End WorkWith
+        End If
+    EndRem
+        
+    Rem 'Show all lists again
+        [Pull] Req.Path
+        HttpStatus  "302"
+        HttpHeader  "Location", ("/" & Req.Path)
+    EndRem
+End Method
+
+
+Method List.IsMine(pList)
+    Rem 'Search for data via relationships
+        SetNew              "MemTab.Person.Alias", ($SessionUser)
+        Children            "ToDo.List"
+        KeepIf              "ToDo.List.Alias", =, `pList
+        [New] FoundIt   |   ToDo.List.Alias
+    EndRem
+    
+    Rem 'Handle not found
+        If Not FoundIt
+            HtmlErr         "<b>Sorry, </b> it looks like you have an invalid link"
+            List.All
+            Exit Proc
+        End If
+    EndRem
+End Method
+
+
+Method Item.Edit.Show(pList, pItem, pAnyErr)
+    Rem 'get our data
+        If pItem = *
+            WorkWith        "ToDo.Item"
+                Pull        "Request", "ToDo.Item", "Name DueDate Status Desc"
+                Rem 'Customize form
+                    KeepFields  "ToDo.Item.", "Name DueDate Status Desc"
+                    GetFieldDefs
+                EndRem
+            End WorkWith
+        Else
+            Item.IsMine pItem                       'Security Check
+            LoadRecord      "ToDo.Item", pItem      'Get our data
+            
+            Rem 'Customize form
+                KeepFields  "ToDo.Item.", "Name DueDate Status Desc Created Modified"
+                GetFieldDefs
+            EndRem
+        End If
+    EndRem
+    
+    Rem 'Apply error states
+        If pAnyErr
+            [Pull]      "Item.Edit.Proc.Input", "Name.Err DueDate.Err Status.Err Desc.Err"
+        Else
+            [New]       Name.Err DueDate.Err Status.Err Desc.Err
+        End If
+        
+        mSetState       (Name.Err, "ToDo.Item.Name")
+        mSetState       (DueDate.Err, "ToDo.Item.DueDate")
+        mSetState       (Status.Err, "ToDo.Item.Status")
+        mSetState       (Desc.Err, "ToDo.Item.Desc")
+    EndRem
+    
+    If pAnyErr
+        WorkWith    "ToDo.Item"
+            Pull    "Request", "ToDo.Item", "Name DueDate Status Desc"
+        End WorkWith
+    End If
+    
+    HtmlForm        "<? i ok ?> Save"               'Put it on the page
+End Method
+
+
+Method Item.Edit.Proc(pList, pItem)
+    Rem 'Security Check
+        If pItem <> *
+            Item.IsMine pItem
+        End If
+    EndRem
+    
+    Rem 'validate data
+        [Pull] "Request", "ToDo.Item.", "Name DueDate Status Desc"
+        [New]   AnyErr Name.Err DueDate.Err
+        
+        If Not Name                                 : AnyErr = "y"  : Name.Err = "y"    : HtmlErr "<b>Oops,</b> please provide a name."             : End If
+        If DueDate  : And Not (ValidDate$ DueDate)  : AnyErr = "y"  : DueDate.Err = "y" : HtmlErr "<b>Oops,</b> please provide a valid Due Date."   : End If
+        
+        If AnyErr
+            Item.Edit.Show pList, pItem, "y"
+            Exit
+        End If
+    EndRem
+    
+    Name = MCase$ Name      'Clean up data
+
+    Rem 'Save to database
+        If pItem = *
+            SetNew          "ToDo.List.Alias", `pList
+            WorkWith        "ToDo.Item"
+                SetNew      "Alias", *
+                Pull        "Name DueDate Status Desc"
+                NewWithAttach   "Parent", "ToDo.List"
+                FailIfRecError
+                [New]       nItem | ToDo.Item.Alias
+            End WorkWith
+        Else 
+            WorkWith        "ToDo.Item"
+                SetNew      "Alias", `pItem
+                Pull        "Name DueDate Status Desc"
+                Backfill
+                    Update
+                End Backfill
+                FailIfRecError
+            End WorkWith
+        End If
+    EndRem
+    
+    Rem 'Show all Items again
+        [Pull] Req.Path
+        HttpStatus  "302"
+        HttpHeader  "Location", ("/" & Req.Path)
+    EndRem
+End Method
+
+
+Method List.Del.Show(pList)
+    List.IsMine     pList   'Security Check
+    Warning.Show    "List"  'Display warning
+End Method
+
+
+Method Item.Del.Show(pItem)
+    Item.IsMine     pItem   'Security Check
+    Warning.Show    "Item"  'Display warning
+End Method
+
+
+Method List.Del.Proc(pList)
+    List.IsMine pList       'Security Check
+    
+    Rem 'Delete it
+        SetNew              "ToDo.List.Alias", `pList
+        Children            "ToDo.Item"
+        DetachWithDelete    "ToDo.Item", "Parent", "ToDo.List"
+        FailIfRecError
+        
+        Reset
+        SetNew              "ToDo.List.Alias", `pList
+        Parents             "ToDo.List", "MemTab.Person"
+        DetachWithDelete    "ToDo.List", "Parent", "MemTab.Person"
+        FailIfRecError
+    EndRem
+    
+    List.Redirect           'Return To List
+End Method
+
+
+Method Item.Del.Proc(pItem)
+    Item.IsMine pItem       'Security Check
+    
+    Rem 'Delete it
+        WorkWith                "ToDo.Item"
+            SetNew              "Alias", `pItem
+            Parents             "ToDo.Item", "ToDo.List"
+            DetachWithDelete    "Parent", "ToDo.List"
+            FailIfRecError
+        End WorkWith
+    EndRem
+    
+    List.Redirect           'Return To List
+End Method
+
+
+Method Item.IsMine(pItem)
+    Rem 'Search for data via relationships
+        SetNew          "MemTab.Person.Alias", ($SessionUser)
+        Children        "ToDo.List"
+        Children        "ToDo.Item"
+        KeepIf          "ToDo.Item.Alias", =, `pItem
+        [New]   FoundIt | ToDo.Item.Alias
+    EndRem
+    
+    Rem 'Handle not found
+        If Not FoundIt
+            HtmlErr         "<b>Sorry, </b> it looks like you have an invalid link."
+            List.All
+            Exit Proc
+        End If
+    EndRem
+End Method
+
+
+Method Warning.Show(pType)
+    Html            "<p>"
+    HtmlAButton         "<? i menu-left ?> Cancel", "?"
+    Html            "</p>"
+    
+    HtmlAlert       "Runtime", "&danger", ("<b>Are you sure?</b> Deleting an " & pType & " cannot be undone.")
+    
+    Html            "<p>"
+    HtmlButton      "<? i remove ?> Delete Item"
+    Html            "</p>"
+End Method
+
+
+Method List.Redirect
+    [Pull] Req.Path
+    HttpStatus "302"
+    HttpHeader "Location", ("/" & Req.Path)
+End Method
+
+
+Macro mSetState(pErrFld, pFullFld)
+    If pErrFld      : Build (pFullFld & "#"), "Attr", "Attr", ($I), "`[State] Error", ""
+    ElseIf pAnyErr  : Build (pFullFld & "#"), "Attr", "Attr", ($I), "`[State] Success", ""
+    End If
+End Macro

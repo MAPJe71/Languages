@@ -1,0 +1,68 @@
+// (c) Copyright 2010 BMC Software, Inc.
+//
+// Contains a pattern for building IBM IMS database information in the 
+// Inferred Model.
+//
+
+#MINADDM 9.0
+
+tpl 1.5 module IBM.IMS_Extended;
+
+metadata
+    origin   := "TKU";
+    tkn_name := "IBM IMS - Database Detail Pattern";
+    tree_path := 'Structured Data Management Software', 'Nonrelational Database Management Systems', 'IBM IMS - Database Detail Pattern';
+end metadata;
+
+
+from SupportingFiles.Mainframe.Support import MainframeModel 1.0;
+
+
+configuration IMS_Extended 1.0
+    """Configuration settings to control building of IMS database inferred model"""
+
+    "Database names to ignore"
+    ignore_databases := [] ("");
+
+end configuration;
+
+
+pattern IMS_Databases 1.0
+ '''
+    Pattern for building IMS database information in the inferred model.
+    
+    Supported Platforms:
+    Mainframe
+ '''
+    
+    metadata
+        publishers := "IBM";
+        products := "IMS";
+        categories := "Nonrelational Database Management Systems";
+        urls := "http://www-01.ibm.com/software/data/ims/";
+    end metadata;
+
+    overview
+        tags TKU, Database, IBM, IMS, Mainframe, TKU_2011_03_01;
+    end overview;
+
+    constants
+      db_type := "IMS Database";
+    end constants;
+  
+    triggers
+        on db_si := SoftwareInstance created, confirmed
+                    where short_type = 'IMS';
+    end triggers;
+
+    body 
+
+        MainframeModel.createDatabaseDetails(db_si,
+                                             db_type,
+                                             IMS_Extended.ignore_databases,
+                                             false, // IMS details not supported
+                                             none);
+    end body;
+
+end pattern;
+

@@ -1,0 +1,449 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display caches I awarded a favorite point
+# MacFileName = FSGPlugin_CachesIAwardedFavoritePoint.gsk
+# MacAuthor = The CEO
+# MacVersion=1.11
+# MacUrl=http://gsak.net/board/index.php?showtopic=20279&view=findpost&p=145511
+#*******************************************
+
+VERCHECK version=8.0.0.133 (The FSGPlugin_CachesIAwardedFavoritePoint requires the use of the Geocaching.com API, which is only availble in GSAK version 8 and later)
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_FirstCacheByCounty</plugin>
+ENDIF
+
+	$_sql = "SELECT sql FROM sqlite_master WHERE type='table' AND name='AllFinds' AND g_Contains('FavPoints',sql)"
+	$work = Sqlite("sql",$_sql)
+	$count = $_SqlRows
+
+IF $count <> 1
+  RETURN msg=This FSGPlugin_CachesIAwardedFavoritePoint plugin requires at least version V4.3.03B of the FindStatGenerator macro. $_CrLf Please update to FindStatGen43Beta.gsk and try again $_CrLf Go to http://gsak.net/board/MacroIndex.php and search for FindStatGen
+ELSE
+	SHOWSTATUS msg="FSGPlugin_CachesIAwardedFavoritePoint starting" Width=350 Title=""
+
+	Declare Var=$p1 Type=String
+	Declare Var=$p2 Type=String
+	Declare Var=$p3 Type=String
+	Declare Var=$p4 Type=String
+	Declare Var=$GcApiData Type=String
+	Declare Var=$tmpS2 Type=String
+	Declare Var=$XMLfile Type=String
+	Declare Var=$StateLimit Type=String
+	Declare Var=$CountryLimit Type=String
+	Declare Var=$OrderBy Type=String
+	Declare Var=$Limit Type=String
+	Declare Var=$ShowFavPoints Type=Boolean
+	Declare Var=$WhereCodeList Type=String
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$ShowState Type=Boolean
+	Declare Var=$ForceShowState Type=Boolean
+	Declare Var=$ShowCounty Type=Boolean
+	Declare Var=$UseOwnXMLParser Type=Boolean
+	Declare Var=$UniqueStateCountyCombinations Type=Boolean
+	
+# TRUE will read the gcapi.xml file in the GSAK Temp dir and extract data from it using the SUBroutine ParseXML
+# FALSE will use the XmlToSqlite function, but requires that first the 'found' DB is attached, as the 	XmlToSqlite function output its table there and not in the FSG database.
+# 		ATTACHING and DETACHING Databases in a FSG Plugin is not a good thing to do, so therefore the OwnParser should be used
+
+$UseOwnXMLParser=TRUE
+
+$ShowHeading=TRUE
+$ShowFavPoints=FALSE
+$Limit=""
+$OrderBy="rowid"	
+$ForceShowState=FALSE
+
+# check for macroparameters
+		
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = lower($Text1)
+		# MSGOK msg="parameter $i: '$Text1' '$Text2'"
+
+		if (AT("orderby=", $Text2) <> 0)
+			$OrderBy=extract($Text1,"=",2)
+			$OrderBy = Replace("milestone","rowid",$OrderBy)
+			$OrderBy = Replace("date","ldate",$OrderBy)
+			$OrderBy = Replace("cache name","name",$OrderBy)
+		endif
+		
+		if (AT("limit=", $Text2) <> 0)
+			$Limit="LIMIT "+extract($Text1,"=",2)
+		endif
+		
+		if (AT("sectionheading=false", $Text2) <> 0)
+			$ShowHeading=FALSE
+		endif
+
+		if (AT("showfavpoints=true", $Text2) <> 0)
+			$ShowFavPoints=TRUE
+		endif
+
+		if (AT("showstate=true", $Text2) <> 0)
+			$ForceShowState=TRUE
+		endif
+		
+		$i = $i+1
+	endwhile
+
+# Exclude locationless?
+IF $Excludelocationless
+	$Locationless = "Cachetype <>'L' AND Exclude <> '1'"
+ELSE
+	$Locationless = "1"
+ENDIF
+
+# Start Main Functionality ########################################################
+
+If $UseOwnXMLParser
+	$GcApiData = gcapi("GetCachesFavoritedByUser")
+	
+	if $_GcApiError
+		# Error running api, so show the error message
+		msgok msg=$GcApiData
+	else
+		GOSUB Name=ParseXML # this will create the MyFavorites database
+		$WhereCodeList="code in (select CacheCode from MyFavorites)"
+	endif
+ELSE
+	$sqlinputfile = SqlQuote($_DbPath + "\" + $Db + "\sqlite.db3")
+	$_sql = "ATTACH $sqlinputfile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+	
+	$GcApiData = gcapi("GetCachesFavoritedByUser")
+	
+	if $_GcApiError
+		# Error running api, so show the error message
+		msgok msg=$GcApiData
+	else
+		$XMLfile=$_AppData + "\temp\gcapi.xml"
+		XmlToSqlite File=$XMLfile
+		$WhereCodeList="code in (select data from gsakdb.GcApi where g_Contains('a:CacheCode',key))"
+	endif
+ENDIF	
+# End Main Functionality ##########################################################	
+
+IF $ForceShowState
+	$ShowState = TRUE
+	$ShowCounty = FALSE
+ELSE
+	$_sql = "SELECT DISTINCT  state, count(state)  FROM allfinds WHERE ($WhereCodeList) AND state<>'' AND state<>'Nil' GROUP BY state"
+	$work = Sqlite("sql",$_sql)
+	If $_SqlRows > 0
+		$ShowState = TRUE
+	ELSE
+		$ShowState = FALSE
+	ENDIF
+
+	$_sql = "SELECT DISTINCT  county, count(county)  FROM allfinds WHERE ($WhereCodeList) AND county<>'' AND county<>'Nil' GROUP BY county"
+	$work = Sqlite("sql",$_sql)
+	If $_SqlRows > 0
+		$ShowCounty = TRUE
+	ELSE
+		$ShowCounty = FALSE
+	ENDIF	
+
+	If $ShowCounty = TRUE
+		$ShowState = FALSE
+	ENDIF	
+ENDIF
+
+$_sql = "SELECT rowid, ldate, county, code, cachetype, name, llogid, url, country, state, FavPoints FROM allfinds WHERE ($WhereCodeList) ORDER BY $OrderBy $Limit"
+$work = Sqlite("sql",$_sql)
+$LogTotal = $_SqlRows
+
+If $UseOwnXMLParser
+	# Do nothing
+ELSE
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+ENDIF	
+
+
+	#Initialize Variables
+
+	$out=""
+	# Initialise Section header
+	$colspan = 1
+	$text="Caches I awarded a favorite point to"
+
+	If $ShowHeading
+		#define maximum table width
+		if $maxtablewidth=0
+			$maxtablewidth = 750
+		endif
+		GOSUB Name=SectionHead
+	endif
+	
+	$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf
+	# Column Heads
+	$text1 = "<b>$Lang31</b>" # Milestone
+	$text2 = "<b>$Lang32</b>" # Date
+	# $text7 = Flag image
+	If $ShowCounty
+		$text3 = "<b>County</b>" # County
+	ENDIF
+	If $ShowState
+		$text3 = "<b>State</b>" # State
+	ENDIF
+	$text4 = "<b>$Lang34</b>" # Code
+	# $text6 = Type icon
+	$text5 = "<b>$Lang35</b>" # Name
+	$text8 = "<b>FavPoints</b>" # FavPoints
+
+	$out = $out + "<tr>" + "$_CrLf" + "<td style='$stTab2cHead'>" + $_CrLf
+	$out = $out + "$text1</td>" + $_CrLf
+	$out = $out + "<td style='$stTab2cHead'>$text2</td>" + $_CrLf
+	IF $FlagIcons
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text3</td>" + $_CrLf
+	$out = $out + "<td style='$stTab2cHead'>$text4</td>" + $_CrLf
+	IF $miletypes
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text5</td>" + $_CrLf
+	if $ShowFavPoints
+		$out = $out + "<td style='$stTab2cHead'>$text8</td>" + $_CrLf 
+	ENDIF
+	$out = $out+ "</tr>" + $_CrLf
+
+	# Initialize variables
+
+	$count = 1
+#loop through all unique county+state combinations
+WHILE $count <= $LogTotal
+	$GetMilestone = Extract($work,$_CrLf,$count)
+	#Extract the date
+	$LogDateDate = SqlToDate(Extract($GetMilestone,";",2))
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($GetMilestone,";",4)
+	$StripCode = Extract($StripCode,"_",1)
+
+	# Format the date to users standard format for display
+	$FindDate = DateFormat($LogDateDate)
+
+	# Log ID for URL link to log
+	$LogidSubstitute = Val(Extract($GetMilestone,";",7))
+	IF $LogidSubstitute <>0
+		BEGINCASE
+		CASE Left($StripCode,2)="GC"
+			$text2 = "<a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>$FindDate</a>"
+		CASE Left($StripCode,2)="GA"
+			$text2 = "<a href='http://geocaching.com.au/log/$LogidSubstitute'>$FindDate</a>"
+		OTHERWISE
+			$text2 = "$FindDate"
+		ENDCASE
+	ELSE
+		$text2 = "$FindDate"
+	ENDIF
+
+	# Output data
+	$text1 = "<b>" + Extract($GetMilestone,";",1) + "</b>"
+	# $text2 = "$FindDate"
+	If $ShowCounty
+		$text3 = Extract($GetMilestone,";",3)
+	ENDIF
+	If $ShowState
+		$text3 = Extract($GetMilestone,";",10)
+	ENDIF
+	
+	$text9 = Extract($GetMilestone,";",9)
+	$text10 = Extract($GetMilestone,";",10)	
+	$text8 = Extract($GetMilestone,";",11)	
+
+	$text4 = Extract($GetMilestone,";",8)
+	$text4 = "<a href='$text4'>$StripCode</a>"
+	$text5 = Extract($GetMilestone,";",6)
+	$text5 = "$text5"
+
+	IF $miletypes
+		$tmpB = FALSE
+		GOSUB Name=StripCodeType
+		$text6 = $TypeImage
+	ELSE
+		$text6 = ""
+	ENDIF
+
+	IF $FlagIcons
+		# Country flag
+		$FullName = $text9
+		GOSUB Name=FlagImage
+	ENDIF
+
+	$out = $out + "<tr>" + "$_CrLf" + "<td style='$st2c1'>" + $_CrLf
+	$out = $out + "$text1</td>" + $_CrLf
+	$out = $out + "<td style='$st2c2'>$text2</td>" + $_CrLf
+	IF $FlagIcons
+		$out = $out + "<td style='$st2c2'>$text7</td>" + $_CrLf
+	ENDIF
+	$out = $out + "<td style='$st2c2'>$text3</td>" + $_CrLf
+	
+	$out = $out + "<td style='$st2c2'>$text4</td>" + $_CrLf
+	IF $miletypes
+		$out = $out + "<td style='$st2c2'>$text6</td>" + $_CrLf
+	ENDIF
+	$out = $out + "<td style='$st2c2'>$text5</td>" + $_CrLf
+	
+	if $ShowFavPoints
+		$out = $out + "<td style='$st2c1'>$text8</td>" + $_CrLf 
+	ENDIF
+	$out = $out+ "</tr>" + $_CrLf
+	
+	$count = $count + 1
+ENDWHILE
+
+
+$out = $out + "</table>" + $_CrLf
+$out = $out + "<br />" + $_CrLf
+$p_FSGData = $out
+
+$_sql = "DROP TABLE IF EXISTS MyFavorites"
+$status = Sqlite("sql",$_sql)
+
+SHOWSTATUS msg="FSGPlugin_CachesIAwardedFavoritePoint finished" Width=350 Title=""
+
+ENDIF # check for correct FSG version
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	#Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	#Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIY1HFO"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774,other"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $tmpS = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $tmpS = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $tmpS = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+#	$out = $out + "<br /><br />" + $CR
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			GOSUB Name=Mid2Col
+			$column = 1
+		ENDIF
+		$lastcolspan = 2
+		$width = $maxtablewidth/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+#	$out = $out + "    $text" + $CR + "</div><br />" + $CR
+	$out = $out + "    $text" + $CR + "</div>" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB name=ParseXML
+	# Parse XML file of users favorite caches
+
+	Declare Var=$xmldata Type=String
+	Declare Var=$cachecode Type=String
+	Declare Var=$cachename Type=String
+	Declare Var=$cachecount Type=Numeric
+	Declare Var=$record Type=String
+	
+	# Create Sqlite TABLE
+	$_sql = "DROP TABLE IF EXISTS MyFavorites"
+	$status = Sqlite("sql",$_sql)
+	$Data="CacheCode text, CacheName text"
+	$_sql = "CREATE TABLE IF NOT EXISTS MyFavorites ($Data)"
+	$status = Sqlite("sql",$_sql)
+
+	# Read file
+	$datafilepath = $_AppData + "\Temp"
+	$DataFile = $datafilepath + "\gcapi.xml"
+
+	IF (FileExists($DataFile))
+		# Read file
+		$xmldata = GetFile($DataFile)
+	ELSE
+		PAUSE Msg="Cannot find XML data file"
+		RETURN
+		RETURN
+	ENDIF
+
+	# Start SQLite transaction
+	$status = Sqlite("sql","begin")
+
+	# How many entries?
+	$cachecount = RegExCount("<a:FavoritePointCacheInfo>(.*?)</a:FavoritePointCacheInfo>",$xmldata)
+
+	# Iterate through them
+	$i = 1
+	WHILE $i<=$cachecount
+		$record = RegExData("<a:FavoritePointCacheInfo>(.*?)</a:FavoritePointCacheInfo>",$xmldata,$i)
+		$cachecode = RegExSub("<a:CacheCode>(.*?)</a:CacheCode>",$record,1,1)
+		$cachename = EntityDecode(RegExSub("<a:CacheTitle>(.*?)</a:CacheTitle>",$record,1,1))
+		$cachecode= Replace("'","''",$cachecode,TRUE)
+		$cachename= Replace("'","''",$cachename,TRUE)
+		$_sql = "INSERT INTO MyFavorites VALUES('$CacheCode','$CacheName')"
+		$status = Sqlite("sql",$_sql)
+		$i = $i + 1
+	ENDWHILE
+
+	# Commit SQlite transaction
+	$status = Sqlite("sql","commit")
+ENDSUB #ParseXML

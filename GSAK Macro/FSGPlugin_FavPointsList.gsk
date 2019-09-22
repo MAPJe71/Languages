@@ -1,0 +1,400 @@
+#-------------------------------------------------------------------------------
+# MacVersion = 1.06
+# MacDescription = PSG Plugin - List of placed caches with favorite points
+# MacAuthor = Doblinus
+# MacFileName = FSGPlugin_FavPointsList.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=20115&view=findpost&p=144229
+#-------------------------------------------------------------------------------
+#
+# Changes:
+#  V1.00 2011-10-26  First version 
+#  V1.01 2011-10-27  added sum and average
+#  V1.02 2011-11-03  No decimals ".0" with D/T
+#                    Colored bg for D/T fields
+#                    minor layout changes
+#  V1.03 2011-11-04  minor layout changes
+#        2011-11-10  fix: Find=0 (div by zero)
+#                    plugin now terminates if there are no caches with favorite points
+#  V1.04 2011-11-14  fix: layout problems with IE8
+#  V1.05 2011-11-18  new parameter: NOARCHIVED
+#  V1.06 2012-09-07  cache name striked through for archived caches
+#        2012-09-17  new parameters: MINPERCENT, MAXCOUNT
+
+#-------------------------------------------------------------------------------
+# MAIN
+#-------------------------------------------------------------------------------
+
+IF $_MacroLevel = 1
+  RETURN msg="This macro is a FindStatGen PlugIn and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_FavPointsList</plugin>"
+ENDIF
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitVariables
+GOSUB Name=InitStyles
+GOSUB Name=GetParameters
+GOSUB Name=FavPointsData
+
+# return data to FSG
+$p_FSGData = $MyOut
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=FavPointsData
+#-------------------------------------------------------------------------------
+	SHOWSTATUS msg="Macro FSGPlugin_FavPointsList getting favorite points data" Width=400
+
+	# output header (macro comment string)
+	$MyOut = $MyOut+"$_CrLf<!-- Macro FSGPlugin_FavPointsList - Version $MacroVersion - run date: $datestamp -->$_CrLf"
+
+	$MyOut = $MyOut+"<div style='width:740px; font-family: Verdana, Arial, sans-serif; font-size: 12px;'><center>$_CrLf"
+	$MyOut = $MyOut+"<table width='100%'><tr>"+$_CrLf
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang37</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang94</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang35</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: center'>$LangForm64</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: center'>D/T</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang91</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang92</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>FPs</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang06</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead'>&nbsp;</td>$_CrLf"
+	$MyOut = $MyOut+"</tr>$_CrLf"
+
+	$list = list("LL_FP","create",$_CrLf)
+
+	# suppress archived?	
+	if $noarchived
+		$tempS = "AND (Status!='Archived')"
+	else
+		$tempS = ""
+	endif
+	
+	# get cache data
+	$sql = "SELECT Code,Name,FavPoints,CacheType,Placed,Finds,Difficulty,Terrain,Status FROM PlacedStatsdata WHERE (FavPoints>0) AND (Finds>0) $tempS ORDER BY FavPoints*100000/Finds DESC"
+#	msgok msg="$sql"
+	$work = Sqlite("sql",$sql)
+
+	$num_entries = $_SqlRows
+#	msgok msg="List:$_CrLf $work $_CrLf $_CrLf Entries: $num_entries"
+
+	# check, if we don't have any caches with favpoints
+	if $num_entries=0
+		$p_FSGData = ""
+		RETURN msg="There are no caches with Favorite Points.$_CrLf PlugIn will terminate."
+	endif
+	
+	$tempS = list("LL_FP","replace",$work)
+
+	# getting entries 
+	$countc = 0
+	$sumFP = 0
+	$sumFinds = 0
+	while $countc < $num_entries
+		$countc = $countc+1
+		if $countc <= $maxcount
+			$entry = list("LL_FP","item","$countc")
+			$Code = Extract($entry,";",1)
+			$Name = Extract($entry,";",2)
+			$FP = Extract($entry,";",3)
+			$CacheType = Extract($entry,";",4)
+			GOSUB Name=StripCodeType		
+			$Created = DateFormat(SqlToDate(Extract($entry,";",5)))
+			$Finds = Extract($entry,";",6)
+			$dval = Replace(".0","",Extract($entry,";",7))
+			$tval =  Replace(".0","",Extract($entry,";",8))
+			$stat = Extract($entry,";",9)
+			if $stat="Archived"
+				$Name = "<strike>"+$Name+"</strike>"
+			endif
+			if $Finds<>"0"
+				$fpercent = Round(Val($FP)/Val($Finds)*100,0)
+				$fwidth = Round(Val($FP)/Val($Finds)*$maxfwidth,0)
+			else
+				$fpercent = 0
+				$fwidth = 0
+			endif
+			if $fpercent >= $minpercent
+				GOSUB Name=SetCellStyle
+				$sumFP = $sumFP+Val($FP)
+				$sumFinds = $sumFinds+Val($Finds)
+				if $countc=1
+					$maxwidth = $fwidth
+				endif
+				if $maxwidth=$fwidth
+					$image ="http://gsak.net/stats/red-h.png"
+				else
+					$image ="http://gsak.net/stats/blue-h.png"
+				endif
+				$MyOut = $MyOut+"<tr>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$countc</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'><a href='http://coord.info/$Code' target='_blank'>$Code</a></td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$Name</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: center'>$TypeImage</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$cellstyle text-align: center'>$dval/$tval</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$Created</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$Finds</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$FP</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+				$MyOut = $MyOut+"<td style='$st2c2'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>$_CrLf"
+				$MyOut = $MyOut+"</tr>$_CrLf"
+			else
+				$num_entries = $countc-1
+			endif
+		else
+			$num_entries = $countc-1
+		endif
+	endwhile
+
+	# output sum & average
+	if $sumFinds>0
+		$fpercent = Round($sumFP/$sumFinds*100,0)
+		$fwidth = Round($sumFP/$sumFinds*$maxfwidth,0)
+	else
+		$fpercent = 0
+		$fwidth = 0
+	endif
+	if $num_entries>0
+		$aveFP = Round($sumFP/$num_entries,0)
+		$aveFinds = Round($sumFinds/$num_entries,0)
+	else
+		$aveFP = 0
+		$aveFinds = 0
+	endif
+
+	# output sum
+	$MyOut = $MyOut+"<tr>$_CrLf"
+	$MyOut = $MyOut+"<td colspan='6' style='$stTab2cHead font-weight: bold; text-align: left'>$LangForm51</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$sumFinds</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$sumFP</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead'>&nbsp;</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead'>&nbsp;</td>$_CrLf"
+	$MyOut = $MyOut+"</tr>$_CrLf"
+	
+	# output average
+	$MyOut = $MyOut+"<tr>$_CrLf"
+	$MyOut = $MyOut+"<td colspan='6' style='$stTab2cHead font-weight: bold; text-align: left'>$Lang124:</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$aveFinds</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$aveFP</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$fpercent %</td>$_CrLf"
+	$MyOut = $MyOut+"<td style='$stTab2cHead'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>$_CrLf"
+	$MyOut = $MyOut+"</tr>$_CrLf"
+	
+	$MyOut = $MyOut+"</table>"+$_CrLf
+
+	# output trailer
+	$MyOut = $MyOut+"<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/index.php?showtopic=20115&view=findpost&p=144229'>"+$_CrLf
+	$MyOut = $MyOut+"FSGPlugin_FavPointsList $MacroVersion - $date</a>$_CrLf"
+	$MyOut = $MyOut+"</center></div>"+$_CrLf
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=StripCodeType
+#-------------------------------------------------------------------------------
+	$tempN = At($CacheType,$Types)
+	$thistype	= Extract($Typenums, "," , $tempN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=SetCellStyle
+#-------------------------------------------------------------------------------
+	$difficulty = Val($tval)
+	$terrain = Val($dval)
+	$cellstyle = $st2c2
+	IF ($difficulty >= 3) OR ($terrain >= 3)
+		$cellstyle = $st2c2Schwer
+	ENDIF
+	IF (($difficulty * $terrain) >= 12)
+		$cellstyle = $st2c2Extrem
+	ENDIF
+	IF ($difficulty >= 4) AND ($terrain >= 4)
+		$cellstyle = $st2c2Hardcore
+	ENDIF
+ENDSUB #SetCellStyle
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetParameters
+#-------------------------------------------------------------------------------
+	IF $_MacroParms <> ""
+		$count = RegExCount("&",$_MacroParms)+1
+		WHILE $count > 0
+			$Parameter = Extract($_MacroParms,"&",$count)
+			$ParamName = Upper(Extract($Parameter,"=",1))
+			$ParamValue = Extract($Parameter,"=",2)
+			#msgok msg="ParamName: *$ParamName* ParamValue: *$ParamValue*"
+			BEGINCASE
+				CASE $ParamName="NOARCHIVED"
+					$noarchived = true
+				CASE $ParamName="MINPERCENT"
+					$minpercent = Val($ParamValue)
+				CASE $ParamName="MAXCOUNT"
+					$maxcount = Val($ParamValue)
+				OTHERWISE
+					RETURN msg=Unknown parameter '$ParamName', macro will terminate
+			ENDCASE
+			$count = $count - 1
+		ENDWHILE
+	ENDIF
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=InitStyles
+#-------------------------------------------------------------------------------
+	# default: Style-colors for grey style
+	$stColor2c2Leicht = "#BEBEBE"
+	$stColor2c2Schwer = "#A8A8A8"
+	$stColor2c2Extrem = "#929292"
+	$stColor2c2Hardcore = "#7B7B7B"
+
+	IF $StyleSet = "Grey"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#BEBEBE"
+		$stColor2c2Schwer = "#A8A8A8"
+		$stColor2c2Extrem = "#929292"
+		$stColor2c2Hardcore = "#7B7B7B"
+	ENDIF
+	IF $StyleSet = "Red"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#D9B6B6"
+		$stColor2c2Schwer = "#BFA1A1"
+		$stColor2c2Extrem = "#A68B8B"
+		$stColor2c2Hardcore = "#8C7676"
+	ENDIF
+	IF $StyleSet = "Green"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B6D9B6"
+		$stColor2c2Schwer = "#A1BFA1"
+		$stColor2c2Extrem = "#8BA68B"
+		$stColor2c2Hardcore = "#768C76"
+
+	ENDIF
+	IF $StyleSet = "Blue"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B8B8D9"
+		$stColor2c2Schwer = "#A3A3BF"
+		$stColor2c2Extrem = "#8D8DA6"
+		$stColor2c2Hardcore = "#77778C"
+	ENDIF
+	IF $StyleSet = "Smooth"
+		# Style-colors for smooth style
+		$stColor2c2Leicht = "#E3DDC2"
+		$stColor2c2Schwer = "#C4BFA7"
+		$stColor2c2Extrem = "#A8A48F"
+		$stColor2c2Hardcore = "#918E7C"
+	ENDIF
+	
+	$st2c2Schwer  = "background: " + $stColor2c2Schwer + ";"
+	$st2c2Extrem  = "background: " + $stColor2c2Extrem + ";"
+	$st2c2Hardcore  = "background: " + $stColor2c2Hardcore + ";"
+
+	IF VarExists("StyleRounded") # only with newer versions of FSG
+		IF $StyleRounded
+			$st2c2Schwer  = $st2c2Schwer + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Extrem  = $st2c2Extrem + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Hardcore  = $st2c2Hardcore + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+		ENDIF
+	ENDIF
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=DeclareVariables
+#-------------------------------------------------------------------------------
+#*******************************************************
+#   Variable declarations for
+#   C:\Users\Uli Zimmermann\AppData\Roaming\gsak\Macros\FSGPlugin_FavPointsList.gsk
+#
+#   Generated 18.11.2011 on GSAKVariables.gsk Rev V0.31
+#
+#*******************************************************
+
+
+Option Explicit=Yes
+
+Declare Var=$aveFinds Type=Numeric
+Declare Var=$aveFP Type=Numeric
+Declare Var=$CacheType Type=String
+# Declare Var=$cellstyle Type=Unknown
+Declare Var=$Code Type=String
+Declare Var=$count Type=Numeric
+Declare Var=$countc Type=Numeric
+Declare Var=$Created Type=String
+Declare Var=$date Type=String
+Declare Var=$datestamp Type=String
+Declare Var=$difficulty Type=Numeric
+Declare Var=$dval Type=String
+Declare Var=$empty Type=String
+Declare Var=$entry Type=String
+Declare Var=$Finds Type=String
+Declare Var=$FP Type=String
+Declare Var=$fpercent Type=Numeric
+Declare Var=$fwidth Type=Numeric
+Declare Var=$maxfwidth Type=Numeric
+Declare Var=$image Type=String
+Declare Var=$indexa1 Type=Numeric
+Declare Var=$list Type=String
+Declare Var=$MacroVersion Type=String
+Declare Var=$maxwidth Type=Numeric
+Declare Var=$MyOut Type=String
+Declare Var=$Name Type=String
+Declare Var=$noarchived Type=Boolean
+Declare Var=$num_entries Type=Numeric
+Declare Var=$p_FSGData Type=String
+Declare Var=$Parameter Type=String
+Declare Var=$ParamName Type=String
+Declare Var=$ParamValue Type=String
+Declare Var=$sql Type=String
+Declare Var=$st2c2Extrem Type=String
+Declare Var=$st2c2Hardcore Type=String
+Declare Var=$st2c2Schwer Type=String
+Declare Var=$stColor2c2Extrem Type=String
+Declare Var=$stColor2c2Hardcore Type=String
+Declare Var=$stColor2c2Leicht Type=String
+Declare Var=$stColor2c2Schwer Type=String
+Declare Var=$sumFinds Type=Numeric
+Declare Var=$sumFP Type=Numeric
+Declare Var=$tempN Type=Numeric
+Declare Var=$tempS Type=String
+Declare Var=$terrain Type=Numeric
+Declare Var=$thistype Type=String
+Declare Var=$tval Type=String
+Declare Var=$stat Type=String
+Declare Var=$TypeImage Type=String
+Declare Var=$Typenums Type=String
+Declare Var=$Types Type=String
+Declare Var=$work Type=String
+Declare Var=$minpercent Type=Numeric
+Declare Var=$maxcount Type=Numeric
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=InitVariables
+#-------------------------------------------------------------------------------
+	$empty = "background: #EDEDED;"
+
+	$MacroVersion = MacHeader("MacVersion")
+	$date = DateFormat($_Today)
+	$datestamp = "$date"
+	$MyOut = ""
+	$indexa1 = 0
+	$noarchived = false
+	$maxfwidth = 150
+	$minpercent = 0
+	$maxcount = 100000
+	
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+ENDSUB
+
+

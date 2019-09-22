@@ -1,0 +1,96 @@
+-------------------------------------------------------------------------------
+----  ROUT_EX.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about ROUT_EX.kl
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----    Conditions:
+----    Data types:
+----    Built-in Functions & Procedures:
+----            CHR                         Sec 3-A,B
+----            FORCE_SPMENU                Sec 3-A,B
+----    Statements:
+----            ROUTINE                     Sec 3-A,B
+----            WRITE                       Sec 3-A,B
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B; 4
+----            CR                          Sec 3-B
+----            END                         Sec 3-A,B; 4
+----            PROGRAM                     Sec 1
+----    Predefined File Names:
+----            CRTERROR                    Sec 3-A
+----            CRTFUNC                     Sec 3-A
+----            CRTPROMPT                   Sec 3-A
+----            CRTSTATUS                   Sec 3-A
+----            OUTPUT                      Sec 3-A
+----            TPERROR                     Sec 3-B
+----            TPFUNC                      Sec 3-B
+----            TPSTATUS                    Sec 3-B
+----            TPPROMPT                    Sec 3-B
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM ROUT_EX
+    %NOLOCKGROUP -- Don't lock any motion groups
+    %COMMENT = 'MISC_ROUTINES'
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declarations
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declarations
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  CRT_CLS Declaration
+----                Clear the predefined windows:
+----                CRTPROMPT, CRTSTATUS, CRTFUNC, CRTERROR, OUTPUT
+----                Force Display of the CRT/KB USER SCREEN.
+-------------------------------------------------------------------------------
+ROUTINE CRT_CLS
+BEGIN ---- CRT_CLS
+    --See Chapter 7.9.2 for more information on the PREDEFINED window names
+    WRITE CRTERROR  (CHR(128),CHR(137))  -- Clear Window, Home Cursor
+    WRITE CRTSTATUS (CHR(128),CHR(137))  -- Clear Window, Home Cursor
+    WRITE CRTPROMPT (CHR(128),CHR(137))  -- Clear Window, Home Cursor
+    WRITE CRTFUNC   (CHR(128),CHR(137))  -- Clear Window, Home Cursor
+    WRITE OUTPUT    (CHR(128),CHR(137))  -- Clear Window, Home Cursor
+    FORCE_SPMENU(CRT_PANEL,SPI_TPUSER,1) -- Force the CRT USER Menu
+                                         -- to be visible last. This will
+                                         -- avoid the screen from flashing
+                                         -- since the screen will be clean
+                                         -- when you see it.
+END CRT_CLS
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  TP_CLS Declaration
+----                Clear the predefined windows:
+----                    TPERROR, TPSTATUS, TPPROMPT, TPFUNC TPDISPLAY
+----                Force Display of the TP USER Menu SCREEN.
+-------------------------------------------------------------------------------
+ROUTINE TP_CLS
+BEGIN
+    WRITE (CHR(128),CHR(137)) -- By default this will clear TPDISPLAY
+    WRITE TPERROR (CR,' ',CR)
+    WRITE TPSTATUS(CR,' ',CR)
+    WRITE TPPROMPT(CR,' ',CR)
+    WRITE TPFUNC (CR,' ',CR)
+    FORCE_SPMENU(TP_PANEL,SPI_TPUSER,1) -- Force the USER menu screen
+                                        -- to be visible last.
+                                        -- This will avoid the screen from
+                                        -- flashing since the screen will
+                                        -- be clean when you see it.
+END TP_CLS
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- ROUT_EX
+
+END ROUT_EX

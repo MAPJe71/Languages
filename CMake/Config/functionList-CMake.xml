@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=       "cmake_syntax"        langID="48"                             />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ CMake ] -->
+
+			<parser
+				displayName="[N/A] CMake"
+				id         ="cmake_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

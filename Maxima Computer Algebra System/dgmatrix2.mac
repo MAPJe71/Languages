@@ -1,0 +1,554 @@
+/************************************************************************
+    dgmatrix2.mac is a package of Maxima functions which 
+    contains code for explicit Dirac spinor and matrix
+    calculations and is part of the Dirac package.
+    
+    Copyright (C) 2010, 2011  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+
+
+
+ /* file dgmatrix2.mac for use with symbolic package dirac2.mac        
+ 
+    use comp_def to define aray components of four vectors
+    (comp_def is defined in dgeval.mac)
+    
+    dgmatrix2 functions  in file order:
+    -----------------------------------
+    
+    cdouble, mdouble  
+    
+    Sig[j],Sigb[j],I2,Z2,Cz2,sL2,sLb2      
+    
+    I4,Z4,CZ4,RZ4  
+    
+    ipm  
+    
+    Avsq  
+    
+    hc  
+    
+    comm  
+           
+    acomm  
+    
+    Gam[mu]  
+    
+    sL(p)  
+    
+    P(sv,Sp) or P(sv)  
+    
+    m_tr  
+    
+    sbar  
+    
+    mbar  
+    
+    Chi  
+    
+    UU  
+    
+    VV  
+    
+    mnctimesp,     mnctimesp(a . b) -> true
+    
+    mncexptp,      mncexptp (a^^2 ) --> true
+    
+    mdivp           mdivp (a/x) --> true
+    
+      
+    
+    acon
+    
+    mcon  
+    
+    mp_split
+    
+    rootcrunch  
+    
+    trigcrunch  
+    
+ 
+   */
+   
+   
+    
+       
+    /* to remove all global arrays currently existing, could use:
+    
+    if length (arrays) > 0 then apply ('remarray, arrays)$
+    
+    */
+    
+   
+  /********* block matrix tools cdouble and mdouble  *************/
+  
+   /**** cdouble produces a 2-element column vector from two numbers,
+           or produces a 4-element column vector from
+           two 2-element column vectors *****************/
+  
+      cdouble (ma,mb) := mat_unblocker ( matrix ([ma],[mb]) )$
+  
+   /******** mdouble constructs 4 by 4 matrix from four 2 by 2 matrices  ****/ 
+   
+    mdouble(Ma,Mb,Mc,Md) :=
+         mat_unblocker (matrix ([Ma,Mb], [Mc,Md]) )$  
+   
+   
+   
+   /* pauli 2 x 2 matrices Sig[j] and Sigb[j] for j = 0,1,2,3
+    ref: Maggiore (M) 2.47, 2.67 */
+
+/**************************************/
+
+  (  I2 : ident(2),
+     Z2 : zeromatrix (2,2),
+     CZ2 : matrix ( [0],[0] ),
+     
+     Sig[0] : ident (2),
+     Sig[1] : matrix ([0,1],[1,0]),
+     Sig[2] : matrix ([0,-%i],[%i,0]),
+     Sig[3] : matrix ([1,0],[0,-1]),
+     Sigb[0] : ident (2),
+     for j thru 3 do Sigb[j] : - Sig[j],
+     
+     sL2(_q%) := sum ( _q%[jj]*Sig[jj],jj,1,3 ),
+     
+     sL2b(_q%) := sum ( _q%[jj]*Sigb[jj],jj,1,3 ) )$
+     
+   /* Four component tools */
+  
+  ( /* 4 x 4 unit matrix  */  
+    I4 : ident (4),
+    
+    /* 4 x 4 zero matrix */
+  
+  Z4 : zeromatrix(4,4),
+  
+  /* 4 element column vector of zeros */
+  
+  CZ4 : cdouble ( CZ2, CZ2),
+  
+  /* 4 element row vector of zeros */
+  
+  RZ4 : matrix ( [0,0,0,0]),
+  
+  
+  
+  
+   
+   
+   /************ ipm(M1,M2) *******************************/
+     /*  Lorentz invariant inner product of two matrices  
+             which each carry a single Lorentz index. */
+             
+    
+    ipm (_mp%, _mq%) := _mp%[0] . _mq%[0] -  _mp%[1] . _mq%[1]  - _mp%[2] . _mq%[2] - 
+                              _mp%[3] . _mq%[3] )$
+    
+    
+/******************** misc tools *********************************/
+  
+
+
+    
+    /********** absolute value squared ********************/
+    
+    (Avsq(_e%) := expand (_e%*conj (_e%)),
+
+
+   /******** hermitian conjugate of a matrix ***********/
+
+  /* hc (_MM%) := transpose ( conj (_MM%)), */
+  
+    hc (_MM%) := (conj (_MM%), transpose (%%)),
+  
+   /***********  commutator of two matrices  *************/
+
+  comm (_M1%,_M2%) := _M1% . _M2% - _M2% . _M1% ,
+  
+  
+  
+    /* 3d completely antisymmetric unit tensor 
+      here commented out:
+  
+     declare ( eps3, antisymmetric ),
+  
+     tellsimpafter(eps3[1,2,3],1),  */
+  
+   
+   /* function which writes the expansion (a sum over sig[n3])
+              equivalent to the commutator  comm ( Sig[n1], Sig[n2] ) 
+                making use of eps3 likewise here commented out   
+  
+  Sig_comm (n1,n2) := 
+          if eps3[n1,n2,nn] = 0 then Z2
+          else ( 2*%i* sum ( eps3 [n1,n2,n3]*Sig[n3],n3,1,3),
+              ev(%%) ),  
+    */
+              
+              
+   /*********** anticommutator of two matrices   ************/
+  
+   acomm (_M1%,_M2%) := _M1% . _M2% + _M2% . _M1% )$
+  
+              
+    
+
+              
+/**********************************************************/              
+
+/*********** Gam[mu] ***********************************************/              
+
+/*  construct gamma matrices in terms of the Pauli matrices
+     Sig[j] and Z2 and I2   (P/S convention chiral rep)  */
+     
+/*****************************************************/
+    
+(      /* Chiral def of dirac gamma matrices, 
+           Peskin-Schroeder convention, also Majjiore */
+           
+   Gam[0] : mdouble ( Z2,I2,I2,Z2 ),
+
+    for j thru 3 do 
+         Gam[j] : mdouble (Z2,Sig[j],-Sig[j],Z2 ),
+         
+    Gam[5] : %i*Gam[0].Gam[1].Gam[2].Gam[3]    )$
+    
+    
+    
+ /*********** four vector and spinor utilities  *************/    
+    
+
+  /* to use Feynman slash sL and/or helicity projection
+         matrices P, need to define four vector components
+         as arrays via the funtion comp_def defined in
+         dgeval.mac  */
+  
+  /*********** Feynman slash matrix sL(p)  *****************/
+    
+       sL (_r%) := ipv (_r%,Gam)$
+       
+  /***** helicity projection matrix P(sv,Sp) or P(sv) */
+       
+       P([v]) := 
+        block ([lv],
+         lv : length(v),
+         if lv = 1 then
+           (I4 + v[1]*Gam[5])/2
+         else if lv = 2 then
+           (I4 + v[1]*Gam[5].sL(v[2]))/2
+         else (
+           disp ("P(sv) or P(sv,Sp); sv = 1 or -1"),
+           Z4 ) )$
+       
+/* non commuting times a . b 
+(%i12) ?mnctimesp(a . b);
+(%o12) true
+ */
+           
+mnctimesp(e) := ?mnctimesp(e)$ 
+
+/* non commuting power  a^^2 = a . a 
+ (%i13) ?mncexptp(a^^2);
+(%o13) true
+*/
+
+mncexptp(e) := ?mncexptp(e)$
+
+/* note also ?mtimesp behavior
+
+(%i4) ?mtimesp(a/b);
+(%o4) true
+(%i5) ?mtimesp(a*b);
+(%o5) true
+
+*/
+
+ mdivp(e) := ?mtimesp(e) and op(e) = "/"$
+
+/*
+
+ (%i6) op(a/b);
+(%o6) "/"
+
+(%i8) mdivp(a*b);
+(%o8) false
+(%i9) mdivp(a/b);
+(%o9) true
+
+*/
+
+  /* mp_split(asum) 6-10-10 returns the list
+     [ pptL, mptL] , where pptL is a list of the
+     part numbers of the multiple momenta, and mptL is
+     a list with the single part number of the
+     mass term,
+     called by m_tr  */
+     
+ mp_split(asum) := 
+     block ([jj,pptL:[],mptL:[],pp ],
+       for jj thru length (asum) do (
+          pp : part (asum,jj),
+          if (not atom(pp) and op(pp) = "-") then pp : -pp,
+          if (not atom(pp) and op(pp) = "*") then pptL : cons (jj,pptL),
+          if (atom(pp) and massp(pp)) then mptL : cons (jj,mptL),
+          if (atom(pp) and not massp(pp)) then pptL : cons (jj,pptL)),
+       [pptL,mptL] )$
+       
+ /*  examples:
+   
+(%i38) sm : c1*p1 + p2 +m$
+(%i39) mp_split(sm);
+(%o39) [[2,1],[3]]
+(%i40) part(sm,2);
+(%o40) c1*p1
+(%i41) part(sm,1);
+(%o41) p2
+(%i42) part(sm,3);
+(%o42) m
+(%i43) sm : c1*p1 + p2 - m$
+(%i44) mp_split(sm);
+(%o44) [[2,1],[3]]
+(%i45) part(sm,3);
+(%o45) -m
+
+*/    
+
+  
+  
+  
+   /**********   m_tr 2-28-11, 6-12-10, 4-21-10    ***************************/
+/*  ability to handle multiple momenta args  6-12-10 
+(%i12) a . Gam[5] . 1;
+(%o12) a . Gam[5]
+ */
+   
+  /* syntax m_tr(p,p+m,q-m,S(1),mu,S(-1,Sp),nu,p1+p2+M,G5)
+     where mu and nu (if meant as Lorentz indices) are either integers in the range
+     0 thru 3 or symbols on the list indexL. G5 represents Gam[5].  */
+  
+  
+ m_tr ([_v%]) := 
+   block ([_vv%,adummy,xx,_PP%,fac1,_PPA%,_pp1%,_pp2%,badarg,_mprod%,
+                psL,mt,jj,kk],
+     /* disp ("m_tr 2-28-11 "),  */
+    
+    /* display (_v%), */
+    if length (_v%) = 0 then return(1),
+    
+    /* we want to use the jj do loop number in returned error 
+       diagnostics */
+    
+    _vv% : cons (adummy,_v%),                       
+    
+    /* build up a return product value */
+    
+    _mprod% : 1,    
+    
+  for jj thru length (_vv%) do (
+    xx : part (_vv%, jj),
+    
+    /* display (jj, xx), */
+    
+    if xx # adummy then (       
+       
+      if atom (xx) then (
+       /* disp (" case atom(xx) "), */
+       
+        if xx = G5 then _mprod% : Gam[5] . _mprod%
+        
+        else if (integerp(xx) or indexp(xx)) then (
+          /* disp ("case indexp = true "), */
+          _mprod% : Gam[xx] . _mprod%  /*, display (xx,_mprod%) */ )
+          
+        else (
+          /* disp ("case not indexp "), */
+          _mprod% : sL(xx) . _mprod% /* ,display (_mprod%) */ ) ) /* end case atom */
+          
+          
+      else if op(xx) = S then (
+          /* disp (" case op = S "), */
+          _PP% : apply ('P,args(xx)),
+          _mprod% : _PP% . _mprod%  /*,display (_mprod%) */  ) /* end case S */
+          
+        /* case op(xx) = "+"  */  
+          
+      else if mplusp (xx)  then (
+        /*  disp ("case op(xx) is plus "),
+           display (xx),
+         */
+        /* cases p + m, p - m ,p1+p2 +m,p1-p2-m, etc */
+       
+        [psL,mt] : mp_split (xx), 
+        psum : 0,
+        badarg : false,
+      
+        for kk thru length (psL) do (
+          _PPA% : part (xx,psL[kk]),
+          
+          [fac1,_PP%] : NDfac (_PPA%),
+          
+          if atom (_PP%) then psum : psum + fac1*sL (_PP%)
+          
+            /* case mtimesp  */
+        
+          else if mtimesp (_PP%)  then (
+            _pp1% : part (_PP%,1),
+            _pp2% : part (_PP%,2),
+            if scalarp (_pp1%) then psum : psum + fac1* _pp1%*sL(_pp2%)
+            else if scalarp (_pp2%) then psum : psum + fac1* _pp2%*sL(_pp1%)
+            else (
+              disp ("m_tr: bad arg "),
+              badarg : true,
+              return ()))          
+            
+          else (
+            disp ("m_tr: bad arg "),
+            badarg : true,
+            return ())), /* end kk do loop */
+            
+        if badarg then return (),
+        
+        if length (mt) = 0 then _mprod% : (psum) . _mprod%
+        
+        else (
+           psum : psum + part (xx,mt[1])*I4,
+           _mprod% : (psum) . _mprod%))  /* end mplusp(xx) case */ 
+               
+      else (
+        print (" m_tr:  property not found for jj = ",jj),        
+        badarg : true,
+        return ()))),  /* end construct jj contrib. to _mprod%  */
+       
+      if badarg then return (apply ('M_TR,_v%)),  
+       
+       /* display (_mprod%), */
+       
+       expand (mat_trace (_mprod%)) )$
+         
+       
+  /********** end  m_tr 6-12-10,  4-21-10  ***************************/  
+  
+            
+  
+                        
+     /**** sbar: make barred dirac spinor   ***************/  
+          
+        /* sbar (_uu%) := hc (_uu%) . Gam[0]$ */
+        
+        
+    /* sbar (_uu%) := block ([temp],
+          temp : conj (_uu%),
+          temp : transpose (_uu%),
+          temp : temp . Gam[0],
+          temp)$      */
+          
+    sbar (_uu%) := (
+          conj (_uu%),
+          transpose (%%),
+          %% . Gam[0] )$
+         
+        
+        
+    /******* barred dirac matrix mbar  ***************/
+    
+    
+      mbar(_M%) := Gam[0] . hc (_M%) . Gam[0] $
+      
+        
+
+                           
+   /******  dirac four component spinors  ********/
+   
+   /** first define two component helicity eigenspinors Chi       **/
+   
+   Chi (_th%,_phi%,_sv%) := (
+      if _sv% = 1 then cdouble (cos (_th%/2),sin (_th%/2)*exp(%i*_phi%) )
+      else if _sv% = -1 then cdouble( -sin (_th%/2)*exp(-%i*_phi%), cos (_th%/2) )
+      else (
+         disp ("Chi: helicity quantum number sv can only be -1 or 1 "),
+         CZ2))$
+         
+   
+   /* Four component particle and antiparticle dirac spinors with helicity sv = 1 or -1,
+      energy E, three momentum magnitude p and spherical-polar angles th and phi.
+      The range of the angle th (the angle between the 3-momentum vector and the positive z axis) 
+      is 0 to %pi radians, and the range of the azimuthal angle phi is 0 to 2*%pi radians
+      */
+            
+   UU( _EE%,_pp%,_tth%,_pphi%,_ssv%) := 
+      (cdouble ( sqrt (_EE% - _ssv% * _pp%)*Chi (_tth%,_pphi%,_ssv%),
+                sqrt (_EE% + _ssv% * _pp%)*Chi (_tth%,_pphi%,_ssv%) ),
+        matrixmap (rootscontract,%%) )$
+  
+    VV(_E%,_p%,_th%,_phi%,_sv%) := -Gam[5] . UU (_E%,_p%,_th%,_phi%, - _sv% ) $
+    
+    
+       
+
+ /*  new acon, mcon1 and mcon 4-9-11, avoids old mcon1 use;
+         ie., avoids use of gmet, sum, me_first_loc,
+         and provides speedups of about 14 times (?)
+         provided we use ratexpand with
+         ratexpand:true (?)    */
+
+   acon(_ee%,_mu%) := 
+     (subst (_mu% = 0,_ee%) -  subst (_mu% = 1,_ee%)  - subst (_mu% = 2,_ee%) - subst (_mu% = 3,_ee%),
+       ev (%%),expand(%%))$
+       
+       
+   mcon1(_b%,[xL]) := block ([_qsum%,jj ],
+      _qsum% : acon (_b%,xL[1]),
+      
+      for jj:2 thru length (xL) do
+        _qsum% : acon (_qsum%,xL[jj]),
+      expand (_qsum%))$
+      
+  /* this version doesn't use ratexpand */           
+       
+   mcon (_e%,[vL]) := block ([vp,_ec%,mysumL,myrsum,_a% ],
+      /* disp (" mcon, 4-9-11 "), */
+   
+     _ec% : expand (_e%),
+     mysumL : sumToList (_ec%),
+     myrsum : 0,
+     for _a% in mysumL do 
+       myrsum : myrsum + apply ('mcon1,cons(_a%,vL)),
+       
+     myrsum )$
+   
+      
+ 
+  
+    
+
+
+
+      /*  useful for getting zero from roots of roots
+          warning: rootcrunch squares the argument!!
+          so if arg is not acually zero, the answer
+          returned will be the square, thus possibly
+          losing signs. */   
+                
+rootcrunch(_x%):= (expand (_x%), expand (%%*conj(%%)),rootscontract (%%), factor (%%))$
+
+
+            
+trigcrunch(expr,x) :=
+         (trigsimp (expand (demoivre (expr))),to_half_angle(%%,x),
+            rootcrunch (%%) )$
+            

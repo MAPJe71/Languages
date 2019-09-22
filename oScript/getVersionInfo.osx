@@ -1,0 +1,14 @@
+
+function List getVersionInfo(String modulename)
+    List versionList = {}
+    Object module = $Kernel.ModuleSubsystem.GetItem(modulename)
+ 
+    if ( !IsError( module ) )
+        versionList = module.VersionList()
+    end
+ 
+    return versionList
+end
+
+List versionInfo = getVersionInfo("mymodule")
+echo(Str.Format("my module %1.%2.%3,versionInfo[1],versionInfo[2],versionInfo[4]))

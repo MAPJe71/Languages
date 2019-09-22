@@ -1,0 +1,64 @@
+<NotepadPlus>
+    <UserLang name="Squirrel" ext="nut" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="no" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="yes" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00// 01 02 03/* 04*/</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">? ! != || == &amp;&amp; &lt; &lt;= =&gt; &gt; + += - -= / /= * *= % %= ++ -- &lt;- = &amp; ^ | ~ &gt;&gt; &lt;&lt; &gt;&gt;&gt; [ ] , . : :: ; ( )</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open">{</Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close">}</Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open">/*</Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close">*/</Keywords>
+            <Keywords name="Keywords1">local const function return break continue extends class constructor foreach for while do case try vargc default resume typeof vargv catch delegate instanceof delete if switch parent clone &quot;else if&quot; else in this yield enum throw static</Keywords>
+            <Keywords name="Keywords2">true false null</Keywords>
+            <Keywords name="Keywords3">array seterrorhandler setdebughook enabledebuginfo getroottable setroottable getconsttable setconsttable assert print compilestring compiledscript collectgarbage type getstackinfos newthread _version_ _charsize_ _intsize_ _floatsize_ tofloat tostring tointeger tochar weakref len slice find tolower toupper rawget rawset rawdelete rawin clear append push extend pop top insert remove resize sort call pcall acall pacall bindenv instance getattributes getattributes getclass getstatus call wakeup ref _set _get _newslot _delslot _add _sub _mul _div _modulo _unm _typeof _cmp _call _cloned _nexti _tostring _inherited _newmember abs acos asin atan atan2 ceil cos exp fabs floor log log10 pow rand sin sqrt srand tan PI RAND_MAX</Keywords>
+            <Keywords name="Keywords4">@</Keywords>
+            <Keywords name="Keywords5">AIAccounting&#x000D;&#x000A;AIAirport&#x000D;&#x000A;AIBase&#x000D;&#x000A;AIBaseStation&#x000D;&#x000A;AIBridge&#x000D;&#x000A;AIBridgeList&#x000D;&#x000A;AIBridgeList_Length&#x000D;&#x000A;AICargo&#x000D;&#x000A;AICargoList&#x000D;&#x000A;AICargoList_IndustryAccepting&#x000D;&#x000A;AICargoList_IndustryProducing&#x000D;&#x000A;AICargoList_StationAccepting&#x000D;&#x000A;AICompany&#x000D;&#x000A;AIController&#x000D;&#x000A;AIDate&#x000D;&#x000A;AIDepotList&#x000D;&#x000A;AIEngine&#x000D;&#x000A;AIEngineList&#x000D;&#x000A;AIError&#x000D;&#x000A;AIEvent&#x000D;&#x000A;AIEventAircraftDestTooFar&#x000D;&#x000A;AIEventCompanyAskMerger&#x000D;&#x000A;AIEventCompanyBankrupt&#x000D;&#x000A;AIEventCompanyInTrouble&#x000D;&#x000A;AIEventCompanyMerger&#x000D;&#x000A;AIEventCompanyNew&#x000D;&#x000A;AIEventCompanyTown&#x000D;&#x000A;AIEventController&#x000D;&#x000A;AIEventDisasterZeppelinerCleared&#x000D;&#x000A;AIEventDisasterZeppelinerCrashed&#x000D;&#x000A;AIEventEngineAvailable&#x000D;&#x000A;AIEventEnginePreview&#x000D;&#x000A;AIEventExclusiveTransportRights&#x000D;&#x000A;AIEventIndustryClose&#x000D;&#x000A;AIEventIndustryOpen&#x000D;&#x000A;AIEventRoadReconstruction&#x000D;&#x000A;AIEventStationFirstVehicle&#x000D;&#x000A;AIEventSubsidyAwarded&#x000D;&#x000A;AIEventSubsidyExpired&#x000D;&#x000A;AIEventSubsidyOffer&#x000D;&#x000A;AIEventSubsidyOfferExpired&#x000D;&#x000A;AIEventTownFounded&#x000D;&#x000A;AIEventVehicleCrashed&#x000D;&#x000A;AIEventVehicleLost&#x000D;&#x000A;AIEventVehicleUnprofitable&#x000D;&#x000A;AIEventVehicleWaitingInDepot&#x000D;&#x000A;AIExecMode&#x000D;&#x000A;AIGameSettings&#x000D;&#x000A;AIGroup&#x000D;&#x000A;AIGroupList&#x000D;&#x000A;AIIndustry&#x000D;&#x000A;AIIndustryList&#x000D;&#x000A;AIIndustryList_CargoAccepting&#x000D;&#x000A;AIIndustryList_CargoProducing&#x000D;&#x000A;AIIndustryType&#x000D;&#x000A;AIIndustryTypeList&#x000D;&#x000A;AIInfo&#x000D;&#x000A;AIInfrastructure&#x000D;&#x000A;AIList&#x000D;&#x000A;AILog&#x000D;&#x000A;AIMap&#x000D;&#x000A;AIMarine&#x000D;&#x000A;AIOrder&#x000D;&#x000A;AIRail&#x000D;&#x000A;AIRailTypeList&#x000D;&#x000A;AIRoad&#x000D;&#x000A;AISign&#x000D;&#x000A;AISignList&#x000D;&#x000A;AIStation&#x000D;&#x000A;AIStationList&#x000D;&#x000A;AIStationList_Vehicle&#x000D;&#x000A;AISubsidy&#x000D;&#x000A;AISubsidyList&#x000D;&#x000A;AITestMode&#x000D;&#x000A;AITile&#x000D;&#x000A;AITileList&#x000D;&#x000A;AITileList_IndustryAccepting&#x000D;&#x000A;AITileList_IndustryProducing&#x000D;&#x000A;AITileList_StationType&#x000D;&#x000A;AITown&#x000D;&#x000A;AITownEffectList&#x000D;&#x000A;AITownList&#x000D;&#x000A;AITunnel&#x000D;&#x000A;AIVehicle&#x000D;&#x000A;AIVehicleList&#x000D;&#x000A;AIVehicleList_DefaultGroup&#x000D;&#x000A;AIVehicleList_Depot&#x000D;&#x000A;AIVehicleList_Group&#x000D;&#x000A;AIVehicleList_SharedOrders&#x000D;&#x000A;AIVehicleList_Station&#x000D;&#x000A;AIWaypoint&#x000D;&#x000A;AIWaypointList&#x000D;&#x000A;AIWaypointList_Vehicle</Keywords>
+            <Keywords name="Keywords6">GSAccounting&#x000D;&#x000A;GSAdmin&#x000D;&#x000A;GSAirport&#x000D;&#x000A;GSBase&#x000D;&#x000A;GSBaseStation&#x000D;&#x000A;GSBridge&#x000D;&#x000A;GSBridgeList&#x000D;&#x000A;GSBridgeList_Length&#x000D;&#x000A;GSCargo&#x000D;&#x000A;GSCargoList&#x000D;&#x000A;GSCargoList_IndustryAccepting&#x000D;&#x000A;GSCargoList_IndustryProducing&#x000D;&#x000A;GSCargoList_StationAccepting&#x000D;&#x000A;GSCargoMonitor&#x000D;&#x000A;GSCompany&#x000D;&#x000A;GSCompanyMode&#x000D;&#x000A;GSController&#x000D;&#x000A;GSDate&#x000D;&#x000A;GSDepotList&#x000D;&#x000A;GSEngine&#x000D;&#x000A;GSEngineList&#x000D;&#x000A;GSError&#x000D;&#x000A;GSEvent&#x000D;&#x000A;GSEventAdminPort&#x000D;&#x000A;GSEventCompanyBankrupt&#x000D;&#x000A;GSEventCompanyInTrouble&#x000D;&#x000A;GSEventCompanyMerger&#x000D;&#x000A;GSEventCompanyNew&#x000D;&#x000A;GSEventCompanyTown&#x000D;&#x000A;GSEventController&#x000D;&#x000A;GSEventExclusiveTransportRights&#x000D;&#x000A;GSEventGoalQuestionAnswer&#x000D;&#x000A;GSEventIndustryClose&#x000D;&#x000A;GSEventIndustryOpen&#x000D;&#x000A;GSEventRoadReconstruction&#x000D;&#x000A;GSEventStationFirstVehicle&#x000D;&#x000A;GSEventSubsidyAwarded&#x000D;&#x000A;GSEventSubsidyExpired&#x000D;&#x000A;GSEventSubsidyOffer&#x000D;&#x000A;GSEventSubsidyOfferExpired&#x000D;&#x000A;GSEventTownFounded&#x000D;&#x000A;GSEventVehicleCrashed&#x000D;&#x000A;GSEventWindowWidgetClick&#x000D;&#x000A;GSExecMode&#x000D;&#x000A;GSGame&#x000D;&#x000A;GSGameSettings&#x000D;&#x000A;GSGoal&#x000D;&#x000A;GSIndustry&#x000D;&#x000A;GSIndustryList&#x000D;&#x000A;GSIndustryList_CargoAccepting&#x000D;&#x000A;GSIndustryList_CargoProducing&#x000D;&#x000A;GSIndustryType&#x000D;&#x000A;GSIndustryTypeList&#x000D;&#x000A;GSInfo&#x000D;&#x000A;GSInfrastructure&#x000D;&#x000A;GSList&#x000D;&#x000A;GSLog&#x000D;&#x000A;GSMap&#x000D;&#x000A;GSMarine&#x000D;&#x000A;GSNews&#x000D;&#x000A;GSOrder&#x000D;&#x000A;GSRail&#x000D;&#x000A;GSRailTypeList&#x000D;&#x000A;GSRoad&#x000D;&#x000A;GSSign&#x000D;&#x000A;GSSignList&#x000D;&#x000A;GSStation&#x000D;&#x000A;GSStationList&#x000D;&#x000A;GSStationList_Vehicle&#x000D;&#x000A;GSStoryPage&#x000D;&#x000A;GSStoryPageElementList&#x000D;&#x000A;GSStoryPageList&#x000D;&#x000A;GSSubsidy&#x000D;&#x000A;GSSubsidyList&#x000D;&#x000A;GSTestMode&#x000D;&#x000A;GSText&#x000D;&#x000A;GSTile&#x000D;&#x000A;GSTileList&#x000D;&#x000A;GSTileList_IndustryAccepting&#x000D;&#x000A;GSTileList_IndustryProducing&#x000D;&#x000A;GSTileList_StationType&#x000D;&#x000A;GSTown&#x000D;&#x000A;GSTownEffectList&#x000D;&#x000A;GSTownList&#x000D;&#x000A;GSTunnel&#x000D;&#x000A;GSVehicle&#x000D;&#x000A;GSVehicleList&#x000D;&#x000A;GSVehicleList_Depot&#x000D;&#x000A;GSVehicleList_SharedOrders&#x000D;&#x000A;GSVehicleList_Station&#x000D;&#x000A;GSViewport&#x000D;&#x000A;GSWaypoint&#x000D;&#x000A;GSWaypointList&#x000D;&#x000A;GSWaypointList_Vehicle&#x000D;&#x000A;GSWindow</Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00&quot; 01 02&quot; 03&quot;@ 04 05&quot; 06&apos; 07 08&apos; 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="8704" />
+            <WordsStyle name="LINE COMMENTS" fgColor="808040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="8448" />
+            <WordsStyle name="NUMBERS" fgColor="400080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="800040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="009B4E" bgColor="FFFFFF" fontName="" fontStyle="4" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="00B700" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="0080FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="FF0080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="808040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

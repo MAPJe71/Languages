@@ -1,0 +1,436 @@
+-------------------------------------------------------------------------------
+----  CPY_PTH.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about CPY_PTH.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Action:
+----    Clauses:
+----            FROM                        Sec 3-A
+----            IN DRAM                     Sec 2
+----            WHEN                        Sec 4-A
+----    Conditions:
+----    Data types:
+----            ARRAY OF STRING             Sec 2
+----            BOOLEAN                     Sec 2; 3-C
+----            COMMON_ASSOC                Sec 2
+----            FILE                        Sec 2
+----            GROUP_ASSOC                 Sec 2
+----            INTEGER                     Sec 2; 3-B,C
+----            PATH                        Sec 2
+----            STRING                      Sec 2; 3-B
+----            STRUCTURE...ENDSTRUCTURE    Sec 2
+----            USER DEFINED PATH           Sec 2
+----            XYZWPR                      Sec 2
+----    Directives:
+----            ALPHABETIZE                 Sec 1
+----            COMMENT                     Sec 1
+----            CMOSVARS                    Sec 1
+----            CRTDEVICE                   Sec 1
+----            INCLUDE                     Sec 2
+----    Built-in Functions & Procedures:
+----            APPEND_NODE                 Sec 4-D
+----            BYNAME                      Sec 4-E
+----            CALL_PROG                   Sec 4-B
+----            COPY_PATH                   Sec 3-C; 4-D
+----            CNV_INT_STR                 Sec 4-E
+----            CREATE_VAR                  Sec 4-E
+----            CURPOS                      Sec 4-B
+----            DELETE_NODE                 Sec 4-C
+----            LOAD                        Sec 4-B
+----            PATH_LEN                    Sec 4-C,E
+----            PROG_LIST                   Sec 4-B
+----            READ_KB                     Sec 3-B
+----            SET_CURSOR                  Sec 4-E
+----            SET_FILE_ATR                Sec 4-A
+----            SET_VAR                     Sec 4-B
+----            SUB_STR                     Sec 4-E
+----            VAR_LIST                    Sec 4-E
+----    Statements:
+----            ABORT                       Sec 4-C,E
+----            CLOSE FILE                  Sec 4-E
+----            FOR .... ENDFOR             Sec 3-C; 4-C,D,E
+----            IF...THEN...ENDIF           Sec 3-B,C; 4-B,C,D,E
+----            MOVE ALONG                  Sec 4-D
+----            OPEN FILE                   Sec 4-A
+----            REPEAT...UNTIL              Sec 3-B; 4-E
+----            ROUTINE                     Sec 3
+----            WRITE                       Sec 3-B,C; 4-A,B,C,E
+----            USING...ENDUSING            Sec 4-D
+----    Reserve Word:
+----            BEGIN                       Sec 3-B,C; 4
+----            END                         Sec 3-B,C; 4-E
+----            PROGRAM                     Sec 1
+----            TYPE                        Sec 2
+----            VAR                         Sec 2
+----    Predefined File Names:
+----            CRTFUNC                     Sec 3-B
+----            CRTPROMPT                   Sec 3-B,C
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM CPY_PTH
+    %ALPHABETIZE
+    %COMMENT = 'COPY PATH' -- Display information by default to CRT/KB
+    %CRTDEVICE -- Use CMOS RAM to store all static variables,
+    %CMOSVARS -- except those specified with IN DRAM
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant, Variable and Type Declarations
+-------------------------------------------------------------------------------
+CONST
+    SUCCESS = 0 -- The value returned from all built-ins when successful
+TYPE
+    node_struc = STRUCTURE -- Create a user defined node structure
+        posn_dat : XYZWPR
+        grup_dat : GROUP_ASSOC
+        comn_dat : COMMON_ASSOC
+    ENDSTRUCTURE
+    user_path  = PATH nodedata = node_struc -- Create a user defined path
+VAR
+    pth1,
+    pth2,
+    pth3
+    pth4              : PATH      -- These are system defined PATHs
+    upth1,
+    upth2,
+    upth3,
+    upth4             : user_path -- These are user defined PATHs
+    p1_len,
+    p2_len,
+    status,
+    total_node        : INTEGER
+    F1_press,
+    F2_press          : BOOLEAN
+    src_num,
+    des_num           : INTEGER
+    dummy_str,
+    src_var,
+    des_var           : STRING[20]
+    cur_name          : STRING[12]
+    entry             : INTEGER
+    var_type          : INTEGER
+    mem_loc           : INTEGER
+
+    -- Store the following variables in DRAM, which is temporary memory
+    indx IN DRAM      : INTEGER
+    prog_name IN DRAM : STRING[10]
+    prog_type IN DRAM : INTEGER
+    n_match IN DRAM   : INTEGER
+    n_skip IN DRAM    : INTEGER
+    format IN DRAM    : INTEGER
+    ary_nam IN DRAM   : ARRAY[5] OF STRING[20]
+    prog_indx IN DRAM : INTEGER
+    do_copy IN DRAM   : BOOLEAN
+    crt_kb IN DRAM    : FILE
+
+%INCLUDE KLEVKMSK -- system supplied file: definition of KC_FUNC_KEY
+%INCLUDE KLEVKEYS -- system supplied file: definition of KY_F1 & KY_F2
+
+-------------------------------------------------------------------------------
+----  Section 3: Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  CRT_CLS Declaration
+-------------------------------------------------------------------------------
+ROUTINE CRT_CLS FROM rout_ex -- include this routine from the file rout_ex.kl
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  YES_NO Declaration
+----                LABEL the F1 key as YES and F2 key as NO, ask for user
+----                confirmation. These two keys are monitored by global
+----                condition handler,so User response can be trapped.
+-------------------------------------------------------------------------------
+ROUTINE YES_NO
+VAR
+    key_press : INTEGER
+    str       : STRING[1]
+    n_chars   : INTEGER
+    l_status  : INTEGER
+BEGIN ---- YES_NO
+    WRITE CRTFUNC (CHR(128),CHR(137)) --- Clear Window, Home Cursor
+    -- Display YES above F1 & NO above F2 & clear rest of Function window
+    WRITE CRTFUNC (' YES NO ',chr(129))
+    F1_press = FALSE
+    F2_press = FALSE
+    REPEAT -- until user presses either the F1 or F2 key
+        -- Read just the function keys of the CRT/KB.
+        -- The read will be satisfied only when a function key is pressed.
+        READ_KB (crt_kb, str , 0, 0, kc_func_key, -1,
+                    '', n_chars, key_press, l_status)
+        -- key_press must be converted from a "raw" CRT character to the teach
+        -- pendant equivalent character.g
+        key_press = $CRT_KEY_TBL[key_press+1]
+        IF (key_press = ky_f1) THEN -- The user pressed F1
+            F1_press = true
+        ENDIF
+        IF (key_press = ky_f2) THEN -- The user pressed F2
+            F2_press = true
+        ENDIF
+    UNTIL ((f1_press = TRUE) OR (F2_press = TRUE))
+    WRITE CRTFUNC (CHR(128),CHR(137)) --- Clear Window, Home Cursor
+    WRITE CRTPROMPT (CHR(128),CHR(137)) --- Clear Window, Home Cursor
+END YES_NO
+
+-------------------------------------------------------------------------------
+----  Section 3-C:  PTH_CPY Declaration
+----                Copy one user defined path variable to another user defined path
+----                variable. The first parameter is the source path. The second
+----                parameter is the destination path. The path parameters can only
+----                be passed using BYNAME and the path's must be user defined
+-------------------------------------------------------------------------------
+ROUTINE PTH_CPY(src_path: USER_PATH; des_path: USER_PATH)
+VAR
+    node_indx :INTEGER
+    do_it     :BOOLEAN
+    1_stat    :INTEGER
+BEGIN --- pth_cpy
+    CRT_CLS -- Clear the CRT/KB USER Menu screen
+    do_it = true
+
+    -- WRITE ('Peform copy',CR)
+    yes_no
+
+    do_it = F1_press -- F1_press will be true only if the user selected YES
+
+    IF (do_it) THEN
+        -- Copy the entire path of src_path to des_path
+        COPY_PATH (src_path, 0,0, des_path, l_stat)
+        IF (l_stat <> 0) THEN
+            WRITE ('Error in COPY_PATH', l_stat, CR)
+        ELSE
+            WRITE ('Path Copy function Completed ',cr)
+        ENDIF
+    ELSE
+        WRITE ('Path Copy function canceled by choice',cr,cr)
+    ENDIF
+END PTH_CPY
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- CPY_PATH
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Open CRT KB for reading YES/NO inputs from user
+-------------------------------------------------------------------------------
+    CRT_CLS -- will force the CRT USER menu to be visible & clear the screen
+    SET_FILE_ATR(crt_kb, ATR_FIELD) -- Needed so the read is satisfied with one
+                                    -- character.
+    OPEN FILE crt_kb ('RO', 'KB:crkb') -- Open a file to the CRT/KB
+                                       -- Used within the YES_NO routine.
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Check if SAVE_VRS.PC is loaded. If loaded then execute
+-------------------------------------------------------------------------------
+    ---- First check if the "SAVE_VRS" program is loaded or not.
+    prog_name = 'SAVE_VRS' -- Only interested in SAVE_VRS program
+    prog_type = 6 -- Interested only in PC type files
+    n_skip    = 0 -- First time do not skip any files
+    format    = 1 -- Return just the filename
+    do_copy   = TRUE
+
+    WRITE ('Checking Program List',cr)
+    PROG_LIST(prog_name, prog_type, n_skip, format, ary_nam, n_match, status)
+    IF (status <>SUCCESS ) THEN
+        IF (status = 7073 ) THEN ---- Program does not exist error
+            --- Program SAVE_VRS is not loaded on the controller.
+            WRITE ( 'LOADING ',prog_name, CR)
+            LOAD (prog_name+'.PC', 0, status)
+            IF (status <> SUCCESS) THEN
+                WRITE ('Error loading ', prog_name,cr)
+                WRITE CRTPROMPT('Copy path''s WITHOUT saving program variables?',CR)
+                YES_NO
+                do_copy = F1_press -- F1_press is true only if user selected YES
+                -- Copy without saving variables.
+            ENDIF
+        ELSE
+            -- The program listing failed.
+            WRITE ('PROG_LIST built-in failed',cr,' with Status = ',status,cr)
+            WRITE CRTPROMPT('Copy path''s WITHOUT saving program variables?',CR)
+            YES_NO
+            do_copy = F1_press -- F1_press is true only if user selected YES
+        ENDIF -- Copy without saving variables.
+    ENDIF
+    IF (status = SUCCESS) THEN
+        -- This is one way to set variables within another program without
+        -- using the FROM clause in the variable section.
+        -- It is very useful if you want to have run-time independent code,
+        -- where the program or variable name you are setting is not
+        -- known until run-time.
+        cur_name = CURR_PROG
+        SET_VAR (entry, prog_name, 'del_vr', TRUE, status)
+        SET_VAR (entry, prog_name, 'prog_name',cur_name , status)
+        SET_VAR (entry, prog_name, 'sav_type', 1, status)
+        SET_VAR (entry, prog_name, 'dev', 'FLPY:', status)
+        WRITE ('Saving program variables before copy', CR)
+        CALL_PROG(prog_name,prog_indx) -- call SAVE_VRS
+    ENDIF
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Check for initialization of PATHs pth1 and pth2.
+-------------------------------------------------------------------------------
+    IF (NOT do_copy) THEN
+        WRITE ('Program exiting, unable to save variables,',cr)
+        WRITE ('before copying path''s',cr)
+        -- NOTICE:
+        -- Two single quotes will display as one single quote
+        -- so this write statement will appear as :
+        -- "before copying path's"
+        ABORT
+    ENDIF
+    WRITE ('Checking Variable initialization',cr)
+
+    -- Check if the pth variables are initialized.
+    p1_len = PATH_LEN(pth1) ; p2_len = PATH_LEN(pth2)
+    IF ( (p1_len = 0) OR (p2_len = 0) )THEN
+        WRITE ('PTH1 or PTH2 is empty path',cr)
+        WRITE ('Please make sure both paths are taught then restart',cr)
+        ABORT -- Cannot copy uninitialized variables.
+    ENDIF
+
+    -- Check if the pth3 variable is initialized.
+    IF (PATH_LEN(pth3) <> 0) THEN
+        WRITE ('Deleting nodes from pth3',cr) -- Delete the old path of pth3
+        FOR indx = PATH_LEN(pth3) DOWNTO 1 DO
+            -- its easy to delete nodes from the end instead of deleting node from
+            -- the front end. Since after every deletion the nodes are renumbered.
+            DELETE_NODE(pth3, indx, status) -- Delete last node of pth3
+            IF status <> SUCCESS THEN
+                WRITE ('While Deleting ',indx, ' node',cr)
+                WRITE ('DELETE_NODE unsuccessful: Status = ',status,cr)
+            ENDIF
+        ENDFOR
+    ENDIF
+
+-------------------------------------------------------------------------------
+----  Section 4-D:  Add pth1 and pth2 together to create pth3.
+----                Move along pth1 and pth2.
+----                Move backwards through pth3.
+-------------------------------------------------------------------------------
+    total_node = p1_len + p2_len -- Total number of nodes needed for pth3
+
+    -- Copy the node data from pth1 to pth3
+    WRITE ('copying pth1 to pth3',cr)
+    COPY_PATH (pth1, 0,0, pth3, status)
+    IF (status <> 0) THEN
+        WRITE ('ERROR in COPY_PATH', status, CR)
+    ENDIF
+
+    -- Create the required number of nodes for pth3.
+    -- We know that pth3 now has PATH_LEN(pth3) nodes.
+    WRITE ('Appending nodes to pth3',cr)
+    FOR indx = p1_len+1 TO total_node DO -- Append the correct number of nodes.
+        APPEND_NODE(pth3, status)
+        IF (status <> 0) THEN
+            WRITE ('While Appending ',indx, ' node',cr)
+            WRITE ('APPEND_NODE unsuccessful: Status = ',status,cr)
+        ENDIF
+    ENDFOR
+
+    -- Append the node data of pth2 to pth3.
+    WRITE ('Appending pth2 to pth3',cr)
+    FOR indx = p1_len+1 TO total_node DO
+        USING pth2[indx - p1_len] DO
+            pth3[indx].node_pos    = node_pos
+            pth3[indx].group_data  = group_data
+            pth3[indx].common_data = common_data
+        ENDUSING
+    ENDFOR
+
+    -- Move Along the path pth1 and pth2
+    WRITE ('Moving Along Path pth1',cr)
+    MOVE ALONG pth1
+    WRITE ('Moving Along Path pth2',cr)
+    MOVE ALONG pth2
+
+    --Copy pth3 in reverse order to pth4
+    COPY_PATH (pth3, PATH_LEN(pth3), 1, pth4, status)
+    IF (status <> 0) THEN
+        WRITE ('ERROR in COPY_PATH', status, CR)
+    ENDIF--- Move along pth4 which is a reverse order of pth3.
+
+    WRITE ('Moving Along Path pth4',cr)
+    MOVE ALONG pth4
+
+-------------------------------------------------------------------------------
+----  Section 4-E:  Copy User Defined Paths.
+----                Copy one user defined path to another user defined path,
+----                where the user specifies which paths to be copied.
+-------------------------------------------------------------------------------
+    CRT_CLS
+    SET_CURSOR(OUTPUT,2,10, status) -- Position cursor nicely on CRT
+    IF (status <> 0 ) THEN
+        WRITE ('SET_CURSOR built-in failed with status = ',status,cr)
+    ENDIF
+
+    -- write message in reverse video and then set back to normal video
+    WRITE (chr(139),' COPY PATH FUNCTION',chr(143),CR,cr)
+    WRITE ('Currently you have the following ',cr)
+    WRITE ('User Defined Paths',cr,cr)
+    n_skip   = 0
+    var_type = 31 -- Get listing of only PATH type variables
+    REPEAT
+        VAR_LIST ('CPY_PTH', '*',var_type, n_skip, 2, ary_nam, n_match, status)
+        FOR indx = 1 TO n_match DO
+            IF (SUB_STR (ary_nam[indx], 1, 4) = 'UPTH') THEN -- Verify it's one of
+                -- the user defined path's
+                WRITE (ary_nam[indx], CR)
+            ENDIF
+        ENDFOR
+        n_skip = n_skip + n_match
+    UNTIL (n_match < ARRAY_LEN(ary_nam))
+    Write ('Enter the source path number:')
+    READ(src_num);
+    Write ('Enter the destination path number:')
+    READ(des_num);
+    CNV_INT_STR(src_num,2,0,dummy_str) -- Convert source number to string
+    src_var = 'UPTH'+ SUB_STR(dummy_str,2,1) -- SUB_STR will remove the leading
+                                             -- blank from dummy_str before
+                                             -- concatenating to create the
+    var_type = 0 -- source variable name
+    VAR_LIST ('CPY_PTH', src_var, var_type, 0, 2, ary_nam, n_match, status)
+    IF (status <> SUCCESS) THEN
+        WRITE ('Var_list for src_var: status ', status, cr)
+    ENDIF
+
+    -- If the variable does not exist create it.
+    IF (n_match = 0) THEN
+        CREATE_VAR ('', src_var, '', 'USER_PATH', 1, 0, 0, 0, status, mem_loc)
+        IF (status <> SUCCESS) THEN
+            WRITE ('Error creating ', src_var, ':', status, cr)
+        ENDIF
+    ENDIF
+
+    -- Create the destination variable name
+    CNV_INT_STR(des_num,2,0,dummy_str) -- Convert des_num to a string
+    des_var = 'UPTH'+ SUB_STR(dummy_str,2,1) -- The SUB_STR will remove the leading
+                                             -- blank from dummy_str before
+                                             -- concatenating to create the
+                                             -- source variable name
+    -- Verify that the des_var variable exists.
+    VAR_LIST ('CPY_PTH', des_var, var_type, 0, 2, ary_nam, n_match, status)
+    IF (status <> SUCCESS) THEN
+        WRITE ('Var_list for des_vr: status', status, cr)
+    ENDIF
+
+    -- If the variable does not exist create it.
+    IF (n_match = 0) THEN
+        CREATE_VAR ('', des_var, '', 'USER_PATH', 1, 0, 0, 0, status, mem_loc)
+        IF (status <> SUCCESS) THEN
+            WRITE ('Error creating ', des_var, ':', status, cr)
+        ENDIF
+    ENDIF
+
+    -- Copy the specified source path to the specified destination path
+    pth_cpy(BYNAME('', src_var, indx), BYNAME('', des_var, indx) )
+
+    -- Close file before quitting
+    CLOSE FILE crt_kb
+    WRITE ('CPY_PTH example completed',cr)
+
+END CPY_PTH

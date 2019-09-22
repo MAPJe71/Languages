@@ -1,0 +1,95 @@
+/* photon1.mac
+   E. L. Woollett
+   woollett@charter.net
+   April 15, 2011
+   
+   explicit photon transverse
+   polarization vector sums   
+   */
+   
+  display2d:false$
+  " ======================================================"$
+ "  file photon1.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+    
+ "-----------------------------------------------------"$
+ "  PROPERTIES AND SUMS OF TRANSVERSE POLARIZATION VECTORS "$
+ " ----------------------------------------------------- "$
+  
+  " define 3-vectors as lists "$
+  " scattering plane is z-x plane "$
+ 
+  k_vec : [0,0,k]$
+ 
+  kp_vec : [kp*sin(th),0,kp*cos(th)]$ 
+  
+  " e[1] X e[2] = k_vec/k "$
+ 
+  e[1] : [1,0,0]$
+ 
+  e[1] . e[1];
+ 
+  e[1] . k_vec; 
+  
+  e[2] : [0,1,0]$
+ 
+  e[2] . e[2];
+  
+  e[2] . e[1];
+  
+  e[2] . k_vec;
+  
+  " ep[1] X ep[2] = kp_vec/kp "$
+  
+  " parallel to the scattering plane "$
+  
+  ep[1] : [cos(th),0,-sin(th)]$
+  
+  trigsimp (ep[1] . ep[1]);  
+  
+  ep[1] . kp_vec;
+  
+  " perpendicular to the scattering plane "$
+  
+  ep[2] : [0,1,0]$
+  
+  ep[2] . ep[2];      
+  
+  ep[2] . ep[1];
+  
+  ep[2] . kp_vec;
+  
+  "============================================="$
+  
+  " photon transverse polarization sum over both leads to "$
+  "  (1 + cos(th)^2 ) "$
+  
+  
+  sum (sum ( (e[s] . ep[r])^2,s,1,2),r,1,2);  
+      
+ 
+  "============================================="$
+ " Sum over only e[1] and e[2] values leads to "$
+ " sum ( (e[s] . ep[r])^2,s,1,2) = 1 - (ku . ep[r])^2 "$
+ " where ku is unit vector along k_vec "$
+ 
+ ku : k_vec/k;
+ 
+ " first for r = 1 "$
+ 
+ sum ( (e[s] . ep[1])^2,s,1,2);
+ 
+ trigsimp ( 1-(ku . ep[1])^2 );
+ 
+ " next for r = 2 "$
+ 
+ sum ( (e[s] . ep[2])^2,s,1,2);
+ 
+ 1-(ku . ep[2])^2;
+ 
+  "============================================="$
+  

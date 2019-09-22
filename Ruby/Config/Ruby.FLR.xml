@@ -1,0 +1,14 @@
+<Language name="Ruby" imagelistpath="C:\Documents and Settings\king_cao\Application Data\Notepad++\plugins\config\C++.flb">
+        <Group name="CLASS" subgroup="FUNCTION" icon="1" child="11" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^class\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="^end$" sep="" />
+        </Group>
+        <Group name="FUNCTION" subgroup="" icon="9" child="17" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^[\s\t]+def\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="^[\s\t]+end$" sep="" />
+        </Group>
+        <Group name="GlobalFunction" subgroup="" icon="9" child="17" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^def\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="^end$" sep="" />
+        </Group>
+        <Group name="MODULE" subgroup="FUNCTION" icon="8" child="11" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^module\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="^end$" sep="" />
+        </Group>
+</Language>

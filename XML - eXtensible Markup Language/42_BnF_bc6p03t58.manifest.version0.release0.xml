@@ -1,0 +1,794 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:premis="info:lc/xmlns/premis-v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:spar_dc="http://bibnum.bnf.fr/ns/spar_dc" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<dmdSec ID="DMD.1">
+		<mdWrap MIMETYPE="text/xml" MDTYPE="DC">
+			<xmlData>
+				<spar_dc:spar_dc>
+					<dc:title>Les cracks / Alex Joffé, réal., id. orig., scénario, adapt., dial. ; Gabriel Arout, Pierre Levy-Corti, scénario, adapt., dial. ; Georges Delerue, comp. ; Bourvil, Robert Hirsch, Monique Tarbes... [et al.], act.</dc:title>
+					<dc:creator>Joffé, Alex (1918-1995). Réalisateur. Auteur de l'idée originale. Scénariste. Adaptateur. Dialoguiste</dc:creator>
+					<dc:creator>Arout, Gabriel (1909-1982). Scénariste. Adaptateur. Dialoguiste</dc:creator>
+					<dc:creator>Lévy-Corti, Pierre. Scénariste. Adaptateur. Dialoguiste</dc:creator>
+					<dc:creator>Delerue, Georges (1925-1992). Compositeur</dc:creator>
+					<dc:creator>Bourvil (1917-1970). Acteur</dc:creator>
+					<dc:creator>Hirsch, Robert (1925-....). Acteur</dc:creator>
+					<dc:creator>Tarbès, Monique (1937-....). Acteur</dc:creator>
+					<dc:identifier xsi:type="spar_dc:tradeNumber">référence éditoriale 350029</dc:identifier>
+					<dc:identifier xsi:type="spar_dc:commercialBarCode">EAN 3384443500295</dc:identifier>
+					<dc:date>1992</dc:date>
+					<dc:language xsi:type="dcterms:ISO639-3">fre</dc:language>
+					<dc:type>monograph</dc:type>
+					<dcterms:provenance>BnF</dcterms:provenance>
+					<dc:relation xsi:type="spar_dc:ark">ark:/12148/cb38316489b</dc:relation>
+				</spar_dc:spar_dc>
+			</xmlData>
+		</mdWrap>
+	</dmdSec>
+	<amdSec>
+		<techMD ID="AMD.5">
+			<mdWrap MDTYPE="PREMIS:OBJECT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:object xsi:type="premis:representation">
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>ark</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>ark:/12148/bc6p03t58</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>productionIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>99218</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>versionIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>version0.release0</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:relationship>
+							<premis:relationshipType>track</premis:relationshipType>
+							<premis:relationshipSubType>channel</premis:relationshipSubType>
+							<premis:relatedObjectIdentification>
+								<premis:relatedObjectIdentifierType>ark</premis:relatedObjectIdentifierType>
+								<premis:relatedObjectIdentifierValue>ark:/12148/br2d26qc</premis:relatedObjectIdentifierValue>
+							</premis:relatedObjectIdentification>
+						</premis:relationship>
+					</premis:object>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.6">
+			<mdWrap MDTYPE="PREMIS:OBJECT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:object xsi:type="premis:file">
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>metsIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>master.1</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectCharacteristics>
+							<premis:compositionLevel>0</premis:compositionLevel>
+							<premis:format>
+								<premis:formatDesignation>
+									<premis:formatName>video/mpeg</premis:formatName>
+								</premis:formatDesignation>
+								<premis:formatRegistry>
+									<premis:formatRegistryName>BnF SPAR</premis:formatRegistryName>
+									<premis:formatRegistryKey>ark:/12148/br2d276z</premis:formatRegistryKey>
+								</premis:formatRegistry>
+							</premis:format>
+						</premis:objectCharacteristics>
+						<premis:storage>
+							<premis:storageMedium>SPAR storage unit</premis:storageMedium>
+						</premis:storage>
+					</premis:object>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.7">
+			<mdWrap MDTYPE="OTHER" OTHERMDTYPE="MPEG7" MIMETYPE="text/xml">
+				<xmlData>
+					<mpeg7:Mpeg7 xmlns:mpeg7="urn:mpeg:mpeg7:schema:2004" xmlns="urn:mpeg:mpeg7:schema:2004">
+						<mpeg7:DescriptionMetadata>
+							<mpeg7:PrivateIdentifier>VK_023716_V1_1.mpg</mpeg7:PrivateIdentifier>
+							<mpeg7:CreationTime>2011-08-02T22:08:40+00:00</mpeg7:CreationTime>
+							<mpeg7:Instrument>
+								<mpeg7:Tool>
+									<mpeg7:Name>MediaInfoLib - v0.7.44</mpeg7:Name>
+								</mpeg7:Tool>
+							</mpeg7:Instrument>
+						</mpeg7:DescriptionMetadata>
+						<mpeg7:Description xsi:type="ContentEntityType">
+							<mpeg7:MultimediaContent xsi:type="AudioVisualType">
+								<mpeg7:AudioVisual>
+									<mpeg7:MediaInformation>
+										<mpeg7:MediaProfile>
+											<mpeg7:MediaFormat>
+												<mpeg7:Content href="urn:mpeg:mpeg7:cs:ContentCS:2001:2">
+													<mpeg7:Name xml:lang="en">Audiovisual</mpeg7:Name>
+												</mpeg7:Content>
+												<mpeg7:FileFormat href="urn:mpeg:mpeg7:cs:FileFormatCS:2001:3">
+													<mpeg7:Name xml:lang="en">mpeg</mpeg7:Name>
+													<mpeg7:Term termID="3.1">
+														<mpeg7:Name xml:lang="en">mpeg-ps</mpeg7:Name>
+													</mpeg7:Term>
+												</mpeg7:FileFormat>
+												<mpeg7:FileSize>4768792576</mpeg7:FileSize>
+												<mpeg7:System href="urn:mpeg:mpeg7:cs:SystemCS:2001:1">
+													<mpeg7:Name xml:lang="en">PAL</mpeg7:Name>
+												</mpeg7:System>
+												<mpeg7:BitRate variable="false">6487579</mpeg7:BitRate>
+												<mpeg7:VisualCoding>
+													<mpeg7:Format href="urn:mpeg:mpeg7:cs:VisualCodingFormatCS:2001:2" colorDomain="color">
+														<mpeg7:Name xml:lang="en">MPEG-2 Video</mpeg7:Name>
+														<mpeg7:Term termID="2.2">
+															<mpeg7:Name xml:lang="en">MPEG-2 Video Main Profile</mpeg7:Name>
+															<mpeg7:Term termID="2.2.2">
+																<mpeg7:Name xml:lang="en">MPEG-2 Video Main Profile @ Main Level</mpeg7:Name>
+															</mpeg7:Term>
+														</mpeg7:Term>
+													</mpeg7:Format>
+													<mpeg7:Pixel aspectRatio="1.067" bitsPer="8"/>
+													<mpeg7:Frame aspectRatio="1.333" height="576" width="720" rate="25.000" structure="interlaced"/>
+													<mpeg7:ColorSampling>
+														<!-- YUV 4:2:0 Interlaced -->
+														<mpeg7:Lattice height="720" width="486"/>
+														<mpeg7:Field temporalOrder="0" positionalOrder="0">
+															<mpeg7:Component>
+																<mpeg7:Name>Luminance</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="0.0"/>
+																<mpeg7:Period horizontal="1.0" vertical="2.0"/>
+															</mpeg7:Component>
+															<mpeg7:Component>
+																<mpeg7:Name>ChrominanceBlueDifference</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="0.5"/>
+																<mpeg7:Period horizontal="2.0" vertical="4.0"/>
+															</mpeg7:Component>
+															<mpeg7:Component>
+																<mpeg7:Name>ChrominanceRedDifference</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="0.5"/>
+																<mpeg7:Period horizontal="2.0" vertical="4.0"/>
+															</mpeg7:Component>
+														</mpeg7:Field>
+														<mpeg7:Field temporalOrder="1" positionalOrder="1">
+															<mpeg7:Component>
+																<mpeg7:Name>Luminance</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="1.0"/>
+																<mpeg7:Period horizontal="1.0" vertical="2.0"/>
+															</mpeg7:Component>
+															<mpeg7:Component>
+																<mpeg7:Name>ChrominanceBlueDifference</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="2.5"/>
+																<mpeg7:Period horizontal="2.0" vertical="4.0"/>
+															</mpeg7:Component>
+															<mpeg7:Component>
+																<mpeg7:Name>ChrominanceRedDifference</mpeg7:Name>
+																<mpeg7:Offset horizontal="0.0" vertical="2.5"/>
+																<mpeg7:Period horizontal="4.0" vertical="2.0"/>
+															</mpeg7:Component>
+														</mpeg7:Field>
+													</mpeg7:ColorSampling>
+												</mpeg7:VisualCoding>
+												<mpeg7:AudioCoding>
+													<mpeg7:Format href="urn:mpeg:mpeg7:cs:AudioCodingFormatCS:2001:3">
+														<mpeg7:Name xml:lang="en">MPEG-1 Audio</mpeg7:Name>
+														<mpeg7:Term termID="3.2">
+															<mpeg7:Name xml:lang="en">MPEG-1 Audio Layer II</mpeg7:Name>
+														</mpeg7:Term>
+													</mpeg7:Format>
+													<mpeg7:AudioChannels>2</mpeg7:AudioChannels>
+													<mpeg7:Sample rate="48000"/>
+													<mpeg7:Emphasis>none</mpeg7:Emphasis>
+													<mpeg7:Presentation href="urn:mpeg:mpeg7:cs:AudioPresentationCS:2001:3">
+														<mpeg7:Name>stereo</mpeg7:Name>
+													</mpeg7:Presentation>
+												</mpeg7:AudioCoding>
+											</mpeg7:MediaFormat>
+											<mpeg7:MediaTranscodingHints>
+												<mpeg7:CodingHints intraFrameDistance="15" anchorFrameDistance="3"/>
+											</mpeg7:MediaTranscodingHints>
+										</mpeg7:MediaProfile>
+									</mpeg7:MediaInformation>
+									<mpeg7:MediaTime>
+										<mpeg7:MediaTimePoint>T00:00:00:36912F90000</mpeg7:MediaTimePoint>
+										<mpeg7:MediaDuration>PT1H38M0S13N25F</mpeg7:MediaDuration>
+									</mpeg7:MediaTime>
+								</mpeg7:AudioVisual>
+							</mpeg7:MultimediaContent>
+						</mpeg7:Description>
+					</mpeg7:Mpeg7>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.9">
+			<mdWrap MDTYPE="PREMIS:OBJECT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:object xsi:type="premis:file">
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>metsIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>documentation.1</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectCharacteristics>
+							<premis:compositionLevel>0</premis:compositionLevel>
+							<premis:format>
+								<premis:formatDesignation>
+									<premis:formatName>text/xml</premis:formatName>
+									<premis:formatVersion>1.0</premis:formatVersion>
+								</premis:formatDesignation>
+								<premis:formatRegistry>
+									<premis:formatRegistryName>BnF SPAR</premis:formatRegistryName>
+									<premis:formatRegistryKey>ark:/12148/br2d269</premis:formatRegistryKey>
+								</premis:formatRegistry>
+							</premis:format>
+						</premis:objectCharacteristics>
+						<premis:storage>
+							<premis:storageMedium>SPAR storage unit</premis:storageMedium>
+						</premis:storage>
+					</premis:object>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.10">
+			<mdWrap MDTYPE="TEXTMD" MIMETYPE="text/xml">
+				<xmlData>
+					<textmd:textMD xmlns:textmd="info:lc/xmlns/textMD-v3">
+						<textmd:character_info>
+							<textmd:charset>ISO-8859-1</textmd:charset>
+							<textmd:byte_order>little</textmd:byte_order>
+							<textmd:byte_size>8</textmd:byte_size>
+							<textmd:character_size>1</textmd:character_size>
+							<textmd:linebreak>CR/LF</textmd:linebreak>
+						</textmd:character_info>
+						<textmd:markup_basis version="1.0">XML</textmd:markup_basis>
+					</textmd:textMD>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.12">
+			<mdWrap MDTYPE="PREMIS:OBJECT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:object xsi:type="premis:file">
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>metsIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>documentation.2</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectCharacteristics>
+							<premis:compositionLevel>0</premis:compositionLevel>
+							<premis:format>
+								<premis:formatDesignation>
+									<premis:formatName>text/plain</premis:formatName>
+								</premis:formatDesignation>
+								<premis:formatRegistry>
+									<premis:formatRegistryName>BnF SPAR</premis:formatRegistryName>
+									<premis:formatRegistryKey>ark:/12148/br2d2b4</premis:formatRegistryKey>
+								</premis:formatRegistry>
+							</premis:format>
+						</premis:objectCharacteristics>
+						<premis:storage>
+							<premis:storageMedium>SPAR storage unit</premis:storageMedium>
+						</premis:storage>
+					</premis:object>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.13">
+			<mdWrap MDTYPE="TEXTMD" MIMETYPE="text/xml">
+				<xmlData>
+					<textmd:textMD xmlns:textmd="info:lc/xmlns/textMD-v3">
+						<textmd:character_info>
+							<textmd:charset>US-ASCII</textmd:charset>
+							<textmd:byte_order>little</textmd:byte_order>
+							<textmd:byte_size>8</textmd:byte_size>
+							<textmd:character_size>1</textmd:character_size>
+							<textmd:linebreak>CR/LF</textmd:linebreak>
+						</textmd:character_info>
+					</textmd:textMD>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.16">
+			<mdWrap MDTYPE="PREMIS:OBJECT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:object xsi:type="premis:file">
+						<premis:objectIdentifier>
+							<premis:objectIdentifierType>metsIdentifier</premis:objectIdentifierType>
+							<premis:objectIdentifierValue>documentation.4</premis:objectIdentifierValue>
+						</premis:objectIdentifier>
+						<premis:objectCharacteristics>
+							<premis:compositionLevel>0</premis:compositionLevel>
+							<premis:format>
+								<premis:formatDesignation>
+									<premis:formatName>image/jpeg</premis:formatName>
+									<premis:formatVersion>1.01</premis:formatVersion>
+								</premis:formatDesignation>
+								<premis:formatRegistry>
+									<premis:formatRegistryName>BnF SPAR</premis:formatRegistryName>
+									<premis:formatRegistryKey>ark:/12148/br2d211h</premis:formatRegistryKey>
+								</premis:formatRegistry>
+							</premis:format>
+						</premis:objectCharacteristics>
+						<premis:storage>
+							<premis:storageMedium>SPAR storage unit</premis:storageMedium>
+						</premis:storage>
+					</premis:object>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="AMD.17">
+			<mdWrap MDTYPE="NISOIMG" MIMETYPE="text/xml">
+				<xmlData>
+					<mix:mix xmlns:mix="http://www.loc.gov/mix/v10">
+						<mix:BasicDigitalObjectInformation>
+							<mix:byteOrder>big_endian</mix:byteOrder>
+							<mix:Compression>
+								<mix:compressionScheme>6</mix:compressionScheme>
+							</mix:Compression>
+						</mix:BasicDigitalObjectInformation>
+						<mix:BasicImageInformation>
+							<mix:BasicImageCharacteristics>
+								<mix:imageWidth>750</mix:imageWidth>
+								<mix:imageHeight>1050</mix:imageHeight>
+								<mix:PhotometricInterpretation>
+									<mix:colorSpace>6</mix:colorSpace>
+								</mix:PhotometricInterpretation>
+							</mix:BasicImageCharacteristics>
+						</mix:BasicImageInformation>
+						<mix:ImageAssessmentMetadata>
+							<mix:SpatialMetrics>
+								<mix:samplingFrequencyUnit>1</mix:samplingFrequencyUnit>
+							</mix:SpatialMetrics>
+							<mix:ImageColorEncoding>
+								<mix:bitsPerSample>
+									<mix:bitsPerSampleValue>8,8,8</mix:bitsPerSampleValue>
+									<mix:bitsPerSampleUnit>integer</mix:bitsPerSampleUnit>
+								</mix:bitsPerSample>
+								<mix:samplesPerPixel>3</mix:samplesPerPixel>
+							</mix:ImageColorEncoding>
+						</mix:ImageAssessmentMetadata>
+					</mix:mix>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<sourceMD ID="AMD.1">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="DC">
+				<xmlData>
+					<spar_dc:spar_dc>
+						<dc:identifier xsi:type="spar_dc:originalObjectCallNumber">VK-23716</dc:identifier>
+						<dc:description xsi:type="spar_dc:boxOrder">1 sur 1</dc:description>
+					</spar_dc:spar_dc>
+				</xmlData>
+			</mdWrap>
+		</sourceMD>
+		<sourceMD ID="AMD.4">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="DC">
+				<xmlData>
+					<spar_dc:spar_dc>
+						<dc:description xml:lang="fr">cassette vidéo 1/2 p VHS</dc:description>
+					</spar_dc:spar_dc>
+				</xmlData>
+			</mdWrap>
+		</sourceMD>
+		<digiprovMD ID="AMD.2">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>9d82d540-bd52-11e0-96c1-00144f68e7e0</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>packageCreation</premis:eventType>
+						<premis:eventDateTime>2011-08-02T23:58:54.868+02:00</premis:eventDateTime>
+						<premis:eventDetail>Création d'un paquet compatible avec SPAR</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>info:bnf/spar/agent/preingest_fil_aud_b_act_218</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>producerIdentifier</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>AUD</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>issuer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>channelIdentifier</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>info:bnf/spar/context/fil_aud_b</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>authorizer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingObjectIdentifier>
+							<premis:linkingObjectIdentifierType>productionIdentifier</premis:linkingObjectIdentifierType>
+							<premis:linkingObjectIdentifierValue>99218</premis:linkingObjectIdentifierValue>
+						</premis:linkingObjectIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.3">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>9d83e6b0-bd52-11e0-96c1-00144f68e7e0</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>digitization</premis:eventType>
+						<premis:eventDateTime>2006-04-28T11:07:10</premis:eventDateTime>
+						<premis:eventDetail>Création des fichiers master</premis:eventDetail>
+						<premis:linkingObjectIdentifier>
+							<premis:linkingObjectIdentifierType>productionIdentifier</premis:linkingObjectIdentifierType>
+							<premis:linkingObjectIdentifierValue>99218</premis:linkingObjectIdentifierValue>
+						</premis:linkingObjectIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.8">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fa8cedb0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>fileProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.459+02:00</premis:eventDateTime>
+						<premis:eventDetail>fileProcessing is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>Well-Formed and valid</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>identificationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d2cb</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>characterizationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d26vb</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.11">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fab25000-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>fileProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.704+02:00</premis:eventDateTime>
+						<premis:eventDetail>fileProcessing is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>Well-Formed</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>Not validated</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>identificationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d2cb</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>characterizationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d238m</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>validationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d2598</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.14">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fac2a3b0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>fileProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.811+02:00</premis:eventDateTime>
+						<premis:eventDetail>fileProcessing is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>Well-Formed and valid</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>identificationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d2cb</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>characterizationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d238m</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.15">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fac4eda0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>fileProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.826+02:00</premis:eventDateTime>
+						<premis:eventDetail>fileProcessing is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>identification failed</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.18">
+			<mdWrap MIMETYPE="text/xml" MDTYPE="PREMIS:EVENT">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fad679d0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>fileProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.941+02:00</premis:eventDateTime>
+						<premis:eventDetail>fileProcessing is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>Well-Formed and valid</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>identificationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d2cb</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>characterizationTool</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d238m</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.19">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>281d9f00-bd53-11e0-9f63-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>packageReception</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:02:47.409+02:00</premis:eventDateTime>
+						<premis:eventDetail>packageReception is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act01</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.20">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>d157c3c0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>requestAudit</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:07:31.324+02:00</premis:eventDateTime>
+						<premis:eventDetail>requestAudit is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act02</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.21">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>d185d8a0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>metsValidation</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:07:31.626+02:00</premis:eventDateTime>
+						<premis:eventDetail>metsValidation is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act03</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.22">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>d1a34bb0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>packageSearch</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:07:31.819+02:00</premis:eventDateTime>
+						<premis:eventDetail>packageSearch is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>AUD</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act04</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.23">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fa2181b0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>packageAudit</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:39.755+02:00</premis:eventDateTime>
+						<premis:eventDetail>packageAudit is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act05</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.24">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fad6a0e0-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>filesProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:40.942+02:00</premis:eventDateTime>
+						<premis:eventDetail>filesProcessing is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act06</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.25">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fadfa190-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>idGeneration</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:41.001+02:00</premis:eventDateTime>
+						<premis:eventDetail>idGeneration is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>ark:/12148/bc6p03t58</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act07</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.26">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fb4cbb40-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>setProcessing</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:41.716+02:00</premis:eventDateTime>
+						<premis:eventDetail>setProcessing is valid</premis:eventDetail>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act08</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+		<digiprovMD ID="AMD.27">
+			<mdWrap MDTYPE="PREMIS:EVENT" MIMETYPE="text/xml">
+				<xmlData>
+					<premis:event>
+						<premis:eventIdentifier>
+							<premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+							<premis:eventIdentifierValue>fb58f040-bd53-11e0-9404-00144f68e1cc</premis:eventIdentifierValue>
+						</premis:eventIdentifier>
+						<premis:eventType>ingestCompletion</premis:eventType>
+						<premis:eventDateTime>2011-08-03T00:08:41.796+02:00</premis:eventDateTime>
+						<premis:eventDetail>ingestCompletion is valid</premis:eventDetail>
+						<premis:eventOutcomeInformation>
+							<premis:eventOutcome>ark-12148-bc6p03t58.version0.release0.tar</premis:eventOutcome>
+						</premis:eventOutcomeInformation>
+						<premis:linkingAgentIdentifier>
+							<premis:linkingAgentIdentifierType>BnFApplication</premis:linkingAgentIdentifierType>
+							<premis:linkingAgentIdentifierValue>ark:/12148/br2d27h/act09</premis:linkingAgentIdentifierValue>
+							<premis:linkingAgentRole>performer</premis:linkingAgentRole>
+						</premis:linkingAgentIdentifier>
+					</premis:event>
+				</xmlData>
+			</mdWrap>
+		</digiprovMD>
+	</amdSec>
+	<fileSec>
+		<fileGrp USE="master" ID="GRP.1">
+			<file CHECKSUMTYPE="MD5" CHECKSUM="048a16e3ae7192e360c875b51af5ca28" ID="master.1" ADMID="AMD.3 AMD.4 AMD.6 AMD.7 AMD.8" MIMETYPE="video/mpeg" SIZE="4768792576">
+				<FLocat xlink:type="simple" LOCTYPE="URL" xlink:href="100_099218/VK_023716_V1_1/VK_023716_V1_1.MPG"/>
+			</file>
+		</fileGrp>
+		<fileGrp USE="documentation" ID="GRP.3">
+			<file CHECKSUMTYPE="MD5" CHECKSUM="f6dae13780ce294277967e6f53d803e4" ID="documentation.1" ADMID="AMD.9 AMD.10 AMD.11" MIMETYPE="text/xml" SIZE="1003">
+				<FLocat xlink:type="simple" LOCTYPE="URL" xlink:href="100_099218/100_099218.xml"/>
+			</file>
+			<file CHECKSUMTYPE="MD5" CHECKSUM="b474bbe6184636cf6c3cd34381fa11ff" ID="documentation.2" ADMID="AMD.12 AMD.13 AMD.14" MIMETYPE="text/plain" SIZE="832">
+				<FLocat xlink:type="simple" LOCTYPE="URL" xlink:href="100_099218/VK_023716_V1_1/VK_023716_V1_1.MTD"/>
+			</file>
+			<file CHECKSUMTYPE="MD5" CHECKSUM="804dd7c578b3f60857a0988205e51698" ID="documentation.3" ADMID="AMD.15" SIZE="1428">
+				<FLocat xlink:type="simple" LOCTYPE="URL" xlink:href="100_099218/VK_023716_V1_1/VK_023716_V1_1.NOT"/>
+			</file>
+			<file CHECKSUMTYPE="MD5" CHECKSUM="eb38b16ec04e07704a57ca534106beb5" ID="documentation.4" ADMID="AMD.16 AMD.17 AMD.18" MIMETYPE="image/jpeg" SIZE="131182">
+				<FLocat xlink:type="simple" LOCTYPE="URL" xlink:href="100_099218/VK_023716_V1_1/VK_023716_V1_1.jpg"/>
+			</file>
+		</fileGrp>
+	</fileSec>
+	<structMap TYPE="physical">
+		<div TYPE="set" ID="DIV.1">
+			<div TYPE="group" ID="DIV.2" DMDID="DMD.1" ADMID="AMD.1 AMD.2 AMD.5 AMD.19 AMD.20 AMD.21 AMD.22 AMD.23 AMD.24 AMD.25 AMD.26 AMD.27">
+				<div TYPE="object" ORDER="1" ID="DIV.7">
+					<fptr FILEID="master.1"/>
+				</div>
+			</div>
+		</div>
+	</structMap>
+	<structMap TYPE="attachment">
+		<div TYPE="set" ID="DIV.5">
+			<div TYPE="group" ID="DIV.6" DMDID="DMD.1" ADMID="AMD.1 AMD.2 AMD.5 AMD.19 AMD.20 AMD.21 AMD.22 AMD.23 AMD.24 AMD.25 AMD.26 AMD.27">
+				<div TYPE="object" ORDER="1" ID="DIV.8">
+					<fptr FILEID="documentation.1"/>
+				</div>
+				<div TYPE="object" ORDER="2" ID="DIV.9">
+					<fptr FILEID="documentation.2"/>
+				</div>
+				<div TYPE="object" ORDER="3" ID="DIV.10">
+					<fptr FILEID="documentation.3"/>
+				</div>
+				<div TYPE="object" ORDER="4" ID="DIV.11">
+					<fptr FILEID="documentation.4"/>
+				</div>
+			</div>
+		</div>
+	</structMap>
+</mets>

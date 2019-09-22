@@ -1,0 +1,12 @@
+<Language name="Python" imagelistpath="C:Program FilesNotepad++pluginsConfigC++.flb">	 
+	<CommList param1="#" param2="" />	 
+	<Group name="Class" subgroup="" icon="1" child="11" autoexp="1" matchcase="1" fendtobbeg="" bbegtobend="">	 
+		<Rules regexbeg="^classs+" regexfunc="[w_]+" regexend="" bodybegin="" bodyend="" sep="" />	 
+	</Group>	 
+	<Group name="Function" subgroup="Class" icon="9" child="17" autoexp="1" matchcase="1" fendtobbeg="" bbegtobend="">	 
+		<Rules regexbeg="^[st]+defs+" regexfunc="[w_]+" regexend="" bodybegin=":" bodyend="$" sep="" />	 
+	</Group>	 
+	<Group name="GlobalFunction" subgroup="" icon="9" child="17" autoexp="1" matchcase="1" fendtobbeg="" bbegtobend="">	 
+		<Rules regexbeg="^defs+" regexfunc="[w_]+" regexend="" bodybegin=":" bodyend="$" sep="" />	 
+	</Group>	 
+</Language>

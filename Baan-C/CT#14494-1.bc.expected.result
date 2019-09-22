@@ -1,0 +1,16 @@
+{
+    "root":"CT#14494-1.bc",
+    "branches":[
+        {
+            "name":"functions",
+            "leaves":[
+                "func1",
+                "func2",
+            ]
+        }
+    ],
+    "leaves":[
+        "declaration",
+        "before.program"
+    ]
+}

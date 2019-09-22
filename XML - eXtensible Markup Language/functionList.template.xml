@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  To learn making your own language parser, please check the following link:
+  http://notepad-plus-plus.org/features/function-list.html
+-->
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID= "1"                                id=     "php_syntax"   />
+      <association ext=".vba"                                 id=     "vba_syntax"   />
+      <association             userDefinedLangName="Papyrus"  id= "papyrus_function" />
+      <association ext=".scad" userDefinedLangName="OpenSCAD" id="OpenSCAD_syntax"   />
+    </associationMap>
+    <parsers>
+    
+      <!-- ================================================== [ php_syntax ] -->
+      <parser
+          id         ="php_syntax"
+          displayName="PHP"
+          commentExpr="(?'MLC'(?s-m)/\*.*?\*/)|(?'SLC'(?m-s)(?:#|/{2}).*$)|(?'STRLIT'(?s-m)&quot;[^&quot;\\]*(?:\\.[^&quot;\\]*)*&quot;|&apos;[^&apos;\\]*(?:\\.[^&apos;\\]*)*&apos;)"
+          version    ="0.0.0.0"
+        >
+        <classRange
+            mainExpr   ="^\s*(?:(?-i:abstract|final)\s+)?(?-i:class)[\t ]+[A-Za-z_\x7f-\xff][\w\x7f-\xff]*(\s+(extends|implements|extends\s+(\\|[A-Za-z_\x7f-\xff][\w\x7f-\xff]*)+\s+implements)\s+(,\s*|(\\|[A-Za-z_\x7f-\xff][\w\x7f-\xff]*))+)?\s*\{"
+            openSymbol ="\{" openSymbole ="\{"
+            closeSymbol="\}" closeSymbole="\}"
+          >
+          <className>
+            <nameExpr expr="(?:(?-i:abstract|final)\s+)?(?-i:class)[\t ]+[A-Za-z_\x7f-\xff][\w\x7f-\xff]*" />
+            <nameExpr expr="\s+[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\Z" />
+            <nameExpr expr="[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\Z" />
+          </className>
+          <function
+              mainExpr="\s*(?:(?-i:static|public|protected|private|final)*(\s+(?-i:static|public|protected|private|final))+\s+)?(?-i:function\s+)([A-Za-z_\x7f-\xff][\w\x7f-\xff]*(\s+[A-Za-z_\x7f-\xff][\w\x7f-\xff]*)?(\s+|\*\s+|\s+\*|\s+\*\s+))?([A-Za-z_\x7f-\xff][\w\x7f-\xff]*\s*:{2})?(?:\b(?!(?-i:if|while|for|switch)\b))[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\s*\([^\{]*\{"
+            >
+            <functionName>
+              <funcNameExpr expr="(?:\b(?!(?-i:if|while|for|switch)\b))[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\s*\([^{]*" />
+              <!-- comment out the following node to display the method with its parameters -->
+              <funcNameExpr expr="[A-Za-z_\x7f-\xff][\w\x7f-\xff]*" />
+            </functionName>
+          </function>
+        </classRange>
+        <function
+            mainExpr="\s*(?-i:function)(?:\s+|[*&amp;]\s*|\s*[*&amp;]|\s*[*&amp;]\s*)(?:\b(?!(?-i:if|while|for|switch)\b))[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\s*\([^{]*\{"
+          >
+          <functionName>
+            <nameExpr expr="(?:\b(?!(?-i:if|while|for|switch)\b))[A-Za-z_\x7f-\xff][\w\x7f-\xff]*\s*\(" />
+            <!-- comment out the following node to display the function with its parameters -->
+            <nameExpr expr="[A-Za-z_\x7f-\xff][\w\x7f-\xff]*" />
+          </functionName>
+        </function>
+      </parser>
+      
+      <!-- ========================================== [ visualbasic_syntax ] -->
+      <parser
+          id         ="vba_syntax"
+          displayName="Visual Basic for Applications"
+          commentExpr="(?m-s)(?'SLC1'&apos;.*$)|(?'SLC2'(?i:REM)([\t ].+)?$)"
+          version    ="0.0.0.0"
+        />
+        
+      <!-- ============================================ [ papyrus_function ] -->
+      <parser
+          id         ="papyrus_function"
+          displayName="Papyrus"
+          commentExpr="(;.*?$)"
+        >
+        <function mainExpr="^[\t ]*([\w]+[\t ]+)?(function|event)[\t ]+\w+[\t ]*\(.*?\)" >
+          <functionName>
+            <nameExpr expr="\w+[\t ]*\(.*?\)" />
+          </functionName>
+        </function>
+      </parser>
+
+      <!-- ============================================= [ OpenSCAD_syntax ] -->
+      <parser
+          id         ="OpenSCAD_syntax"
+          displayName="OpenSCAD"
+          commentExpr="(?'MLC'(?s-m)/\*.*?\*/)|(?'SLC'(?m-s)/{2}.*$)"
+        >
+        <function mainExpr="^[\t ]*(?:module|function)[\t ]+\w+" >
+          <functionName>
+            <nameExpr expr="(?!(?:module|function)\b)[\t ]+\K[\w]+" />
+          </functionName>
+        </function>
+      </parser>
+      
+      <!-- ============================================================== [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

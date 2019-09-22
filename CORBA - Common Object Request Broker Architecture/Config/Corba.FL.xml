@@ -1,0 +1,34 @@
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="corba_syntax" userDefinedLangName="CORBA" />
+			<association id="corba_syntax" ext=".idl" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="CORBA - Common Object Request Broker Architecture"
+				id         ="corba_syntax"
+			>
+				<classRange
+					mainExpr    ="interface.*\{"
+					openSymbole ="\{"
+					closeSymbole="\}"
+					commentExpr="(?s:/\*.*?\*/)|(?m-s://.*?$)"
+				>
+					<className>
+						<nameExpr expr="interface[\t\x20]+\w+" />
+						<nameExpr expr="[\t\x20]+\w+" />
+						<nameExp expr="\w+" />
+					</className>
+					<function
+						mainExpr="\w+[\t\x20]+\("
+					>
+						<functionName>
+							<funcNameExpr expr="\w+" />
+						</functionName>
+					</function>
+				</classRange>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

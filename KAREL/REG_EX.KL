@@ -1,0 +1,183 @@
+-------------------------------------------------------------------------------
+---- REG_EX.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about REG_EX.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----    Conditions:
+----    Data types:
+----            BOOLEAN                     Sec 2
+----            JOINTPOS                    Sec 2
+----            REAL                        Sec 2
+----            XYZWPR                      Sec 2
+----    Directives:
+----            ALPHABETIZE                 Sec 1
+----            COMMENT                     Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            CALL_PROGLIN                Sec 4-A, 4-C
+----            CHR                         Sec 4
+----            CURPOS                      Sec 4-A
+----            FORCE_SPMENU                Sec 4
+----            GET_POS_REG                 Sec 4-B
+----            GET_JPOS_REG                Sec 4-B
+----            GET_REG                     Sec 4-C
+----            POS_REG_TYP                 Sec 4-B
+----            SET_JPOS_REG                Sec 4-B
+----            SET_INT_REG                 Sec 4-B
+----            SET_POS_REG                 Sec 4-A
+----    Statements:
+----            WRITE                       Sec 4, 4-A,B,C
+----            IF..THEN..ELSE..ENDIF       Sec 4-A,B,C
+----            SELECT...CASE...ENDSELECT   Sec 4-B
+----    Reserve Words:
+----            BEGIN                       Sec 4
+----            CONST                       Sec 2
+----            CR                          Sec 4-A,B,C
+----            END                         Sec 4-C
+----            PROGRAM                     Sec 4
+----            VAR                         Sec 2
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM reg_ex
+    %nolockgroup
+    %comment = 'Reg-Ops'
+    %alphabetize
+
+-------------------------------------------------------------------------------
+----  Section 2:  Variable Declaration
+-------------------------------------------------------------------------------
+CONST
+    cc_success = 0 -- Success status
+    cc_xyzwpr  = 2 -- Position Register has an XYZWPR
+    cc_jntpos  = 9 -- Position Register has a JOINTPOS
+VAR
+    xyz    : XYZWPR
+    jpos   : JOINTPOS
+    r_val  : REAL
+    prg_indx,
+    i_val,
+    pos_type,
+    num_axes,
+    status : INTEGER
+    r_flg  : BOOLEAN
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main program
+-------------------------------------------------------------------------------
+BEGIN -- REG_EX
+    write(chr(137),chr(128)); -- Clear the TP USER menu screen
+    FORCE_SPMENU(TP_PANEL,SPI_TPUSER,1) -- Force the TP USER menu to be
+                                        -- visible
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Store current position in PR[1] and execute PROG_VAL.TP
+-------------------------------------------------------------------------------
+    WRITE('Getting Current Position',cr)
+    xyz = CURPOS(0,0) -- Get the current position
+
+    WRITE('Storing Current position to PR[1]',cr)
+    SET_POS_REG(1,xyz, status) -- Store the position in PR[1]
+
+    IF (status = cc_success) THEN -- verify SET_POS_REG is successful
+        WRITE('Executing "PROG_VAL.TP"',cr)
+        CALL_PROGLIN('PROG_VAL',2,prg_indx, FALSE)
+        --Execute 'PROG_VAL.TP' starting
+        -- at line 2. Do not pause on
+        -- entry of PROG_VAL.
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Get new position from PR[1]. Manipulate and store in PR[2]
+-------------------------------------------------------------------------------
+        WRITE('Getting Position back from PR[1]',cr)
+
+        -- Decide what type of position is stored in Position Register 1, PR[1]
+        POS_REG_TYPE(1, 1, pos_type, num_axes, status)
+        IF (status = cc_success) THEN
+            -- Get the position back from PR[1], using the correct builtin.
+            -- This position was modified in PROG_VAL.TP
+            SELECT pos_type OF
+                CASE (cc_xyzwpr):
+                    xyz= GET_POS_REG(1, status)
+                    CASE (cc_jntpos):
+                    jpos = GET_JPOS_REG(1, status)
+                    xyz = jpos
+
+                ELSE:
+                    write ('The position register set to invalid type', pos_type,CR)
+                    status = -1 -- set status so do not continue.
+            ENDSELECT
+
+            IF (status = cc_success) THEN -- Verify GET_POS_REG/GET_JPOS_REG is
+                                          -- successful
+                xyz.x = xyz.x+10 -- Manipulate the position.
+                xyz.z = xyz.z-10
+                jpos  = xyz      -- Convert to a JOINTPOS
+                WRITE('Setting New Position to PR[2]',cr)
+                SET_JPOS_REG(2,jpos,status) -- Set the JOINTPOS into PR[2]
+
+                IF (status = cc_success) THEN -- Verify SET_JPOS_REG is successful
+                    WRITE('Setting Integer Value to R[1]',cr)
+                    SET_INT_REG(1, 10, status) -- Set the value 10 into R[1]
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Execute PROG_1.TP and check the R[2]
+-------------------------------------------------------------------------------
+                    IF (status = cc_success) THEN --Verify SET_INT_REG is successful
+                        WRITE('Executing "PROG_1.TP"',cr)
+                        CALL_PROGLIN('PROG_1',1, prg_indx, FALSE)
+
+                        -- Execute PROG_1.TPstarting on first line.
+                        -- Do not pause on entry of PROG_1.
+                        WRITE('Getting Value from R[2]',cr)
+                        GET_REG(2,r_flg, i_val, r_val, status) -- Get R[2] value
+
+                        IF (status = cc_success) THEN -- Verify GET_REG success
+                            IF (r_flg) THEN -- REAL value in register
+                                WRITE('Got REAL value from R[2]',cr)
+                                IF (r_val <> 1.0) THEN -- Verify value set
+                                    WRITE ('PROG_1 failed to set R[2]',cr) -- by PROG_1_TP
+                                    WRITE ('PROG_1 failed to set R[2]',cr)
+                                ENDIF
+                            ELSE -- Register contained an INTEGER
+                                WRITE('Got INTEGER value from R[2]',cr)
+                                IF (i_val <> 1) THEN -- Verify value set by
+                                    WRITE ('PROG_1 failed to set R[2]',cr) -- PROG_1.TP
+                                ENDIF
+                            ENDIF
+                        ELSE -- GET_REG was NOT successful
+                            WRITE('GET_REG Failed',cr,' Status = ',status,cr)
+                        ENDIF
+                    ELSE -- SET_INT_REG was NOT successful
+                        WRITE('SET_INT_REG Failed, Status = ',status,cr)
+                    ENDIF
+                ELSE -- SET_JPOS_REG was NOT successful
+                    WRITE('SET_JPOS_REG Failed, Status = ',status,cr)
+                ENDIF
+            ELSE -- GET_POS_REG was NOT Successful
+                WRITE('GET_POS_REG Failed, Status = ',status,cr)
+            ENDIF
+        ELSE
+            WRITE ('POS_REG_TYPE Failed, Status =', status, cr)
+        ENDIF
+    ELSE -- SET_POS_REG was NOT successful
+        WRITE('SET_POS_REG Failed, Status = ',status,cr)
+    ENDIF
+
+    IF (status = cc_success) THEN
+        WRITE ('Program Completed Successfully',cr)
+    ELSE
+        WRITE ('Program Aborted due to error',cr)
+    ENDIF
+
+END REG_EX

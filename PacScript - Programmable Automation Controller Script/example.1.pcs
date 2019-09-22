@@ -1,0 +1,71 @@
+Function TestFunctionWithoutArg As Integer
+        'dasdsd
+End Function
+
+Function TestFunction1() As Integer
+    Do While (IntCounter < 42)
+        If (IntCounter <= 0) Then
+            Exit Loop
+        End If
+        IntCounter = IntCounter + 1
+    Loop
+    'dasdsd
+End Function
+
+Function TestFunction2(ByVal IntInput As Integer, ByRef IntOutput As Integer) As Integer
+    For IntCounter = 1 To (IntCounter1 + 3) 'the "1" in IntCounter1 should be no number
+        If (IntCounter = 13) Then
+            Exit For '"For" should be not used as open folding
+        End If
+    Next IntCounter
+
+    IntVarNumber1 = 12
+    IntVarNumber1Plus = 13
+
+    If (IntVarNumber1 = 12) Then
+        'dasdsd
+    End If
+
+    If (IntVarNumber1Plus = 13) Then
+        'dasdsd
+    End If
+
+    IntNumberBin1 = &B1031001 'should be no number because of the "3" inside
+
+    'line comment
+    Rem Comment
+    Call Remove '"Remove" should be not displayed as comment
+    Call Remove() '"Remove" should be not displayed as comment
+
+    Select Case IntCounter
+        Case 1
+        Case 13
+        Case Else '"Else" should be not used as open folding
+    End Select
+
+    If (IntCounter = 42) Then
+        Exit Function '"Function" should be not used as open folding
+    Else
+        IntCounter = 47
+    End If
+End Function
+
+
+Sub TestSub3(ByRef IntOutput As Integer)
+    If (IO[IntOutput] = On) Then
+        Reset IO[IntOutput]
+    Else
+        Set IO[IntOutput]
+        Exit Sub '"Sub" should be not used as open folding
+    End If
+End Sub
+
+
+Sub TestSub1()
+    'blabla
+End Sub
+
+
+Sub TestSub2
+    'blabla
+End Sub

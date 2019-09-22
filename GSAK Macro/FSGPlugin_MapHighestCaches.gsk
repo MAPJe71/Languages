@@ -1,0 +1,478 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display a map of your highest or lowest found caches
+# MacFileName = FSGPlugin_MapHighestCaches.gsk
+# MacAuthor = The CEO
+# MacVersion=1.04
+# MacUrl=http://gsak.net/board/index.php?showtopic=18005&st=0&#entry131879
+#*******************************************
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_MapHighestCaches</plugin>
+ENDIF
+
+$out=""	
+
+Declare Var=$p1 Type=String
+Declare Var=$p2 Type=String
+Declare Var=$p3 Type=String
+Declare Var=$p4 Type=String
+Declare Var=$WhereClause Type=String
+Declare Var=$HighestLowest Type=String
+Declare Var=$ShowHeading Type=Boolean
+Declare Var=$ShowList Type=String
+Declare Var=$RandomPlusMin1 Type=String
+Declare Var=$TmpLong Type=String
+Declare Var=$TmpLat Type=String	
+Declare Var=$GoogleMarker Type=String	
+Declare Var=$ExcludeCaches Type=String	
+
+GOSUB Name=InitLanguage
+
+# check for macroparameters
+$p1 = extract(lower($_MacroParms),"&",1)
+$p2 = extract(lower($_MacroParms),"&",2)
+$p3 = extract(lower($_MacroParms),"&",3)
+$p4 = extract(lower($_MacroParms),"&",4)
+
+# $msg = "p1=$p1" + $_NewLine + "p2=$p2" + $_NewLine + "p3=$p3"
+# Msgok msg=$msg
+
+$ShowHeading=TRUE
+$ShowList="block"
+$HighestLowest="highest"
+$ExcludeCaches=""
+
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = lower($Text1)
+		# MSGOK msg="parameter $i: '$Text1' '$Text2'"
+		
+		if (AT("sectionheading=false", $Text2) <> 0)
+			$ShowHeading=FALSE
+		endif
+
+		if (AT("showlist=false", $Text2) <> 0)
+			$ShowList="none"
+		endif
+
+		if (AT("lowest", $Text2) <> 0)
+			$HighestLowest="lowest"
+		endif
+		
+		if (AT("num=", $Text2) <> 0)
+			$elevationlimit = extract($Text1,"=",2)
+		endif
+
+		IF (AT("exclude=", $Text2) <> 0)
+			$p1 = upper(extract($Text2,"=",2))
+			$p1=Replace(";","','",$p1)	
+			$ExcludeCaches = "AND Code NOT IN ('" + $p1 + "')"
+		ENDIF
+		
+	$i = $i+1
+	endwhile
+
+# Exclude locationless?
+IF $Excludelocationless
+	$Locationless = "Cachetype <>'L' AND Exclude <> '1'"
+ELSE
+	$Locationless = "1"
+ENDIF
+
+# write subheading	
+$colspan = 1
+IF $elevationlimit="1"
+	$text = "Map of $HighestLowest found cache"
+ELSE
+	$text = "Map of $elevationlimit $HighestLowest caches"
+ENDIF
+
+If $ShowHeading
+	#define maximum table width
+	if $maxtablewidth=0
+		$maxtablewidth = 750
+	endif
+	GOSUB Name=SectionHead
+endif
+
+SHOWSTATUS msg="Generating Google map for $HighestLowest caches" Width=350 Title=""
+
+# SQL clause to filter for all caches to be plotted on the graph (both markers and path)
+# add random component to both longitude and latitude
+# N/S: 65 +/- 35 meters
+# E/W: 65 +/- 35 meters at 45 deg North or South, more when above 45 deg, less when below 45 deg.
+$RandomPlusMin1="(2*round(0.5+random()/9223372036854775808/2)-1)"
+# $RandomPlusMin1="0"
+$TmpLat="round(latitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001)),5)"
+$TmpLong="round(longitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001/0.707)),5)"
+
+# build SQL
+
+	IF $HighestLowest="lowest"
+		$WhereClause="resolution <> '' AND ($Locationless $ExcludeCaches) ORDER BY elevation ASC, foundbymedate, code"
+	ELSE # highest
+		$WhereClause="resolution <> '' AND ($Locationless $ExcludeCaches) ORDER BY elevation DESC, foundbymedate, code"
+	ENDIF
+	$_sql = "SELECT distinct code, $TmpLat || ',' || $TmpLong FROM AllFinds WHERE " + $WhereClause + " LIMIT 1,($elevationlimit-1)"
+	$status = Sqlite("sql",$_sql)
+	$rows = $_SqlRows
+	
+	$list = list("sql","replace",$status)
+	$count = Val(list("sql","count","")) # Number of elevations to list
+	$tmpN1 = $count
+
+	$text2=""
+	WHILE $tmpN1 >= 1
+		$list = List("sql","item","$tmpN1")
+		$text2 = $text2+"&markers=color:blue|label:"+NumToStr($tmpN1+1)+"|"+Extract($list,";",2) # +"|"
+		$tmpN1=$tmpN1-1
+	ENDWHILE
+	
+	# SQL clause to filter for the highest cache so it can be given a different color marker
+	$_sql = "SELECT distinct code, $TmpLat || ',' || $TmpLong FROM AllFinds WHERE " + $WhereClause + "  LIMIT 1"
+	$status = Sqlite("sql",$_sql)
+	$list= list("sql","replace",$status)
+	$text3=Extract($list,";",2)
+	
+	# Build the Google map parameters
+	$tmpS = "markers=color:green|label:1|" + $text3 + $text2 
+	
+	$out = $out + "<center><div style='width:600px; border:2px outset blue'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?size=600x400&$tmpS&maptype=terrain&sensor=false'></div></center>" + $_CrLf 
+	$out=$out+"<br><br>"
+
+	# Google map ready
+	# Start building a list of all caches 
+
+	IF $elevationlimit="1"
+		$tmpS="Show/Hide details of $HighestLowest found cache"
+	ELSE
+		$tmpS="$LangShowHideList $elevationlimit $HighestLowest caches"
+	ENDIF	
+	
+	
+	$out = $out + "<!--BeginJavascript-->"
+	$out = $out + "<span style='cursor:pointer; border: 1px solid #000000' onmousedown=" + Quote("document.getElementById('$HighestLowest').style.display = (getElementById('$HighestLowest').style.display != 'none' ? 'none' : '');") + "><i><b>&nbsp; $tmpS &nbsp; </b></i></span> " + $_CrLf
+		$out = $out + "<!--EndJavascript-->"
+
+	#			$tmpS = "none"
+
+				$tmpS = "block"
+
+				$out = $out + "<div id='$HighestLowest' "
+				$out = $out + "<!--BeginJavascript-->"
+				$out = $out + "style='display:$ShowList'"
+				$out = $out + "<!--EndJavascript-->"
+				$out = $out + ">" + $CR
+
+
+	# Initialise Section header
+		
+	# Initialise Section variables
+
+	$dbs = SqlQuote($db)	
+ 
+  IF $distunits = "Miles"
+		$text10 = "ft"
+		$conversion = 3.2808399
+	ELSE
+		$text10 = "m"		
+		$conversion = 1
+	ENDIF
+		
+	# Output top and bottom 10 elevations
+	
+	$out=$out+"<br><br>"
+	$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $CR
+	# Column Heads
+	$text1 = "<b>$Lang34</b>"
+	$text2 = "<b>$Lang35</b>"
+	$text3 = "<b>$Lang49</b>"
+	$text4 = "<b>$Lang169</b>"
+	$text5 = "<b>$Lang159</b>"
+	$text6 = "<b>$Lang160</b>"
+
+	$out = $out + "<tr>" + "$CR" + "<td style='$stTab2cHead'>&nbsp;</td>" + $CR
+	$out = $out + "<td style='$stTab2cHead'>$text1</td>" + $CR
+	$out = $out + "<td style='$stTab2cHead'>$text2</td>" + $CR
+	IF $miletypes
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $CR
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text3</td>" + $CR
+	IF $FlagIcons
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $CR
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text4</td>" + $CR
+	$out = $out + "<td style='$stTab2cHead'>$text5</td>" + $CR
+	$out = $out + "<td style='$stTab2cHead'>$text6</td>" + $CR + "</tr>" + $CR
+	
+			
+	$_sql = "select distinct code, name, country, state, resolution, CAST('$conversion' * elevation AS Integer) AS Elevation, url from Allfinds WHERE $WhereClause limit $elevationlimit"
+	$status = Sqlite("sql",$_sql,"")
+
+	$_sql = "select distinct code from Allfinds WHERE resolution <> ''  AND ($Locationless $ExcludeCaches)"
+	$tmpS = Sqlite("sql",$_sql,"")
+	$rows = $_SqlRows
+
+#	$_sql = "select distinct code, name, country, state, resolution, CAST('$conversion' * elevation AS Integer) AS Elevation, url from Allfinds WHERE $WhereClause LIMIT ($rows-$elevationlimit),$elevationlimit"
+#	$status = $status + $_NewLine + "...;...;...;...;...;..." + $_NewLine + Sqlite("sql",$_sql,"")	
+
+	
+	$list = list("sql","replace",$status)
+	$count = Val(list("sql","count","")) # Number of elevations to list
+	$tmpN1 = 1
+	$ZeroElevation = FALSE
+	
+	WHILE $tmpN1 <= $count
+		$list = List("sql","item","$tmpN1")
+		$text1 = Extract($list,";",1) # code
+		$text2 = Extract($list,";",2) # name
+		$text3 = Extract($list,";",3) # country
+		$text4 = Extract($list,";",4) # state
+		$text5 = Extract($list,";",5) # resolution
+		$text6 = Extract($list,";",6) # elevation
+		$text8 = Extract($list,";",7)	# url
+				
+		IF $miletypes AND Not($text1 = "...")
+			$StripCode = $text1
+			$tmpB = FALSE
+			GOSUB Name=StripCodeType
+			$text9 = $TypeImage
+		ELSE
+			$text9 = ""
+		ENDIF
+
+		if $tmpN1=1
+			$GoogleMarker = "<img align ='top' vspace='1'  src='http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=$tmpN1|65BA4A|000000' />"
+
+		ELSE
+			$GoogleMarker = "<img align ='top' vspace='1'  src='http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=$tmpN1|44ABFF|000000' />"
+		ENDIF
+		
+		IF $text4 = "Nil"
+			$text4 = "-"
+		ENDIF
+		
+		IF $text6 <> "..."
+			$text6 = "$text6 $text10"
+		ENDIF
+		
+		IF $text1 <> "..."
+			$text1 = "<a href='$text8'>$text1</a>"
+		ENDIF
+		
+		IF $FlagIcons AND Not($text1 = "...")
+			# Country flag into $text7
+			$FullName = $text3
+			GOSUB Name=FlagImage
+		ELSE
+			$text7 = ""
+		ENDIF
+		
+#		IF Not($ZeroElevation) OR Val(Extract($list,";",6)) <> 0
+			GOSUB name=ElevationLine
+#		ENDIF
+		
+		# Skip terminal zeroes apart from first one
+#		IF Val(Extract($list,";",6)) = 0 AND $text6 <> "..." AND $SuppressZeroes
+#			$ZeroElevation = TRUE
+#		ENDIF
+		
+		$tmpN1 = $tmpN1 + 1
+	ENDWHILE
+	
+	$out = $out + "</table>" + $CR + "<br />"
+	
+	# Average elevation
+	
+	$_sql = "select avg('$conversion' * elevation) from (SELECT elevation from AllFinds WHERE 1 AND ($Locationless) group by code)"
+	$tmpS = NumToStr(Round(Val(Sqlite("sql",$_sql)),1))
+		
+  $out = $out + "<i>$Lang167: <b>$tmpS $text10</b></i>" + $CR  
+    
+	IF $ExcludeLocationLess
+		$out = $out + "<br/><span style='$stSmall'><i>$Lang38a</i></span>" + $CR
+	ENDIF
+
+				$out = $out + "</div>" + $CR
+$p_FSGData = $out
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	#Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	#Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+	$out = $out + "<br /><br />" + $CR
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			GOSUB Name=Mid2Col
+			$column = 1
+		ENDIF
+		$lastcolspan = 2
+		$width = $maxtablewidth/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+	$out = $out + "    $text" + $CR + "</div><br />" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB Name=ElevationLine
+	# Add a line to the 'Elevation' section, inputs are:
+	# $text1 : Code
+	# $text2 : Name
+	# $text3 : Country
+	# $text4 : State
+	# $text5 : Resolution
+	# $text6 : Elevation
+	# $text7 : Country Flag image
+	# $text9 : Cachetype Image
+		
+	$out = $out + "<tr>" + "$CR" + "<td style='$st2c1'>" + $CR
+	$out = $out + "$GoogleMarker</td>" + $CR
+	$out = $out + "<td style='$st2c2'>$text1</td>" + $CR
+	$out = $out + "<td style='$st2c2'>$text2</td>" + $CR
+	IF $miletypes
+		$out = $out + "<td style='$st2c2'>$text9</td>" + $CR
+	ENDIF
+	$out = $out + "<td style='$st2c2'>$text3</td>" + $CR
+	IF $FlagIcons
+		$out = $out + "<td style='$st2c2'>$text7</td>" + $CR
+	ENDIF
+	$out = $out + "<td style='$st2c2'>$text4</td>" + $CR
+	$out = $out + "<td style='$st2c2'><i>$text5</i></td>" + $CR
+	$out = $out + "<td style='$st2c1'><b>$text6</b></td>" + $CR + "</tr>" + $CR
+ENDSUB #ElevationLine
+
+BEGINSUB Name=InitLanguage
+	Declare Var=$LangMapOf Type=String
+	Declare Var=$LangHighestCaches Type=String
+	Declare Var=$LangOn Type=String
+	Declare Var=$LangDayWithMostCaches Type=String
+	Declare Var=$LangShowHideList Type=String
+	Declare Var=$LangListOfAll Type=String
+	Declare Var=$LangHighestCachesFoundOn Type=String
+	Declare Var=$LangCounty Type=String	
+	
+	# default: English
+	$LangMapOf="Map of"
+	$LangHighestCaches="highest caches"
+	$LangOn="on"
+	$LangDayWithMostCaches="day with most found caches"
+	$LangShowHideList="Show/Hide list of"
+	$LangListOfAll="List of all"
+	$LangHighestCachesFoundOn="caches found on"
+	$LangCounty="county"
+	
+	IF $Language = "Deutsch"
+		$LangMapOf="Karte des"
+		$LangHighestCaches="höchsten caches"
+		$LangOn="am"
+		$LangDayWithMostCaches="Tages mit den meisten funden"
+		$LangShowHideList="Anzeigen/Ausblenden Liste"
+		$LangListOfAll="Liste des"
+		$LangHighestCachesFoundOn="Caches gefunden am"
+		$LangCounty="Landkreis"
+	ENDIF
+	
+	IF $Language = "Nederlands"
+		$LangMapOf="Kaart van"
+		$LangHighestCaches="de hoogste caches"
+		$LangOn="on"
+		$LangDayWithMostCaches="de dag met de meeste gevonden caches"
+		$LangShowHideList="Toon/verberg lijst"
+		$LangListOfAll="Lijst van alle"
+		$LangHighestCachesFoundOn="caches gevonden op"
+		$LangCounty="gemeente"
+	ENDIF	
+
+	IF $Language = "Svenska"
+		$LangMapOf="Karta för"
+		$LangHighestCaches="caches"
+		$LangOn="op"
+		$LangDayWithMostCaches="dagen med flest hittade cacher"
+		$LangShowHideList="Visa/Dölj lista"
+		$LangListOfAll="Lista över alla"
+		$LangHighestCachesFoundOn="cacher hittade"
+		$LangCounty="county"
+	ENDIF	
+
+	IF $Language = "Èesky" 
+		$LangMapOf="Mapa dne"
+		$LangHighestCaches="nejvyšší keší"
+		$LangOn="dne"
+		$LangDayWithMostCaches="s nejvíce nálezy"
+		$LangShowHideList="Zobraz/Skryj seznam"
+		$LangListOfAll="Seznam všech"
+		$LangHighestCachesFoundOn="keší nalezených dne"
+		$LangCounty="Okres"		 
+	ENDIF		
+
+ENDSUB
+

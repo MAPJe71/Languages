@@ -1,0 +1,64 @@
+<NotepadPlus>
+    <UserLang name="KAREL" ext="kl" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="yes" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="yes" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00-- 01 02 03 04</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">[ ] + - * / &lt; = &gt; : ; # @ &lt;= &gt;= &lt;&gt; &gt;=&lt; ( ) . ,</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open"></Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code2, open">BEGIN</Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close">END</Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">BEGIN CONST END PROGRAM ROUTINE STRUCT TYPE VAR WHILE DO ENDWHILE FOR ENDFOR &#x000D;&#x000A;NOABORT NOMESSAGE NOPAUSE PAUSE ABORT PULSE RESUME STOP UNHOLD UNPAUSE&#x000D;&#x000A;AND OR NOT DIV MOD IF THEN ELSE ENDIF CASESELECT ENDSELECT EVAL FROM IN WHEN REPEAT UNTIL RETURN &#x000D;&#x000A;STRUCTURE ENDSTRUCTURE CASE SELECT OF TO</Keywords>
+            <Keywords name="Keywords2">ARRAY BOOLEAN BYTE CONFIG DISP_DAT_T FILE INTEGER JOINTPOS PATH POSITION QUEUE_TYPE REAL SHORT STD_PTH_NODE STRING VECTOR XYZWPR XYZWPREXT</Keywords>
+            <Keywords name="Keywords3">CONDITION ENDCONDITION CONTINUE DELAY ERROR EVENT HOLD READ RELEASE SEMAPHORE USING ENDUSING WRITE CANCEL CLOSE FILE HAND CONNECT TIMER DISABLE DISCONNECT ENABLE OPEN PURGE RELAX WAIT WITH MOVE NEAR NOWAIT BY</Keywords>
+            <Keywords name="Keywords4">ABORT_TASK ACT_SCREEN ACT_TBL ADD_BYNAMEPC ADD_DICT ADD_INTPC ADD_REALPC ADD_STRINGPC APPEND_NODE APPEND_QUEUE ATT_WINDOW_D ATT_WINDOW_S AVL_POS_NUM BYTES_AHEAD CALL_PROG CALL_PROGLIN CHECK_DICT CHECK_EPOS CHECK_NAME CLEAR CLEAR_SEMA CLOSE_TEP CLR_IO_STAT CLR_PORT_SIM CLR_POS_REG CNC_DYN_DISB CNC_DYN_DISE CNC_DYN_DISI CNC_DYN_DISP CNC_DYN_DISR CNC_DYN_DISS CNCL_STP_MTN CNV_CNF_STRG CNV_CONF_STR CNV_INT_STR CNV_JPOS_REL CNV_REAL_STR CNV_REL_JPOS CNV_STR_CONF CNV_STR_INT CNV_STR_REAL CNV_STR_TIME CNV_TIME_STR COMPARE_FILE CONT_TASK COPY_FILE COPY_PATH COPY_QUEUE COPY_TPE CREATE_TPE CREATE_VAR DAQ_CHECKP DAQ_REGPIPE DAQ_START DAQ_STOP DAQ_UNREG DAQ_WRITE DEF_SCREEN DEF_WINDOW DELETE_FILE DELETE_NODE DELETE_QUEUE DEL_INST_TPE DET_WINDOW DISCTRL_ALPH DISCTRL_FORM DISCTRL_LIST DISCTRL_PLMN DISCTRL_SBMN DISCTRL_TBL DISMOUNT_DEV DOSFILE_INF ERR_DATA FILE_LIST FORCE_SPMENU FORMAT_DEV GET_ATTR_PRG GET_PORT_ASG GET_PORT_CMT GET_PORT_MOD GET_PORT_SIM GET_PORT_VAL GET_POS_FRM GET_POS_TYP GET_PREG_CMT GET_QUEUE GET_REG GET_REG_CMT GET_SREG_CMT GET_STR_REG GET_TIME GET_TPE_CMT GET_TPE_PRM GET_TSK_INFO GET_USEC_SUB GET_VAR INI_DYN_DISB INI_DYN_DISE INI_DYN_DISI INI_DYN_DISP INI_DYN_DISR INI_DYN_DISS INIT_QUEUE INIT_TBL INSERT_NODE INSERT_QUEUE IO_MOD_TYPE KCL KCL_NO_WAIT KCL_STATUS LOAD LOAD_STATUS LOCK_GROUP MODIFY_QUEUE MOUNT_DEV MOVE_FILE MSG_CONNECT MSG_DISO MSG_PING OPEN_TPE PAUSE_TASK PEND_SEMA PIPE_CONFIG POP_KEY_RD POS_REG_TYPE POST_ERR POST_ERR_L POST_SEMA PRINT_FILE PROG_BACKUP PROG_CLEAR PROG_RESTORE PROG_LIST PURGE_DEV PUSH_KEY_RD READ_DICT READ_DICT_V READ_KB REMOVE_DICT RENAME_FILE RENAME_VAR RENAME_VARS RESET RUN_TASK SAVE SAVE_DRAM SELECT_TPE SEND_DATAPC SEND_EVENTPC SET_ATTR_PRG SET_CURSOR SET_EPOS_REG SET_EPOS_TPE SET_FILE_ATR SET_FILE_POS SET_INT_REG SET_JPOS_REG SET_JPOS_TPE SET_LANG SET_PERCH SET_PORT_ASG SET_PORT_ATR SET_PORT_CMT SET_PORT_MOD SET_PORT_SIM SET_PORT_VAL SET_POS_REG SET_POS_TPE SET_PREG_CMT SET_REAL_REG SET_REG CMT SET_SREG_CMT SET_STR_REG SET_TIME SET_TPE_CMT SET_TRNS_TPE SET_TSK_ATTR SET_TSK_NAME SET_VAR TRANSLATE UNLOCK_GROUP UNPOS V_CAM_CALIB V_GET_OFFSET V_GET_PASSFL V_GET_QUEUE V_INIT_QUEUE V_RALC_QUEUE V_RUN_FIND V_SET_REF V_START_VTRK V_STOP_VTRK VAR_INFO VAR_LIST VOL_SPACE VREG_FND_POS VREG_OFFSET WRITE_DICT WRITE_DICT_V XML_ADDTAG XML_GETDATA XML_REMTAG XML_SCAN XML_SETVAR</Keywords>
+            <Keywords name="Keywords5">RDI RDO GOUT GIN DIN DOUT</Keywords>
+            <Keywords name="Keywords6">ON OFF FALSE TRUE</Keywords>
+            <Keywords name="Keywords7">$</Keywords>
+            <Keywords name="Keywords8">ABS ACOS APPROACH ARRAY_LEN ASIN ATAN2 ATTACH BYNAME BYTES_LEFT CHR COS CURJPOS CURPOS CURR_PROG EXP FRAME GET_FILE_POS GET_JPOS_REG GET_JPOS_TPE GET_PORT_ATR GET_POS_REG GET_POS_TPE GET_USEC_TIM INDEX IN_RANGE INV IO_STATUS J_IN_RANGE JOINT2POS LN MIRROR MOTION_CTL NODE_SIZE ORD ORIENT PATH_LEN POS POS2JOINT ROUND SEMA_COUNT SIN SQRT STR_LEN SUB_STR TAN TRUNC UNINIT</Keywords>
+            <Keywords name="Delimiters">00&apos; 01 02&apos; 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="408080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="808000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="C30000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="C30000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="C30000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="808000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="18" id="vb_function"         /> <!-- L_VB           -->
+    </associationMap>
+    <parsers>
+      <!--                                                     [vb_function] -->
+      <parser 
+          id="vb_function" 
+          displayName="Visual Basic (.NET|Script|for Applications)"  
+          commentExpr="(?m:((?&lt;=&apos;).*?$)|((?i:REM)([\t ].*?)?$))"> 
+        <classRange
+            mainExpr="(?s:(?&lt;SCOPE&gt;(?i:CLASS|TYPE)).*?(?i:END[\t ]\k&lt;SCOPE&gt;))"
+            displayMode="node" >
+          <className>
+            <nameExpr expr="(?i:CLASS|TYPE)[\t ]+(?:[A-Za-z_][\w]*\b)(?:.*?[\r\n])" />
+            <nameExpr expr="[\t ]+(?:[A-Za-z_][\w]*\b)" />
+            <nameExpr expr="[A-Za-z_][\w]*" />
+          </className>
+          <function
+              mainExpr="(?m:^[\t ]*(?i:(?:(?:PRIVATE|PROTECTED|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$))" >
+            <functionName>
+              <funcNameExpr expr="(?i:(?:(?:PRIVATE|PROTECTED|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+              <funcNameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+              <funcNameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+            </functionName>
+          </function>
+        </classRange>
+        <function 
+            mainExpr="^[\t ]*(?i:(?:(?:PRIVATE|PROTECTED|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY))[\t ].*?[A-Za-z_][\w]*(?:[\t ]*\(|$)" 
+            displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="(?i:(?:(?:PRIVATE|PROTECTED|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY))[\t ].*?[A-Za-z_][\w]*(?:[\t ]*\(|$)"/>
+            <nameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY))[\t ].*?[A-Za-z_][\w]*(?:[\t ]*\(|$)"/>
+            <nameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+          </functionName>
+        </function>
+      </parser>      
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

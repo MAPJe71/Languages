@@ -1,0 +1,347 @@
+; TextPad syntax definitions for Haskell 98
+; www.TextPad.com / www.Haskell.org
+
+; Copyright (C) November 2000
+; Jeroen van Wolffelaar and Arjan van IJzerdoorn
+; J.vanWolffelaar@students.math.uu.nl
+; version v1.0
+;
+;
+; Description:
+;
+; keywords 1: build-in keywords
+;   ex: where, do, type, if, infix
+; keywords 2: Standard prelude functions
+;   ex: map, concat, ord, show
+; keywords 3: Standard prelude data-types
+;   ex: String, Bool, IO, Int, Maybe
+; keywords 4: Standard prelude classes
+;   ex: Num, Ord, Eq, Integral
+; keywords 5: Standard prelude constructors
+;   ex: True, Just, LT
+;
+
+C=1
+
+[Syntax]
+Namespace1 = 6
+IgnoreCase = No
+InitKeyWordChars = A-Za-z_
+KeyWordChars = A-Za-z0-9_'
+BracketChars = {[(,;)]}
+OperatorChars = -+*/<>!~%^&|=.:$@
+PreprocStart = #
+SyntaxStart =
+SyntaxEnd =
+HexPrefix = 0x
+CommentStart = {-
+CommentEnd = -}
+CommentStartAlt =
+CommentEndAlt =
+SingleComment = --
+SingleCommentCol =
+SingleCommentAlt =
+SingleCommentColAlt =
+SingleCommentEsc =
+StringsSpanLines = No
+StringStart = "
+StringEnd = "
+StringAlt =
+StringEsc = \
+CharStart = '
+CharEnd = '
+CharEsc = \
+
+[Keywords 1] ; codewoorden
+case
+class
+data
+deriving
+do
+else
+export
+if
+import
+in
+infix
+infixl
+infixr
+instance
+let
+module
+newtype
+of
+primitive
+then
+type
+where
+
+[Keywords 2] ; standaard prelude-functies
+abs
+acos
+acosh
+all
+and
+any
+appendFile
+approxRational
+asin
+asinh
+asTypeOf
+atan
+atan2
+atanh
+break
+catch
+ceiling
+chr
+compare
+concat
+concatMap
+const
+cos
+cosh
+curry
+cycle
+decodeFloat
+denominator
+digitToInt
+div
+divMod
+drop
+dropWhile
+either
+elem
+encodeFloat
+enumFrom
+enumFromThen
+enumFromThenTo
+enumFromTo
+error
+even
+exp
+exponent
+fail
+filter
+flip
+floatDigits
+floatRadix
+floatRange
+floor
+fmap
+foldl
+foldl1
+foldr
+foldr1
+fromDouble
+fromEnum
+fromInt
+fromInteger
+fromIntegral
+fromRational
+fst
+gcd
+getChar
+getContents
+getLine
+head
+id
+index
+init
+inRange
+interact
+intToDigit
+ioError
+isAlpha
+isAlphaNum
+isAscii
+isControl
+isDenormalized
+isDigit
+isHexDigit
+isIEEE
+isInfinite
+isLower
+isNaN
+isNegativeZero
+isOctDigit
+isPrint
+isSpace
+isUpper
+iterate
+last
+lcm
+length
+lex
+lexDigits
+lexLitChar
+lines
+log
+logBase
+lookup
+map
+mapM
+mapM_
+max
+maxBound
+maximum
+maybe
+min
+minBound
+minimum
+mod
+negate
+not
+notElem
+null
+numerator
+odd
+or
+ord
+otherwise
+pi
+pred
+primExitWith
+print
+product
+properFraction
+putChar
+putStr
+putStrLn
+quot
+quotRem
+range
+rangeSize
+read
+readDec
+readFile
+readFloat
+readHex
+readInt
+readIO
+readList
+readLitChar
+readLn
+readOct
+readParen
+reads
+readSigned
+readsPrec
+realToFrac
+recip
+rem
+repeat
+replicate
+return
+reverse
+round
+scaleFloat
+scanl
+scanl1
+scanr
+scanr1
+seq
+sequence
+sequence_
+show
+showChar
+showInt
+showList
+showLitChar
+showParen
+shows
+showSigned
+showsPrec
+showString
+significand
+signum
+sin
+sinh
+snd
+span
+splitAt
+sqrt
+subtract
+succ
+sum
+tail
+take
+takeWhile
+tan
+tanh
+toEnum
+toInt
+toInteger
+toLower
+toRational
+toUpper
+truncate
+uncurry
+undefined
+unlines
+until
+unwords
+unzip
+unzip3
+userError
+words
+writeFile
+zip
+zip3
+zipWith
+zipWith3
+
+[Keywords 3] ; datatypes
+Addr
+Bool
+Char
+Double
+Either
+EmptyRec
+EmptyRow
+FilePath
+Float
+Int
+Integer
+IO
+IOError
+IOResult
+Maybe
+Ordering
+Ratio
+Rational
+ReadS
+Rec
+ShowS
+String
+
+[Keywords 4] ; klassen
+Bounded
+Enum
+Eq
+Floating
+Fractional
+Functor
+Integral
+Ix
+Monad
+Num
+Ord
+Read
+Real
+RealFloat
+RealFrac
+Show
+
+[Keywords 5] ; constructors
+EQ
+False
+GT
+Just
+Left
+LT
+Nothing
+Right
+True
+
+[Preprocessor keywords]

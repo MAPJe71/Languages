@@ -1,0 +1,161 @@
+'************************************************************************************
+'**  Thematic Mapping
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		2 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub CreateThematicMap
+Declare Sub OpenTable
+Declare Sub CreateThematic
+Declare Sub About
+Declare Sub End_Program
+
+Define AppName "Thematic Mapping Sample Code"
+Define AppNameMenu "&ThematicMapping"
+Define AppVersion 0.8
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Global sTable, sLegendTitle, sLegendSubtitle as String
+Global aColumn as Alias
+Global iNumberOfRanges as Integer
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&" + AppName
+		HelpMsg AppName
+		Calling CreateThematicMap,
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+
+End Sub Main
+
+'*********************************************************************************************
+Sub CreateThematicMap
+'*********************************************************************************************
+
+	Close All Interactive
+
+	sTable = "FR_Départements2006"
+	aColumn = "Densité"
+	iNumberOfRanges = 8
+	sLegendTitle = "Population Density French Departments"
+	sLegendSubtitle = "Data: 2006, INSEE"
+
+'Step 1:
+	Call OpenTable
+	
+'Step 2:
+	Call CreateThematic
+
+End Sub CreateThematicMap
+
+'*********************************************************************************************
+Sub OpenTable
+'*********************************************************************************************
+
+	OnError Goto ErrorHandler
+	
+	Open Table ApplicationDirectory$() + "Tables\" + sTable + ".TAB" Interactive
+	Map From sTable
+		Position (0,0) Units "in"
+		Width 3.51042 Units "in" Height 3.54167 Units "in" 
+	Set Map Window FrontWindow() Zoom Entire
+	
+	Exit Sub
+
+	ErrorHandler:
+		Note Error$()
+
+End Sub OpenTable
+
+'*********************************************************************************************
+Sub CreateThematic
+'*********************************************************************************************
+Dim fRangeLimitsArray() As Float
+Dim bBrushStylesArray() As Brush
+
+	OnError Goto ErrorHandler
+	
+	'create ranges on selected column
+	Create Ranges From sTable With aColumn Use "Equal Count" Number iNumberOfRanges Round 1 Into Variable fRangeLimitsArray
+	
+	'create styles for the specified number of ranges
+	Create Styles From Brush (2,15597520,16777215) To Brush (2,32768,16777215) Vary Color By "RGB" Number iNumberOfRanges Into Variable bBrushStylesArray 
+	
+	'apply thematic
+	Shade Window FrontWindow() sTable With aColumn Ranges From Variable fRangeLimitsArray Style Variable bBrushStylesArray		
+	
+	'show legend
+	Open Window Legend
+
+	'modify legend
+	Set Legend Window FrontWindow() Layer 1 Count On Title sLegendTitle Font ("Arial",1,9,255) Subtitle sLegendSubtitle Font ("Arial",2,8,255)
+	
+	'change legend window size
+	Set Window Legend
+		Width 3.54167 Units "in" Height 3.54167 Units "in"
+
+	Exit Sub
+
+	ErrorHandler:
+		Note Error$()
+
+End Sub CreateThematic
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to use MapBasic to create a ranged thematic map." Position 3dW, 1dH
+		Control StaticText title "- use the Create Ranges statement to calculate the ranges" Position 3dW, 3dH
+		Control StaticText title "- use the Create Styles statement to create styles for the specified number of ranges" Position 3dW, 4dH
+		Control StaticText title "- use the Shade statement to actually create the thematic layer and" Position 3dW, 5dH
+		Control StaticText title "  add it to the Map Window" Position 3dW, 6dH
+		Control StaticText title "- use the Open Window statement to display the Theme Legend window" Position 3dW, 7dH
+		Control StaticText title "A sample table - FR_Départements2006.TAB - is used to create a ranged themmatic" Position 3dW, 9dH
+		Control StaticText title "map for the population density (the column Densité)." Position 3dW, 10dH
+		Control StaticText title "It should be easy to change the table name, column name and legend titles to apply" Position 3dW, 12dH
+		Control StaticText title "the code to your own data." Position 3dW, 13dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 50dW, 18dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+		End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************

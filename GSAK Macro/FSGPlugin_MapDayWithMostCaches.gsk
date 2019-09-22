@@ -1,0 +1,735 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display a map of all caches found on your day with most finds
+# MacFileName = FSGPlugin_MapDayWithMostCaches.gsk
+# MacAuthor = The CEO
+# MacVersion=1.11
+# MacUrl=http://gsak.net/board/index.php?showtopic=18007&view=findpost&p=131983
+#*******************************************
+
+NoError commands=UPDATECHECK
+UPDATECHECK Frequency=10 
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_MapDayWithMostCaches</plugin>
+ENDIF
+
+SHOWSTATUS msg="Starting FSGPlugin_MapDayWithMostCaches" Width=350 Title=""
+GOSUB Name=InitializeVariables
+GOSUB Name=ExtractMacroParms
+GOSUB Name=PrepareMiscSettings
+GOSUB Name=Main
+SHOWSTATUS msg="Finished FSGPlugin_MapDayWithMostCaches" Width=350 Title=""
+
+#*******************************************
+
+BEGINSUB Name=InitializeVariables
+
+	Declare Var=$p1 Type=String
+	Declare Var=$p2 Type=String
+	Declare Var=$p3 Type=String
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$ShowState Type=Boolean
+	Declare Var=$ShowCounty Type=Boolean
+	Declare Var=$DateOverride Type=Boolean
+	Declare Var=$DateOverrideMacroParamPos Type=Numeric
+	Declare Var=$ShowConnectingLines Type=Boolean
+	Declare Var=$ShowList Type=String
+	Declare Var=$MapType Type=String
+	
+	Declare Var=$RandomPlusMin1 Type=String
+	Declare Var=$TmpLong Type=String
+	Declare Var=$TmpLat Type=String	
+	
+	Declare Var=$DateWhereClause Type=String	
+	Declare Var=$LocationWhereClause Type=String	
+	Declare Var=$ExcludeCaches Type=String
+	
+	Declare Var=$StartLocation Type=String	
+	Declare Var=$EndLocation Type=String
+	
+	Declare Var=$LocationText Type=String
+	
+	Declare Var=$Country Type=String	
+	Declare Var=$State Type=String	
+	Declare Var=$County Type=String	
+
+	$out=""		
+	$DateOverride=FALSE
+	$ShowHeading=TRUE
+	$ShowList="block"
+	$ShowConnectingLines=TRUE
+	$ExcludeCaches=""
+
+	$MapType="roadmap"
+
+	$StartLocation=""
+	$EndLocation=""	
+
+	$Country=""
+	$State=""
+	$County=""
+
+	$Text=MacHeader("MacFileName")+" v"+MacHeader("MacVersion")
+	$out = $out + $_CrLf + "<!-- $Text Param:$_MacroParms -->" + $_CrLf
+	$Text=""	
+	
+	GOSUB Name=InitLanguage
+ENDSUB
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	# Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	# Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIYFHDPO"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774,4738,other"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $tmpS = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $tmpS = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $tmpS = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+#	$out = $out + "<br /><br />" + $CR
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			GOSUB Name=Mid2Col
+			$column = 1
+		ENDIF
+		$lastcolspan = 2
+		$width = $maxtablewidth/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+	$out = $out + "    $text" + $CR + "</div>" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB Name=InitLanguage
+	Declare Var=$LangMapOf Type=String
+	Declare Var=$LangCaches Type=String
+	Declare Var=$LangOn Type=String
+	Declare Var=$LangDayWithMostCaches Type=String
+	Declare Var=$LangShowHideList Type=String
+	Declare Var=$LangListOfAll Type=String
+	Declare Var=$LangCachesFoundOn Type=String
+	Declare Var=$LangCounty Type=String	
+	Declare Var=$LangMyMostRecentTrip Type=String	
+	
+	# default: English
+	$LangMapOf="Map of"
+	$LangCaches="caches"
+	$LangOn="on"
+	$LangDayWithMostCaches="day with most found caches"
+	$LangShowHideList="Show/Hide list of caches found on"
+	$LangListOfAll="List of all"
+	$LangCachesFoundOn="caches found on"
+	$LangCounty="County"
+	$LangMyMostRecentTrip="my most recent Geocaching trip"
+	
+	IF $Language = "Deutsch"
+		$LangMapOf="Karte"
+		$LangCaches="caches"
+		$LangOn="am"
+		$LangDayWithMostCaches="des Tages mit den meisten gefundenen Caches"
+		$LangShowHideList="Zeige/Verberge Liste mit Caches, gefunden am"
+		$LangListOfAll="Liste aller"
+		$LangCachesFoundOn="Caches, gefunden am"
+		$LangCounty="Landkreis"
+		$LangMyMostRecentTrip="meiner letzen Geocaching Ausflug"
+	ENDIF
+	
+	IF $Language = "Nederlands"
+		$LangMapOf="Kaart van"
+		$LangCaches="caches"
+		$LangOn="op"
+		$LangDayWithMostCaches="de dag met de meeste gevonden caches"
+		$LangShowHideList="Toon/verberg lijst met caches gevonden op"
+		$LangListOfAll="Lijst van alle"
+		$LangCachesFoundOn="caches gevonden op"
+		$LangCounty="Gemeente"
+		$LangMyMostRecentTrip="mijn laatste Geocaching dag"
+	ENDIF	
+
+	IF $Language = "Svenska"
+		$LangMapOf="Karta för"
+		$LangCaches="caches"
+		$LangOn="op"
+		$LangDayWithMostCaches="dagen med flest hittade cacher"
+		$LangShowHideList="Visa/Dölj lista med cacher hittade"
+		$LangListOfAll="Lista över alla"
+		$LangCachesFoundOn="cacher hittade"
+		$LangCounty="County"
+	ENDIF	
+
+	IF $Language = "Èesky" 
+		$LangMapOf="Mapa dne"
+		$LangCaches="caches"
+		$LangOn="dne"
+		$LangDayWithMostCaches="s nejvíce nálezy"
+		$LangShowHideList="Zobraz/Skryj seznam keší nalezených dne"
+		$LangListOfAll="Seznam všech"
+		$LangCachesFoundOn="keší nalezených dne"
+		$LangCounty="Okres"		 
+	ENDIF		
+
+ENDSUB
+
+BEGINSUB Name=ExtractMacroParms		
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = lower($Text1)
+		# MSGOK msg="parameter $i: '$Text1' '$Text2'"
+
+
+		if (AT("start=", $Text2) <> 0)
+			$StartLocation=extract($Text1,"=",2)
+		endif
+		
+		if (AT("end=", $Text2) <> 0)
+			$EndLocation=extract($Text1,"=",2)
+		endif
+		
+		if (AT("sectionheading=false", $Text2) <> 0)
+			$ShowHeading=FALSE
+		endif
+
+		if (AT("showlist=false", $Text2) <> 0)
+			$ShowList="none"
+		endif
+		
+		if (AT("showlines=false", $Text2) <> 0)
+			$ShowConnectingLines=FALSE
+		endif
+		
+		IF (AT("exclude=", $Text2) <> 0)
+			$p1 = upper(extract($Text2,"=",2))
+			$p1=Replace(";","','",$p1)	
+			$ExcludeCaches = "AND Code NOT IN ('" + $p1 + "')"
+		ENDIF
+		
+		if (AT("date=", $Text2) <> 0)
+			$DateOverride=TRUE
+			$DateOverrideMacroParamPos=$i
+			# We cannot determine the date paarmeters at this point, because they may depend on the country, state, county that are not yet determined.
+			# So we just set DateOverride here to TRUE and then determine the date later.
+		endif	
+		
+		if (AT("maptype=", $Text2) <> 0)
+			$MapType = extract($Text2,"=",2)
+			# Valid values are roadmap, satellite, hybrid & terrain. Default value is now 'roadmap'
+			if NOT ($MapType="roadmap" OR $MapType="satellite" OR $MapType="hybrid" OR $MapType="terrain")
+				MsgOk msg=Invalid maptype specified. Valid values are roadmap, satellite, hybrid & terrain
+				$MapType="RoadMap"
+			endif
+		endif
+		
+		if (AT("county=", $Text2) <> 0)
+			$County = extract($Text1,"=",2)
+			$Text=" in $County"
+			$County=Replace(";","','",$County)
+			$County = upper($County)
+			# cannot use lower due to http://gsak.net/v80/hs23820.htm
+		endif
+		
+		if (AT("state=", $Text2) <> 0)
+			$State = extract($Text1,"=",2)
+			if $Text=""
+				$Text=" in $State"
+			else
+				$Text = $Text + " [$State]"
+			endif
+			$State=Replace(";","','",$State)	
+			$State = upper($State)
+			# cannot use lower due to http://gsak.net/v80/hs23820.htm
+		endif
+		
+		if (AT("country=", $Text2) <> 0)
+			$Country = extract($Text1,"=",2)
+			if $Text=""
+				$Text=" in $Country"
+			else
+				$Text = $Text + " [$Country]"
+			endif
+			$Country=Replace(";","','",$Country)	
+			$Country = lower($Country)
+		endif
+
+		$i = $i+1
+	endwhile
+
+	$LocationText=$Text
+	$LocationWhereClause="1 "
+
+	If $Country<>"" AND lower($Country)<>"europe"  
+		$LocationWhereClause=$LocationWhereClause+"AND Lower(Country) IN ('$Country') "
+	endif
+	
+	If $Country<>"" AND lower($Country)="europe"  
+		$LocationWhereClause=$LocationWhereClause+"AND ( Latitude+0>38 AND Longitude+0>-12 AND Longitude+0<34 AND Lower(Country) NOT IN  ('turkey') ) OR (Lower(Country) IN  ('spain','portugal','iceland','belarus','cyprus','gibraltar','latvia','lithuania','malta','ukraine','greece') ) "
+	endif
+
+	If $State<>"" 
+		$LocationWhereClause=$LocationWhereClause+"AND g_upper(State) IN ('$State') "
+	endif
+	
+	If $County<>"" 
+		$LocationWhereClause=$LocationWhereClause+"AND g_upper(County) IN ('$County') "
+	endif
+	
+	if $StartLocation<>"" OR $EndLocation<>""
+		# $rawloclist is list of locations; inherited from FSG
+		$count = RegExCount(";",$rawloclist)
+		$i=1
+		while $i <= $count+1	
+			$Text1 = extract($rawloclist,";",$i)	
+			if (AT($StartLocation, $Text1) <> 0)
+				$Text2 = Replace($Startlocation+",","",$Text1)
+				$Text2= GCalc($Text2,"FormatDegrees")
+				$StartLocation = "|" + Replace(";",",",$Text2) 
+
+			endif		
+			if (AT($EndLocation, $Text1) <> 0)
+				$Text2 = Replace($EndLocation+",","",$Text1)
+				$Text2= GCalc($Text2,"FormatDegrees")
+				$EndLocation = "|" + Replace(";",",",$Text2) 
+
+			endif		
+			$i = $i+1
+		endwhile	
+		
+		if AT("|",$StartLocation) = 0 and $StartLocation<>""
+			Msgok msg="StartLocation $StartLocation could not be recognized as a valid GSAK location, and will therefor be discarded"	
+			$StartLocation=""
+		endif
+		
+		if AT("|",$EndLocation) = 0 and $EndLocation<>""
+			Msgok msg="EndLocation $EndLocation could not be recognized as a valid GSAK location, and will therefor be discarded"	
+			$EndLocation=""
+		endif
+
+	#	$StartLocation = Replace("|","",$StartLocation)	
+	#	$EndLocation = Replace("|","",$EndLocation)	
+		
+	#			Msgok msg=$StartLocation	
+	#			Msgok msg=$EndLocation
+	ENDIF
+	
+	
+ENDSUB
+
+BEGINSUB NAME=PrepareMiscSettings
+	if $DateOverride=FALSE
+		# Search for date with Most finds in a day
+		$_sql = "SELECT Count(Code) as c, lDate from AllFinds WHERE ($LocationWhereClause) GROUP BY lDate ORDER BY c DESC LIMIT 1"
+		$work = Sqlite("sql",$_sql)
+		$list = list("sql","replace",$work)
+		$count = $_SqlRows
+		if $count=0
+			RETURN msg=" FSGPlugin_MapDayWithMostCaches Error $_NewLine Sorry, you could not find any found caches $LocationText $_NewLine Please adapt the plugin parameters"				
+		endif		
+		$text1 = "$Lang70"
+		$text2 = ""
+		
+		$MostInADay = Val(Extract($work,";",1))
+		$MostInADayDate = SqlToDate((Extract($work,";",2)))
+		$DateWhereClause="lDate = '"+DateToSql($MostInADayDate)+"'"	
+		$text="$LangMapOf $LangDayWithMostCaches $LocationText: <b>$MostInADay</b> $LangOn <b>$MostInADayDate</b>"
+	ELSE # DateOverride=TRUE
+		# Now we can determine the dataparameters
+		$Text1 = extract($_MacroParms,"&",$DateOverrideMacroParamPos)
+		$Text2 = lower($Text1)
+		$p1 = lower(extract($Text1,"=",2))
+		
+			BeginCase
+				Case len($p1)=8 AND val(Left($p1,4))>1999 AND val(Left($p1,4))<2050 AND val(SubStr($p1,5,2))<13 AND val(SubStr($p1,7,2))<32
+					$MostInADayDate=StringToDate($p1) 
+					$DateWhereClause="lDate = '"+DateToSql($MostInADayDate)+"'"
+					$text="$LangMapOf ~~count~~ $LangCachesFoundOn <b>$MostInADayDate</b> $LocationText"
+				Case $p1="mostrecent"
+					$_sql = "SELECT Count(Code) as c, lDate from AllFinds WHERE ($LocationWhereClause) GROUP BY lDate ORDER BY lDate DESC LIMIT 1"
+					$work = Sqlite("sql",$_sql)
+					$MostInADayDate = SqlToDate((Extract($work,";",2)))
+					$DateWhereClause="lDate = '"+DateToSql($MostInADayDate)+"'"	
+					$text="$LangMapOf $LangMyMostRecentTrip $LocationText $LangOn <b>$MostInADayDate</b>"
+				Case left($p1,11)="mostrecent>"
+					$p1=Replace("mostrecent>","",$p1)	
+					$_sql = "SELECT c, lDate FROM (SELECT Count(Code) as c, lDate from AllFinds WHERE ($LocationWhereClause) GROUP BY lDate ORDER BY lDate DESC) WHERE c>$p1 LIMIT 1"
+					$work = Sqlite("sql",$_sql)
+					if $work=""
+						RETURN msg=" FSGPlugin_MapDayWithMostCaches Error $_NewLine Sorry, you haven't found (yet) more than $p1 caches on one day $_NewLine Please adapt the 'mostrecent>$p1'  plugin parameter."				
+					ELSE
+						$MostInADayDate = SqlToDate((Extract($work,";",2)))
+						$DateWhereClause="lDate = '"+DateToSql($MostInADayDate)+"'"	
+						$text="$LangMapOf $LangMyMostRecentTrip $LocationText $LangOn <b>$MostInADayDate</b>"
+					ENDIF
+				Case len($p1)=17 AND AT("-",$p1)=9 AND val(Left($p1,4))>1999 AND val(Left($p1,4))<2050 AND val(SubStr($p1,5,2))<13 AND val(SubStr($p1,7,2))<32
+					$tmpS = DateToSql(StringToDate(Left($p1,8)))
+					$DateWhereClause="lDate >= '"+DateToSql(StringToDate(Left($p1,8)))+"' AND lDate <= '"+DateToSql(StringToDate(Right($p1,8)))+"'"
+		#			Msgok msg=$DateWhereClause	
+					
+					$MostInADayDate=StringToDate(Left($p1,8))
+					$text="$LangMapOf ~~count~~ $LangCachesFoundOn <b>$MostInADayDate"+"-"
+					$MostInADayDate=StringToDate(Right($p1,8))
+					$text=$text+"$MostInADayDate</b> $LocationText"	
+			OtherWise
+				RETURN msg=" FSGPlugin_MapDayWithMostCaches Error $_NewLine date=$p1 not recognized. Use Date=YYYYMMDD OR Date=YYYYMMDD-YYYYMMDD for range of dates"
+			EndCase
+	endif
+
+	# Exclude locationless?
+	IF $Excludelocationless
+		$Locationless = "Cachetype <>'L' AND Exclude <> '1'"
+	ELSE
+		$Locationless = "1"
+	ENDIF
+
+	$colspan = 1
+
+	If $ShowHeading
+		# define maximum table width
+		if $maxtablewidth=0
+			$maxtablewidth = 750
+		endif
+		$_sql = "SELECT Count(*) FROM AllFinds WHERE  ($DateWhereClause  $ExcludeCaches AND ($LocationWhereClause) )"
+		$count = Val(Sqlite("sql",$_sql))
+		$Text1 = "$count" 
+		$text=Replace("~~count~~", $Text1 , $text)
+		GOSUB Name=SectionHead 
+	endif
+		$out = $out + "<br>"
+ENDSUB
+
+BEGINSUB Name=Main
+	GOSUB Name=CreateGoogleMap
+	
+	# Start building a list of all caches found on this date
+
+	$out = $out + "<!--BeginJavascript-->"
+	$out = $out + "<span style='cursor:pointer; border: 1px solid #000000' onmousedown=" + Quote("document.getElementById('$MostInADayDate').style.display = (getElementById('$MostInADayDate').style.display != 'none' ? 'none' : '');") + "><i><b>&nbsp; $LangShowHideList $MostInADayDate &nbsp; </b></i></span> " + $_CrLf
+	$out = $out + "<!--EndJavascript-->" 
+	
+	$out = $out + "<br><br>"
+	
+	$out = $out + "<div id='$MostInADayDate' "
+	$out = $out + "<!--BeginJavascript-->"
+	$out = $out + "style='display:$ShowList'"
+	$out = $out + "<!--EndJavascript-->"
+	$out = $out + ">" + $CR
+
+	$tmpS = DateToSql($MostInADayDate)		
+		
+	$_sql = "SELECT DISTINCT  state, count(state)  FROM allfinds WHERE ($DateWhereClause  $ExcludeCaches AND ($LocationWhereClause) ) AND state<>'' AND state<>'Nil' GROUP BY state"
+	$work = Sqlite("sql",$_sql)
+	If $_SqlRows > 0
+		$ShowState = TRUE
+	ELSE
+		$ShowState = FALSE
+	ENDIF
+	
+	$_sql = "SELECT DISTINCT  county, count(county)  FROM allfinds WHERE ($DateWhereClause  $ExcludeCaches AND ($LocationWhereClause) ) AND county<>'' AND county<>'Nil' GROUP BY county"
+	$work = Sqlite("sql",$_sql)
+	If $_SqlRows > 0
+		$ShowCounty = TRUE
+	ELSE
+		$ShowCounty = FALSE
+	ENDIF
+	
+	$_sql = "SELECT rowid, ldate, county, code, cachetype, name, llogid, url, country, state FROM allfinds WHERE ($DateWhereClause  $ExcludeCaches AND ($LocationWhereClause) )"
+	$work = Sqlite("sql",$_sql)
+	
+	#Initialize Variables
+	$LogTotal = $_SqlRows
+
+	# Initialise Section header
+	$colspan = 1
+
+	IF len($p1)=17 AND AT("-",$p1)=9
+			$MostInADayDate=StringToDate(Left($p1,8))
+			$text="$LangListOfAll $count $LangCachesFoundOn $MostInADayDate"+"-"
+			$MostInADayDate=StringToDate(Right($p1,8))
+			$text=$text+"$MostInADayDate "	
+	ELSE
+			$text="$LangListOfAll $count $LangCachesFoundOn $MostInADayDate "
+	ENDIF
+	$text = $text + $LocationText
+		
+	If $ShowHeading
+		GOSUB Name=SectionHead
+	ELSE
+		$out=$out+"<br>"+$_CrLf
+	endif
+	$out = $out + "<center><table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf
+	# Column Heads
+	$text1 = "<b>Log</b>" # Milestone
+	$text2 = "<b>$Lang169</b>" # 
+	# $text7 = Flag image
+	$text3 = "<b>$LangCounty</b>" # County
+	$text4 = "<b>$Lang34</b>" # Code
+	# $text6 = Type icon
+	$text5 = "<b>$Lang35</b>" # Name
+
+	$out = $out + "<tr>" + "$_CrLf" + "<td style='$stTab2cHead'>" + $_CrLf
+	$out = $out + "$text1</td>" + $_CrLf
+
+	IF $FlagIcons
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+	ENDIF
+	
+	IF $ShowState
+	$out = $out + "<td style='$stTab2cHead'>$text2</td>" + $_CrLf
+	ENDIF
+	
+	IF $ShowCounty
+	$out = $out + "<td style='$stTab2cHead'>$text3</td>" + $_CrLf
+	ENDIF
+	
+	$out = $out + "<td style='$stTab2cHead'>$text4</td>" + $_CrLf
+	
+	IF $miletypes
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+	ENDIF
+	
+	$out = $out + "<td style='$stTab2cHead'>$text5</td>" + $_CrLf + "</tr>" + $_CrLf
+
+	# Initialize variables
+
+	$count = 1
+
+	WHILE $count <= $LogTotal
+		$GetMilestone = Extract($work,$_CrLf,$count)
+		#Extract the date
+		$LogDateDate = SqlToDate(Extract($GetMilestone,";",2))
+
+		# Strip off the suffix code if necessary
+		$StripCode = Extract($GetMilestone,";",4)
+		$StripCode = Extract($StripCode,"_",1)
+
+		# Format the date to users standard format for display
+		$FindDate = DateFormat($LogDateDate)
+
+		# Log ID for URL link to log
+		$LogidSubstitute = Val(Extract($GetMilestone,";",7))
+		IF $LogidSubstitute <>0
+			BEGINCASE
+			CASE Left($StripCode,2)="GC"
+				$text2 = "<a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>$FindDate</a>"
+			CASE Left($StripCode,2)="GA"
+				$text2 = "<a href='http://geocaching.com.au/log/$LogidSubstitute'>$FindDate</a>"
+			OTHERWISE
+				$text2 = "$FindDate"
+			ENDCASE
+		ELSE
+			$text2 = "$FindDate"
+		ENDIF
+
+		# Output data
+		$text1 = "<b><a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>" + Extract($GetMilestone,";",1) + "</a></b>"
+		$text2 = Extract($GetMilestone,";",10)
+		$text3 = Extract($GetMilestone,";",3)
+		$text4 = Extract($GetMilestone,";",8)
+		$text4 = "<a href='$text4'>$StripCode</a>"
+		$text5 = Extract($GetMilestone,";",6)
+		$text5 = "$text5"
+		$text9 = Extract($GetMilestone,";",9)
+		
+		IF $miletypes
+			$tmpB = FALSE
+			GOSUB Name=StripCodeType
+			$text6 = $TypeImage
+		ELSE
+			$text6 = ""
+		ENDIF
+
+		IF $FlagIcons
+			# Country flag
+			$FullName = $text9
+			GOSUB Name=FlagImage
+		ENDIF
+
+		$out = $out + "<tr>" + "$_CrLf" + "<td style='$st2c1'>" + $_CrLf
+		$out = $out + "$text1</td>" + $_CrLf
+
+		IF $FlagIcons
+			$out = $out + "<td style='$st2c2'>$text7</td>" + $_CrLf
+		ENDIF
+		
+		IF $ShowState
+			$out = $out + "<td style='$st2c2'>$text2</td>" + $_CrLf
+		ENDIF
+		
+		IF $ShowCounty
+			$out = $out + "<td style='$st2c2'>$text3</td>" + $_CrLf
+		ENDIF
+		
+		$out = $out + "<td style='$st2c2'>$text4</td>" + $_CrLf
+		
+		IF $miletypes
+			$out = $out + "<td style='$st2c2'>$text6</td>" + $_CrLf
+		ENDIF
+		$out = $out + "<td style='$st2c1'>$text5</td>" + $_CrLf + "</tr>" + $_CrLf
+		$count = $count + 1
+		
+	ENDWHILE
+
+	$out = $out + "</table></center>" + $_CrLf
+	$out = $out + "<br></div>" + $_CrLf
+	$p_FSGData = $out
+ENDSUB
+
+BEGINSUB Name=CreateGoogleMap
+	# Get all caches on that day into a List for a map 
+	$tmpS = DateToSql($MostInADayDate)
+
+	$_sql = "SELECT Count(*) FROM AllFinds WHERE  ($DateWhereClause  $ExcludeCaches AND ($LocationWhereClause) )"
+	$count = Val(Sqlite("sql",$_sql))
+	# CLIP Data=$_sql
+	
+	if $count=0
+		RETURN msg=" FSGPlugin_MapDayWithMostCaches Error $_NewLine Sorry, you could not find any found caches on $MostInADayDate $LocationText $_NewLine Please adapt the plugin parameters"				
+	endif
+	
+	# find the rowid of the first cache found on this date
+	$_sql = "SELECT rowid FROM AllFinds WHERE  ($DateWhereClause $ExcludeCaches AND ($LocationWhereClause) ) LIMIT 1"
+	$tmpN = Val(Sqlite("sql",$_sql))		
+		
+	BeginCase
+
+		Case $count <=40
+		$text1 = "(rowid like '%')"
+
+		Case $count >40 AND $count <=80
+		$text1= "(rowid like '%2' or  rowid like'%4' or  rowid like'%6' or  rowid like'%8' or  rowid like'%0')"
+
+		Case $count >80 AND $count <=130
+		$text1= "(rowid like '%3' or  rowid like'%6' or  rowid like'%0')"
+
+		Case $count >131 AND $count <=200
+		$text1= "(rowid like '%0' or  rowid like'%5' )"
+
+		Case $count >200 AND $count <=400
+		$text1= "(rowid like '%0'  )"
+
+		Case $count >400 AND $count <=800
+		$text1= "(rowid like '%20' or  rowid like'%40' or  rowid like'%60' or  rowid like'%80' or  rowid like'%00')"
+		
+		Case $count >800 AND $count <=1000
+		$text1= "(rowid like '%25' or  rowid like'%50' or  rowid like'%75' or rowid like'%00')"
+			
+		OtherWise
+		$text1= "(rowid like '%33' or  rowid like'%66'  or  rowid like'%00' )"
+
+	EndCase
+
+	$text1 = $text1 + " AND ($DateWhereClause $ExcludeCaches AND ($LocationWhereClause) ) AND rowid<>" + NumToStr($tmpN+$count-1) + " AND rowid<>" + NumToStr($tmpN)
+	
+	# modify the SQL where clause so it always include both first and the last cache on this date
+	# $text1=$text1+" AND ($DateWhereClause $ExcludeCaches) OR (rowid=$tmpN OR rowid="
+	# $tmpN=$tmpN+$count-1
+	# $text1=$text1+"$tmpN)"
+	
+	# SQL clause to filter for all caches to be plotted on the graph (both markers and path)
+	# add random component to both longitude and latitude
+	# N/S: 65 +/- 35 meters
+	# E/W: 65 +/- 35 meters at 45 deg North or South, more when above 45 deg, less when below 45 deg.
+	# SELECT CASE WHEN units = 'ft' THEN elevation/3.2808399 ELSE elevation END
+	
+	$RandomPlusMin1="(2*round(0.5+random()/9223372036854775808/2)-1)"
+	$TmpLat="round(latitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001)),4)"
+	$TmpLong="round(longitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001/0.707)),4)"
+
+	$_sql = "SELECT CASE WHEN (Latitude=latoriginal AND Longitude=lonoriginal) THEN ( round(Latitude,4) || ',' || round(Longitude,4) ) ELSE ($TmpLat || ',' || $TmpLong) END FROM AllFinds WHERE " + $text1 
+	
+	$status = Sqlite("sql",$_sql)
+	$status = Replace($_CrLf,"|",$status)
+	
+	# SQL clause to filter for the first and last cache on this date, so they can be given a different color marker
+	$_sql = "SELECT CASE WHEN (Latitude=latoriginal AND Longitude=lonoriginal) THEN ( round(Latitude,4) || ',' || round(Longitude,4) ) ELSE ($TmpLat || ',' || $TmpLong) END FROM AllFinds WHERE rowid=" + NumToStr($tmpN)
+	$text3 = Sqlite("sql",$_sql)
+	
+	$_sql = "SELECT CASE WHEN (Latitude=latoriginal AND Longitude=lonoriginal) THEN ( round(Latitude,4) || ',' || round(Longitude,4) ) ELSE ($TmpLat || ',' || $TmpLong) END FROM AllFinds WHERE rowid=" + NumToStr($tmpN+$count-1)
+	$text2 = Sqlite("sql",$_sql)	
+
+	$tmpS=""	
+	if $StartLocation<>""
+		$tmpS = "&markers=color:black" + $StartLocation
+	endif
+	
+	if $ShowConnectingLines=TRUE
+		# Build the Google map parameters
+		$tmpS = $tmpS + "&markers=color:green|" + $text3 +"&markers=color:red|" +$text2 + "&markers=color:blue|" + $status 
+		$tmpS = $tmpS + "&path=color:0xff0000ff|weight:3" + $StartLocation + "|" + $text3 + "|" + $status + "|" + $text2 + $EndLocation
+	else
+		# Build the Google map parameters
+		$tmpS = $tmpS + "&markers=color:blue|" + $text3 +"&markers=color:blue|" +$text2 + "&markers=color:blue|" + $status 
+	endif
+	
+	if $EndLocation<>""
+		$tmpS = $tmpS + "&markers=color:black" + $EndLocation
+	endif
+	
+	$out = $out + "<center><div style='width:600px; border:2px outset blue'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?maptype=$MapType&size=600x400&$tmpS&sensor=false'></div></center>" + $_CrLf 
+	$out=$out+"<br><br>"
+
+ENDSUB
+

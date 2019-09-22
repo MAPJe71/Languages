@@ -1,0 +1,53 @@
+;  EnumDir.KIX
+;
+;  Enumerates a directory
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+BREAK ON
+
+IF $Dir = 0
+   $Dir = "%TEMP%"
+ENDIF
+
+;
+; first enumerate all directories
+;
+$File = Dir( $Dir + "\*.*" )
+
+WHILE @ERROR = 0 AND $File
+
+   IF $File <> "." AND
+      $File <> ".." AND
+      GetFileAttr( $Dir + "\" + $File ) & 16    ; is it a directory ?
+
+      DIM $SaveDir
+
+      $Savedir = $Dir
+
+      $Dir = $Dir + "\" + $File
+
+      ? $Dir
+
+      CALL EnumDir
+
+      $Dir = $SaveDir
+   ELSE
+      ? $Dir + "\" + $File
+   ENDIF
+
+
+   IF @ERROR = 0
+
+      ; try for next subkey
+
+      $File = Dir("")
+   ENDIF
+
+LOOP
+EXIT 0

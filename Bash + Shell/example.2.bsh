@@ -1,0 +1,31 @@
+
+# bash function definitions
+
+  function abc {
+   echo ---abc
+}
+
+        function ab2()  {
+   echo ---ab2
+}
+
+function ab3()  
+{
+   echo ---ab3
+}
+
+    ab4()  {
+   echo -----ab4
+}
+
+ab5 ()  {
+   echo $((5+4))
+}
+
+   ab6    ()  {
+   echo -----ab6
+}
+
+   ab7    (       )  {
+   echo $((11+14))
+}

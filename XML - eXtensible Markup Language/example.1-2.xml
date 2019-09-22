@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!ENTITY MyParamEntity "Has been expanded">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" >
+<head>
+<title>CDATA Example</title>
+</head>
+<body>
+
+<h2>Using a Comment</h2>
+<div id="commentExample">
+<!--
+Within this comment I can use ]]>
+and other reserved characters like <
+&, ', and ", but %MyParamEntity; will not be expanded
+(if I retrieve the text of this node it will contain
+%MyParamEntity; and not "Has been expanded")
+and I can't place two dashes next to each other.
+-->
+</div>
+
+<h2>Using a CDATA Section</h2>
+<div id="cdataExample">
+<![CDATA[
+Within this Character Data block I can
+use double dashes as much as I want (along with <, &, ', and ")
+*and* %MyParamEntity; will be expanded to the text
+"Has been expanded" ... however, I can't use
+the CEND sequence (if I need to use it I must escape one of the
+brackets or the greater-than sign).
+]]>
+</div>
+
+</body>
+</html>

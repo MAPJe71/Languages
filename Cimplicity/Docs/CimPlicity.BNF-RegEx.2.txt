@@ -1,0 +1,153 @@
+(?x)
+(?(DEFINE)
+    (?'DIGIT'[0-9])
+    (?'OCTAL_DIGIT'[0-7])
+    (?'HEX_DIGIT'(?&DIGIT)|[A-Fa-f])
+    (?'EXPONENT_CHAR'[DEde])
+    (?'SIGN'[+-])
+    (?'MANTISSA'(?:(?&DIGIT))+(?:\.(?:(?&DIGIT))*)?|(?:(?&DIGIT))*\.(?:(?&DIGIT))+)
+    (?'NON_NEGATIVE_INTEGER'(?:(?&DIGIT))+|\x26(?:[Hh](?:(?&HEX_DIGIT))+|[Oo](?:(?&OCTAL_DIGIT))+))
+    (?'NUMBER'(?:(?&SIGN))?(?:(?&NON_NEGATIVE_INTEGER)|(?&MANTISSA)(?:(?&EXPONENT_CHAR)(?:(?&SIGN))?(?:(?&DIGIT))+)?))
+    (?'GUID'\{(?:(?&HEX_DIGIT)){8}-(?:(?:(?&HEX_DIGIT)){4}-){3}(?:(?&HEX_DIGIT)){12}\})
+    (?'NAMED_CHAR'B(?:ackspace|ell)|C(?:arriageReturn|haracterTabulation)|Delete|Escape|FormFeed|L(?:eft(?:Brace|CurlyBracket)|ine(?:Feed|Tabulation))|N(?:ewLine|ull)|QuotationMark|R(?:eturn|ight(?:Brace|CurlyBracket))|Tab)
+    (?'STRING_CHAR'[^\x0A\x22\x7B]|\{(?:(?&NON_NEGATIVE_INTEGER)|(?&NAMED_CHAR))\})
+    (?'STRING'\x22(?:(?&STRING_CHAR))*\x22|(?&STRING)(?:\s*\x26\s*(?&STRING))*)
+
+
+    (?'GMMIEVENT'
+        \(\s*
+            GmmiEvent\s+(?&NUMBER)\s+(?&STRING)
+        |
+            \(\s*
+                GmmiInvokeScriptAction
+                \s+(?&NUMBER)
+                (?:\s+(?&STRING)){2}
+                \s+\(\s*GmmiParameterBlock\s+(?&NUMBER)(?:\s+(?&NUMBER)\s+(?&GMMIEXPR))*\s*\)
+            \s*\)
+            \s+(?&STRING)
+        \s*\)
+    )
+    (?'GMMIEXPR'\(\s*GmmiExpr\s+(?&STRING)\s*\))
+    (?'GMMIEXPRANIM'\(\s*GmmiExprAnim\s+(?&NUMBER)(?:\s+(?&STRING))?(?:(?:\s+(?&NUMBER)){2})?\s*\))
+    (?'GMMIEXPREVENT'\(\s*GmmiExprEvent\s+(?&GMMIEVENT)\s+(?&GMMIEXPR)\s*\))
+    (?'GMMIKEYEVENT'\(\s*GmmiKeyEvent\s+(?&GMMIEVENT)\s+(?&NUMBER)\s*\))
+    (?'GMMIMOVEANIM'(?&GMMIEXPRANIM)\s+(?&NUMBER)\s+\(\s*ExecCond(?:\s+(?&STRING)){2}\s*\)\s+(?&NUMBER))
+    (?'GMMISCALEANIM'(?&GMMIEXPRANIM)(?:\s+(?&NUMBER)){2})
+
+    (?'GRBORDERATTR'\(\s*Border\s+(?&GRCOLORATTR)(?:\s+(?&NUMBER)){3}\s*\))
+    (?'GRCOLORATTR'\(\s*Color\s+[0-3]\s+(?&NUMBER)\s*\))
+    (?'GRINTERIORATTR'\(\s*Interior(?:\s+(?&GRCOLORATTR)){2}\s+(?&NUMBER)(?:(?:\s+(?&NUMBER)){2})?\s*\))
+
+    (?'ROOTOPTIONTABLE' # parentheses not balanced
+        \(\s*
+        (?:
+            Empty
+        |
+            GmmiOptionTable
+            (?:
+                \s+\(\s*GmmiOptionTable
+                (?:
+                    \s+\(\s*
+                    (?:
+                        (?:GmmiHorizMoveAnim |GmmiVertMoveAnim )\s+(?&GMMIMOVEANIM)
+                    |   (?:GmmiHorizScaleAnim|GmmiVertScaleAnim)\s+(?&GMMISCALEANIM)
+                    |   GmmiRotateAnim                          \s+(?&GMMIEXPRANIM) \s+\(\s*Point\s+(?&NUMBER)\s+(?&NUMBER)\s*\)\s+(?&NUMBER)\s+(?&NUMBER)
+                    )
+                    \s*\)
+                )+
+                \s*\)
+            )?
+            (?:
+                \s+\(\s*    GmmiOptionTable
+                    (?:
+                        \s+\(\s*Gmmi
+                        (?:
+                            FillAnim        \s+(?&GMMIEXPRANIM)
+                        |   ExprValueAnnun  \s+(?&GMMIEXPRANIM)
+                        |   VisibilityAnim  \s+(?&GMMIEXPRANIM)
+                        |   ValueAnim       \s+(?&GMMIEXPRANIM)\s+(?&STRING)\s+(?&NUMBER)
+                        |   DefaultAnnun    \s+(?&STRING)(?:\s+(?&NUMBER)){2}
+                        |   ExprAnnun       \s+(?&NUMBER)
+                                (?:
+                                    \s+\(\s*GmmiExprAnnunElement
+                                            \s+(?&GMMIEXPRANIM)
+                                            \s+\(\s*
+                                                GmmiOptionTable
+                                                (?:\s+\(\s*Gmmi
+                                                    (?:
+                                                        BlinkAnnunAttr
+                                                    |   ColorAnnunAttr      \s+(?&GRCOLORATTR)
+                                                    |   TextAnnunAttr       \s+(?&STRING)
+                                                    |   InteriorAnnunAttr   \s+(?&NUMBER)   \s+(?&GRINTERIORATTR)
+                                                    |   BorderAnnunAttr     \s+(?&NUMBER)   \s+(?&GRBORDERATTR)
+                                                    |   FontAnnunAttr       \s+(?&NUMBER)   \s+\(\s*Font\s+(?&STRING)(?:\s+(?&NUMBER)){4}\s*\)
+                                                    )
+                                                \s*\))?
+                                            \s*\)
+                                        \s*\)
+                                )*
+                        )
+                        \s*\)
+                    )+
+                \s*\)
+            )?
+            (?:
+                \s+\(\s*GmmiOptionTable
+                    (?:
+                        \s+\(\s*Gmmi
+                        (?:
+                            (?:Mouse(?:Up|Down)Event|Screen(?:Open|Close)Event)    \s+(?&GMMIEVENT)
+                        |   WhileMouseDownEvent                                    \s+(?&GMMIEVENT)    \s+(?&NUMBER)
+                        )
+                        \s*\)
+                    )*
+                    (?:
+                        \s+
+                        \(
+                        \s*
+                        GmmiOption
+                        (?:
+                            Array
+                                \s+
+                                \(
+                                \s*
+                                (?:
+                                    GmmiKey(?:Down|Up)Event         \s+     (?&GMMIKEYEVENT)
+                                |   GmmiOleEvent                    \s+     (?&GMMIEVENT)       \s+     (?&STRING)
+                                |   GmmiWhileKeyDownEvent           \s+     (?&GMMIKEYEVENT)    \s+     (?&NUMBER)
+                                )
+                                \s*
+                                \)
+                        |
+                            Table
+                                \s+
+                                \(
+                                \s*
+                                (?:
+                                    GmmiTimedEvent                  \s+     (?&GMMIEVENT)       \s+     (?&NUMBER)
+                                |   GmmiExpr(?:Hight|Update)Event   \s+     (?&GMMIEXPREVENT)
+                                )
+                                \s*
+                                \)
+                        )
+                        )+
+                        \s*
+                        \)
+                    )*
+                \s*\)
+            )?
+            (?:\s+\(\s*GmmiScript\s+(?&STRING)\s*\))?
+            (?:\s+\(\s*GmmiVariables(?:\s+\(\s*GmmiVariables(?:\s+(?&STRING)){2}\s*\))*\s*\))?
+        )
+        \s*\)
+    )
+)
+(?'GMMIOBJECT'
+    \(\s*GmmiObject\s+(?&STRING)\s+(?&NUMBER)
+        (?:\s+\(\s*GmmiBlink\s+(?&NUMBER)(?:\s+(?&GRINTERIORATTR)){2}\s+(?&GRBORDERATTR)\s*\))?
+        \s+\(\s*\Help\s+(?&STRING)\s+(?&STRING)\s+(?&STRING)\s*\)
+        \s+
+        (?&ROOTOPTIONTABLE)
+        \s+\(\s*GmmiTabOrder\s+(?&NUMBER)\s*\)
+    \s*\)
+)

@@ -1,0 +1,365 @@
+! POV-Ray Export Routine
+! This macro creates a POV-Ray script used for photorealistic rendering of a ZEMAX lens file
+! Written by Akash Arora
+! Version 1.0
+! Feb 8, 2010
+
+! ZEMAX Version Check
+if vers() < 091109
+  print "This macro requires a ZEMAX release after Nov 9, 2009 to run!"
+  end
+endif
+
+! POV-Ray Program Location
+input "Enter the full path for POV-Ray:", shell_exe$
+
+! Point of View
+label 5
+input "Enter the point of view (right, left, top, bottom, front, back, or quarter):", pov$
+if (pov$ $!= "right") & (pov$ $!= "left") & (pov$ $!= "top") & (pov$ $!= "bottom") & (pov$ $!= "front") & (pov$ $!= "back") & (pov$ $!= "quarter") then goto 5
+
+! Determine lens path and name, and set pov-ray file name
+Path$ = $pathname()
+LensFile$ = $filename()
+NumChar = SLEN(LensFile$)
+n = NumChar - 4
+File$= $leftstring( LensFile$, n)
+PovFile$ = Path$ + "\" + File$ + ".pov"
+output PovFile$
+
+! Set IGS export options
+vec1(1) = 0			# IGS file type
+vec1(2) = 32			# Number of spline points
+vec1(5) = 0			# Ray layer
+vec1(6) = 0			# Lens layer
+vec1(7) = 0			# Export dummy surfaces
+vec1(8) = 1			# Export surfaces as solids
+vec1(9) = 0			# Ray pattern
+vec1(10) = 0			# Number of rays
+vec1(11) = 0			# Wave number
+vec1(12) = 0			# Field number
+vec1(13) = 1			# Delete vignetted rays
+vec1(14) = 1			# Dummy thickness
+vec1(15) = 0			# Split NSC rays
+vec1(16) = 0			# Scatter NSC rays
+vec1(17) = 0			# Use polarization
+vec1(18) = NCON() + 3		# Configuration
+vec1(19) = 0			# Tolerance
+
+
+!Export Routine
+NSC = 0
+surf = 0
+export = 1
+format "%#03i" LIT
+
+label 1
+export$ = $str(export)
+igs$ = path$ + "\" + "element_" + export$ + ".igs"
+txt$ = path$ + "\" + "element_" + export$ + ".txt"
+mat$ = $glass(surf)
+dummy = spro(surf,0)
+type$ = $buffer()
+vec1(3) = surf
+
+if surf == nsur()
+  goto 3
+endif
+
+if type$ $== "NONSEQCO"
+  vec1(4) = surf
+  for obj, 1, NOBJ(surf),1
+    dummy = NPRO(surf,obj,4,0)
+    objmat$ = $buffer()
+    if objmat$ $!= ""         # Export non-air NS object
+      export$ = $str(export)
+      igs$ = path$ + "\" + "element_" + export$ + ".igs"
+      if nsur() == 2
+         vec1(3) = obj
+         vec1(4) = obj
+         NSC = 1
+      else
+         vec1(20) = obj
+         vec1(21) = obj
+      endif
+      exportcad igs$
+      vec2(export) = 1                                    # Record if material is reflective, refractive or absorbing for material assignment
+      if objmat$ $== "MIRROR" then vec2(export) = 0
+      if objmat$ $== "ABSORB" then vec2(export) = -1
+      export = export + 1
+    endif
+  next
+  surf = surf + 1
+  goto 1
+endif
+
+if mat$ $== ""
+  surf = surf + 1
+  goto 1
+endif
+
+vec2(export) = gind(surf)
+if mat$ $== "MIRROR"
+  vec1(4) = surf
+  surf = surf + 1
+  exportcad igs$
+  export = export + 1
+  goto 1
+else
+  label 2
+  surf = surf + 1
+  mat$ = $glass(surf)
+  dummy = spro(surf,0)
+  type$ = $buffer()
+  if (type$ $== "COORDBRK") | (mat$ $== "MIRROR")
+    goto 2
+  else
+    vec1(4) = surf
+    exportcad igs$
+    export = export + 1
+  endif
+  goto 1
+endif
+
+label 3
+total = export - 1
+
+if total == 0
+  print "No glass, mirror, or absorbing elements to export!"
+  end
+endif
+
+! Read facet list and compute object boundaries
+x_max = 0
+x_min = 0
+y_max = 0
+Y_min = 0
+z_max = 0
+z_min = 0
+declare triangles, double, 2, total, 1E6
+
+for step, 1, total, 1
+  format "%#03i" LIT
+  step$ = $str(step)
+  igs$ = path$ + "\" + "element_" + step$ + ".igs"
+  txt$ = path$ + "\" + "element_" + step$ + ".txt"
+  makefacetlist igs$, txt$                                # Convert IGS to list of triangular facets
+
+  open txt$
+  format 0.14
+  n = 1
+  label 4
+  read x
+  read y
+  read z
+  read nx
+  read ny
+  read nz
+
+  if x > x_max then x_max = x                  # Compute bounding limits for objects (useful for camera & light placement)
+  if x < x_min then x_min = x
+  if y > y_max then y_max = y
+  if y < y_min then y_min = y
+  if z > z_max then z_max = z
+  if z < z_min then z_min = z
+
+  triangles(step, n) = x                      # Assign triangle normals & vertices to numeric array
+  triangles(step, n+1) = y
+  triangles(step, n+2) = z
+  triangles(step, n+3) = nx
+  triangles(step, n+4) = ny
+  triangles(step, n+5) = nz
+
+  if ( EOFF() == 0 )               # If not end of file, repeat for next triangle
+     n = n + 6
+     goto 4
+  endif
+
+  vec3(step) = n + 5               # Number of elements in the triangles array variable
+
+  close
+  deletefile igs$                      # Close and delete text file
+  deletefile txt$
+next
+
+totx = x_max - x_min
+toty = y_max - y_min
+totz = z_max - z_min
+
+midx = x_min + (totx/2)
+midy = y_min + (toty/2)
+midz = z_min + (totz/2)
+
+max = totx
+if toty > totx then max = toty
+if totz > toty then max = totz
+
+! POV include files (textures, glasses, etc.)
+textures$ = $quote() + "textures.inc" + $quote()
+glass$ = $quote() + "glass.inc" + $quote()
+metals$ = $quote() + "metals.inc" + $quote()
+colors$ = $quote() + "colors.inc" + $quote()
+
+! POV file header and include syntax
+print "//POV-Ray file generated by ZEMAX"
+print
+print "#include ", textures$
+print "#include ", glass$
+print "#include ", metals$
+print "#include ", colors$
+print
+
+! POV file camera syntax
+format 0.3
+print "camera {"
+
+      ! Right view
+      if pov$ $== "right"
+         x = totz
+         if toty > totz then x = toty
+         print "  location <", (midx + 2*x), ",", midy, ",", midz, ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+      
+      ! Left view
+      if pov$ $== "left"
+         x = totz
+         if toty > totz then x = toty
+         print "  location <", (midx - 2*x), ",", midy, ",", midz, ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+
+      ! Top view
+      if pov$ $== "top"
+         y = totx
+         if totz > totx then y = totz
+         print "  location <", midx, ",", (midy + 2*y), ",", midz, ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+
+      ! Bottom view
+      if pov$ $== "bottom"
+         y = totx
+         if totz > totx then y = totz
+         print "  location <", midx, ",", (midy - 2*y), ",", midz, ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+
+      ! Front view
+      if pov$ $== "front"
+         z = totx
+         if toty > totx then z = toty
+         print "  location <", midx, ",", midy, ",", (midz - 2*z), ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+
+      ! Back view
+      if pov$ $== "back"
+         z = totx
+         if toty > totx then z = toty
+         print "  location <", midx, ",", midy, ",", (midz + 2*z), ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+      
+      ! Quarter view
+      if pov$ $== "quarter"
+         dim = sqrt(2)*max
+         print "  location <", (midx + (dim*0.8)), ",", (midy + (dim*0.8)), ",", (midz - (dim*0.8)), ">"
+         print "  look_at <", midx, ",", midy, ",", midz, ">"
+      endif
+
+print "}"
+print
+
+! POV file lighting syntax
+
+if (pov$ $== "right")
+   print "light_source { <", midx, ",", (midy + max*2), ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx + totx, ",", midy, ",", midz - totz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "y"
+endif
+
+if (pov$ $== "left")
+   print "light_source { <", midx, ",", (midy + max*2), ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx - totx, ",", midy, ",", midz + totz, "> color rgb <1,1,1> spotlight radius ", max, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "y"
+endif
+
+if (pov$ $== "top")
+   print "light_source { <", midx, ",", midy, ",", (midz + max*2), "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx - totx, ",", midy + toty, ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "z"
+endif
+
+if (pov$ $== "bottom")
+   print "light_source { <", midx, ",", midy, ",", (midz - max*2), "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx + totx, ",", midy - toty, ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "-z"
+endif
+
+if (pov$ $== "front")
+   print "light_source { <", midx, ",", (midy + max*2), ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx - totx, ",", midy, ",", midz - totz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "y"
+endif
+
+if (pov$ $== "back")
+   print "light_source { <", midx, ",", (midy + max*2), ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx + totx, ",", midy, ",", midz + totz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "y"
+endif
+
+if (pov$ $== "quarter")
+   print "light_source { <", midx, ",", (midy + max*2), ",", midz, "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   print "light_source { <", midx - (dim*0.4), ",", midy + (dim*0.4), ",", midz - (dim*0.8), "> color rgb <1,1,1> spotlight radius ", max*1.5, " point_at <", midx, ",", midy, ",", midz, ">}"
+   gradient$ = "y rotate 30*x"
+endif
+print
+
+
+print "sky_sphere {pigment { gradient ", gradient$, " color_map {[0.0 color White] [1.0 color NewMidnightBlue]} scale 2 translate -1}}"
+print
+
+! POV file material declarations
+print   "#declare glassmat = material {texture { T_Glass4 } interior {I_Glass caustics 1}}"
+print   "#declare metalmat = material {texture {T_Chrome_2B finish {Metal}}}"
+print   "#declare absrbmat = material {texture {pigment {color Black}}}"
+print
+
+! POV file object syntax
+for step, 1, total, 1
+    format "%#03i" LIT
+    print "#declare object", step, " = mesh {"
+    count = vec3(step) - 18
+    for n, 0, count, 18
+        format 0.14
+        print "   smooth_triangle { <", triangles(step,n+1), ", ", triangles(step,n+2), ", ", triangles(step,n+3), ">, <",
+        print                           triangles(step,n+4), ", ", triangles(step,n+5), ", ", triangles(step,n+6), ">, <",
+        print                           triangles(step,n+7), ", ", triangles(step,n+8), ", ", triangles(step,n+9), ">, <",
+        print                           triangles(step,n+10), ", ", triangles(step,n+11), ", ", triangles(step,n+12), ">, <",
+        print                           triangles(step,n+13), ", ", triangles(step,n+14), ", ", triangles(step,n+15), ">, <",
+        print                           triangles(step,n+16), ", ", triangles(step,n+17), ", ", triangles(step,n+18), "> }"
+    next
+    print "}"
+
+! POV file object materials
+    format "%#03i" LIT
+    if vec2(step) > 0 then print "object { object", step, " material { glassmat }}"
+    print
+    if vec2(step) < 0 then print "object { object", step, " material { absrbmat }}"
+    print
+    if vec2(step) == 0 then print "object { object", step, " material { metalmat }}"
+    print
+next
+
+
+!Render and exit POV-Ray Remotely
+shell_arg$ = "/NR '" + PovFile$ + "' " + "+o'"  + $datapath()+ "\IMAFiles\" + File$ + "' /exit"
+command shell_exe$, shell_arg$
+
+output screen
+bmp$ = file$ + ".bmp"
+pause time, 5000
+showbitmap bmp$
+
+print "POV-Ray Export Finished!"

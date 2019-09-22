@@ -1,0 +1,296 @@
+#*******************************************
+# MacDescription = Generate a GSAK tag list for UltraEdit
+# MacFileName = UltraEditTagList.gsk
+# MacAuthor = Kai Team
+# MacVersion=1.3
+# MacUrl=http://gsak.net/board/index.php?showtopic=2804&view=findpost&p=68529
+#*******************************************
+VERCHECK Version=7.5.0.173 (Note: this macro requires GSAK 7.5.0.173 or newer)
+IF $_Version<"7.6.0.0"
+    NOERROR SysVar=$_ExePath
+    $InstallFolder=$_Install
+ELSE
+    $InstallFolder=$_ExePath
+ENDIF
+$Comspec = GetEnvV("comspec")
+$Spaces="    "
+$Radiobutton2=TRUE
+MACSETTINGS Type=R FileCheck=N
+
+IF VarExists("Combobox1")
+    IF $Combobox1="Write File"
+        $Form = EditForm($Form,"GroupBox1","Visible","Yes")
+        $Form = EditForm($Form,"Label1","Visible","Yes")
+        $Form = EditForm($Form,"Label2","Visible","Yes")
+        $Form = EditForm($Form,"Label3","Visible","Yes")
+        $Form = EditForm($Form,"Label4","Visible","Yes")
+        $Form = EditForm($Form,"Radiobutton1","Visible","Yes")
+        $Form = EditForm($Form,"Radiobutton2","Visible","Yes")
+        $Form = EditForm($Form,"File1","Visible","Yes")
+    ENDIF
+    
+    IF $Combobox1="Windows Clipboard"
+        $Form = EditForm($Form,"GroupBox1","Visible","No")
+        $Form = EditForm($Form,"Label1","Visible","No")
+        $Form = EditForm($Form,"Label2","Visible","No")
+        $Form = EditForm($Form,"Label3","Visible","No")
+        $Form = EditForm($Form,"Label4","Visible","No")
+        $Form = EditForm($Form,"Radiobutton1","Visible","No")
+        $Form = EditForm($Form,"Radiobutton2","Visible","No")
+        $Form = EditForm($Form,"File1","Visible","No")
+    ENDIF
+ENDIF
+
+WHILE TRUE
+    $FormExit = form($Form,"")
+    BEGINCASE 
+        CASE $FormExit = "SystemExit"
+        CANCEL Msg="Macro Cancelled"
+
+        CASE $FormExit = "OK"
+        GOSUB Name=Run
+        MACSETTINGS Type=S Vars=File1,Radiobutton1,Radiobutton2,Combobox1
+        BREAK 
+
+        CASE $FormExit="Combobox1"
+            IF $Combobox1="Write File"
+                $Form = EditForm($Form,"GroupBox1","Visible","Yes")
+                $Form = EditForm($Form,"Label1","Visible","Yes")
+                $Form = EditForm($Form,"Label2","Visible","Yes")
+                $Form = EditForm($Form,"Label3","Visible","Yes")
+                $Form = EditForm($Form,"Label4","Visible","Yes")
+                $Form = EditForm($Form,"Radiobutton1","Visible","Yes")
+                $Form = EditForm($Form,"Radiobutton2","Visible","Yes")
+                $Form = EditForm($Form,"File1","Visible","Yes")
+            ENDIF
+            
+            IF $Combobox1="Windows Clipboard"
+                $Form = EditForm($Form,"GroupBox1","Visible","No")
+                $Form = EditForm($Form,"Label1","Visible","No")
+                $Form = EditForm($Form,"Label2","Visible","No")
+                $Form = EditForm($Form,"Label3","Visible","No")
+                $Form = EditForm($Form,"Label4","Visible","No")
+                $Form = EditForm($Form,"Radiobutton1","Visible","No")
+                $Form = EditForm($Form,"Radiobutton2","Visible","No")
+                $Form = EditForm($Form,"File1","Visible","No")
+            ENDIF
+        
+        CASE $FormExit = "Cancel"
+        CANCEL Msg="Macro Cancelled"
+    ENDCASE 
+ENDWHILE
+
+BEGINSUB Name=Run
+    $SQLfile = $InstallFolder + "\static.db3"
+    $status = Sqlite("open",$SQLfile)
+    
+    $_sql = "SELECT vfrom,d2 FROM lookup WHERE type='sysvars' or type='dbv' order by vfrom"
+    $VariableString = Sqlite("sql",$_sql)
+        
+    $_sql = "SELECT vfrom,type FROM lookup WHERE type='functions' or type='commands' order by vfrom"
+    $FunctionString = Sqlite("sql",$_sql)
+    
+    $TagList="[TagList]" + $_NewLine + "ActiveGroup=GSAK Variables"  + $_Newline + $_NewLine
+    
+    $TagList=$TagList + "[Tag Group - GSAK Variables]" + $_NewLine
+    $x=RegExCount($_NewLine,$VariableString)+2
+    $ThisLine=0
+    WHILE $ThisLine<$x
+        $TagList=$TagList + NumToStr($ThisLine) + "=" + $_Quote
+        $DataLine=Extract($VariableString, $_NewLine, $ThisLine)
+        $Data=Extract($DataLine, ";",1)
+        $Type=Extract($DataLine, ";",2)
+        BEGINCASE
+            CASE $Type="C"
+                $Type="String"
+            CASE $Type="N"
+                $Type="Numeric"
+            CASE $Type="D"
+                $Type="Date"
+            CASE $Type="L"
+                $Type="Boolean"
+        ENDCASE
+        $DataType=$Data + $Spaces + $type + " :UEDS:" + $Data
+        $TagList=$Taglist + $DataType + $_Quote + $_NewLine
+        $ThisLine=$ThisLine + 1
+    ENDWHILE
+    $Taglist=$Taglist + NumToStr($ThisLine) + "=" 
+    
+    $TagList=$TagList + $_Newline + $_Newline + "[Tag Group - GSAK Commands & Functions]" + $_NewLine
+    $x=RegExCount($_NewLine,$FunctionString)+2
+    $ThisLine=0
+    WHILE $ThisLine<$x
+        $TagList=$TagList + NumToStr($ThisLine) + "=" + $_Quote
+        $DataLine=Extract($FunctionString, $_NewLine, $ThisLine)
+        $Data=Extract($DataLine, ";",1)
+        $Type=Extract($DataLine, ";",2)
+        $DataType=$Data + $Spaces + $type + " :UEDS:" + $Data
+        $TagList=$Taglist + $DataType + $_Quote + $_NewLine
+        $ThisLine=$ThisLine + 1
+    ENDWHILE
+    $Taglist=$Taglist + NumToStr($ThisLine) + "="  + $_NewLine + $_NewLine 
+    $TagList=$TagList + "[Group List]" + $_NewLine + "0=None"  + $_NewLine + "1=GSAK Variables" + $_Newline + "2=GSAK Commands & Functions" + $_NewLine + "3=" + $_NewLine + $_NewLine 
+    
+    IF $Combobox1="Write File"
+        IF FileExists($File1) AND $Radiobutton2
+            $FilePath=Extract($File1,".",1)
+            $numslashes = RegExCount("\\",$FilePath) + 1
+            $FileName=Extract($FilePath,"\",$numslashes)
+            $BackFile=$FileName + ".bak"
+            $PathBackfile=Extract($File1,".",1)+".bak"
+            IF FileExists($PathBackfile)
+                RUNPGM pgm=$comspec parms=/C DEL "$PathBackfile" wait=yes
+            ENDIF 
+            RUNPGM pgm=$comspec parms=/C REN "$File1" "$BackFile" wait=yes
+        ENDIF
+        $WriteFile=PutFile($File1,$TagList)
+        IF Left($WriteFile,7) = "*Error*"
+            PAUSE Msg="$NewFile"
+            Cancel
+        ENDIF
+    ELSE
+        CLIP Data=$TagList
+        MSGOK Msg=UltraEdit GSAK Tag List copied to the Windows Clipboard for pasting into your existing tag List
+    ENDIF
+ENDSUB
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Mon 29-Dec-2008 21:12:01
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Create UltraEdit TagList File
+  Height = 251
+  Width = 500
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 49
+  Left = 18
+  Top = 108
+  Visible = No
+  Width = 433
+  Taborder = 3
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 97
+  Top = 174
+  Width = 75
+  Taborder = 0
+  Caption = OK
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 319
+  Top = 174
+  Width = 75
+  Taborder = 1
+  Caption = Cancel
+
+Name = Label1
+  Type = Label
+  Font = MS Sans Serif
+  Height = 16
+  Left = 18
+  Size = 11
+  Style = Bold
+  Top = 54
+  Visible = No
+  Width = 433
+  Caption = Select or enter the full path and file name for the taglist text file to save:
+
+Name = File1
+  Type = File
+  Height = 21
+  Left = 18
+  Top = 81
+  Visible = No
+  Width = 457
+  Taborder = 2
+
+Name = Label2
+  Type = Label
+  Container = Groupbox1
+  Font = MS Sans Serif
+  Height = 16
+  Left = 18
+  Size = 11
+  Style = Bold
+  Top = 20
+  Visible = No
+  Width = 82
+  Caption = If file exists:
+
+Name = Radiobutton1
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 108
+  Top = 20
+  Visible = No
+  Width = 15
+  Taborder = 0
+
+Name = Label3
+  Type = Label
+  Container = Groupbox1
+  Font = MS Sans Serif
+  Height = 16
+  Left = 127
+  Size = 11
+  Style = Bold
+  Top = 20
+  Visible = No
+  Width = 66
+  Caption = Overwrite
+
+Name = Radiobutton2
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 216
+  Top = 20
+  Visible = No
+  Width = 15
+  Taborder = 1
+
+Name = Label4
+  Type = Label
+  Container = Groupbox1
+  Font = MS Sans Serif
+  Height = 16
+  Left = 238
+  Size = 11
+  Style = Bold
+  Top = 20
+  Visible = No
+  Width = 159
+  Caption = Backup (rename *.bak)
+
+Name = Combobox1
+  Type = Combobox
+  Exitonchange = Yes
+  Height = 21
+  Left = 252
+  Top = 18
+  Values = Windows Clipboard;Write File
+  Width = 145
+  Taborder = 4
+
+Name = Label5
+  Type = Label
+  Font = MS Sans Serif
+  Height = 16
+  Left = 18
+  Size = 11
+  Style = Bold
+  Top = 20
+  Width = 221
+  Caption = Select the output method to use:
+
+<enddata>

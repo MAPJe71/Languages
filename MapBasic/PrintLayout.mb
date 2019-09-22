@@ -1,0 +1,637 @@
+'************************************************************************************
+'**  Print Layout Sample Code
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		25 October 2012
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub MLB
+Declare Sub PrintLayoutDefaultSettings
+Declare Sub CreateMaps
+Declare Sub LayoutPortrait
+Declare Sub LayoutLandscape
+Declare Sub MLBOKButton
+Declare Sub SelectAllFromMLB
+Declare Sub HighLightSelectedRegions
+Declare Sub PopulateRegionsArray
+Declare Sub About
+Declare Sub End_Program
+
+'Function to check whether a table is open or not
+Declare Function TableIsOpen (ByVal sTabName As String) As Logical
+
+' /////     Class "MBExtensions.MBDateAndTime"     /////
+' Allows you to retreive information from a MapBasic Date (i.e. YYYYMMDD) or
+' DateTime (i.e. YYYYMMDDHHMMSSFFF) string
+ 
+' Convert the string to it's equivalent long date string representation
+' (depends on Control Panel > Regional and Language Options)
+Declare Method RegionalLongDate
+    Class "MBExtensions.MBDateAndTime"
+    Lib "MBExtensions.dll" (ByVal sDateString as string) As String
+
+Define AppName "Print Layout Sample Code"
+Define AppNameMenu "Print &Layout"
+Define AppVersion "0.50"
+
+'Defining Dialog Width and Height
+'This allows you to specify width and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Define MLBID			1001
+Define SelectAllMLBID	1002
+
+
+Global sTabFile, sTable, sColA, sColB, sRegionsArray(), sAddressArray(5), sPrintDate, sCopyrightText, sFont, sRegion, sRegionTitle, sPrinterName, sDocTitle, sPapersize, sOutputFolder as String
+Global iRegionsSelectedArray(), iPaperChoice, iPapersize, iLogoWindowID, iMapWindowID, iLayoutWindowID, iLayoutFontSize1, iLayoutFontSize2, iLayoutFontSize3, iLayoutFontSize4, iOrientation as Integer
+Global fZoom, fMp, fPaper1, fPaper2, fPaperWidth, fPaperHeight, fHorizontalDistance, fVerticalDistance, fPos1, fPos2 As Float
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&" + AppName
+		HelpMsg AppName
+		Calling MLB,
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+	
+	sOutputFolder = ApplicationDirectory$() + "Output\"
+	sTabFile = ApplicationDirectory$() + "Tables\FR_Départements2006.TAB"
+	sTable = PathToTableName$(sTabFile)
+	sColA = "Nom_Région"
+	sColB = "Nom_Département"
+	
+End Sub Main
+
+'*********************************************************************************************
+Sub MLB
+'*********************************************************************************************
+
+' Processing a MultiListBox control 
+'
+' To read what items the user selected from a MultiListBox control, assign a handle r procedure
+' that is called when the user dismisses the dialog box (for example, assign a handler to the
+' OKButton control). Within the handler procedure, set up a loop to call the ReadControlValue( )
+' function repeatedly. 
+'
+' The first call to the ReadControlValue( ) function returns the number of the first selected
+' item; the second call to the ReadControlValue( ) function returns the number of the second
+' selected item; etc. When the ReadControlValue( ) function returns zero, you have exhausted the
+' list of selected items. If the first call to the ReadControlValue( ) function returns zero,
+' there are no list items selected. 
+
+If Not TableIsOpen(sTable) Then
+	Call PopulateRegionsArray
+End If
+
+If Ubound(iRegionsSelectedArray) = 0 Then
+	Call PopulateRegionsArray
+End If
+	
+Dim l as Integer
+
+Call PrintLayoutDefaultSettings
+
+	Dialog
+		Title AppName
+		Calling HighLightSelectedRegions
+		Control StaticText Title "Print map for one or more regions:" Position 1dW, 1dH
+		Control MultiListBox Title from variable sRegionsArray Width 35dW Height 23dH Position 1dW, 2.5dH ID MLBID
+		Control CheckBox Title "Select &All    " Value 0 Position 1dW, 26dH ID SelectAllMLBID Calling SelectAllFromMLB
+		Control GroupBox Title "Selet Paper Size:" Position 37dW,2.5dH Height 5.5dH Width 30dW
+		Control RadioGroup Title "A&4;A&3" into iPaperChoice Position 39dW, 4.5dH
+		Control OKButton Title "&Print" Calling MLBOKButton
+		Control CancelButton
+
+	If CommandInfo(CMD_INFO_DLG_OK) Then
+	
+		For l = 1 To Ubound(iRegionsSelectedArray)
+			sRegion = sRegionsArray(iRegionsSelectedArray(l))
+			sRegionTitle = "Les départements de la région " + sRegionsArray(iRegionsSelectedArray(l))
+			Call CreateMaps
+		Next
+	
+	End If	
+		
+		
+End Sub MLB
+
+'*********************************************************************************************
+Sub PrintLayoutDefaultSettings
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+	sPrintDate = CurDate()
+	sPrintDate = RegionalLongDate(sPrintDate)
+	sCopyrightText = Chr$(169) + Chr$(32) + Year(CurDate()) + " - My wonderful team"
+	sFont = "Arial"
+	
+	sAddressArray(1) = "My own company name"
+	sAddressArray(2) = "My own company address"
+	sAddressArray(3) = "My own company phone number"
+	sAddressArray(4) = "My own company email address"
+	sAddressArray(5) = "My own company website"
+
+Exit Sub
+'---------------------------
+ErrorHandler:
+	Note Error$()
+
+End Sub PrintLayoutDefaultSettings
+
+'*********************************************************************************************
+Sub CreateMaps
+'*********************************************************************************************
+
+OnError GoTo ErrorHandler
+
+Dim sQuery, sCommand As String
+
+Set Map Redraw OFF
+
+sPrinterName = "MapInfo PDF Printer Version " + Format$(SystemInfo(SYS_INFO_MIVERSION)/100,"#.##")
+
+If iPaperChoice = 1 Then
+	fMp = 1
+	iPapersize = 9
+	sPapersize = "A4"
+	fPaper1 = 21
+	fPaper2 = 29.7
+	iLayoutFontSize1 = 6
+	iLayoutFontSize2 = 8
+	iLayoutFontSize3 = 18
+	iLayoutFontSize4 = 4
+ElseIf iPaperChoice = 2 Then
+	fMp = 1.4142857142857142857142857142857
+	iPapersize = 8
+	sPapersize = "A3"
+	fPaper1 = 29.7
+	fPaper2 = 42
+	iLayoutFontSize1 = 8
+	iLayoutFontSize2 = 11
+	iLayoutFontSize3 = 25
+	iLayoutFontSize4 = 5
+End If
+
+	Open Table ApplicationDirectory$() + "My_own_company_logo.TAB"
+	Map From My_own_company_logo
+	iLogoWindowID = WindowID(FrontWindow())
+	
+	Set CoordSys Table sTable
+
+	sQuery = "Select * From " + sTable + " Where " + sColA + " = " + Chr$(34) + sRegion + Chr$(34) + " into RegionSelected"
+	Run Command sQuery
+
+	fHorizontalDistance = TableInfo("RegionSelected",TAB_INFO_MAXX) - TableInfo("RegionSelected",TAB_INFO_MINX)
+	fVerticalDistance = TableInfo("RegionSelected",TAB_INFO_MAXY) - TableInfo("RegionSelected",TAB_INFO_MINY)
+	If fHorizontalDistance <= fVerticalDistance Then
+		iOrientation = 1
+	Else
+		iOrientation = 2
+	End If
+			
+	Map From RegionSelected
+	iMapWindowID = WindowID(FrontWindow())
+	
+	If iOrientation = 1 Then
+		Set Window FrontWindow() Position (0,0) units "cm" Width 19*fMp units "cm" Height 24.5*fMp units "cm"
+	ElseIf iOrientation = 2 Then
+		Set Window FrontWindow() Position (0,0) units "cm" Width 27.7*fMp units "cm" Height 15.8*fMp units "cm"
+	End If
+	
+	Set Map Window iMapWindowID Zoom Entire Layer RegionSelected
+
+	sCommand = "Set Map Window " + iMapWindowID + " Layer RegionSelected Label With " + sColB + " Auto Retry On"
+	Run Command sCommand
+	Set Map Window iMapWindowID  Layer RegionSelected Label Auto On
+	Set Map Window iMapWindowID  Layer RegionSelected Label Font MakeFont(sFont,257,9,255,16777215)
+
+	sDocTitle = sRegionTitle
+
+	Set Window FrontWindow() Title sDocTitle + " Map"
+	
+		
+		Set Distance Units "cm"
+		Set Paper Units "cm"
+		
+		fZoom = MapperInfo(FrontWindow(),MAPPER_INFO_SCALE)
+		
+		If fZoom < 100000 Then 'under 1:100,000 round to 1,000
+			fZoom = fZoom + 500
+			fZoom = Round(fZoom, 1000)
+		ElseIf fZoom < 1000000 Then 'between 1:100,000 and 1:1,000,000 round to 10,000
+			fZoom = fZoom + 5000
+			fZoom = Round(fZoom, 10000)
+		ElseIf fZoom >= 1000000 Then 'above 1:1,000,000 round to 100,000
+			fZoom = fZoom + 50000
+			fZoom = Round(fZoom, 100000)
+		End If
+		
+		Set Map Scale 1 Units "cm" For fZoom Units "cm"
+
+		Run Menu Command 304 'Unselect All
+
+		Create Adornment From Window FrontWindow() Type Scalebar Position 6 Offset (0.000000, 0.000000) Units "cm" Background Brush (2,16777215,16777215)  Pen (1,2,0)  BarType 3 Ground Units "km" Display Units "mm" BarLength 50.000000 BarHeight 2.000000 BarStyle Pen (1,2,0)  Brush (2,0,16777215)  Font MakeFont(sFont,0,iLayoutFontSize2,BLACK,WHITE) Scale Off 
+
+		If iOrientation = 1 Then
+			fPaperWidth = fPaper1
+			fPaperHeight = fPaper2
+			Call LayoutPortrait
+		ElseIf iOrientation = 2 Then
+			fPaperWidth = fPaper2
+			fPaperHeight = fPaper1
+			Call LayoutLandscape
+		End If
+
+			Save Window FrontWindow() As sOutputFolder + sDocTitle + ".png" Type "PNG" Width fPaperWidth Units "cm" Height fPaperHeight Units "cm" Resolution 300
+
+			Close Window iLayoutWindowID
+			Close Window iMapWindowID
+			Close Table My_own_company_logo
+			Close Table RegionSelected
+			
+Set Map Redraw On	
+
+Exit Sub
+'---------------------------
+ErrorHandler:
+	Note Error$()
+	
+End Sub CreateMaps
+
+'*********************************************************************************************
+Sub LayoutPortrait
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+Dim i As Integer
+
+		Layout
+			Position (10,10) Units "mm"
+			Width 210*fMp Units "mm" Height 297*fMp Units "mm"
+			iLayoutWindowID = WindowID(FrontWindow())
+		  Set CoordSys Layout Units "mm"
+		  Create Frame (10*fMp,20*fMp) (200*fMp,265*fMp)
+			Pen (1,2,0) 
+			Brush (2,16777215,16777215)
+			From Window iMapWindowID
+			FillFrame On
+
+			Create Text
+				sCopyrightText
+				(197*fMp,264*fMp) (200*fMp,350*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,6316128,WHITE)
+				Angle 90
+	
+		Create Text
+			sDocTitle
+			(10*fMp,10*fMp) (200*fMp,20*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize3,BLACK,WHITE)
+
+		Create Text
+			"Print Date:"
+			(64*fMp,266*fMp) (200*fMp,274*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+		Create Text
+			sPrintDate
+			(80*fMp,266*fMp) (200*fMp, 274*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+
+			Create Text
+				"Scale:"
+				(64*fMp,270*fMp) (200*fMp,278*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				"1 : " + Format$(fZoom, ",#")
+				(80*fMp,270*fMp) (200*fMp, 278*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				"Paper Size:"
+				(64*fMp,274*fMp) (200*fMp,282*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				sPapersize
+				(80*fMp,274*fMp) (200*fMp, 282*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+
+        fPos1 = 275.5*fMp
+        fPos2 = 283.5*fMp
+         
+        For i = 1 to 5
+            fPos1 = fPos1 + 2*fMp
+            fPos2 = fPos2 + 2*fMp
+			Create Text
+				sAddressArray(i)
+				(42*fMp,fPos1) (90*fMp,fPos2)
+				Font MakeFont(sFont,0,iLayoutFontSize4,BLACK,WHITE)
+        Next
+
+		Create Rect (10*fMp,265*fMp) (200*fMp,288*fMp)
+			Pen (1,2,8421504) 
+			Brush (1,16777215,16777215)
+		Create Line (62*fMp,265*fMp) (62*fMp,277*fMp)
+			Pen (1,2,8421504)
+		Create Line (78*fMp,265*fMp) (78*fMp,277*fMp)
+			Pen (1,2,8421504)
+		Create Line (110*fMp,265*fMp) (110*fMp,277*fMp)
+			Pen (1,2,8421504)
+		Create Line (62*fMp,269*fMp) (110*fMp,269*fMp)
+			Pen (1,2,8421504)
+		Create Line (62*fMp,273*fMp) (110*fMp,273*fMp)
+			Pen (1,2,8421504)
+		Create Line (40*fMp,277*fMp) (200*fMp,277*fMp)
+			Pen (1,2,8421504)
+		Create Frame (11*fMp,266*fMp) (39*fMp,287*fMp)
+			Pen (1,1,0) 
+			Brush (2,16777215,16777215)
+			From Window iLogoWindowID
+		Create Line (40*fMp,265*fMp) (40*fMp,288*fMp)
+			Pen (1,2,8421504)
+
+		  Set Layout Ruler On Pagebreaks On Frame Contents On
+		  Zoom 33.3333
+		  Set Window FrontWindow() Autoscroll On
+		  Set Window FrontWindow() Title sDocTitle + " Layout"
+		Set Window FrontWindow() Printer
+		 Name sPrinterName Orientation Portrait Copies 1
+		 Papersize iPapersize
+
+Exit Sub
+'---------------------------
+ErrorHandler:
+	Note Error$()
+
+End Sub LayoutPortrait
+
+'*********************************************************************************************
+Sub LayoutLandscape
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+Dim i As Integer
+
+		Layout
+		  Position (10,10) Units "mm"
+		  Width 297*fMp Units "mm" Height 210*fMp Units "mm" 
+			iLayoutWindowID = WindowID(FrontWindow())
+		  Set CoordSys Layout Units "mm"
+		  Create Frame (10*fMp,20*fMp) (287*fMp,178*fMp)
+			Pen (1,2,0) 
+			Brush (2,16777215,16777215)
+			From Window iMapWindowID
+			FillFrame On
+
+			Create Text
+				sCopyrightText
+				(284*fMp,177*fMp) (287*fMp,308*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,6316128,WHITE)
+				Angle 90
+			
+		Create Text
+			sDocTitle
+			(10*fMp,10*fMp) (200*fMp,20*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize3,BLACK,WHITE)
+
+		Create Text
+			"Print Date:"
+			(64*fMp,179*fMp) (200*fMp,187*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+		Create Text
+			sPrintDate
+			(80*fMp,179*fMp) (228*fMp,187*fMp)
+			Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+
+			Create Text
+				"Scale:"
+				(64*fMp,183*fMp) (200*fMp,191*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				"1 : " + Format$(fZoom, ",#")
+				(80*fMp,183*fMp) (228*fMp,191*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				"Paper Size:"
+				(64*fMp,187*fMp) (200*fMp,195*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+			Create Text
+				sPapersize
+				(80*fMp,187*fMp) (228*fMp,195*fMp)
+				Font MakeFont(sFont,0,iLayoutFontSize1,BLACK,WHITE)
+
+        fPos1 = 188.5*fMp
+        fPos2 = 196.5*fMp
+         
+        For i = 1 to 5
+            fPos1 = fPos1 + 2*fMp
+            fPos2 = fPos2 + 2*fMp
+			Create Text
+				sAddressArray(i)
+				(42*fMp,fPos1) (90*fMp,fPos2)
+				Font MakeFont(sFont,0,iLayoutFontSize4,BLACK,WHITE)
+        Next
+
+		
+		Create Rect (10*fMp,178*fMp) (287*fMp,201*fMp)
+			Pen (1,2,8421504) 
+			Brush (1,16777215,16777215)
+
+		Create Line (62*fMp,178*fMp) (62*fMp,190*fMp)
+			Pen (1,2,8421504)
+		Create Line (78*fMp,178*fMp) (78*fMp,190*fMp)
+			Pen (1,2,8421504)
+		Create Line (110*fMp,178*fMp) (110*fMp,190*fMp)
+			Pen (1,2,8421504)
+		Create Line (62*fMp,182*fMp) (110*fMp,182*fMp)
+			Pen (1,2,8421504)
+		Create Line (62*fMp,186*fMp) (110*fMp,186*fMp)
+			Pen (1,2,8421504)
+		Create Line (40*fMp,190*fMp) (287*fMp,190*fMp)
+			Pen (1,2,8421504)
+		Create Frame (11*fMp,179*fMp) (39*fMp,200*fMp)
+			Pen (1,1,0) 
+			Brush (2,16777215,16777215)
+			From Window iLogoWindowID
+		Create Line (40*fMp,178*fMp) (40*fMp,201*fMp)
+			Pen (1,2,8421504)
+			
+		  Set Layout Ruler On Pagebreaks On Frame Contents On
+		  Zoom 33.3333
+		  Set Window FrontWindow() Autoscroll On
+		  Set Window FrontWindow() Title sDocTitle + " Layout"
+		Set Window FrontWindow() Printer
+		 Name sPrinterName Orientation Landscape Copies 1
+		 Papersize iPapersize
+
+Exit Sub
+'---------------------------
+ErrorHandler:
+	Note Error$()
+
+End Sub LayoutLandscape
+
+'*********************************************************************************************
+Sub MLBOKButton
+'*********************************************************************************************
+
+Dim iSel, j As Integer
+
+j = 0
+iSel = ReadControlValue(MLBID)
+
+If iSel = 0 Then
+	Note "Please select a Region"
+	Dialog Preserve
+End If
+
+Do Until iSel = 0
+	j = j + 1
+	Redim iRegionsSelectedArray(j)
+	iRegionsSelectedArray(j) = iSel
+	iSel = ReadControlValue(MLBID)
+Loop
+
+End Sub MLBOKButton
+
+'*********************************************************************************************
+Sub SelectAllFromMLB
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+Dim i As Integer
+
+If ReadControlValue(SelectAllMLBID) Then
+	For i = 1 To Ubound(sRegionsArray)
+		Alter Control MLBID Value i
+		Alter Control SelectAllMLBID Title "Unselect &All"
+	Next
+Else
+	For i = 1 To Ubound(sRegionsArray)
+		Alter Control MLBID Value 0
+		Alter Control SelectAllMLBID Title "Select &All"
+	Next
+End If
+	
+Exit Sub
+'---------------------------
+ErrorHandler:
+	Note Error$()
+
+End Sub SelectAllFromMLB
+
+'*********************************************************************************************
+Sub HighLightSelectedRegions
+'*********************************************************************************************
+
+Dim i As Integer
+
+For i = 1 To Ubound(iRegionsSelectedArray)
+	Alter Control MLBID Value iRegionsSelectedArray(i)
+Next
+
+End Sub HighLightSelectedRegions
+
+'*********************************************************************************************
+Sub PopulateRegionsArray
+'*********************************************************************************************
+
+Dim iNumRegions, i as Integer
+Dim sQuery, sQueryName as String
+Dim aCol as Alias
+
+Close All Interactive
+Open Table sTabFile Interactive
+
+Map From sTable
+	Position (0,0) Units "in"
+	Width 3.51042 Units "in" Height 3.54167 Units "in" 
+Set Map Window FrontWindow() Zoom Entire
+
+sQueryName = "Regions"
+sQuery = "Select " + sColA + " from " + sTable + " group by " + sColA + " order by " + sColA + " into " + sQueryName
+Run Command sQuery
+
+iNumRegions = TableInfo(sQueryName, TAB_INFO_NROWS)
+Redim sRegionsArray(iNumRegions)
+
+For i = 1 to iNumRegions
+	Fetch Rec i from sQueryName
+	aCol = sQueryName + "." + sColA
+	sRegionsArray(i) = aCol
+Next
+
+Close Table sQueryName
+
+End Sub PopulateRegionsArray
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application provides an example of how to use" Position 3dW, 1dH
+		Control StaticText title "the Layout statement in your MapBasic application" Position 3dW, 2dH
+		Control StaticText title Chr$(169) + " 2012 - Egge-Jan Pollé" Position 35dW, 6dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************
+Function TableIsOpen (
+	ByVal sTabName As String)
+As Logical
+
+	Dim iCounter, iNumberOfTables As Integer
+
+	iNumberOfTables = NumTables()
+	If iNumberOfTables = 0 Then
+		Goto no_tables_open
+	End If
+
+	For iCounter = 1 to iNumberOfTables
+		If TableInfo(iCounter, TAB_INFO_NAME) = sTabName Then
+			TableIsOpen = TRUE
+			Exit Function
+		End If
+	Next
+
+	no_tables_open:
+	TableIsOpen = FALSE
+
+End Function
+
+'*********************************************************************************************

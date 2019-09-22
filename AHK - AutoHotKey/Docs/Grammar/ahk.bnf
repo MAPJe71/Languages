@@ -1,0 +1,187 @@
+<!-- saved from url=(0053)http://www.autohotkey.net/~DerRaphael/tmp/ahk.bnf.txt -->
+
+;BNF for AHK ;)
+
+script              = < hotkey >
+                    | < hotstring >
+                    | < directive_statement >
+                    | < function >
+                    | < statement > .
+
+comment             = newline "/*" < character > newline "*/" newline
+                    | < space > comment_identifier < character > newline .
+
+hotkey              = identifier "::"
+                      ( statement
+                      | statement_block ) newline .
+
+hotstring           = ":" identifier ":" identifier "::"
+                      ( statement
+                      | statement_block ) newline .
+
+function            = identifier "(" arglist ")"
+                      statement_block
+
+variable_declarator =           identifier var_assign_expressn
+                      ( < "," < identifier var_assign_expressn > > )
+                      [   "," < identifier var_assign_classic  >   ] newline .
+
+var_assign_expressn = ":=" expression
+
+var_assign_classic  = "=" ( cont_sect_classic
+                            | < character >
+                            | variable_deref )
+
+variable_deref      = [ identifier ] "%" identifier "%" .
+
+cont_sect_classic   = newline "(" ( identifier [ < "," identifier > ] ) < character > newline ")" .
+
+cont_sect_expressn  = newline "(" ( identifier [ < "," identifier > ] )   string      newline ")" .
+
+statement_block     = "{" < statement > "}" .
+
+statement           = ( variable_declaration
+                      | expression
+                      | statement_block
+                      | if_statement
+                      | while_statement
+                      | loop_statement
+                      | "return" [ expression ]
+                      | label statement
+                      | command_statement ) newline .
+
+if_statement        = ( "if" "(" expression ")"
+                      | "if"     expression     )
+                      ( statement | statement_block ) .
+
+while_statement     = "while" "(" expression ")" newline
+                      ( statement | statement_block ) .
+
+loop_statement      = "loop" parameter newline
+                      ( statement | statement_block ) .
+
+command_statement   = identifier parameter
+
+directive_statement = "#" identifier parameter
+
+parameter           = < delimiter_string
+                        ( identifier
+                        | deref_char expression
+                        | cont_sect_classic ) > newline
+
+expression          = ( numeric_expression
+                      | testing_expression
+                      | logical_expression
+                      | string_expression
+                      | bit_expression
+                      | literal_expression
+                      | cont_sect_expressn
+                      | identifier "(" arglist ")" ) .
+
+testing_expression  = expression [
+                        ( ">"
+                        | "<"
+                        | ">="
+                        | "<="
+                        | "=="
+                        | "="
+                        | "!=" ) expression ] .
+
+numeric_expression  = ( "-" | "++" | "--" ) expression )
+                      | ( expression ( "++" | "--" ) )
+                      | ( expression
+                          ( "+"
+                          | "+="
+                          | "-"
+                          | "-="
+                          | "*"
+                          | "*="
+                          | "/"
+                          | "/="
+                          | "//"
+                          | "//="
+                          | "**"
+                          | "**="
+                          | "%"
+                          | "%=" ) expression ) .
+
+bit_expression      = expression
+                      ( ">>="
+                      | "<<="
+                      | ">>"
+                      | "<<"
+                      | "|="
+                      | "&"
+                      | "&=" ) expression .
+
+logical_expression  = ( expression ( "&&" | "||" ) expression  )
+                      | ( expression  "?" expression  ":" expression )
+                      | "true"
+                      | "false" .
+
+string_expression   = ( expression ( "." | ".=" | " " ) expression ) .
+
+literal_expression  = integer_literal
+                    | float_literal
+                    | string
+                    | variable_deref
+                    | character .
+
+arglist             = expression < "," expression > .
+
+modifier            = "static"
+                    | "global"
+                    | "local" .
+
+
+comment_identifier  = ";" | comment_directive .
+
+comment_directive   = "#commentflag" comment_string .
+
+comment_string      = < character > .
+
+
+delimiter           = "," | delimiter_string .
+
+delimiter_directive = "#delimiter" delimiter_string .
+
+delimiter_string    = character .
+
+
+derefchar           = "%" | deref_character .
+
+deref_directive     = "#derefchar" deref_character .
+
+deref_character     = character .
+
+
+escapechar          = "`" | escape_character .
+
+escape_directive    = "#escapechar" escape_character .
+
+escape_character    = character .
+
+
+identifier          =  < "a..z, $, _, 0..9, Windows-ANSI character over 00C0" > .
+
+
+character           =  "based on the Windows-ANSI character set" .
+
+string              =  '"' < character > '"' .
+
+label               = identifier ":" newline .
+
+newline             = ( "\r" )? "\n" .
+
+space               = " " | "\t" .
+
+decimal_digits      =  "0..9" < "0..9" > .
+
+exponent_part       = "e" [ "+" | "-" ] decimal_digits .
+
+integer_literal     = [ "+" | "-" ] "1..9" < "0..9" >
+                    | "0" "x" "0..9a..f" < "0..9a..f" > .
+
+float_literal       = [ "+" | "-" ] ( decimal_digits "." [ decimal_digits ] [ exponent_part ] )
+                    |               (                "."   decimal_digits   [ exponent_part ] )
+                    |               (                      decimal_digits   [ exponent_part ] ) .

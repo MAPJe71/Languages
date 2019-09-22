@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=      "octave_syntax"        userDefinedLangName="Octave"            />
+			<association id=      "octave_syntax"        ext=".m"                                />
+			<association id=      "octave_syntax"        ext=".oct"                              />
+		</associationMap>
+		<parsers>
+			<!-- ====================================================== [ Octave ] -->
+
+			<!--
+			|   see also MATLAB
+			|
+			|					\b(?!(?-i:
+			|						__(?:FIL|LIN)E__
+			|					|	break
+			|					|	c(?:a(?:se|tch)|lassdef|ontinue)
+			|					|	do
+			|					|	e(?:lse(?:if)?
+			|							|nd(?:_(?:try_catch|unwind_protect)
+			|								|classdef|e(?:numeration|vents)
+			|								|f(?:or|unction)|if|methods
+			|								|p(?:arfor|roperties)|switch|while)?
+			|							|numeration
+			|							|vents)
+			|					|	f(?:or|unction)
+			|					|	global
+			|					|	if
+			|					|	methods
+			|					|	otherwise
+			|					|	p(?:arfor|ersistent|roperties)
+			|					|	return
+			|					|	switch
+			|					|	try
+			|					|	un(?:til|wind_protect(?:_cleanup)?)
+			|					|	while
+			|					)\b)
+			\-->
+			<parser
+				displayName="[TBD] Octave"
+				id         ="octave_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?'MLC1'                                            # Multi Line Comment 1
+								(?m)                                            # - ^ and $ match at line-breaks
+								^\h*\x23\{\h*$                                  # - start-of-comment indicator on separate line, white-space allowed
+								(?:                                             # - followed by zero or more characters...
+									[^\x23]                                     #   ...not the start of a start-of-comment indicator,
+								|	\x23(?![{}])                                #   ...not a start- or end-of-comment indicator and
+								|	(?&amp;MLC1)                                #   ...recursion through subroutine call
+								)*?
+								^\h*\x23\}\h*$                                  # - end-of-comment indicator on separate line, white-space allowed
+							)
+						|	(?'MLC2'                                            # Multi Line Comment 2
+								(?m)                                            # - ^ and $ match at line-breaks
+								^\h*%\{\h*$                                     # - start-of-comment indicator on separate line, white-space allowed
+								(?:                                             # - followed by zero or more characters...
+									[^%]                                        #   ...not the start of a start-of-comment indicator,
+								|	%(?![{}])                                   #   ...not a start- or end-of-comment indicator and
+								|	(?&amp;MLC2)                                #   ...recursion through subroutine call
+								)*?
+								^\h*%\}\h*$                                     # - end-of-comment indicator on separate line, white-space allowed
+							)
+						|	(?m-s:[\x23%].*$)                                   # Single Line Comment 1 and 2
+						|	(?s:\x22(?:[^\x22\x5C]|\x5C.)*\x22)                 # String Literal - Double Quoted
+						|	(?s:\x27(?:[^\x27]|\x27{2})*\x27)                   # String Literal - Single Quoted
+					"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

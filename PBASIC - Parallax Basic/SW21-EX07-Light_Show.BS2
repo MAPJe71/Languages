@@ -1,0 +1,131 @@
+' =========================================================================
+'
+'   File....... SW21-EX07-Light_Show.BS2
+'   Purpose.... Mini Light Show Controller with Speed Adjust
+'   Author..... (C) 2000 - 2005, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 01 SEP 2005
+'
+'   {$STAMP BS2}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' Runs a small, multi-mode light show controller using six outputs (runs
+' on LEDs, but with proper interfacing could run incandescent lamps).
+' This program will require modifications (to the constants LoSpeed and
+' Scale) when running on the BS2Sx, BS2p, or BS2px.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+Lights          VAR     OUTL                    ' light control outputs
+LightsDirs      VAR     DIRL                    ' DIRS for lights outputs
+
+Speed           PIN     6                       ' speed control Pot input
+LtMode          PIN     7                       ' mode select input
+
+
+' -----[ Constants ]-------------------------------------------------------
+
+LoSpeed         CON     10                      ' lo end of POT reading
+Scale           CON     $0163                   ' 1.3868 with */
+
+#DEFINE Testing = 0                             ' 1 for POT testing
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+rawSpd          VAR     Word                    ' speed input from POT
+delay           VAR     Word                    ' time between patterns
+btnVar          VAR     Byte                    ' workspace for BUTTON
+mode            VAR     Byte                    ' selected mode
+offset          VAR     Byte                    ' offset into patterns
+rndVal          VAR     Word                    ' workspace for RANDOM
+
+
+' -----[ EEPROM Data ]-----------------------------------------------------
+
+SeqA            DATA    %000001, %000010, %000100, %001000, %010000
+                DATA    %100000
+SeqB            DATA    %100000, %010000, %001000, %000100, %000010
+                DATA    %000001, %000010, %000100, %001000, %010000
+SeqC            DATA    %000000, %001100, %010010, %100001
+SeqD            DATA    %100100, %010010, %001001
+SeqE            DATA    %0
+
+AMax            CON     SeqB - SeqA             ' calculate length
+BMax            CON     SeqC - SeqB
+CMax            CON     SeqD - SeqC
+DMax            CON     SeqE - SeqD
+
+
+' -----[ Initialization ]--------------------------------------------------
+
+Reset:
+  LightsDirs = %00111111                        ' make outputs
+
+  #IF Testing #THEN                             ' for reading raw pot value
+    DO
+      GOSUB Read_Speed
+      DEBUG HOME, DEC rawSpd, CLREOL
+      PAUSE 50
+    LOOP
+  #ENDIF
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  GOSUB Read_Speed                              ' read speed pot
+  delay = (rawSpd - LoSpeed) */ Scale + 50      ' calc delay (50-1000 ms)
+  PAUSE delay                                   ' wait between patterns
+
+Switch_Check:
+  BUTTON LtMode, 0, 255, 0, btnVar, 0, Show     ' new mode?
+  mode = mode + 1 // 5                          ' yes, update mode var
+
+Show:
+  ON mode GOSUB ModeA, ModeB, ModeC, ModeD, ModeE
+  GOTO Main
+
+  END
+
+
+' -----[ Subroutines ]-----------------------------------------------------
+
+Read_Speed:
+  HIGH Speed                                    ' charge cap
+  PAUSE 1                                       '   for 1 millisecond
+  RCTIME Speed, 1, rawSpd                       ' read the Pot
+  RETURN
+
+
+ModeA:
+  offset = offset + 1 // AMax                   ' update offset (0 - 5)
+  READ (SeqA + offset), Lights                  ' output new light pattern
+  RETURN
+
+ModeB:
+  offset = offset + 1 // BMax
+  READ (SeqB + offset), Lights
+  RETURN
+
+ModeC:
+  offset = offset + 1 // CMax
+  READ (SeqC + offset), Lights
+  RETURN
+
+ModeD:
+  offset = offset + 1 // DMax
+  READ (SeqD + offset), Lights
+  RETURN
+
+ModeE:
+  RANDOM rndVal                                 ' get random number
+  Lights = rndVal & %00111111                   ' light random channels
+  RETURN

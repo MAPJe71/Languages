@@ -1,0 +1,162 @@
+%abc-2.0
+%
+% Ave_Maria_Gombert.abc    -*- abc -*-
+%
+% Written for abcm2ps and abc2midi:
+% http://abcplus.sourceforge.net
+% Tested with abcm2ps-8.12.3 and abcMIDI-2016.07.20
+%
+% Edited by Guido Gonzato <guido dot gonzato at gmail dot com>
+% September 15, 2016
+%
+% To typeset this file:
+%       abcm2ps -O= -c Ave_Maria_Gombert.abc
+% To make a MIDI file:
+%       abc2midi Ave_Maria_Gombert.abc
+
+%%format choral
+%%pagescale 0.75
+
+X: 1
+T: Ave Maria
+C: Nicolas Gombert (1490?-1560)
+M: 3/4
+L: 1/4
+Q: 1/4 = 170
+%%score [SI|SII|A|TI|TII|B]
+%%MIDI program 1 53 % voice ooh
+%%MIDI program 2 53
+%%MIDI program 3 53
+%%MIDI program 4 53
+%%MIDI program 5 53
+%%MIDI program 6 53
+%%MIDI program 7 53
+V: SI  clef=treble   name="Soprano I"  sname="SI"
+V: SII clef=treble   name="Soprano II" sname="SII"
+V: A   clef=treble   name="Alto"       sname="A"
+V: TI  clef=treble-8 name="Tenor I"    sname="TI"
+V: TII clef=treble-8 name="Tenor II"   sname="TII"
+V: B   clef=bass     name="Bass"       sname="B"
+K: Gm
+%
+% 1 - 6
+%
+[V: SI] d>dd |ddz    |d>dd  |eez    |d2d         |dde|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+[V: SII] B>BB|BBz    |B>BB  |ccz    |A2A         |BBc|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+[V: A] G>GG  |GGz    |GGG   |GGz    |^F2F        |GGG|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+[V: TI] z3   |d>dd   |ddz   |e>ee   |dd d/ d/    |ddc|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+[V: TII] z3  |B>BB   |BBz   |c>cc   |AA A/ A/    |GBG|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+[V: B] z3    |G,>G,G,|G,G,z |C,>C,C,|D,D, D,/ D,/|G,,G,C,|
+w: A-ve Ma-ri-a A-ve Ma-ri-a gra-ti-a ple-na
+%
+% 7 - 10
+%
+[V: SI] d/ d/ ed-   |d2e  |d/ d/ ed-    |d2e|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+[V: SII] B/ B/ cB-  |B2c  |B/ B/ cB-    |B2c|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+[V: A] G/ G/ EG -   |G2G  |G/ G/ EG-    |G2G|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+[V: TI] d/ d/ cd-   |d2c  |d/ d/ cd-    |d2c|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+[V: TII] B/ B/ GB-  |B2G  |B/ B/ GB-    |B2G|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+[V: B] G,/ G,/ C,G,-|G,2C,|G,/ G,/ C,G,-|G,2C,|
+w: Do-mi-nus te -cum Do-mi-nus te -cum
+%
+% 11 - 13
+%
+[V: SI] d/ d/ ed-   |d2e  |c/ c/ d>d|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+[V: SII] =B/ B/ cB- |=B2c |A/ A/ B>B|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+[V: A] G/ G/ E G-   |G2G  |F/ F/ F>F|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+[V: TI] d/ d/ cd-   |d2c  |c/ c/ B>B|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+[V: TII] =B/ B/ GB- |=B2G |A/ A/ F>F|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+[V: B] G,/ G,/ C,G,-|G,2C,|D,/ D,/ B,,>B,,|
+w: be-ne-di-cta_ tu in mu-lie-ri-
+%
+% 14 - 21
+%
+[V: SI] c3 |c c/ c/ c|c2z      |c c/ c/ c|c2z      |zdB   |e2c|ddz|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+[V: SII] A3|A A/ A/ A|A2z      |A A/ A/ A|A2z      |zBG   |c2A|BBz|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+[V: A] F3  |F F/ F/ F|F2z      |F F/ F/ F|F2z      |zDE   |E2F|DDz|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+[V: TI] c3 |z3       |c c/ c/c |c2z      |d d/ d/ d|dBB   |c2c|BBz|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+[V: TII] A3|z3       |A A/ A/ A|A2z      |F F/ F/ F|BFG   |G2A|FFz|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+[V: B] F,3 |z3|F, F,/ F,/ F,|F,2z |B,, B,,/ B,,/ B,,|[B,F,]B,,E,|C,2F,|B,,B,,z|
+w: bus et be-ne-dic-tus et be-ne-dic-tus fru-ctus ven-tris tu-i
+%
+% 22 - 30
+%
+[V: SI] c3 |dzz   |c3 |dzz   |c3 |dd2    |d3    |d>dd |ddz  |
+w: Je-sus Je-sus Je-sus Je-sus San-cta Ma-ri-a
+[V: SII] A3|Bzz   |A3 |Bzz   |A3 |BB2    |B3    |=B>BB|=BBz |
+w: Je-sus Je-sus Je-sus Je-sus San-cta Ma-ri-a
+[V: A] F3  |Fzz   |F3 |Fzz   |F3 |FF2    |F3    |G>GG |GGz  |
+w: Je-sus Je-sus Je-sus Je-sus San-cta Ma-ri-a
+[V: TI] z3 |d3    |czz|d3    |czz|zd2    |d3    |z3   |d>dd |
+w: Je-sus Je-sus Je-sus San-cta Ma-
+[V: TII] z3|B3    |Azz|B3    |Azz|zB2    |B3    |z3   |=B>BB|
+w: Je-sus Je-sus Je-sus San-cta Ma-
+[V: B] z3  |[B,,3F,3]|F,zz|[B,,3F,3]|F,zz|z[B,,2F,2]|[B,,3F,3]|z3|G,>G,G,|
+w: Je-sus Je-sus Je-sus San-cta Ma-
+%
+% 31 - 37
+%
+[V: SI] d>dd  |eez |c2c     |dd2|c2d|cd2|cd2|
+w: San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+[V: SII] =B>BB|ccz |A2A     |BB2|A2B|AB2|AB2|
+w: San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+[V: A] G>GG   |GGz |F2F     |FF2|F2F|FF2|FF2|
+w: San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+[V: TI] ddz   |e>ee|c/ c/ cc|BB2|c2B|cB2|cB2|
+w: ri-a San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+[V: TII] =BBz |c>cc|A/ A/ AA|FF2|A2G|AF2|AF2|
+w: ri-a San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+[V: B] G,G,z  |C,>C,C,|F,/ F,/ F,F,|B,,B,,2|F,2B,,|F,B,,2|F,B,,2|
+w: ri-a San-cta Ma-ri-a Ma-ter De-i o-ra pro no-bis o-
+%
+% 38 - 44
+%
+[V: SI] cdc |cdc|d/ d/d>d |A2z |A>AA |AAz  |z3  |
+w: ra_ pro no -bis pec-ca-to-ri-bus nunc et in ho-ra
+[V: SII] ABA|ABA|B/ B/ B>B|A2z |^F>FF|^FFz |z3  |
+w: ra_ pro no -bis pec-ca-to-ri-bus nunc et in ho-ra
+[V: A] F2F  |F2F|G/ G/ G>G|^F2z|D>DD |DDz  |z3  |
+w: ra pro no-bis pec-ca-to-ri-bus nunc et in ho-ra
+[V: TI] cBc |cBc|d/ d/d>d |d2z |z3   |A>AA |AAz |
+w: ra_ pro no -bis pec-ca-to-ri-bus nunc et in ho-ra
+[V: TII] AFA|AFA|B/ B/ B>B|A2z |z3   |^F>FF|^FFz|
+w: ra_ pro no -bis pec-ca-to-ri-bus nunc et in ho-ra
+[V: B] F,B,,F,|F,B,,F,|G,,/ G,,/ G,,>G,,|D,2z|z3|D,>D,D,|D,D,z|
+w: ra_ pro no -bis pec-ca-to-ri-bus nunc et in ho-ra
+%
+% 45 - 55
+%
+[V: SI] A2A  |z3   |A2A |z3   |d3 |d2z|d3  |d2z|d3-|d3  |Hd3  |]
+w: mor-tis no-strae A-men. A-men. A -men.
+[V: SII] ^F2F|z3   |^F2F|z3   |A3 |B2z|A3  |B2z|A3-|A3  |H=B3 |]
+w: mor-tis no-strae A-men. A-men. A -men.
+[V: A] D2D   |z3   |D2D |z3   |^F3|G2z|^F3 |G2z|^F3-|^F3|HG3  |]
+w: mor-tis no-strae A-men. A-men. A -men.
+[V: TI] z3   |A2A  |z3  |A2A  |z3 |d3 |d2z |d3 |d2z |d3 |Hd3  |]
+w: mor-tis no-strae A-men. A-men. A-men.
+[V: TII] z3  |^F2F |z3  |^F2F |z3 |B3 |A2z |B3 |A2z |A3 |HG3  |]
+w: mor-tis no-strae A-men. A-men. A-men.
+[V: B] z3    |D,2D,|z3  |D,2D,|z3 |G,3|D,2z|G,3|D,2z|D,3|HG,,3|]
+w: mor-tis no-strae A-men. A-men. A-men.
+%
+% End of file Ave_Maria_Gombert.abc

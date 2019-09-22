@@ -1,0 +1,62 @@
+Declare Sub Main
+
+''''''''' .NET Assembly MBExtensions.dll - Class "MBExtensions.MBDateAndTime"  ''''''
+' Allows you to retreive information from a MapBasic Date (i.e. YYYYMMDD) or
+' DateTime (i.e. YYYYMMDDHHMMSSFFF) string
+ 
+' Convert the string to it's equivalent long date string representation
+' (depends on Control Panel > Regional and Language Options)
+Declare Method RegionalLongDate
+    Class "MBExtensions.MBDateAndTime"
+    Lib "MBExtensions.dll" (ByVal sDateString as string) As String
+ 
+' Extract from the string the name of the month in the regional language
+' (depends on Control Panel > Regional and Language Options)
+Declare Method RegionalMonth
+    Class "MBExtensions.MBDateAndTime"
+    Lib "MBExtensions.dll" (ByVal sDateString as string) As String
+ 
+' Extract from the string the name of the weekday in the regional language
+' (depends on Control Panel > Regional and Language Options)
+Declare Method RegionalWeekday
+    Class "MBExtensions.MBDateAndTime"
+    Lib "MBExtensions.dll" (ByVal sDateString as string) As String
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Global sDateString, sLongDateMB, sMonth, sWeekday as String
+
+Sub Main
+
+sDateString = CurDate()
+sLongDateMB = RegionalLongDate(sDateString)
+sMonth = RegionalMonth(sDateString)
+sWeekday = RegionalWeekday(sDateString)
+
+Print "Current month is: " + sMonth
+Print "----"
+Print "Today:"
+Print sDateString
+Print sWeekday
+Print sLongDateMB
+
+
+
+sDateString = CurDate() + 1
+sLongDateMB = RegionalLongDate(sDateString)
+sWeekday = RegionalWeekday(sDateString)
+Print "----"
+Print "Tomorrow:"
+Print sDateString
+Print sWeekday
+Print sLongDateMB
+
+sDateString = CurDateTime() - 1
+sLongDateMB = RegionalLongDate(sDateString)
+sWeekday = RegionalWeekday(sDateString)
+Print "----"
+Print "Yesterday:"
+Print sDateString
+Print sWeekday
+Print sLongDateMB
+
+End Sub Main

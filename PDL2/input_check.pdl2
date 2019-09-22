@@ -1,0 +1,25 @@
+PROGRAM input_check
+
+ROUTINE time_out : BOOLEAN
+-- checks to see if input is received within time limit
+CONST
+    time_limit = 3000
+VAR
+    time_slice : INTEGER
+BEGIN
+    $TIMER[1] := 0
+    REPEAT
+        time_slice := $TIMER[1]
+    UNTIL ($DIN[1] = ON) OR (time_slice > time_limit)
+    IF time_slice > time_limit THEN
+        RETURN (TRUE)
+    ELSE
+        RETURN (FALSE)
+    ENDIF
+END time_out
+
+BEGIN -- main program
+    IF time_out THEN
+        WRITE (Timeout Occurred)
+    ENDIF
+END input_check

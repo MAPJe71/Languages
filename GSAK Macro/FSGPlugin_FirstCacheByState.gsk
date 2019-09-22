@@ -1,0 +1,187 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display the 1st cache you found in every state
+# MacFileName = FSGPlugin_FirstCacheByState.gsk
+# MacAuthor = Karsten & Co 
+# MacVersion=1.03
+# MacUrl=http://gsak.net/board/index.php?act=ST&f=7&t=17442
+#*******************************************
+
+# Based on 'FSGPlugin_FirstCacheByCounty.gsk' from 'The CEO', which is based on code
+# from 'FindStatGen41Beta.gsk' by 'Lignumaqua'
+#
+# Changes
+#  V1.0  11-01-11  Support for language file in table header
+#                  Added country column if  flags are not shown
+#                  Replaced $CR with $_CrLf so that  'Test' button in FSG-Notes dialog works 
+#  V1.01 14-01-11  If run directly, output an error message
+#  V1.02 21-01-11  Output '-' instead of 'Nil' for countries without state information
+#  V1.03 04-06-12  Grouping by state and country
+
+
+	IF $_MacroLevel = 1
+  		RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_FirstCacheByState</plugin>
+	ENDIF
+
+	# Exclude locationless?
+	IF $Excludelocationless
+		$Locationless = "Cachetype <>'L' AND Exclude <> '1'"
+	ELSE
+		$Locationless = "1"
+	ENDIF
+		
+	$_sql = "SELECT rowid, ldate, state,  code, cachetype, name, llogid, url, country FROM allfinds WHERE rowid IN (SELECT min(rowid) FROM allfinds WHERE $Locationless AND state<>'' GROUP BY state, country)"
+	$work = Sqlite("sql",$_sql)
+	
+	#Initialize Variables
+	$LogTotal = $_SqlRows
+	$out=""
+
+	$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf 
+	# Column Heads
+	$text1 = "<b>$Lang31</b>" # Milestone
+	$text2 = "<b>$Lang32</b>" # Date
+	# $text7 = Flag image
+	$text3 = "<b>$Lang44a</b>" # State
+	$text4 = "<b>$Lang34</b>" # Code
+	# $text6 = Type icon
+	$text5 = "<b>$Lang35</b>" # Name
+	$text9 = "<b>$Lang49</b>" # Country
+
+	$out = $out + "<tr>" + "$_CrLf " + "<td style='$stTab2cHead'>" + $_CrLf 
+	$out = $out + "$text1</td>" + $_CrLf 
+	$out = $out + "<td style='$stTab2cHead'>$text2</td>" + $_CrLf 
+	IF $FlagIcons
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf 
+	ELSE
+		$out = $out + "<td style='$stTab2cHead'>$text9</td>" + $_CrLf 
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text3</td>" + $_CrLf 
+	$out = $out + "<td style='$stTab2cHead'>$text4</td>" + $_CrLf 
+	IF $miletypes
+		$out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf 
+	ENDIF
+	$out = $out + "<td style='$stTab2cHead'>$text5</td>" + $_CrLf  + "</tr>" + $_CrLf 
+
+	# Initialize variables
+     
+	$count = 1
+
+WHILE $count <= $LogTotal
+	$GetMilestone = Extract($work,$_CrLf ,$count)
+	#Extract the date
+	$LogDateDate = SqlToDate(Extract($GetMilestone,";",2))
+
+	#Strip off the suffix code if necessary
+	$StripCode = Extract($GetMilestone,";",4)
+	$StripCode = Extract($StripCode,"_",1)
+
+	# Format the date to users standard format for display
+	$FindDate = DateFormat($LogDateDate)
+
+	# Log ID for URL link to log
+	$LogidSubstitute = Val(Extract($GetMilestone,";",7))
+	IF $LogidSubstitute <>0
+		BEGINCASE
+		CASE Left($StripCode,2)="GC"
+			$text2 = "<a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>$FindDate</a>"
+		CASE Left($StripCode,2)="GA"
+			$text2 = "<a href='http://geocaching.com.au/log/$LogidSubstitute'>$FindDate</a>"
+		OTHERWISE
+			$text2 = "$FindDate"
+		ENDCASE
+	ELSE
+		$text2 = "$FindDate"
+	ENDIF
+
+
+	# Output data
+	$text1 = "<b>" + Extract($GetMilestone,";",1) + "</b>"
+	# $text2 = "$FindDate"
+	$text3 = Extract($GetMilestone,";",3)
+	IF $text3="Nil"
+	  $text3    = "-"
+	ENDIF
+	
+	$text4 = Extract($GetMilestone,";",8)
+	$text4 = "<a href='$text4'>$StripCode</a>"
+	$text5 = Extract($GetMilestone,";",6)
+	$text5 = "$text5"
+	$text9 = Extract($GetMilestone,";",9)
+	IF $miletypes
+		$tmpB = FALSE
+		GOSUB Name=StripCodeType
+		$text6 = $TypeImage
+	ELSE
+		$text6 = ""
+	ENDIF
+
+	IF $FlagIcons
+		# Country flag
+		$FullName = $text9
+		GOSUB Name=FlagImage
+	ENDIF
+
+	$out = $out + "<tr>" + "$_CrLf " + "<td style='$st2c1'>" + $_CrLf 
+	$out = $out + "$text1</td>" + $_CrLf 
+	$out = $out + "<td style='$st2c2'>$text2</td>" + $_CrLf 
+	IF $FlagIcons
+		$out = $out + "<td style='$st2c2'>$text7</td>" + $_CrLf 
+	ELSE
+		$out = $out + "<td style='$st2c2'>$text9</td>" + $_CrLf  
+	ENDIF
+	$out = $out + "<td style='$st2c2'>$text3</td>" + $_CrLf 
+	
+	$out = $out + "<td style='$st2c2'>$text4</td>" + $_CrLf 
+	IF $miletypes
+		$out = $out + "<td style='$st2c2'>$text6</td>" + $_CrLf 
+	ENDIF
+	$out = $out + "<td style='$st2c1'>$text5</td>" + $_CrLf  + "</tr>" + $_CrLf 
+	$count = $count + 1
+ENDWHILE
+
+
+	$out = $out + "</table>" + $_CrLf 
+
+$p_FSGData = $out
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	#Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	#Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+

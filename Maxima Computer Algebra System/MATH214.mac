@@ -1,0 +1,251 @@
+/*MATH214.mac 
+Contents for use with help() */
+disp("MATH214.mac:  help(MATH214) for contents");
+
+MATH214_help():=block(printf(true,
+"MATH214.mac contains:
+    cross(u,v)
+    dot(u,v)
+    len(u)
+    curvature(r,t)
+    unitT(r,t)
+    unitN(r,t)
+    unitB(r,t)
+    integratePaths(f,r,t,a,b)
+    integratePathv2(F,r,t,a,b)
+    integratePathv3(F,r,t,a,b)
+	-
+	-
+    for any of the above functions,
+    help(function_name) returns help lines for function_name"
+)
+);
+/*
+The help utility
+*/
+help(_input):=block(
+eval_string(sconcat(string(_input),"_help()")),
+return(done)
+);
+
+
+
+/* cross computes the cross produce of two vectors of dimension 3 */
+cross(_u,_v):=[_u[2]*_v[3]-_u[3]*_v[2],_u[3]*_v[1]-_u[1]*_v[3],_u[1]*_v[2]-_u[2]*_v[1]]$
+/*the help file for use with help()*/
+cross_help():=block(printf(true,
+"cross(u,v) computes the cross produce of two vectors of dimension 3
+     Example
+        cross([1,0,0],[0,1,0]); returns
+           [0,0,1]"
+)
+);
+
+/* dot duplicates the . operator for parallelism with cross */
+dot(_u,_v) :=_u._v$
+/*the help file for use with help()*/
+dot_help():=block(printf(true,
+"dot(u,v) duplicates the Maxima . operator for function-name 
+  parallelism with cross(u,v)
+     Example
+        dot([1,1,0],[0,1,1]); returns
+           1 "
+)
+);
+
+/* len computes the vector length */
+len(_u):= sqrt(_u._u)$
+/*the help file for use with help()*/
+len_help():=block(printf(true,
+"len(u,v) len computes the vector length
+     Example
+        len([0,1,1]); returns
+           sqrt(2) "
+)
+);
+
+
+
+/* curvature computes the curvature  of a vector values function 
+    r: R --> R^2 or r: R --> R^3
+   curvature requires unitT  */
+curvature(r,t):=
+block([T,Tdot,rdot,K],
+    define(T(t),unitT(r,t)),
+	define(Tdot(t),diff(T(t),t)),
+	define(rdot(t),diff(r,t)),
+	define(K(t),trigsimp(sqrt(Tdot(t).Tdot(t)/rdot(t).rdot(t)))),
+	K(t)
+)$
+/*the help file for use with help()*/
+curvature_help():=block(printf(true,
+"curvature computes the curvature  of a vector values function 
+ r: R --> R^2 or r: R --> R^3
+      Example
+          curvature(2*[cos(t),sin(t)],t); returns
+             1/2 "
+)
+);
+
+/* unitT computes the unit tangent vector for a vector valued function
+ r: R --> R^2 or   r: R --> R^3
+of a scalar variable r(t)=[x(t),y(t)] or r(t)=[x(t),y(t),z(t)]  */
+unitT(r,t):=
+block([rp,rpn,T],
+   define(rp(t),diff(r,t)),
+   define(rpn(t),sqrt(rp(t).rp(t))),
+   define(T(t),rp(t)/rpn(t)),
+   trigsimp(T(t))
+)$
+/*the help file for use with help()*/
+unitT_help():=block(printf(true,
+"unitT computes the unit tangent vector for a vector valued function
+ r: R --> R^2 or   r: R --> R^3
+of a scalar parameter t   r(t)=[x(t),y(t)] or r(t)=[x(t),y(t),z(t)]
+      Example
+          unitT(2*[cos(t),sin(t)],t); returns
+             [-sin(t),cos(t)]"
+)
+);
+
+/* unitN computes the unit normal vector for a vector valued function  r: R --> R^3
+of a scalar variable r(t)=[x(t),y(t),z(t)]  
+  unitN requires unitT */
+unitN(r,t):=
+block([T,Tp,Tpn,N],
+   define(T(t),unitT(r,t)),
+   define(Tp(t),diff(T(t),t)),
+   define(Tpn(t),sqrt(Tp(t).Tp(t))),
+   define(N(t),Tp(t)/Tpn(t)),
+   trigsimp(N(t)) 
+)$
+/*the help file for use with help()*/
+unitN_help():=block(printf(true,
+"unitN computes the unit normal vector for a vector valued function
+ r: R --> R^2 or   r: R --> R^3
+of a scalar parameter t   r(t)=[x(t),y(t)] or r(t)=[x(t),y(t),z(t)]
+      Example
+          unitN(2*[cos(t),sin(t)],t); returns
+             [-cos(t),-sin(t)]"
+)
+);
+
+/* unitB computes the unit normal vector for a vector valued function  r: R --> R^3
+of a scalar variable r(t)=[x(t),y(t),z(t)]  
+  unitB requires unitT and unitN */
+unitB(r,t):=
+block([T,N,B],
+   define(T(t),unitT(r,t)),
+   define(N(t),unitN(r,t)),
+   define(B(t),[T(t)[2]*N(t)[3]-T(t)[3]*N(t)[2],
+                  T(t)[3]*N(t)[1]-T(t)[1]*N(t)[3],
+                  T(t)[1]*N(t)[2]-T(t)[2]*N(t)[1]]),
+    trigsimp(B(t)) 
+)$
+/*the help file for use with help()*/
+unitB_help():=block(printf(true,
+"unitB computes the unit normal vector for a vector valued function  r: R --> R^3
+of a scalar variable r(t)=[x(t),y(t),z(t)]  
+      Example
+          unitB(2*[cos(t),sin(t),t],t); returns
+             [sin(t)/sqrt(2),-cos(t)/sqrt(2),1/sqrt(2)]"
+)
+);
+
+
+
+/*  integratePaths computes the path integral of a real valued integrand 
+   f(x,y): R^n --> R,  on path r(t): R --> R^n, with real parameter t from a to b  */
+integratePaths(f,r,t,a,b):=block(
+[f1,f2,dr,Iout],
+f1:subst(x=r[1],f),
+f2:subst(y=r[2],f1),
+dr:sqrt(diff(r,t).diff(r,t)),
+Iout: integrate(trigsimp(f2*dr),t,a,b),
+Iout
+);
+/*the help file for use with help()*/
+integratePaths_help():=block(printf(true,
+"integratePaths computes the path integral of a real integrand 
+   f(x,y): R^2 --> R,  on a path r(t): R --> R^2, with real parameter t from a to b  
+      Example
+          integratePaths(x*y,[t,1-t],t,0,1); returns
+             1/(3*sqrt(2))"
+)
+);
+
+
+/* integratePathv2: path integral of a vector integrand F(x,y) on path  r(t) in R^2, t from a to b */
+integratePathv2(H,r,t,a,b):=block(
+[H1,H2,I],
+H2:psubst([x=r[1],y=r[2]],H),
+/* H2:subst(y=r[2],H1), */
+I: integrate( trigsimp(H2.diff(r,t)),t,a,b),
+I
+);
+/*the help file for use with help()*/
+integratePathv2_help():=block(printf(true,
+"integratePathv2 computes path integral of a vector integrand 
+  F(x,y):R^2 --> R^2 on a path  r(t) in R^2, with real parameter t from a to b  
+      Example
+          integratePathv2([-y,x^2],[t,1-t],t,0,1); returns
+             -5/6"
+)
+);
+
+
+/*integratePathv3: path integral of a vector integrand F(x,y,z) on path  r(t) in R^3, t from a to b */
+integratePathv3(H,r,t,a,b):=block(
+[H1,H2,H3,I],
+/*H1:subst(x=r[1],H),
+H2:subst(y=r[2],H1),
+H3:subst(z=r[3],H2), */
+H3:psubst([x=r[1],y=r[2],z=r[3]],H),
+I: integrate( trigsimp(H3.diff(r,t)),t,a,b),
+I
+);
+/*the help file for use with help()*/
+integratePathv3_help():=block(printf(true,
+"integratePathv3 computes path integral of a vector integrand 
+  F(x,y,z):R^3 --> R^3 on a path  r(t) in R^3, with real parameter t from a to b  
+      Example
+          integratePathv3([-y,x^2,x*y*z],[t,1-t,t+2],t,0,1);returns
+            -5/12"
+)
+);
+
+
+
+/* Three Maxima functions for the multivariable calculus operators
+   grad, div, and curl*/
+   
+   grad(f,x,y,z):=[diff(f,x),diff(f,y),diff(f,z)]$
+   /*the help file for use with help()*/
+grad_help():=block(printf(true,
+"grad(f,x,y,z) computes the gradient of the scalar-valued function f:R^3-->R  
+      Example
+          grad(2*x*y+z^2,x,y,z); returns
+            [2*y,2*x,2*z]"
+)
+);
+   
+   div(f,x,y,z):=diff(f[1],x)+diff(f[2],y)+diff(f[3],z)$
+    /*the help file for use with help()*/
+div_help():=block(printf(true,
+"div(f,x,y,z) computes the divergence of the vector-valued function F:R^3-->R^3  
+      Example
+          div([x,2*y,3*x*z],x,y,z);returns
+            3*x+3"
+)
+);  
+   curl(f,x,y,z):=[ diff(f[3],y)-diff(f[2],z),
+                     diff(f[1],z)-diff(f[3],x),
+					  diff(f[2],x)-diff(f[1],y) ]$
+					      /*the help file for use with help()*/
+curl_help():=block(printf(true,
+"curl(f,x,y,z) computes the curl of the vector-valued function F:R^3-->R^3  
+      Example
+          curl([x,2*y,3*x*z],x,y,z);returns
+            [0,-3*z,0]"
+)
+);

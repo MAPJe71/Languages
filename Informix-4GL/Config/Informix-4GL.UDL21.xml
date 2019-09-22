@@ -1,0 +1,26 @@
+<NotepadPlus>
+    <UserLang name="Informix-4GL" ext="4gl per sql apl" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="yes" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="2" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="yes" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">03{ 04} 00# 01 02</Keywords>
+            <Keywords name="Operators1">- ! $ % &amp; ( ) , . : [ ] ^ + &lt; = &gt;</Keywords>
+            <Keywords name="Folders in code1, open">&quot;AFTER&quot; &quot;BEFORE&quot; &quot;CASE&quot; &quot;GLOBALS&quot; &quot;IF&quot; &quot;INPUT&quot; &quot;MAIN&quot; &quot;MENU&quot; &quot;WHILE&quot;</Keywords>
+            <Keywords name="Folders in code1, middle">&quot;ELSE&quot; &quot;WHEN&quot;</Keywords>
+            <Keywords name="Folders in code1, close">&quot;END GLOBALS&quot; &quot;END IF&quot; &quot;END WHILE&quot; &quot;END INPUT&quot;</Keywords>
+            <Keywords name="Keywords1">arg_val errorlog fgl_keyval fgl_lastkey get_fldbuf int_flag num_args startlog AFTER ALL AND ANY ARR_COUNT ARR_CURR ARRAY AS ASC ASCII ASCENDING AT ATTRIBUTE ATTRIBUTES AUTONEXT AVG BEFORE BEGIN BETWEEN BORDER BOTTOM BY CALL CASE CAST CHAR CLEAR CLIPPED CLOSE COLUMN COLUMNS COMMAND COMMENTS COMMIT CONSTRAINT CONSTRUCT CONTINUE COUNT CREATE CURRENT CURSOR DATABASE DATE DATETIME DAY DECIMAL DECLARE DEFAULTS DEFER DEFINE DELETE DELIMITERS DELIMITER DESC DESCENDING DIRTY DISPLAY DISTINCT DOWNSHIFT DROP ELSE END ERROR EVERY EXCLUSIVE EXECUTE EXIT EXISTS EXTEND EXTERNAL FALSE FETCH FIELD FILE FINISH FIRST FLUSH FOR FOREACH FORM FORMAT FRACTION FREE FROM FUNCTION GLOBALS GRANT GROUP HAVING HEADER HELP HIDE HOLD HOUR IF IN INCLUDE INDEX INNER INITIALIZE INPUT INSERT INSTRUCTIONS INTEGER INTERRUPT INTERVAL INTO IS ISOLATION JOIN KEY LABEL LAST LEFT LENGTH LET LIKE LINE LINES LOAD LOCK LOG MAIN MARGIN MATCHES MAX MDY MENU MESSAGE MIN MINUTE MOD MODE MONTH NAME NEED NEXT NO NOENTRY NOT NOTFOUND NULL OF ON OPEN OPTION OPTIONS OR ORDER OTHERWISE OUTER OUTPUT PAGE PAGENO PIPE PREPARE PREVIOUS PRIMARY PRINT PROGRAM PROMPT PUT QUIT READ RECORD REFERENCES REPORT RETURN RETURNING REVERSE RIGTH ROLLBACK ROW ROWS RUN SCR_LINE SCREEN SCROLL SECOND SELECT SET SET_COUNT SHARE SHOW SKIP SLEEP SMALLINT SPACE SPACES START STEP STOP SUM TABLE TABLES TEMP THEN TIME TO TODAY TOP TRAILER TRUE TYPE UNCONSTRAINED UNION UNIQUE UNITS UNLOAD UNLOCK UNLOAD UPDATE UPSHIFT USING VALUES VARCHAR WAIT WAITING WEEKDAY WHEN WHENEVER WHERE WHILE WINDOW WITH WITHOUT WORDWRAP WORK YEAR</Keywords>
+            <Keywords name="Delimiters">00&quot; 01 02&quot; 03&apos; 04 05&apos; 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" fontSize="10" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="A2A2A2" bgColor="FFFFFF" fontName="Courier New" fontStyle="2" fontSize="10" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="A2A2A2" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" fontSize="10" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="008040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

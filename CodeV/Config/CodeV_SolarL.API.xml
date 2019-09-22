@@ -1,0 +1,1131 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<!-- language doesnt really mean anything, its more of a comment -->
+	<AutoComplete language="CodeV">
+		<!--
+		Environment specifies how the language should be interpreted. ignoreCase makes autocomplete
+		ignore any casing, start and stopFunc specify what chars a function starts and stops with.
+		param specifies parameter separator and terminal can be used to specify a character that stops
+		any function. Using the same character for different functions results in undefined behaviour.
+		
+		05/11/2009
+		The basic word character are : A-Z a-z 0-9 and '_' 
+		If your function name contains other characters,
+		add your characters in "additionalWordChar" attribute (without separator)
+		in order to make calltip hint work
+		-->
+		<Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," terminal="" additionalWordChar=""/>
+		<!--
+		The following items should be alphabetically ordered.
+		func="yes" means the keyword should be treated as a fuction, and thus can be used in the parameter
+		calltip system. If this is the case, the retVal attribute specifies the return value/type. Any
+		following Param tag specifies a parameter, they must be in order. The name attributes specifies
+		the parameter name.
+		-->
+		<KeyWord name="ABSF" func="yes">
+			<Overload retVal="{}" descr="Absolute value" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ACOSF" func="yes">
+			<Overload retVal="{}" descr="Arccosine in radians" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ARR_TO_BUF" func="yes">
+			<Overload retVal="{}" descr="Copies an array (arg1) to a worksheet buffer (arg4),number of rows and columns in array isspecified (arg2, arg3)" >
+				<Param name="array" />
+				<Param name="num_rows" />
+				<Param name="num_cols" />
+				<Param name="buf_num" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AS_BUILT_ABC" func="yes">
+			<Overload retVal="{}" descr="performs a sensitivity tolerance analysis using the current set of tolerances and compensators. It can be used to generate constraints in AUT for improving the as-built performance." >
+				<Param name="zoom_pos" />
+				<Param name="field_num" />
+				<Param name="NRD" />
+				<Param name="cross_terms" />
+				<Param name="linear_terms" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AS_BUILT_VAR" func="yes">
+			<Overload retVal="{}" descr="AS_BUILT_VAR performs a sensitivity tolerance analysis using the current set of tolerances and compensators." >
+				<Param name="zoom" />
+				<Param name="field" />
+				<Param name="NRD" />
+				<Param name="output-type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ASINF" func="yes">
+			<Overload retVal="{}" descr="Arcsine in radians" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ATANF" func="yes">
+			<Overload retVal="{}" descr="Arctangent in radians" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="BESTSPH" func="yes">
+			<Overload retVal="{}" descr="Curvature of best fitting sphere, specifying- surface number (arg1)- zoom position (arg2)- min and max y coordinates (arg3 and arg4,respectively)" >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="minimum_height" />
+				<Param name="maximum_height" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="BUF_TO_ARR" func="yes">
+			<Overload retVal="{}" descr="Copies a worksheet buffer (arg1) to an array (arg2),starting and ending row and column numbersof the buffer are specified (args 3, 4, 5, 6)." >
+				<Param name="buf_num" />
+				<Param name="array" />
+				<Param name="start_row" />
+				<Param name="end_row" />
+				<Param name="start_col" />
+				<Param name="end_col" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CNVTFIELD" func="yes">
+			<Overload retVal="{}" descr="Converts field specification to object height,paraxial image height, real image height,or field angle in object space." >
+				<Param name="field_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CONCAT" func="yes">
+			<Overload retVal="{}" descr="String concatenation." >
+				<Param name="str1" />
+				<Param name="str2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="COSF" func="yes">
+			<Overload retVal="{}" descr="Cosine (radian arg.)" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CVERROR" func="yes">
+			<Overload retVal="{}" descr="Prints a user-defined error message (message arg1. Ifcontained in arg1) If arg2 is zero, then the text$ERROR - $ precedes the message contained inarg2 is nonzero, this is suppressed." >
+				<Param name="error_msg" />
+				<Param name="cont_line" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CVPUTREC" func="yes">
+			<Overload retVal="{}" descr="Prints a user-defined message to the CommandWindow.Parallel Processing Functions" >
+				<Param name="string_expression" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CVWARNING" func="yes">
+			<Overload retVal="{}" descr="Prints a user-defined warning message (messagecontained in arg1) If arg2 is zero, then the text$WARNING - $ precedes the message containedin arg1. If arg2 is nonzero, this is suppressed." >
+				<Param name="warning_msg" />
+				<Param name="cont_line" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="EOFILE" func="yes">
+			<Overload retVal="{}" descr="Set true if last READ operationresulted in anend of file.User-defined Error Message Functions" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="EVALZERN" func="yes">
+			<Overload retVal="{}" descr="Evaluates a Zernike polynomial generated witheither the ZERNIKE or ZFRCOEF macrofunction and computes the value of thepolynomial at a point (X,Y), where X and Yare normalized to the unit circle." >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="x" />
+				<Param name="y" />
+				<Param name="pol_type" />
+				<Param name="$output_string$" />
+				<Param name="zernike_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="EXPF" func="yes">
+			<Overload retVal="{}" descr="Exponential" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FFT1DCA" func="yes">
+			<Overload retVal="{}" descr="FFT, check manual" >
+				<Param name="cen_in" />
+				<Param name="cen_out" />
+				<Param name="fdata" />
+				<Param name="num_cols" />
+				<Param name="fwd" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FFT1DCB" func="yes">
+			<Overload retVal="{}" descr="FFT, check manual" >
+				<Param name="cen_in" />
+				<Param name="cen_out" />
+				<Param name="fdata" />
+				<Param name="num_cols" />
+				<Param name="fwd" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FFT2DCA" func="yes">
+			<Overload retVal="{}" descr="FFT, check manual" >
+				<Param name="cen_in" />
+				<Param name="cen_out" />
+				<Param name="fdata" />
+				<Param name="num_rows" />
+				<Param name="num_cols" />
+				<Param name="fwd" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FFT2DCB" func="yes">
+			<Overload retVal="{}" descr="FFT, check manual" >
+				<Param name="cen_in" />
+				<Param name="cen_out" />
+				<Param name="fdata" />
+				<Param name="num_rows" />
+				<Param name="num_cols" />
+				<Param name="fwd" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FITERROR" func="yes">
+			<Overload retVal="{}" descr="Returns the RMS fit error of a Zernike polynomialgenerated with either the ZERNIKE orZFRCOEF macro function." >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="pol_type" />
+				<Param name="$output_string$" />
+				<Param name="zernike_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GAUSSBEAM" func="yes">
+			<Overload retVal="{}" descr="Uses BEA option to trace a slow Gaussianbeam through an optical system and calculate at the specified surface the beamradius, beam orientation, wavefront radiusof curvature, waist position and waist radius." >
+				<Param name="surf_num" />
+				<Param name="zoom_pos" />
+				<Param name="field_num" />
+				<Param name="wave_num" />
+				<Param name="input_array" />
+				<Param name="$output_string$" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GAUSSWTS" func="yes">
+			<Overload retVal="{}" descr="Compute Gaussian quadratureweights for a set of inputcoordinates and weights" >
+				<Param name="num_input_pts" />
+				<Param name="input_coords" />
+				<Param name="input_wts" />
+				<Param name="num_quad_pts" />
+				<Param name="quad_coords" />
+				<Param name="quad_wts" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GET_COMPLEX_MAGNITUDE" func="yes">
+			<Overload retVal="{}" descr="Creates an array of magnitudes from an array of complex numbers ,number of values is specified." >
+				<Param name="comp" />
+				<Param name="mag" />
+				<Param name="num_mags" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GET_IMAGINARY_PART" func="yes">
+			<Overload retVal="{}" descr="Creates an array of imaginary numbers (arg2)from an array of complex numbers (arg1),number of values is specified (arg3)." >
+				<Param name="comp" />
+				<Param name="imag" />
+				<Param name="num_imags" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GET_REAL_PART" func="yes">
+			<Overload retVal="{}" descr="Creates an array of real numbers (arg2)from an array of complex numbers (arg1),number of values is specified (arg3)." >
+				<Param name="comp" />
+				<Param name="real" />
+				<Param name="num_reals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GETDIM1num" func="yes">
+			<Overload retVal="{}" descr="Number of elements in a numeric 1D array or num_row in a 2D array" >
+				<Param name="num_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GETDIM2num" func="yes">
+			<Overload retVal="{}" descr="Number of columns ina 2D numeric array" >
+				<Param name="num_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageAdd" func="yes">
+			<Overload retVal="{}" descr="Adds ^imageA and ^imageB and stores theresults in ^outputImage." >
+				<Param name="imageA" />
+				<Param name="imageB" />
+				<Param name="outputImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageAddConstantTo" func="yes">
+			<Overload retVal="{}" descr="Adds a constant to an image. Performs thisoperation $in place,$ i.e., overwrites thestarting image." >
+				<Param name="imageA" />
+				<Param name="constVal" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageChangeGamma" func="yes">
+			<Overload retVal="{}" descr="Modifies the data in the image according to thefollowing formula output = input(^startingGammaValue/GammaValue)" >
+				<Param name="image" />
+				<Param name="gammaValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageClip" func="yes">
+			<Overload retVal="{}" descr="Clips the values in the image so that values greaterthan ^maxValue are set to ^maxValue andvalues less than ^minValue are set to^minValue." >
+				<Param name="image" />
+				<Param name="maxValue" />
+				<Param name="minValue" />
+				<Param name="component" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageCombineComponents" func="yes">
+			<Overload retVal="{}" descr="Combines three images of the same size (one red,one green, one blue) into a single image." >
+				<Param name="redImage" />
+				<Param name="grnImage" />
+				<Param name="bluImage" />
+				<Param name="colorImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageCopy" func="yes">
+			<Overload retVal="{}" descr="Copies an image." >
+				<Param name="inputImage" />
+				<Param name="outputImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageDelete" func="yes">
+			<Overload retVal="{}" descr="Deletes an image." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageDisplay" func="yes">
+			<Overload retVal="{}" descr="Opens a display window containing the image." >
+				<Param name="image" />
+				<Param name="NOR|RAW" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageExtractComponent" func="yes">
+			<Overload retVal="{}" descr="Extracts a monochrome image (red, green, or blue)from a color image." >
+				<Param name="RGBImage" />
+				<Param name="monochromeImage" />
+				<Param name="channel" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageFlipX" func="yes">
+			<Overload retVal="{}" descr="Flips an image left to right." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageFlipY" func="yes">
+			<Overload retVal="{}" descr="Flips an image vertically." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageFromArray" func="yes">
+			<Overload retVal="{}" descr="Writes data from a Macro-PLUS array (2D) toan image." >
+				<Param name="inputArray" />
+				<Param name="monochromeImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetAverageValueColor" func="yes">
+			<Overload retVal="{}" descr="Returns the average value of the pixels in eachchannel of a color image." >
+				<Param name="image" />
+				<Param name="aveArray" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetAverageValueMonochrome" func="yes">
+			<Overload retVal="{}" descr="Returns the average value of the pixels for amonochrome image." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetMaxValueColor" func="yes">
+			<Overload retVal="{}" descr="Returns the maximum value for each channel of acolor image." >
+				<Param name="image" />
+				<Param name="maxArray" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetMaxValueMonochrome" func="yes">
+			<Overload retVal="{}" descr="Returns the maximum value of a monochromeimage." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetMinValueColor" func="yes">
+			<Overload retVal="{}" descr="Returns the minimum value for each channel of acolor image." >
+				<Param name="image" />
+				<Param name="minArray" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetMinValueMonochrome" func="yes">
+			<Overload retVal="{}" descr="Returns the minimum value of a monochromeimage." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetNumWavelengths" func="yes">
+			<Overload retVal="{}" descr="Returns the number of wavelengths used torepresent a color of a color image orluminance of a monochrome image." >
+				<Param name="image" />
+				<Param name="colorStr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetPixelAt" func="yes">
+			<Overload retVal="{}" descr="Gets the value of the image at a particular location." >
+				<Param name="image" />
+				<Param name="row" />
+				<Param name="column" />
+				<Param name="component" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetStatus" func="yes">
+			<Overload retVal="{}" descr="Returns the status of the previous image functioncall." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetSumOfValuesColor" func="yes">
+			<Overload retVal="{}" descr="Gets the sum of the values of the pixels in eachchannel of a color image." >
+				<Param name="image" />
+				<Param name="sumArray" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageGetSumOfValuesMonochrome" func="yes">
+			<Overload retVal="{}" descr="Gets the sum of the values of the pixels for amonochrome image." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDCopy" func="yes">
+			<Overload retVal="{}" descr="Copies all metadata from one image to another." >
+				<Param name="fromImage" />
+				<Param name="toImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDCopyWavelengthsAndWeights" func="yes">
+			<Overload retVal="{}" descr="Copies wavelengths and weights from onespecified image to another specified image." >
+				<Param name="sourceImage" />
+				<Param name="destinationImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetCME" func="yes">
+			<Overload retVal="{}" descr="Gets the CME value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetDescriptor" func="yes">
+			<Overload retVal="{}" descr="Returns the string that was assigned to^descriptorString with ImageMDSetDescriptor(meant for describing the image)." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetDEX" func="yes">
+			<Overload retVal="{}" descr="Gets the DEX value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetDEY" func="yes">
+			<Overload retVal="{}" descr="Gets the DEY value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetFieldOffsetX" func="yes">
+			<Overload retVal="{}" descr="Gets the offset of the center of the objectin theX-direction within the field of view of the lens." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetFieldOffsetY" func="yes">
+			<Overload retVal="{}" descr="Gets the offset of the center of the object in theY-direction within the field of view of the lens." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetFieldRotation" func="yes">
+			<Overload retVal="{}" descr="Gets the field rotation." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetFieldUnits" func="yes">
+			<Overload retVal="{}" descr="Gets the field units." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetGamma" func="yes">
+			<Overload retVal="{}" descr="Gets the gamma value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetGRI" func="yes">
+			<Overload retVal="{}" descr="Gets the GRI value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetImagePixelSize" func="yes">
+			<Overload retVal="{}" descr="Gets the pixel size." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetImageSemiDiagonal" func="yes">
+			<Overload retVal="{}" descr="Gets the image semi-diagonal measurement (theradius of a circle circumscribed around theimage)." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetLensName" func="yes">
+			<Overload retVal="{}" descr="Gets the lens name." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetNRD" func="yes">
+			<Overload retVal="{}" descr="Gets the NRD value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetNumXPixels" func="yes">
+			<Overload retVal="{}" descr="Gets the number of pixels in the X direction." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetNumYPixels" func="yes">
+			<Overload retVal="{}" descr="Gets the number of pixels in the Y direction." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetObjectFileName" func="yes">
+			<Overload retVal="{}" descr="Gets the object file name." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetObjectSemiDiagonal" func="yes">
+			<Overload retVal="{}" descr="Gets the object semi-diagonal measurement (theradius of a circle circumscribed around theobject)." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetOffsetValue" func="yes">
+			<Overload retVal="{}" descr="An IMS simulation that is subsequently processedcan produce a negative result. The offset value isthe difference from 0" >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetPMX" func="yes">
+			<Overload retVal="{}" descr="Gets the PMX value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetPMY" func="yes">
+			<Overload retVal="{}" descr="Gets the PMY value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetScaleValue" func="yes">
+			<Overload retVal="{}" descr="Gets the scale value for fitting 16-bit data to thedynamic range. TrueValue = (FileValue /ScaleValue) + Offset" >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetSimulationDate" func="yes">
+			<Overload retVal="{}" descr="Gets the date when the image simulation was made." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetSym" func="yes">
+			<Overload retVal="{}" descr="Gets the symmetry  rotational(ROT) or non-rotational (NON)." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetTGR" func="yes">
+			<Overload retVal="{}" descr="Gets the TGR value." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetTitle" func="yes">
+			<Overload retVal="{}" descr="Returns the string that was assigned to^titleString with ImageMDSetTitle(meant for describing the image)." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDGetWavelengthsAndWeights" func="yes">
+			<Overload retVal="{}" descr="Gets the image wavelengths and weights." >
+				<Param name="image" />
+				<Param name="wvlAndWtArray" />
+				<Param name="colorStr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDListHeaderInfo" func="yes">
+			<Overload retVal="{}" descr="Lists the header information to the output window." >
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetDescriptor" func="yes">
+			<Overload retVal="{}" descr="Sets specified string to name (meant fordescribing the image)." >
+				<Param name="image" />
+				<Param name="descriptorString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetDEX" func="yes">
+			<Overload retVal="{}" descr="Sets the DEX value." >
+				<Param name="image" />
+				<Param name="dexValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetDEY" func="yes">
+			<Overload retVal="{}" descr="Sets the DEY value." >
+				<Param name="image" />
+				<Param name="deyValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetFieldOffsetX" func="yes">
+			<Overload retVal="{}" descr="Sets the offset of the center of the object in theX-direction within the field of view of the lens." >
+				<Param name="image" />
+				<Param name="fieldOffsetX" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetFieldOffsetY" func="yes">
+			<Overload retVal="{}" descr="Sets the offset of the center of the object in theY-direction within the field of view of the lens." >
+				<Param name="image" />
+				<Param name="fieldOffsetY" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetFieldRotation" func="yes">
+			<Overload retVal="{}" descr="Sets the field rotation." >
+				<Param name="image" />
+				<Param name="fieldRotation" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetFieldUnits" func="yes">
+			<Overload retVal="{}" descr="Sets the field units." >
+				<Param name="image" />
+				<Param name="fieldUnitsStr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetGamma" func="yes">
+			<Overload retVal="{}" descr="Sets the gamma value." >
+				<Param name="image" />
+				<Param name="gamma" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetGRI" func="yes">
+			<Overload retVal="{}" descr="Sets the GRI value." >
+				<Param name="image" />
+				<Param name="griValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetImagePixelSize" func="yes">
+			<Overload retVal="{}" descr="Sets the image pixel size." >
+				<Param name="image" />
+				<Param name="pixelSize" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetImageSemiDiagonal" func="yes">
+			<Overload retVal="{}" descr="Sets the image semi-diagonal measurement (theradius of a circle circumscribed around theimage)." >
+				<Param name="image" />
+				<Param name="semiDiagonal" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetLensName" func="yes">
+			<Overload retVal="{}" descr="Sets the lens name." >
+				<Param name="image" />
+				<Param name="lensNameString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetNRD" func="yes">
+			<Overload retVal="{}" descr="Sets the NRD value." >
+				<Param name="image" />
+				<Param name="nrdValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetObjectFileName" func="yes">
+			<Overload retVal="{}" descr="Sets the image file name." >
+				<Param name="image" />
+				<Param name="objectFileNameString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetObjectSemiDiagonal" func="yes">
+			<Overload retVal="{}" descr="Sets the object semi-diagonal measurement (theimagecradius of a circle circumscribed around theobject)." >
+				<Param name="image" />
+				<Param name="fieldSize" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetPMX" func="yes">
+			<Overload retVal="{}" descr="Sets the PMX value." >
+				<Param name="image" />
+				<Param name="pmxValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetPMY" func="yes">
+			<Overload retVal="{}" descr="Sets the PMY value." >
+				<Param name="image" />
+				<Param name="pmyValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetSimulationDate" func="yes">
+			<Overload retVal="{}" descr="Sets the date when the image simulation was made." >
+				<Param name="image" />
+				<Param name="dateString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetSym" func="yes">
+			<Overload retVal="{}" descr="Sets the symmetry  rotational(ROT) or non-rotational (NON)." >
+				<Param name="image" />
+				<Param name="symString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetTGR" func="yes">
+			<Overload retVal="{}" descr="Sets the TGR value." >
+				<Param name="image" />
+				<Param name="tgrValue" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetTitle" func="yes">
+			<Overload retVal="{}" descr="Sets specified string to name(meant for giving a title to the image.)" >
+				<Param name="image" />
+				<Param name="titleString" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMDSetWavelengthsAndWeights" func="yes">
+			<Overload retVal="{}" descr="Sets the image wavelengths and weights." >
+				<Param name="image" />
+				<Param name="wvlAndWtArray" />
+				<Param name="colorStr" />
+				<Param name="numWavelengths" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageMultiplyByConstant" func="yes">
+			<Overload retVal="{}" descr="Multiplies an image by a constant. The resultoverwrites the starting image. Negativeconstants are allowed." >
+				<Param name="imageA" />
+				<Param name="constVal" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImagePutPixelAt" func="yes">
+			<Overload retVal="{}" descr="Writes a particular value to an image pixel. Thecomponent argument is a string date type." >
+				<Param name="image" />
+				<Param name="row" />
+				<Param name="column" />
+				<Param name="component" />
+				<Param name="value" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageRead" func="yes">
+			<Overload retVal="{}" descr="Reads a 16- or 48-bit PNG file. If written by theSID command, metadata will also be available." >
+				<Param name="filename" />
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageRestoreFrom" func="yes">
+			<Overload retVal="{}" descr="Reads a standard JPG, BMP, TIF, or PNG (8 bits/pixel for monochrome or 24 bits/pixelfor color) and stores the image data in an IMGvariable." >
+				<Param name="filename" />
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageRotate" func="yes">
+			<Overload retVal="{}" descr="Rotates an image, producing a new output image." >
+				<Param name="startingImage" />
+				<Param name="outputImage" />
+				<Param name="rotationAngleDegrees" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageSaveAs" func="yes">
+			<Overload retVal="{}" descr="Saves the image to a file of the designated type.8bits/pixel (monochrome) 24bits/pixel (color)." >
+				<Param name="image" />
+				<Param name="filename" />
+				<Param name="filetype" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageSubtract" func="yes">
+			<Overload retVal="{}" descr="Performs the operation ^outputImage = ^imageA - ^imageB." >
+				<Param name="imageA" />
+				<Param name="imageB" />
+				<Param name="outputImage" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageToArray" func="yes">
+			<Overload retVal="{}" descr="Reads the data in an image and moves it into a 2Dmacro array." >
+				<Param name="monochromeImage" />
+				<Param name="outputArray" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ImageWrite" func="yes">
+			<Overload retVal="{}" descr="Writes a file from the image to a 16- or 48-bitPNG file. The image metadata determines ifit will be 16- or 48-bit.Array Functions" >
+				<Param name="filename" />
+				<Param name="image" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="INDEX" func="yes">
+			<Overload retVal="{}" descr="Compute index value at point x,y,z in a gradientindex glass " >
+				<Param name="surf_num" />
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="glass_num" />
+				<Param name="x" />
+				<Param name="y" />
+				<Param name="z" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="INPARALLEL" func="yes">
+			<Overload retVal="{}" descr="Indicates whether the calling Macro-PLUS codeis in a parallel region or in a serial region." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="INT_DEPART" func="yes">
+			<Overload retVal="{}" descr="Verifies Finite Element Analysis (FEA) softwareis creating correct .INT files." >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="x" />
+				<Param name="y" />
+				<Param name="$nor$|$sag$" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="LENSTR" func="yes">
+			<Overload retVal="{}" descr="String length." >
+				<Param name="str" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="LOCSTR" func="yes">
+			<Overload retVal="{}" descr="Locate, within a string (arg1), a specified sub-(arg2) and return 0 or character index ofsub-string within string." >
+				<Param name="str1" />
+				<Param name="str2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="LOG10F" func="yes">
+			<Overload retVal="{}" descr="Common log" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="LOGF" func="yes">
+			<Overload retVal="{}" descr="Natural log" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="LOWCASE" func="yes">
+			<Overload retVal="{}" descr="Converts entire string to lowercase." >
+				<Param name="str" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MAXF" func="yes">
+			<Overload retVal="{}" descr="Returns maximum of n1 and n2" >
+				<Param name="expr1" />
+				<Param name="expr2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MINF" func="yes">
+			<Overload retVal="{}" descr="Returns minimum of n1 and n2" >
+				<Param name="expr1" />
+				<Param name="expr2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MODF" func="yes">
+			<Overload retVal="{}" descr="Remainder after arg1 isdivided by arg2" >
+				<Param name="expr1" />
+				<Param name="expr2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MTF_1FLD" func="yes">
+			<Overload retVal="{}" descr="Compute the MTF of the lens system." >
+				<Param name="zoom_pos" />
+				<Param name="field_pos" />
+				<Param name="frequency" />
+				<Param name="azimuth" />
+				<Param name="NRD" />
+				<Param name="output_array" />
+				<Param name="dif_or_geo" />
+				<Param name="sin_or_sqw" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="NORMRADIUS" func="yes">
+			<Overload retVal="{}" descr="Returns the normalization radius of a Zernikepolynomial generated with either theZERNIIKE or ZFRCOEF macro functions." >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="pol_type" />
+				<Param name="$output_string$" />
+				<Param name="zernike_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="NUM_TO_STR" func="yes">
+			<Overload retVal="{}" descr="Number to string conversion." >
+				<Param name="num" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="PAD_REAL_TO_COMPLEX" func="yes">
+			<Overload retVal="{}" descr="Creates an array of complex numbers (arg2)from an array of real numbers (arg1),number of values is specified (arg3)." >
+				<Param name="real" />
+				<Param name="comp" />
+				<Param name="num_reals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="POLGRID" func="yes">
+			<Overload retVal="{}" descr="Traces a grid of rays and returns the polarizationproperties of the rays at the image surface." >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="field_pos" />
+				<Param name="aper_check" />
+				<Param name="nrays" />
+				<Param name="input_array" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RANDF" func="yes">
+			<Overload retVal="{}" descr="Returns a randomlygenerated number [0..1)" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RAYPOL" func="yes">
+			<Overload retVal="{}" descr="Perform a fast ray trace, similar to RAYTRA." >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="aper_check" />
+				<Param name="input" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RAYRSI" func="yes">
+			<Overload retVal="{}" descr="Perform an RSI ray trace " >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="ref_surf" />
+				<Param name="input_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RAYSIN" func="yes">
+			<Overload retVal="{}" descr="Perform a SIN ray trace " >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="x_tan" />
+				<Param name="y_tan" />
+				<Param name="x_dir_tan" />
+				<Param name="y_dir_tan" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RAYTRA" func="yes">
+			<Overload retVal="{}" descr="Perform a SIN ray trace " >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="aper_check" />
+				<Param name="input_array" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="REDIMNUM" func="yes">
+			<Overload retVal="{}" descr="arrayResizes a 2D array variable. If array larger thanoriginal, zeros are added. If smaller, the datawill be truncated." >
+				<Param name="array2D" />
+				<Param name="newNumRows" />
+				<Param name="newNumColumns" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RFSTR" func="yes">
+			<Overload retVal="{}" descr="Converts a replacement field entry to a string." >
+				<Param name="rfd_num" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RMS_1FLD" func="yes">
+			<Overload retVal="{}" descr="Calculate RMS wavefront error for single field" >
+				<Param name="zoom_pos" />
+				<Param name="field_pos" />
+				<Param name="wave_num" />
+				<Param name="NRD" />
+				<Param name="output_array" />
+				<Param name="focus" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RMSSPOT" func="yes">
+			<Overload retVal="{}" descr="Calculates and returns the RMS spot size." >
+				<Param name="zoom_pos" />
+				<Param name="field_num" />
+				<Param name="defocus_num" />
+				<Param name="RTL/NRD" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RMSWE" func="yes">
+			<Overload retVal="{}" descr="Calculate RMS wavefront error " >
+				<Param name="zoom_pos" />
+				<Param name="wave_num" />
+				<Param name="NRD" />
+				<Param name="output_array" />
+				<Param name="focus" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ROUNDF" func="yes">
+			<Overload retVal="{}" descr="Round to nearest integer" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SAGF" func="yes">
+			<Overload retVal="{}" descr="Sag of lens, specifying- surface number (arg1)- zoom position (arg2)- x and y coordinates (arg3 and arg4, resp.)" >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="x" />
+				<Param name="y" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SASF" func="yes">
+			<Overload retVal="{}" descr="Compute surface astigmatism " >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="xs" />
+				<Param name="ys" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SCALE_REAL_ARRAY" func="yes">
+			<Overload retVal="{}" descr="Multiplies an array of real numbers (arg1) by ascale factor (arg2), number of values isspecified (arg3)." >
+				<Param name="real" />
+				<Param name="scale" />
+				<Param name="num_vals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SDERIVF" func="yes">
+			<Overload retVal="{}" descr="Sag, 1st and 2nd derivatives of lens surface,specifying- surface number (arg1)- zoom position (arg2)- x and y coordinates (arg3 and arg4, resp.)(results in array)" >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="xs" />
+				<Param name="ys" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SIGNF" func="yes">
+			<Overload retVal="{}" descr="Returns absf(n1) * sign(n2)" >
+				<Param name="expr1" />
+				<Param name="expr2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SINF" func="yes">
+			<Overload retVal="{}" descr="Sine (radian arg.)" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SPOTDATA" func="yes">
+			<Overload retVal="{}" descr="Returns spot size calculations " >
+				<Param name="zoom_pos" />
+				<Param name="field_num" />
+				<Param name="defocus_num" />
+				<Param name="RTL/NRD" />
+				<Param name="Reference" />
+				<Param name="x_shift" />
+				<Param name="y_shift" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SQRTF" func="yes">
+			<Overload retVal="{}" descr="Square root" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="STDEV" func="yes">
+			<Overload retVal="{}" descr="Standard deviation of values in array,number of values is specified." >
+				<Param name="real" />
+				<Param name="num_vals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="STR_TO_NUM" func="yes">
+			<Overload retVal="{}" descr="String to number conversion." >
+				<Param name="str" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SUBSTR" func="yes">
+			<Overload retVal="{}" descr="Sub-string from first argument, with start andlength specified, respectively." >
+				<Param name="str" />
+				<Param name="pos" />
+				<Param name="length" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SUMF" func="yes">
+			<Overload retVal="{}" descr="Sum of values in array, number of values isspecified.String Functions" >
+				<Param name="real" />
+				<Param name="num_vals" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SURFSAGD" func="yes">
+			<Overload retVal="{}" descr="Returns variance of the sag difference from theinput curvature for specified points" >
+				<Param name="surface" />
+				<Param name="zoom_pos" />
+				<Param name="curvature" />
+				<Param name="x_array_input" />
+				<Param name="y_array_input" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SVD" func="yes">
+			<Overload retVal="{}" descr="Applies the singular value decompositionalgorithm to arrays that have been declaredas global variables ." >
+				<Param name="A" />
+				<Param name="Nrows" />
+				<Param name="Ncols" />
+				<Param name="U" />
+				<Param name="V" />
+				<Param name="s" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TANF" func="yes">
+			<Overload retVal="{}" descr="Tangent (radian arg.)" >
+				<Param name="expr" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="THREADNUM" func="yes">
+			<Overload retVal="{}" descr="Returns the thread number of the callingMacro-PLUS code." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TRA_1FLD" func="yes">
+			<Overload retVal="{}" descr="Compute the average transmission and projectedsolid angle at the object for a particular sourcepoint using the TRA option." >
+				<Param name="zoom_pos" />
+				<Param name="x_fld" />
+				<Param name="y_fld" />
+				<Param name="NRD" />
+				<Param name="geo_or_stokes" />
+				<Param name="grid_scale_fact" />
+				<Param name="pol_input" />
+				<Param name="output_array" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TRANSFORM" func="yes">
+			<Overload retVal="{}" descr="Compute transformation of one surface to localcoordinates of another surface." >
+				<Param name="surface" />
+				<Param name="ref_surface" />
+				<Param name="zoom_pos" />
+				<Param name="trans_data" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TRUNC" func="yes">
+			<Overload retVal="{}" descr="Truncate trailing spaces." >
+				<Param name="str" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="UPCASE" func="yes">
+			<Overload retVal="{}" descr="Converts entire string to uppercase.File" >
+				<Param name="input" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ZERNIKE" func="yes">
+			<Overload retVal="{}" descr="Compute Zernike fit coefficients." >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="coef_num" />
+				<Param name="nrd" />
+				<Param name="num_terms" />
+				<Param name="$pupil_type$" />
+				<Param name="pol_type" />
+				<Param name="int_or_phase" />
+				<Param name="zernike_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ZERNIKEGQ" func="yes">
+			<Overload retVal="{}" descr="Compute Zernike fit coefficients. Performsfit using a radial grid based on Gaussianquadrature " >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="coef_num" />
+				<Param name="num_terms" />
+				<Param name="$pupil_type$" />
+				<Param name="pol_type" />
+				<Param name="int_or_phase" />
+				<Param name="Zernike_type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ZFRCOEF" func="yes">
+			<Overload retVal="{}" descr="Compute a specified FRINGE Zernikecoefficient for the specified wavelength,zoom position, field, and pupil type.Image Simulation Functions" >
+				<Param name="wave_num" />
+				<Param name="field_num" />
+				<Param name="zoom_pos" />
+				<Param name="coef_num" />
+				<Param name="nrd" />
+				<Param name="num_terms" />
+				<Param name="$pupil_type$" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ZFRFIT" func="yes">
+			<Overload retVal="{}" descr="Fits user data to fringe Zernikepolynomials to specifiedorder" >
+				<Param name="num_points" />
+				<Param name="x" />
+				<Param name="y" />
+				<Param name="f" />
+				<Param name="num_terms" />
+				<Param name="coefs" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ZRNFIT" func="yes">
+			<Overload retVal="{}" descr="Fits user data to standardZernike polynomials tospecified orderOptical Functions" >
+				<Param name="num_points" />
+				<Param name="x" />
+				<Param name="y" />
+				<Param name="f" />
+				<Param name="num_terms" />
+				<Param name="coefs" />
+			</Overload>
+		</KeyWord>
+
+		<!--
+		End of KeyWords
+		-->	
+	</AutoComplete>
+</NotepadPlus>

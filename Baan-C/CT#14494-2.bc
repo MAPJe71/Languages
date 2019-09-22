@@ -1,0 +1,34 @@
+|
+| https://notepad-plus-plus.org/community/topic/14494/functionlist-classrange-question
+|
+
+declaration:            |This main section, does not have a sub section.
+    func2(10.09, "STR")
+
+before.program:         |This main section, does not have a sub section.
+    func1(10)
+
+choice.test.123:        |Has multiple subsections. 2 shown below. Regex to check this would be "choice\s*\.\s*[\w\s*\.\s*]+"
+before.choice:          |This sub-section should be listed under choice.test.123:
+    func1(20)
+after.choice:           |This sub-section should be listed under choice.test.123:
+    func2(20.09, "STR")
+
+field.field.123:        |Has multiple subections. 1 shown below. Regex to check this would be "field\s*\.\s*[\w\s*\.\s*]+"
+on.input:               |This sub-section should be listed under field.field.123:
+    func1(30)
+
+functions:              |Does not have a sub section (per se)... but, encloses a list of functions
+                        |which are called from other main/sub sections.
+function func1(long var1)   |These are functions, which the existing PR #3702 would work.
+{
+    | Do Something 1.
+}
+
+function string func2(
+            double var2,
+            string var2_1
+            )
+{
+    | Do Something 2.
+}

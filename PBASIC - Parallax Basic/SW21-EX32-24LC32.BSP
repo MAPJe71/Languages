@@ -1,0 +1,99 @@
+' =========================================================================
+'
+'   File....... SW21-EX32-24LC32.BSP
+'   Purpose.... I2C Interfacing
+'   Author..... (C) 2000 - 2005, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 16 AUG 2006
+'
+'   {$STAMP BS2p}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' This program demonstrates essential I2C interfacing by connecting to
+' a 24LC32 EEPROM.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+SDA             PIN     8                       ' I2C serial data line
+SCL             PIN     9                       ' I2C serial clock line
+
+
+' -----[ Constants ]-------------------------------------------------------
+
+Ack             CON     0                       ' acknowledge bit
+Nak             CON     1                       ' no ack bit
+
+EE24LC32        CON     %1010 << 4              ' device ID
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+slvAddr         VAR     Byte                    ' I2C slave address
+devNum          VAR     Nib                     ' device number (0 - 7)
+wrdAddr         VAR     Word                    ' word address
+
+test            VAR     Nib
+outVal          VAR     Byte
+inVal           VAR     Byte
+fails           VAR     Word
+
+
+' -----[ Initialization ]--------------------------------------------------
+
+Reset:
+  #IF ($STAMP < BS2P) #THEN
+    #ERROR "Please use BS2 version: SW21-EX32-24LC32.BS2"
+  #ENDIF
+
+Setup:
+  devNum = %000                                 ' chip select (%000 - %111)
+  slvAddr = EE24LC32 | (devNum << 1)            ' setup slave ID
+
+  DEBUG CLS,
+        "24LC32 Demo    ", CR,
+        "---------------", CR,
+        "Address...     ", CR,
+        "Output....     ", CR,
+        "Input.....     ", CR,
+        "Status....     ", CR,
+        "Errors....     "
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  fails = 0
+  FOR wrdAddr = 0 TO 4095                       ' test all locations
+    DEBUG CRSRXY, 11, 2, DEC4 wrdAddr
+    FOR test = 0 TO 3                           ' use four patterns
+      LOOKUP test, [$FF, $AA, $55, $00], outVal
+      DEBUG CRSRXY, 11, 3, IHEX2 outVal
+      I2COUT SDA, slvAddr, wrdAddr.BYTE1\wrdAddr.BYTE0, [outVal]
+      PAUSE 10
+      I2CIN SDA, slvAddr, wrdAddr.BYTE1\wrdAddr.BYTE0, [inVal]
+      DEBUG CRSRXY, 11, 4, IHEX2 inVal,
+            CRSRXY, 11, 5
+      IF (inVal = outVal) THEN
+        DEBUG "Pass "
+      ELSE
+        fails = fails + 1
+        DEBUG "Fail ", CRSRXY, 11, 6, DEC fails
+        EXIT                                    ' terminate location
+      ENDIF
+      PAUSE 10
+    NEXT
+  NEXT
+  IF (fails = 0) THEN
+    DEBUG CRSRXY, 11, 6, "None. All locations test good."
+  ENDIF
+  END
+
+
+' -----[ Subroutines ]-----------------------------------------------------

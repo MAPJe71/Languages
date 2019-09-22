@@ -1,0 +1,29 @@
+{
+    "root":"CT#14494-2.bc"
+    "branches":[
+        {
+            "name":"choice.test.123"
+            "leaves":[
+                "before.choice",
+                "after.choice"
+            ]
+        },
+        {
+            "name":"field.field.123"
+            "leaves":[
+                "on.input"
+            ]
+        },
+        {
+            "name":"functions"
+            "leaves":[
+                "func1",
+                "func2"
+            ]
+        }
+    ],
+    "leaves":[
+        "declaration"
+        "before.program"
+    ]
+}

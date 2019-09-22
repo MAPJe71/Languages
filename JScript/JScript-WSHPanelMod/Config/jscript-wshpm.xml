@@ -1,0 +1,1157 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<AutoComplete>
+		<Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" />
+		<KeyWord name="Activate" func="yes" >
+			<Overload retVal="void" descr="[IFbTooltip]" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AddRange" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;[1.5.0 Preview 6]: New:" >
+				<Param name ="handles" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AppendMenuItem" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;flags: see Flags.txt." >
+				<Param name ="flags" />				
+				<Param name ="item_id" />
+				<Param name ="text" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AppendMenuSeparator" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;Same as AppendMenuItem(MF_SEPARATOR,...,...)" >
+				<Param name ="flags" />				
+				<Param name ="item_id" />
+				<Param name ="text" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="AppendTo" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;[1.5.0 Beta 2] New:" >
+				<Param name ="parentMenu" />				
+				<Param name ="flags" />
+				<Param name ="text" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ApplyAlpha" func="yes" >
+			<Overload retVal="IGdiBitmap" descr="[IGdiBitmap]" >
+				<Param name ="alpha" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ApplyMask" func="yes" >
+			<Overload retVal="boolean" descr="[IGdiBitmap]&#x0a;&#x0a;Changes will be saved in the current bitmap" >
+				<Param name ="IGdiBitmap" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Array" />
+		<KeyWord name="Array.concat" />
+		<KeyWord name="Array.index" />
+		<KeyWord name="Array.input" />
+		<KeyWord name="Array.join" />
+		<KeyWord name="Array.length" />
+		<KeyWord name="Array.pop" />
+		<KeyWord name="Array.prototype" />
+		<KeyWord name="Array.push" />
+		<KeyWord name="Array.reverse" />
+		<KeyWord name="Array.shift" />
+		<KeyWord name="Array.sort" />
+		<KeyWord name="Array.splice" />
+		<KeyWord name="Array.unshift" />
+		<KeyWord name="BSearch" func="yes" >
+			<Overload retVal="uint" descr="[IFbMetadbHandleList]&#x0a;&#x0a;Only works when sorted, faster than Find()" >
+				<Param name ="handle" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Boolean" />
+		<KeyWord name="Boolean.prototype" />
+		<KeyWord name="BoxBlur" func="yes" >
+			<Overload retVal="void" descr="[IGdiBitmap]" >
+				<Param name ="radius" />
+				<Param name ="iteration = 1" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="BuildMenu" func="yes" >
+			<Overload retVal="void" descr="[IMainMenuManager]&#x0a;&#x0a;NOTE: the last param is count, not max_id, this is different from what IContextMenuManager does." >
+				<Param name ="IMenuObj" />
+				<Param name ="base_id" />
+				<Param name ="count" />
+			</Overload>
+		</KeyWord>		
+		<KeyWord name="CalcTextHeight" func="yes" >
+			<Overload retVal="uint" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3.5] New:&#x0a;Note that it will only calulate one line text height." >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CalcTextWidth" func="yes" >
+			<Overload retVal="uint" descr="[IGdiGraphics]&#x0a;&#x0a;Used with GDI functions, such as GdiDrawText()." >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CheckMenuItem" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;[1.3.0] Changed:&#x0a;check is now a boolean value.&#x0a;[1.3.2] Changed:&#x0a;Add bypos parameter." >
+				<Param name ="id_or_pos" />				
+				<Param name ="check" />
+				<Param name ="bypos = false" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CheckMenuRadioItem" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;[1.3.2] Changed:&#x0a;Add bypos parameter." >
+				<Param name ="first" />				
+				<Param name ="last" />
+				<Param name ="check" />
+				<Param name ="bypos = false" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Clone" />
+		<KeyWord name="Compare" func="yes" >
+			<Overload retVal="boolean" descr="[IFbMetadbHandle]&#x0a;&#x0a;[1.3.2] New&#x0a;Compare two IFbMetadbHandle instances, pointer only.&#x0a;  If you want to compare them physically, use the &quot;RawPath&quot; property, and compare these two values." >
+				<Param name ="IFbMetadbHandle" />	
+			</Overload>
+		</KeyWord>
+		<KeyWord name="CreateRawBitmap" func="yes" >
+			<Overload retVal="IGdiRawBitmap" descr="[IGdiBitmap]&#x0a;&#x0a;Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Date" />
+		<KeyWord name="Date.getDate" />
+		<KeyWord name="Date.getDay" />
+		<KeyWord name="Date.getFullYear" />
+		<KeyWord name="Date.getHours" />
+		<KeyWord name="Date.getMilliseconds" />
+		<KeyWord name="Date.getMinutes" />
+		<KeyWord name="Date.getMonth" />
+		<KeyWord name="Date.getSeconds" />
+		<KeyWord name="Date.getTime" />
+		<KeyWord name="Date.getTimezoneOffset" />
+		<KeyWord name="Date.getUTCDate" />
+		<KeyWord name="Date.getUTCDay" />
+		<KeyWord name="Date.getUTCFullYear" />
+		<KeyWord name="Date.getUTCHours" />
+		<KeyWord name="Date.getUTCMilliseconds" />
+		<KeyWord name="Date.getUTCMinutes" />
+		<KeyWord name="Date.getUTCMonth" />
+		<KeyWord name="Date.getUTCSeconds" />
+		<KeyWord name="Date.getYear" />
+		<KeyWord name="Date.now" />
+		<KeyWord name="Date.parse" />
+		<KeyWord name="Date.prototype" />
+		<KeyWord name="Date.prototype" />
+		<KeyWord name="Date.setDate" />
+		<KeyWord name="Date.setFullYear" />
+		<KeyWord name="Date.setHours" />
+		<KeyWord name="Date.setMilliseconds" />
+		<KeyWord name="Date.setMinutes" />
+		<KeyWord name="Date.setMonth" />
+		<KeyWord name="Date.setSeconds" />
+		<KeyWord name="Date.setTime" />
+		<KeyWord name="Date.setUTCDate" />
+		<KeyWord name="Date.setUTCFullYear" />
+		<KeyWord name="Date.setUTCHours" />
+		<KeyWord name="Date.setUTCMilliseconds" />
+		<KeyWord name="Date.setUTCMinutes" />
+		<KeyWord name="Date.setUTCMonth" />
+		<KeyWord name="Date.setUTCSeconds" />
+		<KeyWord name="Date.setYear" />
+		<KeyWord name="Date.toGMTString" />
+		<KeyWord name="Date.toLocaleDateString" />
+		<KeyWord name="Date.toLocaleString" />
+		<KeyWord name="Date.toLocaleTimeString" />
+		<KeyWord name="Date.toString" />
+		<KeyWord name="Date.toUTCString" />
+		<KeyWord name="Date.valueOf" />
+		<KeyWord name="Deactivate" func="yes" >
+			<Overload retVal="void" descr="[IFbTooltip]" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DiffusedShadow" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----&#x0a;Mode: Soft shadow" >
+				<Param name ="color" />
+				<Param name ="thickness" />
+				<Param name ="offset_x" />
+				<Param name ="offset_y" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Dispose" />
+		<KeyWord name="DoubleOutLineText" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Outline Mode ----" >
+				<Param name ="text_color" />
+				<Param name ="outline_color1" />
+				<Param name ="outline_color2" />
+				<Param name ="outline_width1" />
+				<Param name ="outline_width2" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawEllipse" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="line_width" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawImage" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="IGdiBitmap" />
+				<Param name ="dstX" />
+				<Param name ="dstY" />
+				<Param name ="dstW" />
+				<Param name ="dstH" />
+				<Param name ="srcX" />
+				<Param name ="srcY" />
+				<Param name ="srcW" />
+				<Param name ="srcH" />
+				<Param name ="angle = 0" />
+				<Param name ="alpha = 255" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawLine" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x1" />
+				<Param name ="y1" />
+				<Param name ="x2" />
+				<Param name ="y2" />
+				<Param name ="line_width" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawPolygon" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3.2] New:&#x0a;points is either a VBArray or JScript array." >
+				<Param name ="color" />
+				<Param name ="line_width" />
+				<Param name ="points" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawRect" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="line_width" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawRoundRect" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="arc_width" />
+				<Param name ="arc_height" />
+				<Param name ="line_width" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawString" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+				<Param name ="color" />
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="flags = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="DrawThemeBackground" func="yes" >
+			<Overload retVal="void" descr="[IThemeManager]&#x0a;&#x0a;[1.3.2] Updated:&#x0a;clip_*: set clipping area." >
+				<Param name ="IGdiGraphics" />
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="clip_x = 0" />
+				<Param name ="clip_y = 0" />
+				<Param name ="clip_w = 0" />
+				<Param name ="clip_h = 0" />
+			</Overload>
+		</KeyWord>	
+		<KeyWord name="EnableMenuItem" func="yes" >
+			<Overload retVal="void" descr="[IMenuObj]&#x0a;&#x0a;[1.3.2] Changed:&#x0a;Add bypos parameter." >
+				<Param name ="id_or_pos" />				
+				<Param name ="enable" />
+				<Param name ="bypos = false" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="EnableShadow" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----" >
+				<Param name ="enable" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Equals" func="yes" >
+			<Overload retVal="boolean" descr="[1.5.0] New: new interface for playback queue&#x0a;[IFbPlaybackQueueItem]&#x0a;&#x0a;item: an instance of IFbPlaybackQueueItem." >
+				<Param name ="item" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Error" />
+		<KeyWord name="EstimateLineWrap" func="yes" >
+			<Overload retVal="VBArray" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3.5] New:&#x0a;Returns a VBArray&#x0a;  index | meaning&#x0a;    [0] text line 1&#x0a;    [1] width of text line 1 (in pixel)&#x0a;    [2] text line 2&#x0a;    [3] width of text line 2 (in pixel)&#x0a;    .&#x0a;    .&#x0a;    .&#x0a;    [2n + 2] text line n&#x0a;    [2n + 3] width of text line n (in pixel)" >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+				<Param name ="max_width" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Eval" />
+		<KeyWord name="EvalWithMetadb" />
+		<KeyWord name="ExecuteByID" func="yes" >
+			<Overload retVal="boolean" descr="[IMainMenuManager]" >
+				<Param name ="id" />
+			</Overload>
+		</KeyWord>		
+		<KeyWord name="FillEllipse" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FillGradRect" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3.4] Updated:&#x0a;focus: Specify where the center color will be at its highest intensity, from 0.0 to 1.0" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="angle" />
+				<Param name ="color1" />
+				<Param name ="color2" />
+				<Param name ="focus = 1.0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FillPolygon" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3,2] New:&#x0a;fillmode: 0 - Alternate, 1 - Winding&#x0a;points is either a VBArray or JScript array." >
+				<Param name ="color" />
+				<Param name ="fillmode" />
+				<Param name ="points" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FillRoundRect" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="arc_width" />
+				<Param name ="arc_height" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FillSolidRect" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="color" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="FindById" func="yes" >
+			<Overload retVal="uint" descr="[PlaylistRecyclerManager]&#x0a;&#x0a;returns the index" >
+				<Param name ="id" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Function" />
+		<KeyWord name="Function.apply" />
+		<KeyWord name="Function.call" />
+		<KeyWord name="Function.prototype" />
+		<KeyWord name="Function.toSource" />
+		<KeyWord name="Function.toString" />
+		<KeyWord name="Function.valueOf" />
+		<KeyWord name="GdiAlphaBlend" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]" >
+				<Param name ="IGdiRawBitmap" />
+				<Param name ="dstX" />
+				<Param name ="dstY" />
+				<Param name ="dstW" />
+				<Param name ="dstH" />
+				<Param name ="srcX" />
+				<Param name ="srcY" />
+				<Param name ="srcW" />
+				<Param name ="srcH" />
+				<Param name ="alpha = 255" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GdiDrawBitmap" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;Always faster than DrawImage, do not support alpha channel" >
+				<Param name ="IGdiRawBitmap" />
+				<Param name ="dstX" />
+				<Param name ="dstY" />
+				<Param name ="dstW" />
+				<Param name ="dstH" />
+				<Param name ="srcX" />
+				<Param name ="srcY" />
+				<Param name ="srcW" />
+				<Param name ="srcH" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GdiDrawText" func="yes" >
+			<Overload retVal="VBArray" descr="[IGdiGraphics]&#x0a;&#x0a;[1.3.0] Updated:&#x0a;Returns a VBArray (also see utils.Glob()):&#x0a;  index | meaning&#x0a;    [0] left (DT_CALCRECT)&#x0a;    [1] top (DT_CALCRECT)&#x0a;    [2] right (DT_CALCRECT)&#x0a;    [3] bottom (DT_CALCRECT)&#x0a;    [4] characters drawn&#x0a;Always faster than DrawString and returns chars drawed" >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+				<Param name ="color" />
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="format = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GetColorScheme" func="yes" >
+			<Overload retVal="VBArray" descr="[IGdiBitmap]&#x0a;&#x0a;[1.5.5]:" >
+				<Param name ="max_count" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GetDelayTime" func="yes" >
+			<Overload retVal="int" descr="[IFbTooltip]&#x0a;&#x0a;[1.3.4] New:&#x0a;in milliseconds&#x0a;type: See flags.txt" >
+				<Param name ="type" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GetFileInfo" func="yes" >
+			<Overload retVal="IFbFileInfo" descr="[IFbMetadbHandle]" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GetGraphics" func="yes" >
+			<Overload retVal="IGdiGraphics" descr="[IGdiBitmap]&#x0a;&#x0a;NOTE: Don't forget to use ReleaseGraphics() after operations on IGdiGraphics interface is done." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="GlowText" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Outline Mode ----" >
+				<Param name ="text_color" />
+				<Param name ="glow_color" />
+				<Param name ="glow_width" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="InfoFind" func="yes" >
+			<Overload retVal="int" descr="[IFbFileInfo]&#x0a;&#x0a;returns idx" >
+				<Param name ="name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="InfoName" func="yes" >
+			<Overload retVal="String" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="InfoValue" func="yes" >
+			<Overload retVal="String" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Init" func="yes" >
+			<Overload retVal="void" descr="[IMainMenuManager]&#x0a;&#x0a;NOTE: Only root menu name" >
+				<Param name ="root_name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Insert" />
+		<KeyWord name="InsertRange" />
+		<KeyWord name="IsThemePartDefined" func="yes" >
+			<Overload retVal="boolean" descr="[IThemeManager]&#x0a;&#x0a;NOTE: stateid should be 0, it's unused now." >
+				<Param name ="partid" />
+				<Param name ="stateid = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MakeDifference" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;Must be sorted" >
+				<Param name ="handles" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MakeIntersection" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;Must be sorted" >
+				<Param name ="handles" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MakeUnion" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;Must be sorted" >
+				<Param name ="handles" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Math" />
+		<KeyWord name="Math.abs" />
+		<KeyWord name="Math.acos" />
+		<KeyWord name="Math.asin" />
+		<KeyWord name="Math.atan" />
+		<KeyWord name="Math.atan2" />
+		<KeyWord name="Math.ceil" />
+		<KeyWord name="Math.cos" />
+		<KeyWord name="Math.E" />
+		<KeyWord name="Math.exp" />
+		<KeyWord name="Math.floor" />
+		<KeyWord name="Math.LN10" />
+		<KeyWord name="Math.LN2" />
+		<KeyWord name="Math.log" />
+		<KeyWord name="Math.LOG10E" />
+		<KeyWord name="Math.LOG2E" />
+		<KeyWord name="Math.max" />
+		<KeyWord name="Math.min" />
+		<KeyWord name="Math.PI" />
+		<KeyWord name="Math.pow" />
+		<KeyWord name="Math.prototype" />
+		<KeyWord name="Math.random" />
+		<KeyWord name="Math.round" />
+		<KeyWord name="Math.sin" />
+		<KeyWord name="Math.sqrt" />
+		<KeyWord name="Math.SQRT1_2" />
+		<KeyWord name="Math.SQRT2" />
+		<KeyWord name="Math.tan" />
+		<KeyWord name="MeasureString" func="yes" >
+			<Overload retVal="IMeasureStringInfo" descr="[IGdiGraphics]&#x0a;&#x0a;Used with GDI+ functions, such as DrawString()." >
+				<Param name ="str" />
+				<Param name ="IGdiFont" />
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="flags = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MetaAdd" func="yes" >
+			<Overload retVal="int" descr="[IFbFileInfo]" >
+				<Param name ="name" />
+				<Param name ="value" />
+			</Overload>
+		</KeyWord>	
+		<KeyWord name="MetaFind" func="yes" >
+			<Overload retVal="int" descr="[IFbFileInfo]&#x0a;&#x0a;returns idx" >
+				<Param name ="name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MetaInsertValue" func="yes" >
+			<Overload retVal="void" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+				<Param name ="vidx" />
+				<Param name ="value" />
+			</Overload>
+		</KeyWord>	
+		<KeyWord name="MetaName" func="yes" >
+			<Overload retVal="String" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MetaRemoveField" func="yes" >
+			<Overload retVal="void" descr="[IFbFileInfo]" >
+				<Param name ="name" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="MetaSet" func="yes" >
+			<Overload retVal="void" descr="[IFbFileInfo]" >
+				<Param name ="name" />
+				<Param name ="value" />
+			</Overload>
+		</KeyWord>	
+		<KeyWord name="MetaValue" func="yes" >
+			<Overload retVal="String" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+				<Param name ="vidx" />
+			</Overload>
+		</KeyWord>			
+		<KeyWord name="MetaValueCount" func="yes" >
+			<Overload retVal="int" descr="[IFbFileInfo]" >
+				<Param name ="idx" />
+			</Overload>
+		</KeyWord>		
+		<KeyWord name="Number" />
+		<KeyWord name="Number.MAX_VALUE" />
+		<KeyWord name="Number.MIN_VALUE" />
+		<KeyWord name="Number.NaN" />
+		<KeyWord name="Number.NEGATIVE_INFINITY" />
+		<KeyWord name="Number.POSITIVE_INFINITY" />
+		<KeyWord name="Number.prototype" />
+		<KeyWord name="Object" />
+		<KeyWord name="Object.prototype" />
+		<KeyWord name="Object.toSource" />
+		<KeyWord name="Object.toString" />
+		<KeyWord name="Object.valueOf" />
+		<KeyWord name="OrderByFormat" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;[1.5.0 Preview 4]: New:&#x0a;titleformatObject: an instance of IFbTitleFormat.&#x0a;direction: integer, ascending while >0." >
+				<Param name ="titleformatObject" />
+				<Param name ="direction" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="OrderByPath" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;[1.5.0 Preview 4]: New:" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="OrderByRelativePath" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;[1.5.0 Preview 4]: New:" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="OutLineText" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Outline Mode ----" >
+				<Param name ="text_color" />
+				<Param name ="outline_color" />
+				<Param name ="outline_width" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Purge" func="yes" >
+			<Overload retVal="void" descr="[PlaylistRecyclerManager]&#x0a;&#x0a;Purge multiple content at once.&#x0a;affectedItems is an array contains the indexes." >
+				<Param name ="affectedItems" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RegExp" />
+		<KeyWord name="RegExp.exec" />
+		<KeyWord name="RegExp.prototype" />
+		<KeyWord name="RegExp.test" />
+		<KeyWord name="RegExp.toString" />
+		<KeyWord name="ReleaseGraphics" func="yes" >
+			<Overload retVal="void" descr="[IGdiBitmap]" >
+				<Param name ="IGdiGraphics" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RemoveAll" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RemoveById" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]" >
+				<Param name ="UINT idx" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RemoveRange" func="yes" >
+			<Overload retVal="void" descr="[IFbMetadbHandleList]&#x0a;&#x0a;[1.5.0 Preview 6]: New:" >
+				<Param name ="from" />
+				<Param name ="num" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RenderStringPoint" func="yes" >
+			<Overload retVal="boolean" descr="[IStyleTextRender]&#x0a;&#x0a;---- Render ----&#x0a;Not recommended, if the flags contains something as &quot;center&quot;, this won't&#x0a; work properly, because it's lack of width and height information." >
+				<Param name ="g" />
+				<Param name ="str" />
+				<Param name ="font" />
+				<Param name ="x" />
+				<Param name ="y[, flags]" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="RenderStringRect" func="yes" >
+			<Overload retVal="boolean" descr="[IStyleTextRender]&#x0a;&#x0a;---- Render ----&#x0a;Not recommended, if the flags contains something as &quot;center&quot;, this won't&#x0a; work properly, because it's lack of width and height information." >
+				<Param name ="g" />
+				<Param name ="str" />
+				<Param name ="font" />
+				<Param name ="x" />
+				<Param name ="y" />
+				<Param name ="w" />
+				<Param name ="h[, flags]" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="ResetShadow" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----&#x0a;if you have a *global* IStyleTextRender instance once called EnableShadow(),&#x0a;  it's recommended to call ResetShadow() then." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Resize" func="yes" >
+			<Overload retVal="IGdiBitmap" descr="[IGdiBitmap]&#x0a;&#x0a;[1.5.0 Beta 5]: Changed: Add parameter &quot;interpolationMode&quot;.&#x0a;See Flags.txt meanings of modes." >
+				<Param name ="w" />
+				<Param name ="h" />
+				<Param name ="interpolationMode = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Restore" />
+		<KeyWord name="RestoreById" />
+		<KeyWord name="RotateFlip" func="yes" >
+			<Overload retVal="void" descr="[IGdiBitmap]" >
+				<Param name ="mode" />				
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetDelayTime" func="yes" >
+			<Overload retVal="void" descr="[IFbTooltip]&#x0a;&#x0a;[1.3.4] New:&#x0a;type: See flags.txt" >
+				<Param name ="type" />
+				<Param name ="time" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetInterpolationMode" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;See Flags.txt meanings of modes." >
+				<Param name ="mode" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetMaxWidth" func="yes" >
+			<Overload retVal="void" descr="[IFbTooltip]" >
+				<Param name ="width" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetPartAndStateID" func="yes" >
+			<Overload retVal="void" descr="[IThemeManager]&#x0a;&#x0a;For parts and stats: http://msdn.microsoft.com/en-us/library/bb773210%28VS.85%29.aspx &#x0a;You get vsstyle.h and vssym32.h (won't included in Flags because they are too large) here:&#x0a;  http://dl.dropbox.com/u/2451120/vsstyles_h.7z" >
+				<Param name ="partid" />
+				<Param name ="stateid" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetPlaylistSelectionTracking" func="yes" >
+			<Overload retVal="void" descr="[IFbUiSelectionHolder]&#x0a;&#x0a;Sets selected items to playlist selection and enables tracking.&#x0a;When the playlist selection changes, the stored selection is automatically updated.&#x0a;Tracking ends when a set method is called on any ui_selection_holder or when&#x0a;the last reference to this ui_selection_holder is released." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetPlaylistTracking" func="yes" >
+			<Overload retVal="void" descr="[IFbUiSelectionHolder]&#x0a;&#x0a;Sets selected items to the contents of the active playlist and enables tracking.&#x0a;hen the active playlist or its contents changes, the stored selection is automatically updated.&#x0a;Tracking ends when a set method is called on any ui_selection_holder or when&#x0a;the last reference to this ui_selection_holder is released." >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetPngImage" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Render ----&#x0a;[1.3.0] New&#x0a;Only in pngmode, the image should be a transparent image created by gdi.CreateImage()." >
+				<Param name ="IGdiBitmap" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetSelection" func="yes" >
+			<Overload retVal="void" descr="[IFbUiSelectionHolder]&#x0a;&#x0a;Sets the selected items.&#x0a;It should not to clear the selection" >
+				<Param name ="handles" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetShadowBackgroundColor" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----&#x0a;While using DiffusedShadow(),&#x0a; these two methods(another SetShadowBackgroundImage) below are useful" >
+				<Param name ="color" />
+				<Param name ="width" />
+				<Param name ="height" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetShadowBackgroundImage" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----&#x0a;While using DiffusedShadow(),&#x0a; these two methods(another SetShadowBackgroundColor) below are useful" >
+				<Param name ="img" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetSmoothingMode" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;See Flags.txt meanings of modes." >
+				<Param name ="mode" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="SetTextRenderingHint" func="yes" >
+			<Overload retVal="void" descr="[IGdiGraphics]&#x0a;&#x0a;See Flags.txt meanings of modes." >
+				<Param name ="mode" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="Shadow" func="yes" >
+			<Overload retVal="void" descr="[IStyleTextRender]&#x0a;&#x0a;---- Shadow ----&#x0a;Mode: Default shadow, used in solid shadow color" >
+				<Param name ="color" />
+				<Param name ="thickness" />
+				<Param name ="offset_x" />
+				<Param name ="offset_y" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="String" />
+		<KeyWord name="String.charAt" />
+		<KeyWord name="String.charCodeAt" />
+		<KeyWord name="String.concat" />
+		<KeyWord name="String.fromCharCode" />
+		<KeyWord name="String.indexOf" />
+		<KeyWord name="String.lastIndexOf" />
+		<KeyWord name="String.match" />
+		<KeyWord name="String.replace" />
+		<KeyWord name="String.search" />
+		<KeyWord name="String.slice" />
+		<KeyWord name="String.split" />
+		<KeyWord name="String.substr" />
+		<KeyWord name="String.substring" />
+		<KeyWord name="String.toLowerCase" />
+		<KeyWord name="String.toString" />
+		<KeyWord name="String.toUpperCase" />
+		<KeyWord name="String.valueOf" />
+		<KeyWord name="ToPlaylist" func="yes" >
+			<Overload retVal="void" descr="[IDropTargetAction]&#x0a;&#x0a;Parse dropped items as playlist" >
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TrackPopupMenu" func="yes" >
+			<Overload retVal="int" descr="[IMenuObj]&#x0a;&#x0a;[1.4.0 Beta 3] Updated:&#x0a;flags: Control popup positions and animations. (See Flags.txt)" >
+				<Param name ="x" />				
+				<Param name ="y" />
+				<Param name ="flags = 0" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="TrackPosition" func="yes" >
+			<Overload retVal="void" descr="[IFbTooltip]&#x0a;&#x0a;[1.5.0 Preview 8]: New:&#x0a;NOTE: You should make sure x, y is changed before call, or you will recive a blinking tooltip." >
+				<Param name ="x" />
+				<Param name ="y" />
+			</Overload>
+		</KeyWord>
+		<KeyWord name="UpdateFileInfo" />
+		<KeyWord name="UpdateFileInfoSimple" />
+		<!-- IFbUtils -->
+		<KeyWord name="fb.AcquireUiSelectionHolder" />
+		<KeyWord name="fb.ActivePlaylist" />
+		<KeyWord name="fb.AddDirectory" />
+		<KeyWord name="fb.AddFiles" />
+		<KeyWord name="fb.ClearPlaylist" />
+		<KeyWord name="fb.ComponentPath" />
+		<KeyWord name="fb.CreateAutoPlaylist" />
+		<KeyWord name="fb.CreateContextMenuManager" />
+		<KeyWord name="fb.CreateMainMenuManager" />
+		<KeyWord name="fb.CreatePlaylist" />
+		<KeyWord name="fb.CreateProfiler" />
+		<KeyWord name="fb.CursorFollowPlayback" />
+		<KeyWord name="fb.DuplicatePlaylist" />
+		<KeyWord name="fb.Exit" />
+		<KeyWord name="fb.FoobarPath" />
+		<KeyWord name="fb.GetFocusItem" />
+		<KeyWord name="fb.GetNowPlaying" />
+		<KeyWord name="fb.GetPlaylistName" />
+		<KeyWord name="fb.GetSelection" />
+		<KeyWord name="fb.GetSelections" />
+		<KeyWord name="fb.GetSelectionType" />
+		<KeyWord name="fb.IsAutoPlaylist" />
+		<KeyWord name="fb.IsMetadbInMediaLibrary" />
+		<KeyWord name="fb.IsPaused" />
+		<KeyWord name="fb.IsPlaying" />
+		<KeyWord name="fb.LoadPlaylist" />
+		<KeyWord name="fb.MovePlaylist" />
+		<KeyWord name="fb.Next" />
+		<KeyWord name="fb.Pause" />
+		<KeyWord name="fb.Play" />
+		<KeyWord name="fb.PlaybackFollowCursor" />
+		<KeyWord name="fb.PlaybackLength" />
+		<KeyWord name="fb.PlaybackOrder" />
+		<KeyWord name="fb.PlaybackTime" />
+		<KeyWord name="fb.PlayingPlaylist" />
+		<KeyWord name="fb.PlaylistCount" />
+		<KeyWord name="fb.PlaylistItemCount" />
+		<KeyWord name="fb.PlayOrPause" />
+		<KeyWord name="fb.Prev" />
+		<KeyWord name="fb.ProfilePath" />
+		<KeyWord name="fb.Random" />
+		<KeyWord name="fb.RemovePlaylist" />
+		<KeyWord name="fb.RenamePlaylist" />
+		<KeyWord name="fb.RunContextCommand" />
+		<KeyWord name="fb.RunContextCommandWithMetadb" />
+		<KeyWord name="fb.RunMainMenuCommand" />
+		<KeyWord name="fb.SavePlaylist" />
+		<KeyWord name="fb.ShowAutoPlaylistUI" />
+		<KeyWord name="fb.ShowConsole" />
+		<KeyWord name="fb.ShowPopupMessage" />
+		<KeyWord name="fb.ShowPreferences" />
+		<KeyWord name="fb.Stop" />
+		<KeyWord name="fb.StopAfterCurrent" />
+		<KeyWord name="fb.TitleFormat" />
+		<KeyWord name="fb.Trace" />
+		<KeyWord name="fb.trace" />
+		<KeyWord name="fb.Volume" />
+		<KeyWord name="fb.VolumeDown" />
+		<KeyWord name="fb.VolumeMute" />
+		<KeyWord name="fb.VolumeUp" />
+		<KeyWord name="function" />
+		<KeyWord name="gdi.CreateImage" />
+		<KeyWord name="gdi.CreateStyleTextRender" />
+		<KeyWord name="gdi.Font" />
+		<KeyWord name="gdi.Image" />
+		<KeyWord name="gdi.LoadImageAsync" />
+		<!-- Callbacks -->
+		<KeyWord name="on_char" func="yes">
+			<Overload retVal="" descr="function on_char(code) {}&#x0a;&#x0a;[1.3.2] New:&#x0a;code: UTF16 encoded char.&#x0a;NOTE: in order to use this callback, set flag DLGC_WANTCHARS (#Flags.txt) to window.DlgCode.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_colors_changed" func="yes">
+			<Overload retVal="" descr="function on_colors_changed() {}&#x0a;&#x0a;[1.3.0] New:&#x0a;DUI and CUI&#x0a;On color setting changed&#x0a;Retrieve colors using window.GetColorXXX() method.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_cursor_follow_playback_changed" func="yes">
+			<Overload retVal="" descr="function on_cursor_follow_playback_changed(state) {}&#x0a;&#x0a;[1.1.1] New: Called when &quot;cursor follow playback&quot; state is changed&#x0a;state: boolean, reflect current &quot;cursor follow playback&quot; value">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_drag_drop" func="yes">
+			<Overload retVal="" descr="function on_drag_drop(action, x, y, mask) {}&#x0a;&#x0a;[1.4.1] Added:&#x0a;x, y and mask have the same meaning as in on_mouse_*() callbacks.&#x0a;action: an object of IDropTargetAction interface.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_drag_enter" func="yes">
+			<Overload retVal="" descr="function on_drag_enter(action, x, y, mask) {}&#x0a;&#x0a;[1.4.1] Added:&#x0a;x, y and mask have the same meaning as in on_mouse_*() callbacks.&#x0a;action: an object of IDropTargetAction interface.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_drag_leave" func="yes">
+			<Overload retVal="" descr="function on_drag_leave() {}&#x0a;&#x0a;[1.4.1] Added:">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_drag_over" func="yes">
+			<Overload retVal="" descr="function on_drag_over(action, x, y, mask) {}&#x0a;&#x0a;[1.4.1] Added:&#x0a;x, y and mask have the same meaning as in on_mouse_*() callbacks.&#x0a;action: an object of IDropTargetAction interface.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_focus" func="yes">
+			<Overload retVal="" descr="function on_focus(is_focused) {}&#x0a;&#x0a;Get or lost focus">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_font_changed" func="yes">
+			<Overload retVal="" descr="function on_font_changed() {}&#x0a;&#x0a;[1.3.0] New:&#x0a;DUI and CUI&#x0a;On font setting changed&#x0a;Retrieve fonts using window.GetFontXXX() method.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_get_album_art_done" func="yes">
+			<Overload retVal="" descr="function on_get_album_art_done(metadb, art_id, image, image_path) {}&#x0a;&#x0a;[1.1.10] New:&#x0a;[1.3.0] Updated:&#x0a;  image_path will point to the image file (or music file itself, if image is an embedded image)&#x0a;Get called while thread created by GetAlbumArtAsync() is done.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_item_focus_change" func="yes">
+			<Overload retVal="" descr="function on_item_focus_change(playlist, from, to) {}&#x0a;&#x0a;[1.1.1] Updated: Called when playlist focus has been changed&#x0a;For those who what to implement &quot;follow cursor&quot;&#x0a;[1.5.0 Preview 6]: Changed: Add callback parameters &quot;playlist&quot;, &quot;from&quot; and &quot;to&quot;">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_item_played" func="yes">
+			<Overload retVal="" descr="function on_item_played(metadb) {}&#x0a;&#x0a;[1.1.10] New:&#x0a;Called when at least 60s of the track has been played, or the track has reached its end after at least 1/3&#x0a;of it has been played through.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_key_down" func="yes">
+			<Overload retVal="" descr="function on_key_down(vkey) {}&#x0a;&#x0a;Keyboard key down&#x0a;HINT: Return true to suppress processing keyboard shortcuts&#x0a;vkey: Virtual Key Code, Refer to: http://msdn.microsoft.com/en-us/library/ms927178.aspx">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_key_up" func="yes">
+			<Overload retVal="" descr="function on_key_up(vkey) {}&#x0a;&#x0a;[1.3.2] New:&#x0a;Keyboard key up&#x0a;vkey: Virtual Key Code, Refer to: http://msdn.microsoft.com/en-us/library/ms927178.aspx">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_load_image_done" func="yes">
+			<Overload retVal="" descr="function on_load_image_done(cookie, image) {}&#x0a;&#x0a;[1.3.2] New:&#x0a;Get called while thread created by gdi.LoadImageAsync() is done.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_metadb_changed" func="yes">
+			<Overload retVal="" descr="function on_metadb_changed(metadb_or_metadbs, fromhook) {}&#x0a;&#x0a;[1.1.3] New:&#x0a;[1.4.0] Changed:&#x0a;Called when metadb contents change. (Or, one of display hook component requests display update).&#x0a;Cooperated with window.WatchMetadb() and window.UnWatchMetadb()&#x0a;metadb_or_metadbs:&#x0a;        prior to &quot;v1.4.0&quot; - The same metadb as in window.WatchMetadb(metadb)&#x0a;        &quot;v1.4.0&quot; - Metadb handles&#x0a;fromhook: boolean, set to true when actual file contents haven't changed but one of metadb_display_field_provider&#x0a;  implementations requested an update so output of metadb_handle::format_title() etc has changed.&#x0a;NOTE: See Preprocessors.txt if you are using @feature directive.&#x0a;NOTE: metadb will be metadb handle list (already sorted) when preprocessor directive &quot;feature&quot;:&#x0a;  1. &quot;v1.4&quot; and later is set;&#x0a;  2. &quot;watch-metadb&quot; is set.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_lbtn_dblclk" func="yes">
+			<Overload retVal="" descr="function on_mouse_lbtn_dblclk(x, y, mask) {}&#x0a;&#x0a;[1.1.8] Added: mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_lbtn_down" func="yes">
+			<Overload retVal="" descr="function on_mouse_lbtn_down(x, y, mask) {}&#x0a;&#x0a;[1.0.4] Updated: mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_lbtn_up" func="yes">
+			<Overload retVal="" descr="function on_mouse_lbtn_up(x, y, mask) {}&#x0a;&#x0a;[1.0.4] Updated: mask, see Flags.txt for more details&#x0a;[1.3.6] NOTE: This callback will be suppressed while both VK_LSHIFT and VK_LWIN are pressed.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_leave" func="yes">
+			<Overload retVal="" descr="function on_mouse_leave() {}&#x0a;&#x0a;Called when mouse leaves WSH Panel Mod">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_mbtn_dblclk" func="yes">
+			<Overload retVal="" descr="function on_mouse_mbtn_dblclk(x, y, mask) {}&#x0a;&#x0a;[1.1.8] New:&#x0a;mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_mbtn_down" func="yes">
+			<Overload retVal="" descr="function on_mouse_mbtn_down(x, y, mask) {}&#x0a;&#x0a;[1.1.8] New:&#x0a;mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_mbtn_up" func="yes">
+			<Overload retVal="" descr="function on_mouse_mbtn_up(x, y, mask) {}&#x0a;&#x0a;[1.1.8] New:&#x0a;mask, see Flags.txt for more details&#x0a;Actions should be executed in this callback">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_move" func="yes">
+			<Overload retVal="" descr="function on_mouse_move(x, y, mask) {}&#x0a;&#x0a;[1.4.1] Updated:">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_rbtn_dblclk" func="yes">
+			<Overload retVal="" descr="function on_mouse_rbtn_dblclk(x, y, mask) {}&#x0a;&#x0a;[1.1.8] New:&#x0a;mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_rbtn_down" func="yes">
+			<Overload retVal="" descr="function on_mouse_rbtn_down(x, y, mask) {}&#x0a;&#x0a;[1.0.4] New:&#x0a;mask, see Flags.txt for more details">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_rbtn_up" func="yes">
+			<Overload retVal="" descr="function on_mouse_rbtn_up(x, y, mask) {}&#x0a;&#x0a;[1.0.4] New:&#x0a;mask, see Flags.txt for more details&#x0a;HINT: return true if you want to supress the default context menu.&#x0a;NOTE: {L-Win}+{L-Shift}+{Right Click} is reserved for poping up the default context menu.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_mouse_wheel" func="yes">
+			<Overload retVal="" descr="function on_mouse_wheel(step) {}">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_notify_data" func="yes">
+			<Overload retVal="" descr="function on_notify_data(name, info) {}&#x0a;&#x0a;[1.1.1] New: Called in other panels after window.NotifyOthers(name, info) is executed&#x0a;name and info is the same as in NotifyOthers()&#x0a;[1.3.0] Updated, see Interfaces.txt for more details.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_paint" func="yes">
+			<Overload retVal="" descr="function on_paint(gr) {}&#x0a;&#x0a;Called when window is ready to draw&#x0a;gr - Refer to IGdiGraphics, note that gr will be invalid out of this callback scope.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_dynamic_info" func="yes">
+			<Overload retVal="" descr="function on_playback_dynamic_info() {}&#x0a;&#x0a;Dynamic info (VBR bitrate etc) change">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_dynamic_info_track" func="yes">
+			<Overload retVal="" descr="function on_playback_dynamic_info_track() {}&#x0a;&#x0a;Per-track dynamic info (stream track titles etc) change. Happens less often than on_playback_dynamic_info().">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_edited" func="yes">
+			<Overload retVal="" descr="function on_playback_edited(metadb) {}&#x0a;&#x0a;[1.4.3] Updated:&#x0a;Called when currently played file gets edited">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_follow_cursor_changed" func="yes">
+			<Overload retVal="" descr="function on_playback_follow_cursor_changed(state) {}&#x0a;&#x0a;[1.1.1] New: Called when &quot;playback follow cursor&quot; state is changed&#x0a;state: boolean, reflect current &quot;playback follow cursor&quot; value">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_new_track" func="yes">
+			<Overload retVal="" descr="function on_playback_new_track(metadb) {}&#x0a;&#x0a;[1.1.0] Updated: metadb - Refer to IFbMetadbHandle">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_order_changed" func="yes">
+			<Overload retVal="" descr="function on_playback_order_changed(new_order_index) {}&#x0a;&#x0a;NEW: Called when playback order is changed &#x0a;new_order_index:&#x0a;      0 - &quot;Default&quot; &#x0a;      1 - &quot;Repeat (Playlist)&quot; &#x0a;      2 - &quot;Repeat (Track)&quot; &#x0a;      3 - &quot;Random&quot; &#x0a;      4 - &quot;Shuffle (tracks)&quot; &#x0a;      5 - &quot;Shuffle (albums)&quot; &#x0a;      6 - &quot;Shuffle (folders)">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_pause" func="yes">
+			<Overload retVal="" descr="function on_playback_pause(state) {}&#x0a;&#x0a;state = true when paused, false when resumed">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_queue_changed" func="yes">
+			<Overload retVal="" descr="function on_playback_queue_changed(origin) {}&#x0a;&#x0a;[1.5.0] Added:&#x0a;origin: 0 - changed_user_added&#x0a;        1 - changed_user_removed&#x0a;        2 - changed_playback_advance">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_seek" func="yes">
+			<Overload retVal="" descr="function on_playback_seek(time) {}&#x0a;&#x0a;time - float value, in seconds">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_starting" func="yes">
+			<Overload retVal="" descr="function on_playback_starting(cmd, is_paused) {}&#x0a;&#x0a;cmd: (integer, begin with 0): default, play, next, prev, settrack, rand, resume">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_stop" func="yes">
+			<Overload retVal="" descr="function on_playback_stop(reason) {}&#x0a;&#x0a;reason: (integer, begin with 0): user, eof, starting_another">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playback_time" func="yes">
+			<Overload retVal="" descr="function on_playback_time(time) {}&#x0a;&#x0a;Called every second, for time display&#x0a;time - float value, in sec">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_item_ensure_visible" func="yes">
+			<Overload retVal="" descr="function on_playlist_item_ensure_visible(playlist, item) {}&#x0a;&#x0a;[1.5.0 Preview 7] New:">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_items_added" func="yes">
+			<Overload retVal="" descr="function on_playlist_items_added(playlist) {}&#x0a;&#x0a;[1.4.1] Added:&#x0a;playlist: index to indicate that which playlist has newly added items">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_items_removed" func="yes">
+			<Overload retVal="" descr="function on_playlist_items_removed(playlist, new_count) {}&#x0a;&#x0a;[1.4.1] Added:&#x0a;playlist: index to indicate that which playlist has items removed&#x0a;new_count: new items count of the playlist.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_items_reordered" func="yes">
+			<Overload retVal="" descr="function on_playlist_items_reordered(playlist) {}&#x0a;&#x0a;[1.5.0 Preview] Added:&#x0a;Note this callback is different from on_playlists_changed(), which is applied to playlists, whenever&#x0a;  this applied to playlist items instead.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_items_selection_change" func="yes">
+			<Overload retVal="" descr="function on_playlist_items_selection_change() {}">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_stop_after_current_changed" func="yes">
+			<Overload retVal="" descr="function on_playlist_stop_after_current_changed(state) {}&#x0a;&#x0a;[1.1.1] New: Called when &quot;stop after current&quot; state is changed&#x0a;state: boolean, reflect current &quot;stop after current&quot; value">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlist_switch" func="yes">
+			<Overload retVal="" descr="function on_playlist_switch() {}&#x0a;&#x0a;[1.3.0] New:">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_playlists_changed" func="yes">
+			<Overload retVal="" descr="function on_playlists_changed() {}&#x0a;&#x0a;[1.3.2] New:&#x0a;Called when any playlist is removed/reordered/created/renamed.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_refresh_background_done" func="yes">
+			<Overload retVal="" descr="function on_refresh_background_done() {}&#x0a;&#x0a;[1.1.10] New:&#x0a;NOTE 1: Always call window.GetBackgroundImage() during this callback&#x0a;NOTE 2: DO NOT call window.Repaint()">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_script_unload" func="yes">
+			<Overload retVal="" descr="function on_script_unload() {}&#x0a;&#x0a;[1.3.0] New:&#x0a;Note: this callback is not guarantee to be called during unloading">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_selection_changed" func="yes">
+			<Overload retVal="" descr="function on_selection_changed(metadb) {}&#x0a;&#x0a;[1.3.2] New:&#x0a;[1.4.0 Beta 1] Changed:&#x0a;This behavior will be changed when &quot;Display->Selection viewers&quot; of foobar2000 preferences is changed.&#x0a;NOTE: metadb may be null.&#x0a;NOTE: metadb will be not valid while preprocessor: &quot;feature&quot; is &quot;v1.4&quot; or newer. (See Preprocessors.txt)">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_size" func="yes">
+			<Overload retVal="" descr="function on_size() {}&#x0a;&#x0a;After window is sized&#x0a;NOTE: DO NOT Call window.Repaint() and such to repaint window in this function">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_timer" func="yes">
+			<Overload retVal="" descr="function on_timer(timer_id) {}">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_tooltip_custom_paint" func="yes">
+			<Overload retVal="" descr="function on_tooltip_custom_paint(gr) {}&#x0a;&#x0a;[1.5.0 Preview 8] New:&#x0a;gr - Refer to IGdiGraphics, note that gr will be invalid out of this callback scope.&#x0a;Please check your &quot;tooltip&quot; preprocessor directive before use.">
+			</Overload>
+		</KeyWord>
+		<KeyWord name="on_volume_change" func="yes">
+			<Overload retVal="" descr="function on_volume_change(val) {}&#x0a;&#x0a;val - volume level in dB; 0 for full volume.">
+			</Overload>
+		</KeyWord>
+		<!-- IFbPlaylistManager -->
+		<KeyWord name="plman.ActivePlaylist" />
+		<KeyWord name="plman.AddItemToPlaybackQueue" />
+		<KeyWord name="plman.AddPlaylistItemToPlaybackQueue" />
+		<KeyWord name="plman.ClearPlaylistSelection" />
+		<KeyWord name="plman.CreatePlaybackQueueItem" />
+		<KeyWord name="plman.CreatePlaylist" />
+		<KeyWord name="plman.DuplicatePlaylist" />
+		<KeyWord name="plman.EnsurePlaylistItemVisible" />
+		<KeyWord name="plman.ExecutePlaylistDefaultAction" />
+		<KeyWord name="plman.FindPlaybackQueueItemIndex" />
+		<KeyWord name="plman.FlushPlaybackQueue" />
+		<KeyWord name="plman.GetPlaybackQueueContents" />
+		<KeyWord name="plman.GetPlaybackQueueCount" />
+		<KeyWord name="plman.GetPlayingItemLocation" />
+		<KeyWord name="plman.GetPlaylistFocusItemHandle" />
+		<KeyWord name="plman.GetPlaylistFocusItemIndex" />
+		<KeyWord name="plman.GetPlaylistItems" />
+		<KeyWord name="plman.GetPlaylistName" />
+		<KeyWord name="plman.GetPlaylistSelectedItems" />
+		<KeyWord name="plman.InsertPlaylistItems" />
+		<KeyWord name="plman.InsertPlaylistItemsFilter" />
+		<KeyWord name="plman.IsPlaybackQueueActive" />
+		<KeyWord name="plman.IsPlaylistItemSelected" />
+		<KeyWord name="plman.MovePlaylist" />
+		<KeyWord name="plman.MovePlaylistSelection" />
+		<KeyWord name="plman.PlaybackOrder" />
+		<KeyWord name="plman.PlayingPlaylist" />
+		<KeyWord name="plman.PlaylistCount" />
+		<KeyWord name="plman.PlaylistItemCount" />
+		<KeyWord name="plman.PlaylistRecyclerManager" />
+		<KeyWord name="plman.RemoveItemFromPlaybackQueue" />
+		<KeyWord name="plman.RemoveItemsFromPlaybackQueue" />
+		<KeyWord name="plman.RemovePlaylist" />
+		<KeyWord name="plman.RemovePlaylistSelection" />
+		<KeyWord name="plman.RenamePlaylist" />
+		<KeyWord name="plman.SetPlaylistFocusItem" />
+		<KeyWord name="plman.SetPlaylistFocusItemByHandle" />
+		<KeyWord name="plman.SetPlaylistSelection" />
+		<KeyWord name="plman.SetPlaylistSelectionSingle" />
+		<KeyWord name="plman.SortByFormat" />
+		<KeyWord name="plman.SortByFormatV2" />
+		<!-- IWSHUtils -->
+		<KeyWord name="utils.CheckComponent" />
+		<KeyWord name="utils.CheckFont" />
+		<KeyWord name="utils.FileTest" />
+		<KeyWord name="utils.GetAlbumArt" />
+		<KeyWord name="utils.GetAlbumArtAsync" />
+		<KeyWord name="utils.GetAlbumArtEmbedded" />
+		<KeyWord name="utils.GetAlbumArtV2" />
+		<KeyWord name="utils.GetSysColor" />
+		<KeyWord name="utils.GetSystemMetrics" />
+		<KeyWord name="utils.Glob" />
+		<KeyWord name="utils.IsKeyPressed" />
+		<KeyWord name="utils.PathWildcardMatch" />
+		<KeyWord name="utils.ReadINI" />
+		<KeyWord name="utils.ReadTextFile" />
+		<KeyWord name="utils.WriteINI" />
+		<!-- IFbWindow -->
+		<KeyWord name="window.ClearInterval" />
+		<KeyWord name="window.ClearTimeout" />
+		<KeyWord name="window.CreatePopupMenu" />
+		<KeyWord name="window.CreateThemeManager" />
+		<KeyWord name="window.CreateTimerInterval" />
+		<KeyWord name="window.CreateTimerTimeout" />
+		<KeyWord name="window.CreateTooltip" />
+		<KeyWord name="window.DlgCode" />
+		<KeyWord name="window.GetBackgroundImage" />
+		<KeyWord name="window.GetColorCUI" />
+		<KeyWord name="window.GetColorDUI" />
+		<KeyWord name="window.GetFontCUI" />
+		<KeyWord name="window.GetFontDUI" />
+		<KeyWord name="window.GetProperty" />
+		<KeyWord name="window.Height" />
+		<KeyWord name="window.ID" />
+		<KeyWord name="window.InstanceType" />
+		<KeyWord name="window.IsTransparent" />
+		<KeyWord name="window.IsVisible" />
+		<KeyWord name="window.KillTimer" />
+		<KeyWord name="window.MaxHeight" />
+		<KeyWord name="window.MaxWidth" />
+		<KeyWord name="window.MinHeight" />
+		<KeyWord name="window.MinWidth" />
+		<KeyWord name="window.NotifyOthers" />
+		<KeyWord name="window.Repaint" />
+		<KeyWord name="window.RepaintRect" />
+		<KeyWord name="window.SetCursor" />
+		<KeyWord name="window.SetInterval" />
+		<KeyWord name="window.SetProperty" />
+		<KeyWord name="window.SetTimeout" />
+		<KeyWord name="window.ShowConfigure" />
+		<KeyWord name="window.ShowProperties" />
+		<KeyWord name="window.UnWatchMetadb" />
+		<KeyWord name="window.WatchMetadb" />
+		<KeyWord name="window.Width" />
+	</AutoComplete>
+</NotepadPlus>

@@ -1,0 +1,69 @@
+; TextPad keyword syntax file for ASN.1 files
+; eg SNMP & OSI MIB files
+; (C) David Sansom, 1999 <david@secret.demon.co.uk>
+
+C=1
+
+[Syntax]
+Namespace1 = 6
+IgnoreCase = No
+InitKeyWordChars = A-Za-z_
+KeyWordChars = A-Za-z0-9_-
+BracketChars = {[()]}
+OperatorChars = :=
+SyntaxStart =
+SyntaxEnd =
+CommentStart =
+CommentEnd =
+CommentStartAlt = "
+CommentEndAlt = "
+SingleComment = --
+SingleCommentCol =
+SingleCommentAlt =
+SingleCommentColAlt =
+StringStart = "
+StringEnd = "
+StringAlt = !
+StringEsc = \
+CharStart =
+CharEnd =
+CharEsc =
+
+[Preprocessor keywords]
+
+[Keywords 1]
+DEFINITIONS
+BEGIN
+IMPORTS
+MODULE-IDENTITY
+OBJECT-TYPE
+FROM
+TEXTUAL-CONVENTION
+OBJECT
+IDENTIFIER
+SYNTAX
+DESCRIPTION
+STATUS
+DISPLAY-HINT
+END
+MAX-ACCESS
+SEQUENCE
+OF
+SIZE
+NOTIFICATION-TYPE
+INDEX
+
+[Keywords 2]
+DisplayString
+RowStatus
+DateAndTime
+INTEGER
+read-only
+read-create
+not-accessible
+current
+OCTET
+STRING
+TruthValue
+Integer32
+Unsigned32

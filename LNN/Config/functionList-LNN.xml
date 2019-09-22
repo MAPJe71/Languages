@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=         "lnn_syntax"        userDefinedLangName="LNN"               />
+			<association id=         "lnn_syntax"        ext=".lnn"                              />
+		</associationMap>
+		<parsers>
+			<!-- ========================================================= [ LNN ] -->
+
+			<!--
+			|   Based on:
+			|       https://notepad-plus-plus.org/community/topic/13791/unable-to-use-custom-parser-in-functionlist
+			\-->
+			<parser
+				displayName="[UDL] LNN"
+				id         ="lnn_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:;.*$)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							^
+							\$
+							PROCEDURE
+							\s+
+							\K                                                  # discard text matched so far
+							\w+
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

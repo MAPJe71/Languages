@@ -1,0 +1,8 @@
+ SUBROUTINE bob1(a,b,c)
+SUBROUTINE bob2(a,b,c)
+ SUBROUTINE bob3()
+ SUBROUTINE bob4( )
+ SUBROUTINE bob5
+ SUBROUTINE bob6
+c SUBROUTINE bob7(a,b,c)
+ PRIVATE SUBROUTINE bob8(a,b,c) return(d)

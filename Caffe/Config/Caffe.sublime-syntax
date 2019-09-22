@@ -1,0 +1,112 @@
+%YAML 1.2
+---
+name: Caffe Prototxt
+uuid: 6ad06bb2-1a63-44e8-89a7-5253d4a4a7ec
+file_extensions: [prototxt]
+scope: source.prototxt
+
+variables:
+  var_type: '\b[A-Za-z_][A-Za-z_0-9]*\b'
+  var_js_type: '\b[A-Za-z_0-9\-]*\b'
+  #[A-Za-z_\-]
+  float_type: '\b[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b'
+  path_type: '\b(/)?([^/\0]+(/)?)+\b'
+
+contexts:
+  main:
+    - include: comments-inline
+    - include: layers
+    - include: item-key
+
+  layers:
+    - match: \b(layer|layers)\b
+      scope: keyword.layer.prototxt
+      push: obejct
+
+  obejct:
+    - match: '{'
+      scope: punctuation.layer.prototxt
+      set: obejct-body
+
+  obejct-body:
+    - include: comments-inline
+    - include: item-key
+    - match: '}'
+      scope: punctuation.layer.prototxt
+      pop: true
+  
+  item-key:
+    - match: '{{var_type}}'
+      scope: entity.name.tag.layer.prototxt
+      push:
+      # single value
+      - match: ':'
+        set: item-value-single
+        scope: punctuation.layer.prototxt
+      # object value
+      - match: '{'
+        set: obejct-body
+        scope: punctuation.layer.prototxt
+
+  item-value-single:
+    - match: '{'
+      set: obejct-body
+      scope: punctuation.layer.prototxt
+    # number
+    - match: '{{float_type}}'
+      scope: constant.numeric.layer.prototxt
+      pop: true
+    # string
+    - match: '{{var_js_type}}'
+      scope: string.layer.prototxt
+      pop: true
+    # with single quote
+    - match: "'"
+      scope: string.sq.layer.begin.prototxt
+      set: 
+        - meta_scope: string.end.sq.layer.prototxt
+        - match: "'"
+          scope: string.sq.layer.end.prototxt
+          pop: true
+        - include: string-escape
+        - match: $\n?
+          scope: invalid.string.layer.prototxt
+          pop: true
+    # with double quote
+    - match: '"'
+      scope: string.dq.layer.begin.prototxt
+      set:
+        - meta_scope: string.dq.layer.prototxt
+        - match: '"'
+          scope: string.dq.layer.end.prototxt
+          pop: true
+        - include: string-escape
+        - match: $\n?
+          scope: invalid.string.layer.prototxt
+          pop: true
+    - match: $\n?
+      scope: invalid.string.layer.prototxt
+      pop: true
+
+  # ref: https://github.com/sublimehq/Packages/blob/master/JavaScript/JSON.sublime-syntax
+  string-escape:
+    - match: |-
+        (?x:                # turn on extended mode
+          \\                # a literal backslash
+          (?:               # ...followed by...
+            ["\\/bfnrt]     # one of these characters
+            |               # ...or...
+            u               # a u
+            [0-9a-fA-F]{4}  # and four hex digits
+          )
+        )
+      scope: constant.character.escape.json.prototxt
+    - match: \\.
+      scope: invalid.illegal.unrecognized-string-escape.json.prototxt
+
+  comments-inline:
+    - match: \s*((#).*$\n?)
+      captures:
+        1: comment.line.double-slash.proto
+        2: punctuation.definition.comment.proto
+...

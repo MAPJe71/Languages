@@ -1,0 +1,31 @@
+/* A comment.
+
+This is the only style of comments maxima allows.
+*/
+
+/* A list of Numbers */
+[10,10.0,10e3,10e+3,10e-3,10f3,10f+3,10f-3,10b3,10b+3,10b-3,10g3,10g+3,10g-3];
+
+/* $ and ; are line endings*/
+command1;
+command2$
+
+/* Variables and functions can have the same name. Also using lambda-constructs
+   variables can made to contain functions and it is totally legal to use
+   functions and variables without defining them first => the only way to
+   determine if something is a function is the context.
+   
+   German Umlaute are accepted as part of function names. Also escaped chars are.
+   */
+function(arg1):=arg1;
+variable:10;
+functiößon(arg1):=arg1;
+variabößle:10;
+func\1tiößon(arg1):=arg1;
+varia\3bößle:10;
+
+/* Strings */
+strng:"A string";
+
+/* A few reserved keywords */
+if i>1 then printf(false,"i>1");

@@ -1,0 +1,167 @@
+#**************************************************************************************
+# MacDescription = FSG Plugin - gets your current rank from www.cacherstats.com
+# MacFileName = FSGPlugin_CacherstatsRank.gsk
+# MacAuthor = hulmgulm
+# MacVersion=1.1.0
+# MacUrl=http://gsak.net/board/index.php?showtopic=17428&view=findpost&p=127352
+#**************************************************************************************
+# Usage:
+#   Add the following code to a FindStatsGen annotation section:
+#   <plugin>FSGPlugin_CacherstatsRank?Name=<your gc.com name></plugin>
+#   or
+#   <plugin>FSGPlugin_CacherstatsRank?GUID=<your gc.com accoutn GUID></plugin>
+#
+#   As this plugin does not generate a head line, you might want to add 
+#   <subhead>This is a list</subhead>
+#   to the annotation too.
+#
+# Parameters:
+# *	Name
+#   Your user name on geocaching.com
+# * GUID
+#   Your account guid on geocaching.com
+# 
+#
+# Note:
+# *  You have to have more than 200 finds to be listet on www.cacherstats.com
+# *  If your user name on geocaching.com contains an ampersand, you have to use the
+#    GUID instead
+#**************************************************************************************
+
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_FriendsList[?AdditionalParameters]</plugin>"
+ENDIF
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitLanguage
+
+# initialize parameter variables
+$CRUserName = ""
+$CRGUID = ""
+
+# parse parameters
+if $_MacroParms <> ""
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = upper($Text1)
+		
+		if (AT("NAME", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$CRUserName = AllTrim($Text2)
+			else
+				RETURN msg="$CRLangNameError $_CrLf $Text1"
+			endif
+		endif
+
+		if (AT("GUID", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$CRGUID = AllTrim($Text2)
+			else
+				RETURN msg="$CRLangGUIDError $_CrLf $Text1"
+			endif
+		endif
+		$i = $i+1
+	endwhile
+endif
+
+IF Len($CRGUID)=0 and Len($CRUserName)=0
+	RETURN msg="$CRLangNameError $_CrLf $Text1"
+ENDIF
+
+$out = ""
+SHOWSTATUS msg="Generating Cacherstats Rank ..." Width=350
+
+GOSUB Name=CacherstatsRank
+
+$p_FSGData = $out
+
+BEGINSUB Name=CacherstatsRank
+	$out = $out + "<!--  CacherstatsRank -->" + $CR
+	$out = $out + "<div align='center'>" + $CR
+	$out = $out + "<table border='0' summary='' width='375' style='text-align: left;'>" + $CR
+	$out = $out + "<tr><td style='$stTab2cHead'><b> $CRLocation </b></td><td style='$stTab2cHead'><b> $CRRank </b></td></tr>" + $CR
+
+	IF Len($CRUserName)=0 	
+		$work = GetUrl("http://www.cacherstats.com/cgi-bin/GeocacherLocations.pl?Language=EN&Javascript=1&Font=&UserGUID="+HttpEncode($CRGUID), "Getting ranking ...")
+	ELSE
+		$work = GetUrl("http://www.cacherstats.com/cgi-bin/GeocacherLocations.pl?Language=EN&Javascript=1&Font=&CacherName="+HttpEncode($CRUserName), "Getting ranking ...")
+	ENDIF
+
+	$work = RegExReplace("document.write \("+$_Quote+"\s*", $work, "")
+	$work = RegExReplace("\\n"+$_Quote+"\);", $work, "")
+	$work = RegExReplace("<font[^>]*>", $work, "")
+	$work = RegExReplace("</font>", $work, "")
+
+	# How many records?
+	$NumItems = RegExCount("<A href=http://www.cacherstats.com/[^>]*>[^<]*</A></TD><TD[^>]*>\d+</TD>",$work)
+	
+	IF $NumItems = 0
+		RETURN msg="$CRStatsEmptyError"
+	ENDIF
+	# Go through the data, one record at a time
+	$index = 0
+	WHILE $index < $NumItems
+		$index = $index + 1
+		# Get one data element
+		$data = RegExData("<A href=http://www.cacherstats.com/[^>]*>[^<]*</A></TD><TD[^>]*>\d+</TD>",$work,$index)
+		$text = RegExData("<A href=http://www.cacherstats.com/[^>]*>[^<]*</A>",$data,1)
+		$Tmps = RegExData(">\d+</TD>",$data,1)
+		$num  = Val(Extract(Extract($Tmps,">",2),"<",1))
+		# Replace ampersands with &amp; etc to keep the HTML sweet
+		$text = Replace("&","&amp;",$text,true)
+		$text = Replace("%lt","&lt;",$text,true)
+		$text = Replace("%gt","&gt;",$text,true)
+		# Call the subroutine to write a row out
+		GOSUB Name=Table2ColRow
+	ENDWHILE
+	# write table footer
+	$out = $out + "</table>" + $CR
+	$out = $out + "<a style='text-decoration:none; font-size: xx-small;' href='http://www.cacherstats.com/'>www.cacherstats.com</a>"
+	$out = $out + "</div>" + $CR
+ENDSUB # CacherstatsRank
+
+BEGINSUB Name=Table2ColRow
+	$style1 = $st2c1
+	$style2 = $st2c2
+	
+	# Write the row data to the output variable
+	$out = $out + "<!-- Table2Col Row-->" + $CR
+	$out = $out + "<tr><td style='$style1'>$text</td>" + $CR
+	$out = $out + "<td style='$style2' align='center'>$num</td>" + $CR
+	$out = $out + "</td></tr>" + $CR
+ENDSUB #Table2ColRow
+
+BEGINSUB Name=InitLanguage
+	Declare Var=$CRLocation Type=String
+	Declare Var=$CRRank Type=String
+	Declare Var=$CRLangNameError Type=String
+	Declare Var=$CRLangGUIDError Type=String
+	Declare Var=$CRStatsEmptyError Type=String
+	
+	# default: English
+	$CRLocation = "Location"	
+	$CRRank = "Rank"	
+	$CRLangNameError = "The name parameter must not be empty!"	
+	$CRLangGUIDError = "The GUID parameter must not be empty!"	
+	$CRStatsEmptyError = "Unable to retrieve ranking for user! Please check your user name and retry it later."	
+
+	IF $Language = "Deutsch"
+		$CRLocation = "Gebiet"	
+		$CRRank = "Rang"	
+		$CRLangNameError = "Der Parameter Name darf nicht leer sein!"	
+		$CRLangGUIDError = "Der Parameter GUID darf nicht leer sein!"	
+		$CRStatsEmptyError = "Der Rang des Benuters kann nicht geholt werden! Bitte prüfe den Namen und versuche es später noch einmal."
+	ENDIF
+ENDSUB
+
+BEGINSUB name=DeclareVariables
+	Option Explicit=Yes
+	
+	Declare Var=$CRUserName Type=String
+	Declare Var=$CRGUID Type=String
+ENDSUB
+

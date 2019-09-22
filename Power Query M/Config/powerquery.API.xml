@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+ <AutoComplete language="PowerQuery">
+   <Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," additionalWordChar="@." />
+	<KeyWord name="@Table.TransformColumns" func="yes" >
+     <Overload retVal = "table" descr="Transforms columns from a table using a function.">
+       <Param name="table as table" />
+       <Param name="transformOperations as list" />
+       <Param name="optional defaultTransformation as nullable function" />
+       <Param name="optional missingField as nullable number" />
+     </Overload>
+	</KeyWord> 
+	<KeyWord name="Table.TransformColumns" func="yes" >
+     <Overload retVal = "table" descr="Transforms columns from a table using a function.">
+       <Param name="table as table" />
+       <Param name="transformOperations as list" />
+       <Param name="optional defaultTransformation as nullable function" />
+       <Param name="optional missingField as nullable number" />
+     </Overload>
+	</KeyWord> 
+   <KeyWord name="Table.TransformColumnTypes" func="yes" >
+     <Overload retVal = "table" descr="Transforms the column types from a table using the specified type.">
+       <Param name="table as table" />
+       <Param name="typeTransformations as list" />
+       <Param name="optional culture as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Table.TransformRows" func="yes" >
+     <Overload retVal = "list" descr="Transforms the rows from a table using a transform function.">
+       <Param name="table as table" />
+       <Param name="transform as function" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Table.Transpose" func="yes" >
+     <Overload retVal = "table" descr="Returns a table with columns converted to rows and rows converted to columns from the input table.">
+       <Param name="table as table" />
+       <Param name="optional columns as any" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Table.UnPivot" func="yes" >
+     <Overload retVal = "table" descr="Given a list of table columns, transforms those columns into attribute-value pairs.">
+       <Param name="table as table" />
+       <Param name="pivotColumns as list" />
+       <Param name="attributeColumn as text" />
+       <Param name="valueColumn as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.At" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a character starting at a zero-based offset.">
+       <Param name="value as nullable text" />
+       <Param name="index as number" />
+     </Overload>
+   </KeyWord>
+      <KeyWord name="Text.Clean" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the original text value with non-printable characters removed.">
+       <Param name="string as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Combine" func="yes" >
+     <Overload retVal = "text" descr="Returns a text value that is the result of joining all text values with each value separated by a separator.">
+       <Param name="text as list" />
+       <Param name="separator as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Contains" func="yes" >
+     <Overload retVal = "nullable logical" descr="Returns true if a text value substring was found within a text value string; otherwise, false.">
+       <Param name="string as nullable text" />
+       <Param name="substring as text" />
+       <Param name="optional comparer as nullable function" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.End" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the specified number of characters from the end of a text value.">
+       <Param name="string as nullable text" />
+       <Param name="numChars as number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.EndsWith" func="yes" >
+     <Overload retVal = "nullable logical" descr="Returns a logical value indicating whether a text value substring was found at the end of a string.">
+       <Param name="string as nullable text" />
+       <Param name="substring as text" />
+       <Param name="optional comparer as nullable function" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.From" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the text representation of a number, date, time, datetime, datetimezone, logical, duration &#xA;or binary value. If a value is null, Text.From returns null. The optional culture parameter is used to &#xA;format the text value according to the given culture.">
+       <Param name="value as any" />
+       <Param name="optional culture as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.FromBinary" func="yes" >
+     <Overload retVal = "nullable text" descr="Decodes data from a binary value in to a text value using an encoding.">
+       <Param name="binary as nullable binary" />
+       <Param name="optional BinaryEncoding enum as nullable number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Insert" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a text value with newValue inserted into a text value starting at a zero-based offset.">
+       <Param name="text as nullable text" />
+       <Param name="offset as numbert" />
+       <Param name="newText as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Length" func="yes" >
+     <Overload retVal = "nullable number" descr="Returns the number of characters in a text value.">
+       <Param name="text as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Lower" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the lowercase of a text value.">
+       <Param name="string as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.NewGuid" func="yes" >
+     <Overload retVal = "text" descr="Returns a Guid value as a text value.">
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.PadEnd" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a text value padded at the end with pad to make it at least length characters.">
+       <Param name="text as nullable text" />
+       <Param name="length as number" />
+       <Param name="pad as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.PadStart" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a text value padded at the beginning with pad to make it at least length characters.  &#xA;If pad is not specified, whitespace is used as pad.">
+       <Param name="text as nullable text" />
+       <Param name="length as number" />
+       <Param name="pad as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.PositionOf" func="yes" >
+     <Overload retVal = "nullable number" descr="Returns the position or positions of a substring in a string, starting at the specified occurance. &#xA;If occurance is not specified, the first position (zero-based) of the substring will be returned.">
+       <Param name="string as nullable text" />
+       <Param name="substring as text" />
+       <Param name="optional Occurrence enum as nullable number" />
+       <Param name="optional comparer as nullable function" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.PositionOfAny" func="yes" >
+     <Overload retVal = "number" descr="Returns the position or positions of any substring in a spcified list starting at the specified occurance. &#xA;If occurance is not specified, the first position (zero-based) of any substring will be returned.">
+       <Param name="string as text" />
+       <Param name="list as list" />
+       <Param name="optional Occurrence enum as nullable number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Proper" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a text value with first letters of all words converted to uppercase.">
+       <Param name="string as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Range" func="yes" >
+     <Overload retVal = "text" descr="Returns a number of characters from a text value starting at a &#xA;zero-based offset and for specified count number of characters.">
+       <Param name="text as text" />
+       <Param name="offset as number" />
+       <Param name="count as nullable number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Remove" func="yes" >
+     <Overload retVal = "nullable text" descr="Removes all occurrences of a character or list of characters from a text value. &#xA;The removeChars argument can be a character value or a list of character values.">
+       <Param name="text as nullable text" />
+       <Param name="removeChars as any" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.RemoveRange" func="yes" >
+     <Overload retVal = "nullable text" descr="Removes the specified count characters at the specified zero-based offset from a text value.">
+       <Param name="text as nullable text" />
+       <Param name="offset as number" />
+       <Param name="count as number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Repeat" func="yes" >
+     <Overload retVal = "text" descr="Returns a text value composed of the input text value repeated a number of times.">
+       <Param name="string as text" />
+       <Param name="repeatCount as number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Replace" func="yes" >
+     <Overload retVal = "nullable text" descr="Replaces all occurrences of a substring with a new text value.">
+       <Param name="text as nullable text" />
+       <Param name="old as text" />
+       <Param name="new as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.ReplaceRange" func="yes" >
+     <Overload retVal = "nullable text" descr="Replaces the specified length number of characters in a text value, &#xA;starting at a zero-based offset with the new text value.">
+       <Param name="text as nullable text" />
+       <Param name="offset as number" />
+       <Param name="length as number" />
+       <Param name="new as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Split" func="yes" >
+     <Overload retVal = "list" descr="Returns a list containing parts of a text value that are delimited by a specified separator text value.">
+       <Param name="string as text" />
+       <Param name="separator as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.SplitAny" func="yes" >
+     <Overload retVal = "list" descr="Returns a list containing parts of a text value that are delimited by any of a specified list of separator text values.">
+       <Param name="string as text" />
+       <Param name="separators as {Text}" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Start" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the specified number of characters from the start of a text value.">
+       <Param name="string as nullable text" />
+       <Param name="count as number" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.StartsWith" func="yes" >
+     <Overload retVal = "nullable logical" descr="Returns a logical value indicating whether a text value substring was found at the beginning of a string.">
+       <Param name="string as nullable text" />
+       <Param name="substring as text" />
+       <Param name="optional comparer as nullable function" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.ToBinary" func="yes" >
+     <Overload retVal = "nullable binary" descr="Encodes a text value into binary value using an encoding.">
+       <Param name="text as nullable text" />
+       <Param name="optional BinaryEncoding enum as nullable number" />
+       <Param name="optional includeByteOrderMark as nullable logical" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.ToList" func="yes" >
+     <Overload retVal = "list" descr="Returns a list of characters from a text value.">
+       <Param name="text as text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Trim" func="yes" >
+     <Overload retVal = "nullable text" descr="Removes any occurrences of characters in the trimChars argument from text. &#xA;Characters are removed from the beginning and end of the text value. &#xA;If trimChars is not specified, then whitespace characters are trimmed.">
+       <Param name="text as nullable text" />
+       <Param name="optional trimChars as any" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.TrimEnd" func="yes" >
+     <Overload retVal = "nullable text" descr="Removes any occurrences of the characters specified in the trimChars argument from the end of the original text value.">
+       <Param name="text as nullable text" />
+       <Param name="optional trimChars as any" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.TrimStart" func="yes" >
+     <Overload retVal = "nullable text" descr="Removes any occurrences of the characters specified in the trimChars argument from the start of the original text value.">
+       <Param name="text as nullable text" />
+       <Param name="optional trimChars as any" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Text.Upper" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns the uppercase of a text value.">
+       <Param name="string as nullable text" />
+     </Overload>
+   </KeyWord>
+    <KeyWord name="Time.EndOfHour" func="yes" >
+     <Overload retVal = "nullable datetime" descr="Returns a Time, DateTime or DateTimeZone value where the time portion is reset to the end of the hour (hh:59:59).">
+       <Param name="dateTime as datetime" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.From" func="yes" >
+     <Overload retVal = "nullable time" descr="Returns a time value from a value (text, datetime, datetimezone, or number).">
+       <Param name="value as any" />
+       <Param name="optional culture as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.FromText" func="yes" >
+     <Overload retVal = "nullable date" descr="Returns a time value from text that is in a recognizable time format (hh:mm, hh:mm:ss, or hh:mm:ss.nnnnnnn).">
+       <Param name="time as nullable text" />
+       <Param name="optional culture as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.Hour" func="yes" >
+     <Overload retVal = "nullable number" descr="Returns an hour value from a DateTime value.">
+       <Param name="dateTime as datetime" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.Minute" func="yes" >
+     <Overload retVal = "nullable number" descr="Returns an minute value from a DateTime value.">
+       <Param name="dateTime as datetime" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.Second" func="yes" >
+     <Overload retVal = "nullable number" descr="Returns an second value from a DateTime value.">
+       <Param name="dateTime as datetime" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.StartOfHour" func="yes" >
+     <Overload retVal = "nullable datetime" descr="Returns a Time, DateTime or DateTimeZone value where the time portion is reset to the beginning of the hour (hh:00:00).">
+       <Param name="dateTime as datetime" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.ToRecord" func="yes" >
+     <Overload retVal = "record" descr="Returns a record with each field containing a part of a time value.">
+       <Param name="time as time" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Time.ToText" func="yes" >
+     <Overload retVal = "nullable text" descr="Returns a text value from a Time value.">
+       <Param name="time as nullable time" />
+       <Param name="optional format as nullable text" />
+       <Param name="optional culture as nullable text" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Type.ForList" func="yes" >
+     <Overload retVal = "type" descr="Returns a list type for an item type.">
+       <Param name="itemType as list" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Type.ForNullable" func="yes" >
+     <Overload retVal = "type" descr="Returns a nullable type for a type.">
+       <Param name="itemType as list" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Type.ForRecord" func="yes" >
+     <Overload retVal = "type" descr="Returns a Record type from a fields record.">
+       <Param name="fields as record" />
+       <Param name="open as logical" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Type.ForTable" func="yes" >
+     <Overload retVal = "type" descr="Constructs a table type from a row type as a record type.">
+       <Param name="rowType as type" />
+     </Overload>
+   </KeyWord>
+   <KeyWord name="Type.FunctionParameters" func="yes" >
+     <Overload retVal = "record" descr="Returns a record with field values set to the name of the parameters of a function type, and their values set to their corresponding types.">
+       <Param name="functionType as type" />
+     </Overload>
+   </KeyWord>
+  <KeyWord name="Xml@Tables" func="yes" >
+     <Overload retVal = "table" descr="Returns the contents of an XML document as a nested collection of flattened tables.">
+       <Param name="contents as any" />
+       <Param name="optional options as nullable record" />
+       <Param name="optional encoding as nullable number" />
+     </Overload>
+   </KeyWord>
+  </AutoComplete>
+</NotepadPlus>
+

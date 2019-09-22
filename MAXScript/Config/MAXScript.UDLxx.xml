@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="MaxScript" ext="ms mcr">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;00&quot;00</Keywords>
+            <Keywords name="Folder+"></Keywords>
+            <Keywords name="Folder-"></Keywords>
+            <Keywords name="Operators">! &quot; * . \ _ + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1/* 1 2*/ 2 0--</Keywords>
+            <Keywords name="Words1">and as at by case catch continue do else exit fn for from function global if in local macroscript mapped not of off on or random return select set then throw to try when where while with</Keywords>
+            <Keywords name="Words2">rollout subRollout slider button spinner checkbox checkButton pickButton radioButtons activeXControl messagebox querybox yesNoCancelBox disableSceneRedraw enableSceneRedraw forceCompleteRedraw redrawViews rcmenu createDialog destroyDialog groupBox label editText closeRolloutFloater addRollout removeRollout dropDownList listBox multiListBox colorPicker timer progressBar open entered changed selected pressed selectionEnd doubleClicked picked clicked buttondown buttonup tick resized mousedown mouseup click dblclick mouseover mouseout selChanged ptChanged tangentChanged deleted reset ColumnClick</Keywords>
+            <Keywords name="Words3">append collect findItem join delete group deleteItem loadMaxFile getMaxOpenFilename getFilenameFile fileProperties close openFile include getSavePath createFile resetMaxFile getOpenFilename getSaveFileName skipToString eof seek skipToString readLine skipToNextLine filePos flush readValue readExpr execute deleteFile readChar readChars readDelimitedString doesFileExist mergeMaxFile saveMaxFile exportFile getFiles renameFile maxVersion fetchMaxFile holdMaxFile enumerateFiles classOf subAnim material textureMap numSubs isKindOf superClassOf freeSceneBitmaps getMeditMaterial getNumSubMtls animate coordsys cloneNodes intersectRay isGroupHead isGroupMember isValidNode maxOps rotate scale spaceWarpObject sliderTime filterString stringStream format print getFilenamePath findString replace subString filenameFromPath getFileModDate readDelimitedString trimLeft trimRight openLog flushLog closeLog clearListener</Keywords>
+            <Keywords name="Words4">about parameters persistent plugin struct tool undo utility DOSCommand floor collapseStack saveNodes gc addModifier timeStamp localTime makeDir actionMan undefined unsupplied</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="004000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="400040" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008040" bgColor="FFFFFF" fontName="" fontStyle="2" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008040" bgColor="FFFFFF" fontName="" fontStyle="2" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="884400" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="C41111" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

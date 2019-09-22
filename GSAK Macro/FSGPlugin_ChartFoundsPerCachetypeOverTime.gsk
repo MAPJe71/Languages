@@ -1,0 +1,472 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display a chart of your founds per cachetype over time
+# MacFileName = FSGPlugin_ChartFoundsPerCachetypeOverTime.gsk
+# MacAuthor = The CEO
+# MacVersion=1.04
+# MacUrl=http://gsak.net/board/index.php?showtopic=18003&view=findpost&p=128913
+#*******************************************
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_ChartFoundsPerCachetypeOverTime</plugin>
+ENDIF
+
+	Declare Var=$ColorTrad Type=String
+	Declare Var=$ColorMulti Type=String
+	Declare Var=$ColorMyst Type=String
+	Declare Var=$ColorEarth Type=String
+	Declare Var=$ColorEvent Type=String
+	Declare Var=$ColorOther Type=String
+
+############################################
+# Modify colors here
+# IMPORTANT: remove file FSGPlugin_ChartFoundsPerCachetypeOverTime.xml from the macro directory before changing the colors
+############################################
+$ColorOther="9E6D39"
+$ColorEvent="960000"
+$ColorEarth="FFFC38"
+$ColorMyst="0025c1"
+$ColorMulti="FFAF19"
+$ColorTrad="80af64"
+############################################
+MacSettings Type=R Vars=ColorOther,ColorEvent,ColorEarth,ColorMyst,ColorMulti,ColorTrad FileCheck=N
+MacSettings Type=S Vars=ColorOther,ColorEvent,ColorEarth,ColorMyst,ColorMulti,ColorTrad 
+############################################
+	
+	Declare Var=$num1 Type=Numeric
+	Declare Var=$num2 Type=Numeric
+	Declare Var=$num3 Type=Numeric
+	Declare Var=$p1 Type=String
+	Declare Var=$p2 Type=String
+	Declare Var=$p3 Type=String
+	Declare Var=$TradSeries Type=String
+	Declare Var=$MultiSeries Type=String	
+	Declare Var=$CachetypeSQL Type=String
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$ShowPercentage Type=Boolean
+	Declare Var=$ShowPercentageLine Type=Boolean
+	Declare Var=$Placedstats Type=Boolean
+	
+
+	
+$p1 = lower(extract($_MacroParms,"&",1))
+$p2 = lower(extract($_MacroParms,"&",2))
+$p3 = lower(extract($_MacroParms,"&",3))
+
+If $p1 = "sectionheading=false" OR $p2 = "sectionheading=false" OR $p3 = "sectionheading=false"
+	$ShowHeading=FALSE
+ELSE
+	$ShowHeading=TRUE
+endif
+
+If $p1 = "type=percentageline" OR $p2 = "type=percentageline" OR $p3 = "type=percentageline"
+	$ShowPercentageLine=TRUE
+ELSE
+	$ShowPercentageLine=FALSE
+endif
+
+If $p1 = "type=percentage" OR $p2 = "type=percentage" OR $p3 = "type=percentage"
+	$ShowPercentage=TRUE
+ELSE
+	$ShowPercentage=FALSE
+endif
+
+If $p1 = "placed" OR $p2 = "placed" OR $p3 = "placed" 
+	$Placedstats = TRUE
+	$Placed=TRUE  # for sectionhead color
+ELSE
+	$Placedstats = FALSE
+endif
+
+GOSUB Name=InitLanguage
+	
+$out=""
+	# Initialise Section variables
+	$colspan = 1
+
+	IF $ShowPercentage or $ShowPercentageLine
+		$text=$LangRelChartTitle
+	ELSE
+		$text=$LangAbsChartTitle
+	ENDIF
+	
+	SHOWSTATUS msg=$text Width=350 Title=""
+
+	
+	If $ShowHeading
+		#define maximum table width
+		if $maxtablewidth=0
+			$maxtablewidth = 750
+		endif
+		GOSUB Name=SectionHead
+	endif
+
+	if 1=1  #$FindsWithDuplicates=0    # For TEST button to work OK
+		IF $Placedstats = TRUE
+			$_sql = "Select * from PlacedStatsdata ORDER BY Placed, Name"
+		ELSE
+			$_sql = "Select * from AllFinds ORDER BY lDate, lLogid"
+		ENDIF
+		$work = Sqlite("sql",$_sql)
+		$list = list("sql","replace",$work)
+		$FindsWithDuplicates = $_SqlRows
+
+		#Store date of first find
+		IF $Placedstats = TRUE
+			$_sql = "SELECT Placed from PlacedStatsdata ORDER BY Placed LIMIT 1"
+		ELSE
+			$_sql = "SELECT lDate from AllFinds ORDER BY lDate LIMIT 1"
+		ENDIF
+		$Date = Sqlite("sql",$_sql)
+		$DateFirstFind = SqlToDate($Date)
+	endif 
+	
+	$pc = 0
+	$pc3 = 0
+
+	$FirstYear = Val(left(DateToString($DateFirstFind),4))
+	$ThisYear = $FirstYear
+	$YearNow = Val(left(DateToString($RunDate),4))
+
+	$tmpS = RegExSub("background:\s*?#(.*?);",$stMainDiv,1,1)
+
+	# Line Styles
+#	$text10 = "&chls=1,1,0|1,1,0|1,1,0|1,4,0"
+
+	IF $ShowPercentageLine
+		$text10 = "&chls=3,1,0|3,1,0|3,1,0|3,1,0|3,1,0|3,1,0"
+	else
+		$text10 = "&chls=1,1,0|1,1,0|1,1,0|1,1,0|1,1,0|1,1,0|1,1,0"
+	endif
+
+	# Chart
+	$out = $out + "<img src='http://chart.apis.google.com/chart?cht=lc" + $text10 + "&chs=740x300&chf=bg,s,$tmpS&chxt=x,y"
+
+	IF $ShowPercentage OR $ShowPercentageLine
+		$out=$out+"&chxr=1,0,100"
+	ELSE
+		$out=$out+"&chxr=1,0,$FindsWithDuplicates"
+	ENDIF
+	
+	# Axes colors
+	$out = $out + "&chxs=0,000000"	
+
+
+	# Main chart data variables
+	# $text1 = "&chd=e:....,.A.A.A.A.A8A8A8A8A,ZAZA,KAKAKAKAKAKAKAKAKAKAKAKAKAKAKAKAKAKAKAKA,BABA"
+	IF $ShowPercentageLine
+		$text1 = "&chd=e:"
+	ELSE
+		$text1 = "&chd=e:AAAA,"
+	ENDIF	
+	
+	$text9 = ""
+
+	# Dynamic grid spacing
+	IF $ShowPercentageLine	
+		$text2="10"
+	else
+		BEGINCASE
+		CASE $FindsWithDuplicates <=250
+			$tmpN = 25
+		CASE $FindsWithDuplicates >250 AND $FindsWithDuplicates <=500
+			$tmpN = 50
+		CASE $FindsWithDuplicates >500 AND $FindsWithDuplicates <=1000
+			$tmpN = 100
+		CASE $FindsWithDuplicates >1000
+			$tmpN = 200
+		ENDCASE
+		$text2 = NumToStr(Round(100 * $tmpN/$FindsWithDuplicates,2))
+		$text2 = Replace(",",".",$text2,TRUE)
+	endif
+
+	$text2 = "&chg=0," + $text2
+#	$text2 = "&chg=0,20"
+
+	# Chart colors
+#	$text3 = "&chco=000000"
+
+	IF $ShowPercentageLine
+		$text3 = "&chco=$ColorOther,$ColorEvent,$ColorEarth,$ColorMyst,$ColorMulti,$ColorTrad&chdl=OTHER|EVENTS|EARTH|MYST|MULTI|TRAD"
+	else
+		$text3 = "&chco=$ColorOther|$ColorEvent|$ColorEarth|$ColorMyst|$ColorMulti|$ColorTrad&chdl=OTHER|EVENTS|EARTH|MYST|MULTI|TRAD"
+	endif
+	# Labels
+	$text4 = "&chdlp=b&chxl=0:"
+
+	# Chart shading
+	If $ShowPercentageLine
+		$text5= "&chm="	
+	else
+		$text5 = "&chm=b,$ColorOther,5,6,0|b,$ColorEvent,4,5,0|b,$ColorEarth,3,4,0|b,$ColorMyst,2,3,0|b,$ColorMulti,1,2,0|b,$ColorTrad,0,1,0"
+	endif
+
+	$text6 = ","
+	
+	# Calculate total number of months to be plotted
+
+	$TotalMonths = 12 * (Val(SubStr(DateToString($RunDate),1,4)) - Val(SubStr(DateToString($DateFirstFind),1,4)))
+	$TotalMonths = $TotalMonths + Val(SubStr(DateToString($RunDate),5,2)) - Val(SubStr(DateToString($DateFirstFind),5,2)) + 1
+
+	$text7 = ""
+	$text8 = ""
+		$num1=0
+		$num2=0
+		$Names = "Project Ape,Letterbox,CITO,Event,BenchMark,Locationless,Multi,Earth,Traditional,Mystery,Virtual,Webcam,Mega Event,GPS Adventures Exhibit,Wherigo,Waymark,10 Years! Event,Groundspeak HQ,Lost and Found Celebration"		
+#		$Types = "A,B,C,E,G,L,M,R,T,U,V,W,Z,X,I,Y,1,2,3"
+		If $ShowPercentageLine
+			$Types = "ABGLVWXIY123,CEZ,R,U,M,T"
+		else
+			$Types = "T,M,U,R,CEZ,ABGLVWXIY123"
+		endif	
+	
+		$NumItems = RegExCount(",",$Types )+1
+ 
+		$index = 1
+		$maxnum =0
+		$CachetypeSQL=""
+		
+WHILE $index <= $NumItems		
+	$MultiSeries=""
+	$ThisYear = $FirstYear
+	$num2=0
+	$num3=0
+	$tmpN=1
+	
+	IF $ShowPercentageLine
+		$CachetypeSQL=Extract($Types, ",", $index)
+	ELSE
+		$CachetypeSQL=$CachetypeSQL+Extract($Types, ",", $index)
+	ENDIF
+# Msgok msg=$CachetypeSQL
+
+	WHILE $ThisYear <= $YearNow
+		# Compile stats for year, $ThisYear
+		# Initialise some variables
+		$Month = 2		# Current working month, starting at FEB stepping 2 months at a time due to URL length limit
+		$EndMonth = 12	# Last month of the year
+		$pc2 = 0
+
+		# First year and current year to date are less than 12 months
+
+		IF ($ThisYear = $YearNow) AND ($ThisYear = $FirstYear)
+			$Month = Val(SubStr(DateToString($DateFirstFind),5,2))
+			$EndMonth = Val(SubStr(DateToString($RunDate),5,2))
+		ELSE
+			IF $ThisYear = $YearNow
+				$EndMonth = Val(SubStr(DateToString($RunDate),5,2))
+			ELSE
+				IF $ThisYear = $FirstYear
+					$Month = Val(SubStr(DateToString($DateFirstFind),5,2))
+				ENDIF
+			ENDIF
+		ENDIF
+		
+		If ($month=1 or $month=3 or $month=5 or $month=7 or $month=9 or $month=11)
+					$month=$month+1	# in the first year we also must start with an even month
+		endif
+
+		If ($endmonth=1 or $endmonth=3 or $endmonth=5 or $endmonth=7 or $endmonth=9 or $endmonth=11)
+					$endmonth=$endmonth+1 # in the last year we also must end with an even month
+		endif
+
+		IF ($ThisYear = $FirstYear) AND $Month = 12
+			$tmpB = FALSE
+		ELSE
+			$tmpB = TRUE
+		ENDIF
+
+		# Step through each month in ThisYear
+
+		WHILE $Month <= $Endmonth
+			IF $Placedstats = TRUE
+			 $_sql = "SELECT Count(Placed) from PlacedStatsdata WHERE strftime('%Y',Placed)+0=$ThisYear and (strftime('%m',Placed)+0=$Month OR strftime('%m',Placed)+0=$Month-1) AND g_Contains(CacheType,'$CachetypeSQL')"
+			 $num3 = $num3 + Val(Sqlite("sql",$_sql))
+
+			 $_sql = "SELECT Count(Placed) from PlacedStatsdata WHERE strftime('%Y',Placed)+0=$ThisYear and (strftime('%m',Placed)+0=$Month OR strftime('%m',Placed)+0=$Month-1)"
+			 $num2 = $num2 + Val(Sqlite("sql",$_sql))
+			ELSE
+			 $_sql = "SELECT Count(lDate) from AllFinds WHERE strftime('%Y',lDate)+0=$ThisYear and (strftime('%m',lDate)+0=$Month OR strftime('%m',lDate)+0=$Month-1) AND g_Contains(CacheType,'$CachetypeSQL')"
+			 $num3 = $num3 + Val(Sqlite("sql",$_sql))
+
+			 $_sql = "SELECT Count(lDate) from AllFinds WHERE strftime('%Y',lDate)+0=$ThisYear and (strftime('%m',lDate)+0=$Month OR strftime('%m',lDate)+0=$Month-1)"
+			 $num2 = $num2 + Val(Sqlite("sql",$_sql))	
+			ENDIF
+			
+# Msgok msg="$num3 / $num2"			
+			# $text2 = $text2 + "|" + "$Month"
+
+			IF $ShowPercentage or $ShowPercentageLine
+				$pc = ($num3/$num2) * 4095 
+			ELSE
+				$pc = ($num3/$FindsWithDuplicates) * 4095
+			ENDIF
+			
+			$z = Int($pc)
+			GOSUB name=Extended
+			$MultiSeries = $MultiSeries + $tmpS
+						
+			# $pc2 accumulates the year stats into $text7, $pc3 accumulates the x coordinate for each year stats into $text8
+			# $pc2 = $pc + (Val(Sqlite("sql",$_sql))/$FindsWithDuplicates) * 4095
+			# $z = Int($pc2)
+			# GOSUB name=Extended
+			# $text7 = $text7 + $tmpS
+
+			# IF $TotalMonths <= 1
+			# 	$pc3 = 0
+			# ELSE
+			#	$pc3 = ($tmpN-1) * 4095 / ($TotalMonths-1)
+			# ENDIF
+			# $z = Int($pc3)
+			# GOSUB name=Extended
+			# $text8 = $text8 + $tmpS
+
+		IF  $index = $NumItems	
+			IF $tmpN = 1
+				$text4 = $text4 + "|" + "$ThisYear"
+			ENDIF
+			IF $Month = 2 AND $tmpN<>1
+				$num = $tmpN - 2
+				$text4 = $text4 + "|" + "$ThisYear"
+				if $ShowPercentageLine
+					if $text5<>"&chm="
+						$text5=$text5+"|"  #do not add | to the first element
+					endif
+					$text5 = $text5 + "V,808080,0," + "$num" + ",1.0"
+				else
+					$text5 = $text5 + "|v,808080,6," + "$num" + ",1.0"
+				endif
+			ELSE
+#				IF (NOT( ($Month=$Endmonth) AND ($ThisYear = $YearNow) )) AND $tmpN <> 1
+				IF $tmpN <> 1
+					$text4 = $text4 + "|"
+				ENDIF
+			ENDIF
+		ENDIF
+		#	IF ($Month=$Endmonth) AND NOT($ThisYear = $YearNow)
+		#		$text7 = $text7 + ","
+		#	ENDIF
+			$tmpN = $tmpN + 1
+			$Month = $Month + 2
+		ENDWHILE  # Month
+		$text8 = $text8 + ","
+
+		# skip a single value year if it's also the first year
+		#IF $tmpB
+		#	$text6 = $text6 + $text8 + $text7
+		#ELSE
+		#	$text6 = ","
+		#ENDIF
+
+		$ThisYear = $ThisYear + 1
+
+		# Add artifical zero value at the beginning of each year (AA is zero in extended encoding)
+		# $text7 = "AA"
+		# $text8 = "$tmpS"
+		# $text10 = $text10 + "|2,2,4"
+
+	ENDWHILE  # Year
+	
+	$text1=$text1+$MultiSeries+","
+	$index = $index + 1
+ENDWHILE  # Cachetypes	
+
+	$text4 = $text4 + "|"	
+	$text1 = $text1
+	
+	# $out = $out + $text1 + $text6 + $text4 + "|" + $text3 + $text5 + $text2 + $text10 + "' />" + $CR
+	$out = $out + $text1 + $text4 + $text3 + $text5 + $text2 + "' />" + $CR
+	
+	# Div for legend overlay
+
+$p_FSGData = $out
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+	$out = $out + "<br /><br />" + $CR
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			GOSUB Name=Mid2Col
+			$column = 1
+		ENDIF
+		$lastcolspan = 2
+		$width = $maxtablewidth/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+	$out = $out + "    $text" + $CR + "</div><br />" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB name=Extended
+	# Enter with value from 0-4095 in $z, exits with encoded value in $tmpS
+	$tmpS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-."
+	$x = Int($z/64)
+	$y = $z - (64 *$x)
+	$tmpS = SubStr($tmpS,($x + 1),1) + SubStr($tmpS,($y + 1),1)
+ENDSUB
+
+BEGINSUB Name=InitLanguage
+	Declare Var=$LangRelChartTitle Type=String
+	Declare Var=$LangAbsChartTitle Type=String
+	
+	# default: English
+	IF $Placedstats = TRUE
+	 $LangRelChartTitle="Relative placed per cachetype over time"
+	 $LangAbsChartTitle="Placed per cachetype over time"
+	ELSE
+	 $LangRelChartTitle="Relative finds per cachetype over time"
+	 $LangAbsChartTitle="Finds per cachetype over time"
+	ENDIF
+
+	IF $Language = "Deutsch"
+		IF $Placedstats = TRUE
+			$LangRelChartTitle="Relative Verteilung der Verstecke pro Cachetyp"
+			$LangAbsChartTitle="Verteilung der Verstecke pro Cachetyp"
+		ELSE
+			$LangRelChartTitle="Relative Verteilung der Funde pro Cachetyp"
+			$LangAbsChartTitle="Verteilung der Funde pro Cachetyp"
+		ENDIF
+	ENDIF
+	
+	IF $Language = "Nederlands"
+		IF $Placedstats = TRUE
+			$LangRelChartTitle="Relatieve verdeling verstopte caches per cachetype in de tijd"
+			$LangAbsChartTitle="Verstopte caches per cachetype in de tijd"
+		ELSE
+			$LangRelChartTitle="Relatieve verdeling gevonden caches per cachetype in de tijd"
+			$LangAbsChartTitle="Gevonden caches per cachetype in de tijd"
+		ENDIF
+	ENDIF
+
+	IF $Language = "Èesky"
+		$LangRelChartTitle="Nálezy podle typu keše v èase relativnì"
+		$LangAbsChartTitle="Nálezy podle typu keše v èase"	 
+	ENDIF
+ENDSUB

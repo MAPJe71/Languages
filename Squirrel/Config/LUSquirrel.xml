@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+    <Languages>
+        <Language name="LU Squirrel" ext="nut" commentLine="//" commentStart="/*" commentEnd="*/">
+            <Keywords name="0">class and break do else false for function if in local null not or repeat return then true until while call</Keywords>
+            <Keywords name="1">self.Instructions SWEP.Instructions self.Contact SWEP.Contact self.ViewModel SWEP.ViewModel self.WorldModel SWEP.WorldModel self.Author SWEP.Author self.Spawnable SWEP.Spawnable self.Classname SWEP.Classname self.AutoSwitchTo SWEP.AutoSwitchTo self.AnimPrefix SWEP.AnimPrefix self.Weight SWEP.Weight self.Base SWEP.Base self.AdminSpawnable SWEP.AdminSpawnable self.ViewModelFOV SWEP.ViewModelFOV self.ClassName SWEP.ClassName self.ViewModelFlip SWEP.ViewModelFlip self.Purpose SWEP.Purpose self.HoldType SWEP.HoldType self.AutoSwitchFrom SWEP.AutoSwitchFrom self.Folder SWEP.Folder ENT.Spawnable ENT.Instructions self.PrintName ENT.PrintName ENT.Contact ENT.Base ENT.AdminSpawnable self.Type ENT.Type self.AutomaticFrameAdvance ENT.AutomaticFrameAdvance ENT.Author ENT.Folder ENT.Purpose ENT.ClassName ENT.Classname self.m_fMaxYawSpeed ENT.m_fMaxYawSpeed self.m_iClass ENT.m_iClass self.BuildCPanel TOOL.BuildCPanel self.AddToMenu TOOL.AddToMenu self.AllowedCVar TOOL.AllowedCVar self.Category TOOL.Category self.ClientConVar TOOL.ClientConVar self.ConfigName TOOL.ConfigName self.FaceTimer TOOL.FaceTimer self.LastMessage TOOL.LastMessage self.LeftClickAutomatic TOOL.LeftClickAutomatic self.Message TOOL.Message self.Mode TOOL.Mode self.Model TOOL.Model self.Name TOOL.Name self.Objects TOOL.Objects self.RequiresTraceHit TOOL.RequiresTraceHit self.RightClickAutomatic TOOL.RightClickAutomatic self.ServerConVar TOOL.ServerConVar self.Stage TOOL.Stage self.Stored TOOL.Stored GM.Folder GM.Author GM.Name self.PlayerSpawnTime GM.PlayerSpawnTime self.TeamBased GM.TeamBased self.Website GM.Website self.FolderName GM.FolderName self.Email GM.Email self.DrawAmmo SWEP.DrawAmmo self.DrawWeaponInfoBox SWEP.DrawWeaponInfoBox self.Slot SWEP.Slot self.BobScale SWEP.BobScale self.SwayScale SWEP.SwayScale self.SpeechBubbleLid SWEP.SpeechBubbleLid SWEP.PrintName self.SlotPos SWEP.SlotPos self.DrawCrosshair SWEP.DrawCrosshair self.WepSelectIcon SWEP.WepSelectIcon self.BounceWeaponIcon SWEP.BounceWeaponIcon self.RenderGroup SWEP.RenderGroup ENT.RenderGroup self.PickupHistoryWide GM.PickupHistoryWide self.PickupHistoryLast GM.PickupHistoryLast self.PickupHistory GM.PickupHistory self.PickupHistoryCorner GM.PickupHistoryCorner self.PickupHistoryTop GM.PickupHistoryTop self.Entity self.Owner self.Weapon</Keywords>
+            <Keywords name="2">__eq __gc __mul __index __concat __newindex __add __sub __div __call __pow __unm __lt __le __mode __metatable __tofloat __tostring __tochar __tointeger __len __slice __find __tolower __toupper __rawget __rawset __rawdelete __rawin __clear __append __push __extend __pop __top __insert __remove __resize __sort __reverse</Keywords>
+        </Language>
+    </Languages>
+    <LexerStyles>
+        <LexerType name="LU Squirrel" desc="LU Squirrel" excluded="no" ext="">
+            <WordsStyle name="DEFAULT" styleID="0" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="LU COMMENT BLOCKS" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="CPP COMMENT BLOCKS" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="LU COMMENT LINES" styleID="3" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="CPP COMMENT LINES" styleID="4" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="NUMBERS" styleID="5" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="OPERATORS" styleID="6" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="STRINGS" styleID="8" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="CHARACTERS" styleID="9" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="LITERAL STRINGS" styleID="11" fgColor="95004A" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="INSTRUCTION WORDS" styleID="20" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="0" />
+            <WordsStyle name="SCRIPTED FUNCTIONS" styleID="21" fgColor="0000A0" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="1" />
+            <WordsStyle name="DELEGATES" styleID="22" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="2" />
+        </LexerType>
+	</LexerStyles>
+</NotepadPlus>

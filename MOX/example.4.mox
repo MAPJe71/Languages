@@ -1,0 +1,77 @@
+Rem 'https://moxie.build/Developers
+
+Rem 'Flow Control: Pulls data from incoming web browser request and decides where to go
+    [Pull]  Req.IsGet ajCalc
+    
+    If      ajCalc      :   AjaxReply   : Form.Ajax.Calc
+    ElseIf  Req.IsGet   :   Form.Build
+    Else                :   Form.Proc
+    End If
+EndRem
+
+Method Form.Build()
+    Rem 'Fetch or create our Person fields depending on if we have a valid user logged in
+        If ($SessionIsBad)
+            NewFields       "MemTab.Person.", "FirstName LastName"
+        Else
+            Try
+                LoadRecord  "MemTab.Person", ($SessionUser)
+                KeepFields  "MemTab.Person.", "FirstName LastName"
+            Catch
+                HtmlErr     "<b>Oh my!</b> it looks like we lost you somehow."
+                Error       "Could not load logged in user"     'Sends admin notifications and exits proc
+            End Try
+        End If
+    EndRem
+    
+    Rem 'Create some extra fields for the demo and customize the form
+        NewFields           "Demo.", "Apples Oranges Fruit"
+        
+        GetFieldDefs        'Fetch db defenitions for db fields, creates blank defs for non-db fields
+        
+        WorkWith            "Demo.Apples#"
+            Set             "Label",    "`Apples?"
+            Set             "Attr",     ("`[!] 0, 1, 2, 3, 4, 5, 6, 7, 8, 9" & $I & "[Ajax] FruitCount, ?ajCalc=y")
+        WorkWith            "Demo.Oranges#"
+            Set             "Label",    "`Oranges?"
+            Set             "Attr",     ("`[!] 0, 1, 2, 3, 4, 5, 6, 7, 8, 9" & $I & "[Ajax] FruitCount, ?ajCalc=y")
+        WorkWith            "Demo.Fruit#"
+            Set             "Label",    "`Total Fruit"
+            Set             "Attr",     "`[R]"
+        End WorkWith
+        
+        'Set up our Ajax destination inside of Demo.Fruit
+        Set                 "Demo.Fruit", "<span id='FruitCount'>0</span>"
+    EndRem
+    
+    'Put it on the page, in our FruitDemo Template Insertion Point
+    HtmlForm                "FruitDemo", "<? i cog ?> Do Something", ""
+End Method
+
+Method Form.Ajax.Calc()
+    [Pull]  Demo.Apples Demo.Oranges
+    Html    (Demo.Apples + Demo.Oranges)
+End Method
+
+Function Form.Fruit.Total(pFirstName, pLastName, pApples, pOranges)
+    If pApples == 0 : And pOranges == 0
+        Return "&warning",  "<b>Oops,</b> it looks like you didn't select any fruit to share with us!"
+    Else
+        Return "&success",  ("<b>Thank you " & pFirstName && pLastName & "</b>," & _
+                            " for sending us " & pApples & " Apples " & _
+                            " and " & pOranges & " Oranges.")
+    End If
+End Function
+
+Method Form.Proc()
+    Rem 'Fetch our incomming form data
+        [Pull]  "Request", "MemTab.Person.", "FirstName LastName"
+        [Pull]  "Request", "Demo.", "Apples Oranges"
+    EndRem
+    
+    'Call a processing Function that has four input parameters and two return values
+    [New] AlertClass, UserMessage = Form.Fruit.Total FirstName, LastName, Apples, Oranges
+    
+    HtmlAlert   "FruitDemo", AlertClass, UserMessage    'Display Alert
+    Form.Build                                          'Display Form again
+End Method

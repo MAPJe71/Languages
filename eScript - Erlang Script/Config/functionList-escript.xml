@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=     "escript_syntax"        langID="72"                             />
+		</associationMap>
+		<parsers>
+			<!-- ===================================================== [ escript ] -->
+
+			<parser
+				displayName="[TBD] escript - Erlang Script"
+				id         ="escript_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

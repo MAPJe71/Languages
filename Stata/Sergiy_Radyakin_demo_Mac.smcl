@@ -1,0 +1,110 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}/Users/loverand/Desktop/Sergiy_Radyakin_demo_Mac.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}13 Apr 2015, 08:30:21
+{txt}
+{com}. 
+. * AAL Stata 14 Mac
+. *** ===== beginning of file =======
+. 
+. *** Please do not modify the program. Run as is.
+. *** I am aware that there are two compress statements here and
+. **  they are not in the end of the program. This is intended.
+. 
+. version 14.0
+{txt}
+{com}. 
+. clear
+{txt}
+{com}. set obs 10
+{txt}{p}
+number of observations (_N)  was 0,
+now 10
+{p_end}
+
+{com}. generate s1="abcdefghijklmnopqrstuvwxyz"
+{txt}
+{com}. generate s2=s1*10
+{txt}
+{com}. generate byte region=_n
+{txt}
+{com}. 
+. label define регион 1 "Север" 2 "Запад" 3 "Юг" 4 "Восток" ///
+>                     5 "Центр" 6 "Все остальные" 7 "яΕἲς Ἑρμῆνя" ///
+>                     8 "東京、日本の首都" 9 "Не определено"
+{txt}
+{com}. 
+. label values region регион
+{txt}
+{com}. 
+. generate s3=s1+"Εἲς Ἑρμῆν"+"абвгдежзийклмнопрстуфхцчшщъыьэюя"+"Εἲς Ἑρμῆν"
+{txt}
+{com}. generate strL s4="АБВГДЕЖЗ"*500
+{txt}
+{com}. compress
+{txt}  (0 bytes saved)
+
+{com}. 
+. replace s4="Alpha & Omega" if mod(_n,2)==1
+{txt}(5 real changes made)
+
+{com}. char s4[комментарий] <<<Ἑρμῆν ὕμνει, Μοῦσα, Διὸς καὶ Μαιάδος υἱόν>>>
+{txt}
+{com}. compress
+{txt}  (0 bytes saved)
+
+{com}. 
+. replace s3="" in 5
+{txt}(1 real change made)
+
+{com}. 
+. generate float regionfloat = 11-region
+{txt}
+{com}. label values regionfloat регион
+{txt}
+{com}. 
+. set seed 201781
+{txt}
+{com}. generate double ПеременнаяХранящаяСлучайноеЧисло=floor(runiform()*10000)/100
+{txt}
+{com}. format ПеременнаяХранящаяСлучайноеЧисло %6.2f
+{txt}
+{com}. 
+. char ПеременнаяХранящаяСлучайноеЧисло[комментарий] <<<Простой, понятный и хорошо заметный комментарий>>>
+{txt}
+{com}. 
+. note s1: First
+{res}{txt}
+{com}. note s1: Second
+{res}{txt}
+{com}. note s1: Третья
+{res}{txt}
+{com}. note s1: 4th
+{res}{txt}
+{com}. note s2: А-Я-а-я
+{res}{txt}
+{com}. 
+. label variable s1 "東京、日本の首都"
+{txt}
+{com}. label variable s3 "Εἲς Ἑρμῆνабвгдежз東京、日本の首都"
+{txt}
+{com}. label variable region "РЕГИОН"
+{txt}
+{com}. label variable regionfloat "ТОЖЕ РЕГИОН"
+{txt}
+{com}. label variable ПеременнаяХранящаяСлучайноеЧисло "Метка переменной, которая хранит случайное число"
+{txt}
+{com}. label data "Проверка данных"
+{txt}
+{com}. 
+. *** ===== end of file ===========
+. log off
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}/Users/loverand/Desktop/Sergiy_Radyakin_demo_Mac.smcl
+  {txt}log type:  {res}smcl
+ {txt}paused on:  {res}13 Apr 2015, 08:30:21
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

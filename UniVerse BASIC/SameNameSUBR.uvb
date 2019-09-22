@@ -1,0 +1,7 @@
+*File SameNameSUBR:
+
+SUBROUTINE Bad_Example(A)
+    A = “In global SameNameSUBR”
+RETURN
+
+*Suppose you catalog this subroutine as *SameNameSUBR

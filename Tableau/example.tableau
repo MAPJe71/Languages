@@ -1,0 +1,18 @@
+// Simple expression
+[Max Position 1]+(([Max Position 2]–[Max Position 1])*ATTR([Sigmoid]))
+
+// The style it is case-insensitive
+SUM([Value])/(SUM([Cost]))
+sum([Value])/(sum([Cost]))
+
+// This is a CASE/WHN
+CASE ATTR([Sin])
+WHEN ‘Min’ THEN [Curve A]
+WHEN ‘Max’ THEN [Curve A]
+END
+
+// This is a sigmoid function
+1/(1+EXP(1)^-[T])
+
+// This is a LOD expression because is is delimited by curly braces
+{FIXED [Timeid],[Team],[Judge] : SUM([Score single [PT]]])}

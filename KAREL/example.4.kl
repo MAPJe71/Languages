@@ -1,0 +1,42 @@
+PROGRAM test_add_int
+    -- %NOLOCKGROUP is required to run KAREL from browser
+    %NOLOCKGROUP
+    -- %INCLUDE the KUnit routines
+    %INCLUDE kunit.h
+    
+    -- the ROUTINE under test
+    ROUTINE add_int(l : INTEGER; r : INTEGER) : INTEGER
+    BEGIN
+        RETURN(l + r)
+    END add_int
+    
+    -- 1 + 1 = 2
+    ROUTINE test_11 : BOOLEAN
+    BEGIN
+        RETURN(kunit_eq_int(2, add_int(1,1)))
+    END test_11
+    
+    -- 2 + 2 = 4
+    ROUTINE test_22 : BOOLEAN
+    BEGIN
+        RETURN(kunit_eq_int(4, add_int(2,2)))
+    END test_22
+    
+    -- 0 + 0 = 0
+    ROUTINE test_00 : BOOLEAN
+    BEGIN
+        RETURN(kunit_eq_int(0, add_int(0,0)))
+    END test_00
+
+BEGIN
+    -- initialize KUnit
+    kunit_init
+
+    -- do some tests
+    kunit_test('1+1=2', test_11)
+    kunit_test('2+2=4', test_22)
+    kunit_test('0+0=0', test_00)
+
+    -- output the test suite results
+    kunit_output
+END test_add_int

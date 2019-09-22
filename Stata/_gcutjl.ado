@@ -1,0 +1,218 @@
+*! Make a categorical variable by cutting at break points
+*! Addition to egen
+*! David Clayton and Michael Hills Dec 1998  STB-49 dm66
+*! Extended to allow for interval labels JM.Lauritsen feb 1999, 
+*! note added to generated variable. Renamed to _gcut1
+*! Modified to take account for error on generate with option group
+*! NOTE that the "real" cut has been updated to version 6. This is still based on 
+*! the version for stata 5. 
+program def _gcutjl
+    version 5.0
+    local type "`1'"
+    mac shift
+    local g "`1'"
+    mac shift 
+    mac shift
+
+    local varlist "req ex min(1) max(1)"
+    local if "opt"
+    local in "opt"
+    local options "AT(string) Group(real 0) ICodes Label INTerval Xtract(int 12)"
+    parse "`*'"
+    parse "`varlist'", parse(" ")
+
+
+    tempvar pctile x ifx 
+
+    if "`at'"=="" & `group'==0{
+	di in red "needs at or group option"
+	exit
+    }
+    
+    qui gen `x' = `1' `if' `in'      
+
+    local var_in = "`1'"
+
+    if "`at'"=="" & `group'!=0 & "`icodes'"==""{
+	local icodes = "icodes"
+    }
+
+    local ifx = cond(`xtract' == 8,0,1)
+
+    if "`label'"!="" & "`interval'"!="" {
+	di in yel "Both label and interval specified. Option interval applied"
+    }
+
+    if "`label'"!="" {
+	local xtract = -1
+    }
+    if "`label'"=="" & "`interval'"!="" {
+	local label = "label"
+    }
+
+    if "`label'"!="" & "`icodes'"=="" {
+	local icodes = "icodes"
+    }
+
+    cap label drop `g'
+        qui summ `x'
+	local max_x = _result(6)
+
+    
+    if "`at'"=="" {
+	local count = 1
+	qui summ `x'
+	local extra = string(_result(5))
+	local at  "`extra'"
+	qui pctile `pctile' = `x', nq(`group')
+	while `count' < `group' {
+	local extra = string(`pctile'[`count'])
+	local at  "`at',`extra'"
+        local count = `count' + 1
+	}
+	qui summ `x'
+	local extra = string(_result(6)+1)
+	local at  "`at',`extra'"
+     }
+
+    parse "`at'", parse(",()")
+    local cutp "`1'"
+    while "`1'"!="" {
+	if "`2'"=="," {
+	    if `3'<=`cutp' {
+		di in red "At ... points must be in ascending order"
+		exit
+	    }
+	    else {
+		mac shift
+		mac shift
+		local cutp "`1'"
+	    }
+	}
+	else if "`2'"=="(" {
+	    if "`4'"!=")" {
+		di in red "Syntax error in at(...) list"
+		exit
+	    }
+	    else {
+		if `5'<=`1' {
+		    di in red "At ... points must be in ascending order"
+		    exit
+		}
+		mac shift
+		mac shift
+		local cutw "`1'"
+		mac shift
+		mac shift 
+		while `cutp'<`1' { local cutp = `cutp'+`cutw'}
+		if `cutp'>`1' { local cutp "`1'" }
+	    }
+	}
+	else if "`2'"=="" {
+	    mac shift
+	}
+	else {
+	    di in red "Syntax error in at list"
+	    exit
+	}
+    }
+    local max "`cutp'"
+    
+    qui gen `g'=.
+    parse "`at'", parse(",()")
+    local i=0
+    while "`1'"!="" {
+	if ("`2'"=="," | "`2'"=="(") {
+	    local cutp "`1'"
+	    mac shift
+	    mac shift
+	}
+	else if "`2'"==")" {
+	    local cutp = `cutp' + `1'
+	    if `cutp'>=`3' {
+		local cutp "`3'"
+		mac shift
+		mac shift
+		mac shift
+		mac shift
+	    }
+	}
+	else if "`2'"=="" {
+	    local cutp "`1'"
+	    mac shift
+	}
+	if "`1'"=="" {
+	    qui replace `g' = . if `x'>`cutp'
+	} 
+        else {
+	    if "`icodes'"=="" {
+	        qui replace `g' = `cutp' if `x'>=`cutp'
+	    }
+	    else {
+	        qui replace `g' = `i' if `x'>=`cutp'
+	    }
+	}
+
+	local next = `cutp' -1	
+	if `next' > `max_x' {local next = `max_x'}
+	if index("`cutp'",".") > 0 & "`interval'" != ""{
+             local next = int(`cutp'*10)
+             local next = (`next'/10)-0.1
+        	if substr("`cutp'",2,1) == "." & `xtract' < 3 {
+                local xtract = 3
+                di in blue "Length of xtract adjusted to 3" }
+        }
+
+  	local out = substr("`next'",length("`next'")-`xtract'+`ifx',`xtract')
+	if index("`lastcut'",".") > 0 & "`interval'" != ""{
+             local lastcut = int(`lastcut'*10)
+             local lastcut = `lastcut'/10
+        }
+
+	local out = "`lastcut'-`out'" 
+
+	if `i'>0 & "`label'"!="" {
+            local code = `i' - 1
+	    la def `g' `code' "`out'", a
+        }
+
+	local prev = "`lastcut'"
+        local lastcut "`cutp'"
+        local i = `i'+1
+    }
+
+   * fix last end point of last interval:
+   if "`interval'" != ""{
+	qui summ `x'
+	local cutp = _result(6)
+	if index("`cutp'",".") > 0 & "`interval'" != ""{
+             local cutp = int(`cutp'*10)
+             local cutp = `cutp'/10
+        }
+
+	local out = substr("`cutp'",length("`cutp'")-`xtract'+`ifx',`xtract')
+       local out = "`prev'-`out'" 
+       la def `g' `code' "`out'", modify
+   }
+
+  *fix if rounding error occurs on grouping
+    qui summ `x'
+    qui replace `g' = 0 if (`group' > 0 & `g' == . & `x' == _result(5))
+	
+  if "`label'"!="" | "`interval'"!="" {la val `g' `g'}
+
+  local vdlbl: var l `var_in'
+  label var `g' "`vdlbl'"  
+  local out = "`label'"
+  if "`interval'" != "" {
+      local out = "Interval" 
+      if `xtract' < 20 {local out = "`out'  xtract(`xtract')"}
+  }
+  if "`label'" == "" & "`icodes'" != "" {local out = " icodes"}
+  notes `g': Generated by command egen from variable: `var_in' 
+  if `group' > 0 {notes `g':  =cut1(`var_in') `if' `in' , group(`group') `out'}
+      else {notes `g':  = cut1(`var_in')  `if' `in', at(`at') `out'}
+  notes `g': Created on TS
+
+end
+

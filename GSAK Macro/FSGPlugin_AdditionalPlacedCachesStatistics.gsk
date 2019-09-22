@@ -1,0 +1,2104 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display some additional statistics on placed caches
+# MacFileName = FSGPlugin_AdditionalPlacedCachesStatistics.gsk
+# MacAuthor = The CEO
+# MacVersion=1.06
+# MacUrl=http://gsak.net/board/index.php?showtopic=19632&st=0&#entry140068
+#*******************************************
+
+NoError commands=UPDATECHECK
+UpdateCheck Frequency=10
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_AdditionalPlacedCachesStatistics?SectionOrder=Numbers;Distance;CacheType;DiffTerr;DiffTerrChart;ByFoundDate;ByWeekday;ByMonth</plugin> $_CrLF <placed>
+ENDIF
+
+	SHOWSTATUS msg="FSGPlugin_AdditionalPlacedCachesStatistics starting" Width=350 Title=""
+
+	$out=""	
+
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$WhereClause Type=String	
+	Declare Var=$Country Type=String	
+	Declare Var=$State Type=String	
+	Declare Var=$County Type=String	
+	Declare Var=$DB Type=String
+	Declare Var=$SectionOrder Type=String
+	Declare Var=$count2 Type=Numeric 
+	Declare Var=$j Type=Numeric
+	Declare Var=$MacroVersion Type=String	
+	Declare Var=$MacroName Type=String	
+	Declare Var=$MacroURL Type=String	
+	Declare Var=$date Type=String	
+	
+GOSUB Name=InitLanguage
+	
+$Country=""
+$State=""
+$County=""
+$ShowHeading=TRUE
+$Text=""
+$DB="PlacedStatsdata"
+$SectionOrder="Numbers;Distance;CacheType;DiffTerr;DiffTerrChart;ByFoundDate;ByWeekday;ByMonth" # ;Container"
+
+$MacroVersion = MacHeader("MacVersion")
+$MacroName = Replace(".gsk", "", MacHeader("MacFileName"))
+$MacroURL = MacHeader("MacUrl")
+$date = DateFormat($_Today)
+  
+$tmpS = AddStr(2,"clear")
+
+
+if 1=1
+	# verify that the PlacedStatsdata table is indeed present, as we need information from it
+	$_sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='PlacedStatsdata' "
+	$work = Sqlite("sql",$_sql)
+	$count = $_SqlRows
+	if $count<>0
+		$DB="PlacedStatsdata"
+
+		$_sql = "SELECT name FROM sqlite_master WHERE type='view' AND name='FSGPlugin_AdditionalPlacedCachesStatistics' "
+		$work = Sqlite("sql",$_sql)
+		$tmpN = $_SqlRows
+		if $tmpN<>0
+			$_sql = "drop view FSGPlugin_AdditionalPlacedCachesStatistics"
+			$work = Sqlite("sql",$_sql)	
+		endif			
+		$Latitude = SysInfo("gsakini;LastCenter;Lat")
+		$longitude = SysInfo("gsakini;LastCenter;Lon")
+		$tmpS = Sysinfo("Distance")
+
+		$_sql = "create view FSGPlugin_AdditionalPlacedCachesStatistics as SELECT t1.*, Round(g_Distance(t1.latoriginal,t1.lonoriginal,$Latitude,$longitude,'$tmpS'),2) as Distance, g_Bearing1($Latitude,$longitude,t1.latoriginal,t1.lonoriginal) as Bearing FROM PlacedStatsdata as t1 "
+		$work = Sqlite("sql",$_sql)	
+		$DB="FSGPlugin_AdditionalPlacedCachesStatistics"
+	else
+		MSGOK msg="Please add '<placed>' (without ' ') to any notes section, in order to enable a Placed statistic"	
+		$DB="NotAvailable"
+	endif
+		# Needs the Placed Stats routine if it is in the current report anywhere
+		# Or <placed> is in any Notes section
+endif
+
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = lower($Text1)
+		# MSGOK msg="parameter $i: '$Text1' '$Text2'"
+		
+		if (AT("sectionheading=false", $Text2) <> 0)
+			$ShowHeading=FALSE
+		endif
+
+		if (AT("sectionorder=", $Text2) <> 0)
+			$SectionOrder = extract($Text2,"=",2)
+			# validate section order
+			$count2 = RegExCount(";",$SectionOrder)+1
+			$j=1
+			while $j <= $count2
+				$tmpS=extract($SectionOrder,";",$j)
+#				$SectionOrder="Numbers;Distance;CacheType;DiffTerr;DiffTerrChart;ByFoundDate;ByWeekday;ByMonth"
+				if $tmpS="numbers" or $tmpS="diffterr" or $tmpS="diffterrchart" or $tmpS="distance" or $tmpS="bearing" or $tmpS="cachetype" or $tmpS="byfounddate" or $tmpS="byweekday" or $tmpS="bymonth" or $tmpS="container"
+					# valid element detected
+				else
+					$DB="NotAvailable"
+					Msgok msg="The specified SectionOrder=$SectionOrder is not valid. $_CrLf '$tmpS' is not recognized $_CrLf $_CrLf Valid elements are $_CrLf Numbers $_CrLf Distance $_CrLf DiffTerr $_CrLf DiffTerrChart $_CrLf CacheType $_CrLf ByFoundDate $_CrLf ByWeekday $_CrLf ByMonth " # $_CrLf Container"
+				endif
+				$j=$j+1
+			endwhile
+		endif
+	
+		$i = $i+1
+	endwhile
+
+#define maximum table width
+if $maxtablewidth=0
+	$maxtablewidth = 740
+endif
+
+if $DB<>"NotAvailable"
+	$Placed = TRUE
+	$colspan = 1
+
+#	If $ShowHeading
+#		GOSUB Name=SectionHead
+#	endif
+
+	$WhereClause="1 "
+
+	
+	##### Main routine ##############
+			$count2 = RegExCount(";",$SectionOrder)+1
+			$j=1
+			while $j <= $count2
+				$tmpS=extract($SectionOrder,";",$j)
+				GOSUB Name=$tmpS
+				if $j  <> $count2
+					$out = AddStr(2,"add","<br />" + $CR)
+				endif
+					$out = AddStr(2,"add","</center>" + $CR)
+				$j=$j+1
+			endwhile
+
+
+#	GOSUB Name=Numbers
+#	$out = $out + "<br />" + $CR
+#	GOSUB Name=DiffTerr
+#	$out = $out + "<br />" + $CR
+#
+#	$tmpS="DiffTerrChart"
+#	GOSUB Name=$tmpS
+#	$out = $out + "<br />" + $CR
+#	
+#	GOSUB Name=Distance
+#	GOSUB Name=CacheType
+#	$out = $out + "<br />" + $CR
+	
+	
+#	GOSUB Name=Container	
+
+# Close tabel to prevent a big mess	
+		if $column=2
+			GOSUB Name=Mid2Col
+			$width = ($maxtablewidth-10)/2
+			$out = AddStr(2,"add","<div style='width:$width" + "px; ><table border='0' summary='' width='$width' style='text-align: left;'></table></div>" + $CR)
+		endif
+		GOSUB Name=Close2col
+		$colspan=1
+		$out = AddStr(2,"add",$TabHtml)
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+		
+	$out = AddStr(2,"add","<br>")
+	
+	# create output - footer
+	$out = AddStr(2,"add","<center><div><a style='text-decoration:none; font-size: xx-small;' href='$MacroURL'>")
+	$out = AddStr(2,"add","$MacroName $MacroVersion - $date</a>$_CrLf")
+	$out = AddStr(2,"add","</div></center><center>$_CrLf")
+	
+#	$_sql = "drop view FSGPlugin_AdditionalPlacedCachesStatistics"
+#	$work = Sqlite("sql",$_sql)	
+	$Placed = FALSE
+endif #$DB="NotAvailable"
+
+SHOWSTATUS msg="FSGPlugin_AdditionalPlacedCachesStatistics finished" Width=350 Title=""
+
+$p_FSGData = AddStr(2,"get")
+
+##########################################
+# END of main, start of subroutines
+##########################################
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	# Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	# Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIYFHDPO"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774,4738,other"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from $DB WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $tmpS = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $tmpS = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $tmpS = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB # StripCodeType
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+#	$out = $out + "<br /><br />" + $CR
+	$out = AddStr(2,"add","<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR)
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$out = AddStr(2,"add",$TabHtml)
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			$out = AddStr(2,"add",$TabHtml)
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			IF Len($TabHtml) > 0
+				GOSUB Name=Close2col
+				$out = AddStr(2,"add",$TabHtml)
+				GOSUB Name=Open2Col
+				$column = 2
+			ELSE
+				GOSUB Name=Mid2Col
+				$column = 1
+			ENDIF
+		ENDIF
+		$lastcolspan = 2
+		$width = ($maxtablewidth-10)/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	IF $ShowTitle
+		$out = AddStr(2,"add","<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR)
+		$out = AddStr(2,"add","<a name='$Srun'></a>")
+	#	$out = $out + "    $text" + $CR + "</div><br />" + $CR
+		$out = AddStr(2,"add","    $text" + $CR + "</div>" + $CR)
+	ENDIF
+	$out = AddStr(2,"add","<center>" +$CR)
+	# Clear out the TabHtml string
+	$TabHtml = ""
+	$ShowTitle = TRUE
+ENDSUB #SectionHead
+
+BEGINSUB name=numLatitude
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, latoriginal, URL, Country from $DB WHERE $WhereClause AND CacheType <>'L' and Exclude <> '1' ORDER BY cast(latoriginal as real) DESC"
+	ELSE
+		$_sql = "SELECT Code, Name, latoriginal, URL, Country from $DB WHERE $WhereClause ORDER BY cast(latoriginal as real) DESC"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	
+	$text1 = $LangMostNorth
+	$tmpN = 1
+	GOSUB name=numLatitudeLine
+	
+	$tmpN = $count
+	$text1 = $LangMostSouth
+	GOSUB name=numLatitudeLine
+ENDSUB #numExtremes
+
+BEGINSUB name=numLatitudeLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$latitude = Extract($tmpS,";",3)
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = GCalc("$latitude 0","FormatMinutes")
+	$tmpS = Extract($tmpS,";",1)
+	$text2 = "<b>$tmpS</b>, $ShrunkName <a href='$Url'>$StripCode</a>"
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numLatitudeLine
+
+BEGINSUB name=numLongitude
+	
+	# From home option
+	# SELECT Code, Name,  case when (Longitude+97) < 180 then (longitude+97) else (longitude+97)-360 end as l , URL, Country from $DB WHERE CacheType <>'L' and Exclude <> '1' ORDER BY l DESC
+	
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, lonoriginal, URL, Country from $DB WHERE $WhereClause AND CacheType <>'L' and Exclude <> '1' ORDER BY cast(lonoriginal as real) DESC"
+	ELSE
+		$_sql = "SELECT Code, Name, lonoriginal, URL, Country from $DB WHERE $WhereClause ORDER BY cast(lonoriginal as real) DESC"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	
+	$text1 = $LangMostEast
+	$tmpN = 1
+	GOSUB name=numLongitudeLine
+	
+	$tmpN = $count
+	$text1 = $LangMostWest
+	GOSUB name=numLongitudeLine
+ENDSUB #numExtremes
+
+BEGINSUB name=numLongitudeLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$longitude = Extract($tmpS,";",3)
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = GCalc("0 $longitude","FormatMinutes")
+	$tmpS = Extract($tmpS,";",2)
+	$text2 = "<b>$tmpS</b>, $ShrunkName <a href='$Url'>$StripCode</a>"
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numLongitudeLine
+
+BEGINSUB Name=NumbersLine
+	# Add a line to the 'Some Number section, inputs are:
+	# $text1 : Description of the data
+	# $text2 : The data itself
+	# $text7 : Flag Image if used
+	
+	$text1=Replace("found","placed",$text1)	
+	$text1=Replace("Cache-Fund","versteckte Cache",$text1)	
+	$text1=Replace("gefundener","versteckte",$text1)	
+	$text1=Replace("Funde","Versteckte Caches",$text1)	
+	
+	$out = AddStr(2,"add","<tr>" + "$CR" + "<td style='$st2c1'>" + $CR)
+	$out = AddStr(2,"add","$text1: </td>" + $CR)
+#	IF $FlagIcons
+#		$out = $out + "<td style='$st2c2'>$text7</td>" + $CR
+#	ENDIF
+	IF $FlagIcons
+		$out = AddStr(2,"add","<td style='$st2c2'>$text2 $text7</td>" + $CR + "</tr>" + $CR)
+	ELSE
+		$out = AddStr(2,"add","<td style='$st2c2'>$text2</td>" + $CR + "</tr>" + $CR)
+	ENDIF
+	# Clear out flag Image
+	$text7 = ""
+ENDSUB #NumbersLine
+
+BEGINSUB Name=Numbers
+	# Initialise Section variables
+	$colspan = 1
+	$Text=$LangHeaderNumbers
+	GOSUB Name=SectionHead
+	$out = AddStr(2,"add","<table width='$maxtablewidth' style='text-align: left;'>" + $CR)
+	$out = AddStr(2,"add","<col width='250px' />" + $CR)
+	$text7 = ""
+	
+#	IF $numTotals
+#		GOSUB Name=numTotals
+#		GOSUB Name=num365
+#	ENDIF
+#	IF $numConsecutive
+#		GOSUB Name=numConsec
+#	ENDIF
+#	IF $numPeriods
+#		GOSUB Name=numBestWeekend
+#		GOSUB Name=numBestWeek
+#		GOSUB Name=numBestMonth
+#		GOSUB name=numMostTypes
+#		GOSUB name=numMostCountries
+#		GOSUB name=numMostStates
+#		GOSUB name=numMostCounties
+#	ENDIF
+#	IF $numFastest
+#		GOSUB Name=numFastest100
+#		GOSUB Name=numFastest1000
+#	ENDIF
+#	IF $numDistance
+#		GOSUB Name=numTotalDistance
+#	ENDIF
+
+	$text7 = ""
+	IF $numClosest 
+		GOSUB Name=numClosest
+	ENDIF
+	
+	$text7 = ""
+	IF $numExtremes
+		GOSUB name=numLatitude
+		$text7 = ""
+		GOSUB name=numLongitude
+	ENDIF
+	
+	$text7 = ""
+	IF $numCentroid
+		GOSUB name=numCenterOfMass
+	ENDIF
+	
+	$text7 = ""
+	IF $numOldest
+		GOSUB Name=numOldest
+	ENDIF
+	
+	$text7 = ""
+	
+#	IF $numArchived
+#		GOSUB Name=numArchived
+#	ENDIF
+#	IF $numFTF
+#		$_sql = "SELECT Enabled from OrderMenu WHERE Settings = $settings and ID='15'"
+#		$status = Sqlite("sql",$_sql,"")
+#		IF $status = "0"
+#			GOSUB Name=numFtf
+#		ENDIF
+#		GOSUB Name=numMostFTF
+#		GOSUB Name=numConsecFTF
+#	ENDIF
+#	IF $numLogs
+#		GOSUB name=numLogs
+#	ENDIF
+
+	$out = AddStr(2,"add","</table>" + $CR)
+ENDSUB #Numbers
+
+BEGINSUB name=numClosest
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, Distance, URL, Country from $DB WHERE CacheType <>'L' and Exclude <> '1' ORDER BY Distance"
+	ELSE
+		$_sql = "SELECT Code, Name, Distance, URL, Country from $DB ORDER BY Distance"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	$text1 = "$LangNearest"
+	$tmpN = 1
+	GOSUB name=numClosestLine
+	$tmpN = $count
+	$text1 = "$LangFurthest"
+	GOSUB name=numClosestLine
+ENDSUB #numClosest
+
+BEGINSUB name=numClosestLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$Distance = NumToStr(Val(Extract($tmpS,";",3)))
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = $distunits
+	IF Val($Distance) < $Closest
+		$text2 = "$ShrunkName <a href='$Url'>$StripCode</a>"
+	ELSE
+		IF Val($Distance) < 0.1 AND $distunits = "Miles"
+			$Distance = NumToStr(Int(5280 * Val($distance)))
+			$tmpS = "feet"
+		ENDIF
+		IF Val($Distance) < 1 AND $distunits <> "Miles"
+			$Distance = NumToStr(Int(1000 * Val($distance)))
+			$tmpS = "metres"
+		ENDIF
+		$text2 = "<b>$Distance</b> $tmpS, $ShrunkName <a href='$Url'>$StripCode</a>"
+	ENDIF
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numClosestLine
+
+BEGINSUB Name=numTotals
+	$_sql = "SELECT lDate, count(code) from AllFinds GROUP BY lDate ORDER BY lDate"
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	$tmpS = list("sql","item","1")
+	$firstdate = SqlToDate(Extract($tmpS,";",1))
+	$tmpS = list("sql","item","$count")
+	$lastdate = SqlToDate(Extract($tmpS,";",1))
+	$CachingDays = $count
+	$TotalDays = DateDiff($firstdate, $lastdate) + 1
+	$pc = 100 * $CachingDays / $TotalDays
+	$percent = left("$pc",4)
+	$text1=$Lang87
+	$text2="<b>$FindsWithDuplicates</b> $Lang57 <b>$CachingDays</b> $Lang58 <b>$TotalDays</b> $Lang59 ($percent %)"
+	GOSUB Name=NumbersLine
+	$perdayC = Alltrim(Str($FindsWithDuplicates / $CachingDays,5,2))
+	$perdayO = Alltrim(Str($FindsWithDuplicates / $TotalDays,5,2))
+	$perweek = Alltrim(Str(7 * $FindsWithDuplicates / $TotalDays,6,2))
+	$permonth = Alltrim(Str(30.44 * $FindsWithDuplicates / $TotalDays,6,2))
+	$text1=$Lang88
+	$text2="<b>$perdayC</b> $Lang60 <b>$perdayO</b>$Lang61 <b>$perweek</b>$Lang62 <b>$permonth</b>$Lang63"
+	GOSUB Name=NumbersLine
+ENDSUB #numTotals
+
+BEGINSUB Name=num365
+	$_sql = "SELECT count(*) from AllFinds where ldate > date('$Today','-1 year')"
+	$count = Val(Sqlite("sql",$_sql))
+	IF $count <= 0 
+		EXITSUB
+	ENDIF
+	$_sql = "SELECT count(distinct ldate) from AllFinds where ldate > date('$Today','-1 year')"
+	$CachingDays = Val(Sqlite("sql",$_sql))
+	$pc = 100 * $CachingDays / 365
+	$percent = left("$pc",4)
+	$text1=$Lang147
+	$text2="<b>$count</b> $Lang57 <b>$CachingDays</b> $Lang58 <b>365</b> $Lang59 ($percent %)"
+	GOSUB Name=NumbersLine
+	$perdayC = Alltrim(Str($count / $CachingDays,5,2))
+	$perdayO = Alltrim(Str($count / 365,5,2))
+	$perweek = Alltrim(Str(7 * $count / 365,6,2))
+	$permonth = Alltrim(Str(30.44 * $count / 365,6,2))
+	$text1=$Lang148
+	$text2="<b>$perdayC</b> $Lang60 <b>$perdayO</b>$Lang61 <b>$perweek</b>$Lang62 <b>$permonth</b>$Lang63"
+	GOSUB Name=NumbersLine
+ENDSUB #num365
+
+BEGINSUB Name=numArchived
+	$_sql = "Select count(DISTINCT Code) from $DB WHERE Status='Archived'"
+	$tmpN = Val(Sqlite("sql",$_sql))
+
+	IF $tmpN >0
+		$_sql = "Select count(DISTINCT Code) from $DB  "
+		$pc = 100 * $tmpN / Val(Sqlite("sql",$_sql))
+		$percent = left("$pc",4)
+		$text1 = "$Lang72"
+			$text1=Replace("found","placed",$text1)	
+		$text2 = "<b>$tmpN</b> ($percent %)"
+		GOSUB Name=NumbersLine
+	ENDIF
+
+ENDSUB #numArchived
+
+BEGINSUB name=numCenterOfMass
+	
+#	# Set up the Elevation SQL table
+#	$tmpS = $_Install + "\macros\elevationdataSQL.db3"
+#	$tmpS = SqlQuote($tmpS)
+#		
+#	$_sql = "ATTACH $tmpS AS elevationdataSQL"
+#	$status = Sqlite("sql",$_sql)
+#	
+#	$dbs = SqlQuote($db)
+	
+	# Exclude locationless?
+	IF $Excludelocationless
+		$note = "<i>$Lang38a</i>"
+		#$Locationless = " WHERE database = '$db' AND Cachetype <>'L' AND Exclude <> '1'"
+		$Locationless = " WHERE Cachetype <>'L' AND Exclude <> '1'"
+	ELSE
+		$note = ""
+		#$Locationless = "WHERE database = '$db'"
+		$Locationless = ""
+	ENDIF
+	
+	# Parameters for WGS84 ellipsoid
+	# $ecc is eccentricity squared
+	$axis = 6378137
+	$ecc = 0.00669438038
+	
+	$x = 0
+	$y = 0
+	$z = 0
+	$pi = 3.14159265359
+	
+	IF $_Version >= "7.5.3.12"
+		# x
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (COS(RADIANS(latitude + 0)) * SIN(RADIANS(longitude + 0)))) FROM $DB $Locationless"
+		#$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (COS(RADIANS(latitude + 0)) * SIN(RADIANS(longitude + 0)))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $locationless"
+		$x = Val(Sqlite("sql",$_sql))
+		
+		# y
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (-1 * COS(RADIANS(latitude + 0)) * COS(RADIANS(longitude + 0)))) FROM $DB $Locationless"
+		#$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (-1 * COS(RADIANS(latitude + 0)) * COS(RADIANS(longitude + 0)))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $Locationless"
+		$y = Val(Sqlite("sql",$_sql))
+
+		# z
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (1 - $ecc) * SIN(RADIANS(latitude + 0))) FROM $DB $Locationless"
+		#$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (1 - $ecc) * SIN(RADIANS(latitude + 0))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $Locationless"
+		$z = Val(Sqlite("sql",$_sql))
+
+	ELSE
+		
+		$_sql = "SELECT Latitude, Longitude from $DB $Locationless"
+		$work = Sqlite("sql",$_sql)
+		$list = List("sql","replace",$work)
+		$ThisRecord = 1
+		$count = $_SqlRows
+		
+		WHILE $ThisRecord <= $count
+			IF Frac($ThisRecord/10) = 0
+				SHOWSTATUS msg="$Lang120, $ThisRecord" Width=350
+			ENDIF
+
+			$tmpS = List("sql","item","$ThisRecord")
+			$Latitude = Extract($tmpS,";",1)
+			$Longitude = Extract($tmpS,";",2)
+
+			# Convert to Decimal degrees then to Radians
+			#  	$tmpS = $Latitude + " " + $Longitude
+			#  	$tmpS = GCalc($tmpS,"FormatDegrees")
+			#  	$LatitudeN = Val(Extract($tmpS,";",1))
+			#  	$LongitudeN = Val(Extract($tmpS,";",2))
+			$LatitudeN = Val($Latitude) * $pi / 180
+			$LongitudeN = Val($Longitude) * $pi / 180
+
+			# Calculate 3D cartesian coordinates and average them
+			$v = $axis / (Sqrt(1-($ecc * Sin($LatitudeN) * Sin($LatitudeN))))
+			$x = $x + $v * (Cos($LatitudeN) * Sin($LongitudeN))
+			$y = $y + $v * ( -1 * Cos($LatitudeN) * Cos($LongitudeN))
+			$z = $z + $v * (1 - $ecc) * Sin($LatitudeN)
+
+			$ThisRecord = $ThisRecord + 1
+		ENDWHILE
+		$x = $x/$count
+		$y = $y/$count
+		$z = $z/$count
+
+	ENDIF
+
+
+	# Project the average point back up to the surface of the WGS84 Ellipsoid
+	# Note this requires iteration
+
+	# Longitude = ArcTan2(x, -y)
+	$y = -$y
+
+	$longitudeN = ArcTan2($x,$y)
+
+	# Latitude = ArcTan2(z, sqrt(x*x + y*y))
+
+	$y = Sqrt(Sqr($x) + Sqr($y))
+
+	$latitudeN = ArcTan2($z,($y * (1 - $ecc)))
+	$v = $axis / (Sqrt(1-($ecc * Sin($LatitudeN) * Sin($LatitudeN))))
+	$errvalue = 1
+	$tmpN = 0
+
+	$tmpM = 0
+	WHILE $errvalue > 0.000001 AND $tmpM <5
+		$tmpM = $tmpM + 1
+		$x = ($ecc * $v * Sin($LatitudeN))
+		$tmpN = ArcTan2($z + $x, $y)
+		$errvalue = Abs($tmpN - $LatitudeN)
+		$LatitudeN = $tmpN
+	ENDWHILE
+
+	# Convert from radians to degrees and format as decimal minutes
+
+	$latitudeN = 180 * $latitudeN / $pi
+	$longitudeN = 180 * $longitudeN / $pi
+
+	$latitude = NumToStr($latitudeN)
+	$longitude = NumToStr($longitudeN)
+
+	# Deal with commas as decimal separator
+	$latitude = Replace(",",".",$latitude,TRUE)
+	$longitude = Replace(",",".",$longitude,TRUE)
+
+	$last_lat = $latitude
+	$last_lon = $longitude
+
+	$tmpS = $Latitude + " " + $Longitude
+	$tmpS = GCalc($tmpS,"FormatMinutes")
+	$Latitude = Extract($tmpS,";",1)
+	$Longitude = Extract($tmpS,";",2)
+	
+	# Calculate distance from current home position
+	$text8 = SysInfo("gsakini;LastCenter;Lat")
+	$text9 = SysInfo("gsakini;LastCenter;Lon")
+	
+	$tmpS1 = $text8 + " " + $text9 + ";" + $last_lat + " " + $last_lon
+	$tmpS1 = GCalc($tmpS1,"CalcDistance")
+	$tmpN = Val($tmpS1)
+	IF $tmpN < 10
+		$tmpN = Round($tmpN,1)
+	ELSE
+		$tmpN = Int($tmpN)
+	ENDIF
+	
+	# Get country or ocean
+	
+	$url = "http://ws.geonames.org/countrySubdivision?lat=" + $last_lat + "&lng=" + $last_lon
+	SHOWSTATUS msg="Getting country information for centroid" Width=350 Title=""
+	$data = GetUrl($url,"")
+	$text3 = UTF8(RegExSub("<countryName>(.*?)</countryName>",$data,1,1),"d")
+	$text4 = UTF8(RegExSub("<adminName1>(.*?)</adminName1>",$data,1,1),"d")
+	$text5 = UTF8(RegExSub("<countryCode>(.*?)</countryCode>",$data,1,1),"d")
+	$text7 = ""
+	
+	# no result, try an ocean
+	IF Len($text3) = 0
+		$url = "http://ws.geonames.org/ocean?lat=" + $last_lat + "&lng=" + $last_lon
+		SHOWSTATUS msg="Getting ocean information for centroid" Width=350 Title=""
+		$data = GetUrl($url,"")
+		$text3 = UTF8(RegExSub("<name>(.*?)</name>",$data,1,1),"d")
+	ENDIF
+	
+	IF Len($text4) >0
+		$text4 = "Centroid $Lang185 $tmpN $distunits $Lang186: $text4,"
+	ELSE
+		IF Len($Text3) > 0
+			$text4 = "Centroid $Lang185 $tmpN $distunits $Lang186:"
+		ENDIF
+	ENDIF
+	
+	IF Len($text5) > 0
+		$text7 = " <img align ='top' vspace='1'  alt='$text3' title='$text3' src='" + $ImageURL + "flags/" + $text5 + ".gif'/>"
+	ENDIF
+
+#	$tmpS = " <a target='_blank' href='http://maps.google.com/maps?q=Centroid@" + $last_lat + "," + $last_lon + "&z=8'><img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>"
+	
+	$tmpS = " <a href ='#' onclick=" + Quote("document.getElementById('centPlacedmap').style.display = (getElementById('centPlacedmap').style.display != 'none' ? 'none' : '');return false;") + "><img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>" + $CR
+	$text2 = "<b>$Latitude $Longitude</b> $note " + $tmpS + "<br />$text4 $text3" + $CR
+	
+#	$text2 = "<b>$Latitude $Longitude</b> $note<br />" + $tmpS + " $text4 $text3"
+
+	$text1 = "<a target='_blank' href='http://en.wikipedia.org/wiki/Centroid'>" + $Lang120 + "</a>"
+	GOSUB Name=NumbersLine
+	
+	$out = AddStr(2,"add","<tr id='centPlacedmap' style='display:none'><td colspan='2'><center><div style='width:600px; border:2px outset blue'><a target='_blank' href='http://maps.google.com/maps?q=Centroid@" + $last_lat + "," + $last_lon + "&z=8'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?center=$last_lat,$last_lon&zoom=8&size=600x400&markers=color:yellow|label:C|$last_lat,$last_lon&sensor=false'></a></div></center></td></tr>" + $CR)
+
+#	$_sql = "DETACH elevationdataSQL"
+#	$status = Sqlite("sql",$_sql)
+
+ENDSUB  #CenterOfMass
+
+BEGINSUB name=numLogs
+	$_sql = "SELECT Sum(LogLength) from AllFinds"
+	$num = Val(Sqlite("sql",$_sql))
+	$_sql = "SELECT Sum(Length(lText)) from AllFinds"
+	$tmpN = Val(Sqlite("sql",$_sql))
+	$tmpS = NumToStr(Int($num/$FindsWithDuplicates))
+	$text1 = $Lang123
+	$text2 = "$Lang164: <b>$num</b>" + ", " + $Lang124 + ": <b>$tmpS</b>, ($Lang165: <b>$tmpN</b>)<br />"
+	$_sql = "SELECT Code, lLogID, LogLength from AllFinds WHERE lLogID <> '0' ORDER BY LogLength DESC LIMIT 1"
+	$tmpS = Sqlite("sql",$_sql)
+	$Code = Extract($tmpS,";",1)
+	$Log = Extract($tmpS,";",2)
+	$tmpS = Extract($tmpS,";",3)
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	
+	BEGINCASE
+			CASE Left($StripCode,2)="GC"
+				$text2 = $text2 + $Lang125 + ": <a href='http://www.geocaching.com/seek/log.aspx?LID=$Log'>$StripCode</a> <b>$tmpS</b>, "
+			CASE Left($StripCode,2)="GA"
+				$text2 = $text2 + $Lang125 + ": <a href='http://geocaching.com.au/log/$Log'>$StripCode</a> <b>$tmpS</b>, "
+			OTHERWISE
+				$text2 = $text2 + $Lang125 + ": $StripCode <b>$tmpS</b>, "
+	ENDCASE
+	
+	
+	
+	$_sql = "SELECT Code, lLogID, LogLength from AllFinds WHERE lLogID <> '0' ORDER BY LogLength ASC LIMIT 1"
+	$tmpS = Sqlite("sql",$_sql)
+	$Code = Extract($tmpS,";",1)
+	$Log = Extract($tmpS,";",2)
+	$tmpS = Extract($tmpS,";",3)
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	
+	BEGINCASE
+			CASE Left($StripCode,2)="GC"
+				$text2 = $text2 + $Lang126 + ": <a href='http://www.geocaching.com/seek/log.aspx?LID=$Log'>$StripCode</a> <b>$tmpS</b>"
+			CASE Left($StripCode,2)="GA"
+				$text2 = $text2 + $Lang126 + ": <a href='http://geocaching.com.au/log/$Log'>$StripCode</a> <b>$tmpS</b>"
+			OTHERWISE
+				$text2 = $text2 + $Lang126 + ": $StripCode <b>$tmpS</b>"
+	ENDCASE
+	
+	
+	GOSUB Name=NumbersLine
+ENDSUB #numLogs
+
+BEGINSUB name=numOldest
+	$_sql = "SELECT Code, Name, Age, Placed, URL, Type, Country from $DB ORDER BY Placed"
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+
+	$tmpN = $count
+	$tmpS = list("sql","item","$tmpN")
+#	$C_FoundDate = SqlToDate(Extract($tmpS,";",3))
+#	$C_PlacedDate = SqlToDate(Extract($tmpS,";",4))
+
+	# Check if the placed date has been changed (as in a repeating event)
+#	WHILE ($C_FoundDate < $C_PlacedDate) AND $tmpN>=1
+#		$tmpN = $tmpN -1
+#		$tmpS = list("sql","item","$tmpN")
+#		$C_FoundDate = SqlToDate(Extract($tmpS,";",3))
+#		$C_PlacedDate = SqlToDate(Extract($tmpS,";",4))
+#	ENDWHILE
+
+	$text1 = "$LangNewest"
+	GOSUB name=numOldestLine
+	
+	$tmpN = 1
+	$text1 = "$LangOldest"
+	GOSUB name=numOldestLine
+ENDSUB #numOldest
+
+BEGINSUB name=numOldestLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$URL = Extract($tmpS,";",5)
+	$C_PlacedDate = SqlToDate(Extract($tmpS,";",4))
+	$FullName = Extract($tmpS,";",7)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	# Format the date to users standard format for display
+	$tmpS = DateFormat($C_PlacedDate)
+	IF Len($Name) > 44
+		$ShrunkName = Left($Name,42) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$text2 = "<b>$tmpS</b>, $ShrunkName <a href='$Url'>$StripCode</a>"
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numOldestLine
+
+BEGINSUB Name=DiffTerr
+	# Initialise Variables
+	$rating  = 1
+	$dif     = ""
+	$terr    = ""
+	$maxdif  = 0
+	$maxterr = 0
+	WHILE $rating <=5
+		# Deal with use of "," as separator
+		$text = replace(",",".",numtoStr($rating),true)
+		SHOWSTATUS msg="$LangStatus17 $text" Width=350
+		$_sql = "Select count(Code) from $DB WHERE Difficulty=$rating"
+		$num = Val(Sqlite("sql",$_sql))
+		IF $num>$maxdif
+			$maxdif = $num
+		ENDIF
+		$dif = $dif + "$text,$num;"
+		$_sql = "Select count(Code) from $DB WHERE Terrain=$rating"
+		$num = Val(Sqlite("sql",$_sql))
+		IF $num>$maxterr
+			$maxterr = $num
+		ENDIF
+		$terr = $terr + "$text,$num;"
+		$rating=$rating + 0.5
+	ENDWHILE
+	# Initialise Section variables
+	$colspan = 2
+	# Force Diff and Terr to be next to each other, they like it that way ;)
+	$column = 1
+	$text=$LangHeaderDifficulty
+	GOSUB Name=SectionHead
+	$result=$dif
+	$maxnum=$maxdif
+	$note=""
+	$maxwidth = 150
+		$_sql = "Select count(DISTINCT Code) from $DB  "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+
+
+#	$totalpercent = $FindsWithDuplicates
+	IF $PieCharts
+		GOSUB Name=Table2Pi
+	ELSE
+		GOSUB Name=Table2Col
+	ENDIF
+	# Initialise Section variables
+	$colspan = 2
+	$text=$LangHeaderTerrain
+	GOSUB Name=SectionHead
+	$result=$terr
+	$maxnum=$maxterr
+	$note=""
+	$maxwidth = 150
+			$_sql = "Select count(DISTINCT Code) from $DB  "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+#	$totalpercent = $FindsWithDuplicates
+	IF $PieCharts
+		GOSUB Name=Table2Pi
+	ELSE
+		GOSUB Name=Table2Col
+	ENDIF
+
+	
+	
+	
+#	IF $ShowDiffTerrChart
+#		GOSUB  Name=DiffTerrChart
+#	ENDIF
+ENDSUB #DiffTerr
+
+BEGINSUB Name=DiffTerrChart
+	# Initialise Variables
+	$terrain  = 1
+	$difficulty = 1
+	$diffterr     = ""
+	$maxdiffterr  = 0
+	$diffterr = "1,1.5,2,2.5,3,3.5,4,4.5,5,;"
+	$count = 0
+	
+	$_sql = "Select count(Code) as c from $DB group by difficulty order by c desc limit 1"
+	$maxdif = Val(Sqlite("sql",$_sql))
+	
+	$_sql = "Select count(Code) as c from $DB group by terrain order by c desc limit 1"
+	$maxterr = Val(Sqlite("sql",$_sql))
+
+	WHILE $difficulty <=5
+		WHILE $terrain <=5
+			SHOWSTATUS msg="$LangStatus18 $difficulty/$terrain" Width=350
+			$_sql = "Select count(Code) from $DB WHERE Difficulty=$difficulty and Terrain=$terrain"
+			$num = Val(Sqlite("sql",$_sql))
+			$diffterr = $diffterr + "$num,"
+			IF $num >0
+				$count = $count + 1
+			ENDIF
+			IF $num>$maxdiffterr
+				$maxdiffterr = $num
+			ENDIF
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		$diffterr = $diffterr + ";"
+		$difficulty = $difficulty + 0.5
+		$terrain  = 1
+	ENDWHILE
+
+	$colspan = 1
+	$text=$LangHeaderDiffTerrChart
+	GOSUB Name=SectionHead
+	$out = AddStr(2,"add","<table width='$maxtablewidth' style='text-align: left;'>" + $CR)
+
+	$cellwidth = Int($maxtablewidth/12.5)
+	$headerwidth = $maxtablewidth - (11 * $cellwidth)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$terrain  = 1
+	$difficulty = 1
+
+	# Title row
+
+	$out = AddStr(2,"add","<tr><td style='$stTab2cHead'></td><td style='$stTab2cHead' colspan='10' align='center'><B>$Lang28b</B></td></tr>" + $CR)
+	$out = AddStr(2,"add","<tr><td style='$stTab2cHead' rowspan='10' width='$headerwidth' valign='middle' align='center'><B>$Lang28a</B></td>" + $CR)
+
+	$out = AddStr(2,"add","<td style='$st2c1'></td>")
+	# Get one data line
+	$data = Extract($diffterr, ";" , $indexd)
+	WHILE $indext < 9
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$out = AddStr(2,"add","<td style='$st2c1' width='$cellwidth' align='center'><B>$text</B></td>" + $CR)
+	ENDWHILE
+	# Row Total
+	$out = AddStr(2,"add","<td width='$cellwidth'></td>" + $CR)
+	$out = AddStr(2,"add","</tr>" + $CR)
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 10
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($diffterr, ";" , $indexd)
+		$tindexd = replace(",",".",numtoStr($difficulty),true)
+		$out = AddStr(2,"add","<tr><td style='$st2c1'><b> $tindexd</b></td>" + $CR)
+		$tmpN = 0
+		WHILE $indext < 9
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputChartLine
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		IF $num >= $maxdif
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		$out = AddStr(2,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$indext = 0
+		$out = AddStr(2,"add","</tr>" + $CR)
+		$difficulty = $difficulty + 0.5
+		$terrain  = 1
+	ENDWHILE
+
+	$out = AddStr(2,"add","<tr><td></td><td></td>" + $CR)
+	$rating  = 1
+	# Column Totals
+	WHILE $rating <=5
+		# Deal with use of "," as separator
+		#$trating = replace(",",".",numtoStr($rating),true)
+		$_sql = "Select count(Code) from $DB WHERE Terrain=$rating"
+		$num = Val(Sqlite("sql",$_sql))
+		$text = NumToStr($num)
+		IF $num >= $maxterr
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		$out = AddStr(2,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$rating=$rating + 0.5
+	ENDWHILE
+
+	$out = AddStr(2,"add","</table>" + $CR + "<br />")
+
+	# Count caches where difficulty/terrain is greater or equal to 3 as 'Hard' caches
+	$_sql = "Select count(Code) from $DB WHERE Terrain >=3 OR Difficulty >=3"
+	$num = Val(Sqlite("sql",$_sql))
+	$_sql = "Select count(DISTINCT Code) from $DB  "
+	$FindsWithDuplicates= Val(Sqlite("sql",$_sql))
+	$tmpN = Int(1000*$num/$FindsWithDuplicates)/10
+	$out = AddStr(2,"add","<i><b>$count</b>" + " $LangT5 " + $LangDiffTerrCombinations + " <b>81</b> " + "<br /><b>$num</b> ($tmpN" + "%) " + $LangDiffTerrRated3OrGreater + "</i>" + $CR)
+    $out = AddStr(2,"add","<br />" + $CR)  
+
+ENDSUB #DiffTerrChart
+
+BEGINSUB Name=Container
+	# Initialise Section variables
+	$colspan = 2
+	$text = $LangStatus26
+	SHOWSTATUS msg="$text" Width=350
+	GOSUB Name=SectionHead
+	$Cont = "Large;Micro;Not chosen;Other;Regular;Small;Virtual"
+	$NumItems = RegExCount(";",$Cont )
+	$index = 0
+	$maxnum =0
+	$result = ""
+	WHILE $index <= $NumItems
+		$index = $index + 1
+		$text = Extract($Cont, ";" , $Index)
+		SHOWSTATUS msg="$LangStatus27 $text" Width=350
+		$_sql = "SELECT count(Code) from AllFinds WHERE Container='$text'"
+		$num = Val(Sqlite("sql",$_sql))
+		IF $num > $maxnum
+			$maxnum = $num
+		ENDIF
+		$result = $result + "$text,$num;"
+	ENDWHILE
+	GOSUB Name=SortResult
+	$note = ""
+	$maxwidth = 150
+	$totalpercent = $FindsWithDuplicates
+	IF $PieCharts
+		GOSUB Name=Table2Pi
+	ELSE
+		GOSUB Name=Table2Col
+	ENDIF
+ENDSUB #Container
+
+BEGINSUB Name=Table2Pi
+
+	# This subroutine writes a fixed format pie chart, taking these inputs:
+	# $result : semicolon delimited record pairs, each record is a 'text'
+	#           and a 'number' separated by a comma
+	# $maxnum : The largest number in the dataset
+	# $note   : Any note that should appear beneath the table
+	# $totalpercent : The total that percentage is based on, normally $FindsWithDuplicates
+	#
+
+	# How many records?
+	$NumItems = RegExCount(";",$result)
+	# Go through the data, one record at a time
+	$index = 0
+
+	$tmpS = RegExSub("background:\s*?#(.*?);",$stMainDiv,1,1)
+	$out = AddStr(2,"add","<img src='https://chart.googleapis.com/chart?cht=p3&chs=370x120&chf=bg,s,$tmpS")
+	$text1 = "&chd=t:"
+	$text2 = "&chl="
+	$text3 = "&chco="
+	$text4 = "0000ff,ff9900,00ff00,ffff00,ff00ff,00ffff,ff8080,80ff80,8080ff"
+	$text4 = "0000f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0,2020f0,8080f0"
+
+	WHILE $index < $NumItems
+		$index = $index + 1
+		# Get one data element
+		$data = Extract($result, ";" , $Index)
+		$text = Extract($data, ",", 1)
+		$num  = Val(Extract($data, ",", 2))
+		# Replace ampersands with &amp; etc to keep the HTML sweet
+		$text = Replace("&","&amp;",$text,true)
+		$text = Replace("%lt","&lt;",$text,true)
+		$text = Replace("%gt","&gt;",$text,true)
+		# Calculate the percentage of this record to one dp
+		# $pc = Int(($num/$totalpercent) * 1000)/10
+		# $percent = "$pc"
+		
+		$pc = ($num/$totalpercent) * 100
+		$percent = left("$pc",4)
+		
+		$percent = Replace(",",".",$percent,TRUE)
+		$text1 = $text1 + $percent
+		$text2 = $text2 + $text + " ($percent%)"
+		IF $num = $maxnum
+			$text3 = $text3 + "ff0000"
+		ELSE
+			$text3 = $text3 + Extract($text4,",",$index)
+		ENDIF
+		IF $index <> $NumItems
+			$text1 = $text1 + ","
+			$text2 = $text2 + "|"
+			$text3 = $text3 + ","
+		ENDIF
+	ENDWHILE
+
+	$out = AddStr(2,"add", $text1 + $text2 + $text3 + "' />")
+
+	IF $note <> ""
+		$out = AddStr(2,"add","<span style='$stSmall'>$note</span>" + $CR)
+	ENDIF
+
+ENDSUB
+
+BEGINSUB Name=Table2Col
+	# This subroutine writes a fixed format stats table, taking these inputs:
+	# $result : semicolon delimited record pairs, each record is a 'text'
+	#           and a 'number' separated by a comma
+	# $maxnum : The largest number in the dataset
+	# $note   : Any note that should appear beneath the table
+	# $totalpercent : The total that percentage is based on, nomrally $FindsWithDuplicates
+	#
+	# NB. It would be 'nicer' to calculate $maxnum in this routine, but there
+	# is a significant cycle saving by doing it in the stats generating routines
+	# They've already been through the data once after all!
+	# Open the table and write the header line to the output variable
+	$out = AddStr(2,"add", "<!--  Table2Col -->" + $CR)
+	$out = AddStr(2,"add","<table border='0' summary='' width='365' style='text-align: left;'>" + $CR)
+	$out = AddStr(2,"add","<tr><td style='$stTab2cHead'>&nbsp;</td><td style='$stTab2cHead'><b> $Lang05 </b></td>")
+	$out = AddStr(2,"add","<td style='$stTab2cHead'><b> $Lang06 </b></td><td style='$stTab2cHead'>&nbsp;</td></tr>" + $CR)
+	# How many records?
+	$NumItems = RegExCount(";",$result)
+	# Go through the data, one record at a time
+	$index = 0
+	WHILE $index < $NumItems
+		$index = $index + 1
+		# Get one data element
+		$data = Extract($result, ";" , $Index)
+		$text = Extract($data, ",", 1)
+		$num  = Val(Extract($data, ",", 2))
+		# Replace ampersands with &amp; etc to keep the HTML sweet
+		$text = Replace("&","&amp;",$text,true)
+		$text = Replace("%lt","&lt;",$text,true)
+		$text = Replace("%gt","&gt;",$text,true)
+		# Calculate the percentage of this record
+		$pc = ($num/$totalpercent) * 100
+		$percent = left("$pc",4)
+		# Call the subroutine to write a row out
+		GOSUB Name=Table2ColRow
+	ENDWHILE
+	# write table footer
+	$out = AddStr(2,"add","</table>" + $CR)
+	IF $note <> ""
+		$out = AddStr(2,"add","<span style='$stSmall'>$note</span>" + $CR)
+	ENDIF
+
+ENDSUB # Table2Col
+BEGINSUB Name=Open2Col
+	# Open the table for two column output
+	$out = AddStr(2,"add","<!-- Open2Col -->" + $CR)
+	$out = AddStr(2,"add", "<center><table border='0'>" + $CR)
+	$out = AddStr(2,"add","<tr>" + $CR)
+	$out = AddStr(2,"add","<td valign='top' align='center'>" + $CR)
+ENDSUB #Open2Col
+BEGINSUB Name=Mid2Col
+	# Add the HTML for between two, two column sections
+	$out = AddStr(2,"add","<!-- Mid2Col -->" + $CR)
+	$out = AddStr(2,"add","</td>" + $CR)
+	$out = AddStr(2,"add", "<td  valign='top' align='center'>" + $CR)
+ENDSUB #Mid2Col
+BEGINSUB Name=Close2Col
+	# Finish two column output
+	$out = AddStr(2,"add", "<!-- Close2Col -->" + $CR)
+	$out = AddStr(2,"add","</td></tr></table></center>" + $CR)
+ENDSUB #Close2col
+BEGINSUB Name=Table2ColRow
+	# Write a row in the standard half width layout
+	# If this is the largest data element, make the bar red and highlight it
+	IF $num = $maxnum
+		$style1 = $st2cHi1
+		$style2 = $st2cHi2
+	ELSE
+		$style1 = $st2c1
+		$style2 = $st2c2
+	ENDIF
+	# Write the row data to the output variable
+	$out = AddStr(2,"add","<!-- Table2Col Row-->" + $CR)
+	$out = AddStr(2,"add","<tr><td style='$style1'>$text</td>" + $CR)
+	$out = AddStr(2,"add","<td style='$style2'>$num</td>" + $CR)
+	$out = AddStr(2,"add","<td style='$style2'>$percent %</td>" + $CR)
+	$out = AddStr(2,"add","<td style='$style2' width='$maxwidth'>" + $CR)
+
+	IF $maxnum = 0
+		$maxnum = 1
+	ENDIF
+
+	$width = Int($maxwidth * $num / $maxnum)
+
+	IF $width=0 AND $num >0
+		$width = 1
+	ENDIF
+
+	IF $width>0
+		GOSUB Name=HBar
+	ENDIF
+	$out = AddStr(2,"add","</td></tr>" + $CR)
+ENDSUB #Table2ColRow
+
+BEGINSUB Name=HBar
+	# Output the horizontal bar for the 'graph' display
+
+	IF $UseImageBars
+		IF $num = $maxnum
+			$image = $imagepath + $ImageRH
+			$out = AddStr(2,"add","<img src='$image' border='0' width='$width' style='float:left;'")
+		ELSE
+			$image = $imagepath + $ImageBH
+			$out = AddStr(2,"add","<img src='$image' border='0' width='$width' style='float:left;'")
+		ENDIF
+		$out = AddStr(2,"add","height='15' alt='$num' title='$num' />" + $CR)
+	ELSE
+		IF $UseHeatBars
+			$heatnum = $num
+			$heatmax = $maxnum
+			GOSUB Name=GetHeatColor
+			$out = AddStr(2,"add","<span title='$num' style='display:block; background: #$HeatColor; width:$width" + "px;'>&nbsp;</span>")
+		ELSE
+			IF $num = $maxnum
+				$out = AddStr(2,"add","<span title='$num' style='display:block; background: $stRedBar; width:$width" + "px;'>&nbsp;</span>")
+			ELSE
+				$out = AddStr(2,"add","<span title='$num' style='display:block; background: $stBlueBar; width:$width" + "px;'>&nbsp;</span>")
+			ENDIF
+		ENDIF
+	ENDIF
+ENDSUB #HBar
+
+BEGINSUB Name=GetHeatColor
+	$begRed = 20
+	$redChange = 180
+	$begGreen = 50
+	$greenChange = 150
+	$begBlue = 0
+	$blueChange = 0
+
+	IF $heatmax > 0 AND $heatnum > 0
+		# Use log scale to enhance color differences
+		IF $heatmax = 1 AND $heatnum = 1
+			$heatx = 1
+		ELSE
+			$heatx = Log($heatmax,$heatnum)
+		ENDIF
+		
+		$heaty = 1-($heatnum/$heatmax)
+		# Scale so one color is always at full intensity
+		IF $heatx >= $heaty
+			$heaty = $heaty/$heatx
+			$heatx = 1
+		ELSE
+			$heatx = $heatx/$heaty
+			$heaty = 1
+		ENDIF
+	ELSE
+		$heatx = 0
+		$heaty = 0
+	ENDIF
+	$red=$begRed+($redChange*$heatx)
+	$dec=$red
+	GOSUB Name=dectohex
+	$redhex=$hex
+	$green=$begGreen+($greenChange*$heaty)
+	$dec=$green
+	GOSUB Name=dectohex
+	$greenhex=$hex
+	$blue=$begBlue+($blueChange*$heatx)
+	$dec=$blue
+	GOSUB Name=dectohex
+	$bluehex=$hex
+	$heatcolor = $redhex + $greenhex + $bluehex
+	$heatstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+
+ENDSUB #GetHeatColor
+
+BEGINSUB Name=OutputChartLine
+	$bold = ""
+	$boldoff = ""
+	$cellstyle = $st2c2
+	
+	$begRed = 20
+	$redChange = 180
+	$begGreen = 50
+	$greenChange = 150
+	$begBlue = 0
+	$blueChange = 0
+
+	IF $num > 0
+		IF $num = $maxdiffterr
+			$cellstyle = $stDiffTerrhi
+			$bold = "<b>"
+			$boldoff = "</b>"
+		ELSE
+			
+			# Use heat map shading
+			IF $UseHeatMap
+				IF $maxdiffterr > 0
+					# Use log scale to enhance color differences
+					IF $maxdiffterr = 1 AND $num = 1
+						$x = 1
+					ELSE
+						$x = Log($maxdiffterr,$num)
+					ENDIF
+					$y = 1-($num/$maxdiffterr)
+					# Scale so one color is always at full intensity
+					IF $x >= $y
+						$y = $y/$x
+						$x = 1
+					ELSE
+						$x = $x/$y
+						$y = 1
+					ENDIF
+				ENDIF
+				$cellstyle = $stDiffTerr
+				$red=$begRed+($redChange*$x)
+				$dec=$red
+				GOSUB Name=dectohex
+				$redhex=$hex
+				$green=$begGreen+($greenChange*$y)
+				$dec=$green
+				GOSUB Name=dectohex
+				$greenhex=$hex
+				$blue=$begBlue+($blueChange*$x)
+				$dec=$blue
+				GOSUB Name=dectohex
+				$bluehex=$hex
+				$cellstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+			ELSE
+				$cellstyle = $stDiffTerr
+			ENDIF
+					
+		ENDIF
+	ELSE
+		$text = " "
+	ENDIF
+	IF $indext = 1
+		$out = AddStr(2,"add","    <td style='$cellstyle' width='$cellwidth' align='center'>$bold$text$boldoff</td>" + $CR)
+	ELSE
+		$out = AddStr(2,"add","    <td style='$cellstyle' align='center'>$bold$text$boldoff</td>" + $CR)
+	ENDIF
+ENDSUB
+
+BEGINSUB name=dectohex
+	# Takes input from 0-255 as a decimal number in $dec
+	# and returns it as a two character hex string in $hex
+
+	$hexlookup="0123456789ABCDEF"
+	$c_d = Int($dec)
+	$c_q = Int($c_d/16)
+	$c_r = $c_d - ($c_q*16)
+	$hex = SubStr($hexlookup,$c_q+1,1) + SubStr($hexlookup,$c_r+1,1)
+ENDSUB
+
+BEGINSUB Name=CacheType
+	# Initialise Section variables
+	$colspan = 2
+	$text = $LangHeaderCacheType
+	SHOWSTATUS msg="$text" Width=350
+	GOSUB Name=SectionHead
+	$Types = "A,B,C,E,G,L,M,R,T,U,V,W,Z,X,I,Y,F,H,D,P,O"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774,4738,other"
+	# 10 year is 3653, HQ is 3773, Lost and Found is 3774, O is other, P is Block Party
+	#TypeImageBase = "http://www.geocaching.com/images/wpttypes/sm/???.gif"
+	$Names = "Project Ape,Letterbox,CITO,Event,Benchmark,Locationless,Multi,Earth,Traditional,Mystery,Virtual,Webcam,Mega Event,GPS Adventures Exhibit,Wherigo,Waymark,10 Years! Event,Groundspeak HQ,Lost and Found Celebration,Block Party,Other"
+	$GCIDs = "tx=2555690d-b2bc-4b55-b5ac-0cb704c0b768,tx=4bdd8fb2-d7bc-453f-a9c5-968563b15d24,tx=57150806-bc1a-42d6-9cf0-538d171a2d22,tx=69eb8534-b718-4b35-ae3c-a856a55b0874,"
+	$GCIDs = $GCIDs + "benchmark,tx=8f6dd7bc-ff39-4997-bd2e-225a0d2adf9d,tx=a5f6d0ad-d2f2-4011-8c14-940a9ebf3c74,tx=c66f5cf3-9523-4549-b8dd-759cd2f18db8,tx=32bc9333-5e52-4957-b0f6-5a2c8fc7b257,"
+	$GCIDs = $GCIDs + "tx=40861821-1835-4e11-b666-8d41064d03fe,tx=294d4360-ac86-4c83-84dd-8113ef678d7e,tx=31d2ae3c-c358-4b5f-8dcd-2185bf472d3d,tx=69eb8535-b718-4b35-ae3c-a856a55b0874,"
+	$GCIDs = $GCIDs + "tx=72e69af2-7986-4990-afd9-bc16cbbb4ce3,tx=0544fa55-772d-4e5c-96a9-36a51ebcf5c9,waymark,tx=3ea6533d-bb52-42fe-b2d2-79a3424d4728,tx=416f2494-dc17-4b6a-9bab-1a29dd292d8c,tx=af820035-787a-47af-b52b-becc8b0c0c88,tx=bc2f3df2-1aab-4601-b2ff-b5091f6c02e3,other"
+	$GCIDPrefix = "<a href='http://www.geocaching.com/seek/nearest.aspx?"
+	$GCIDSuffix = "&ul=" + HttpEncode($user) + "'>"
+	# Make best guess at OwnerID
+	$_sql = "SELECT lOwnerid FROM (SELECT lOwnerid, Count(lOwnerID) AS c FROM Allfinds GROUP BY lownerid ORDER BY c DESC LIMIT 1)"
+	$OwnerID = Sqlite("sql",$_sql)
+
+	$NumItems = RegExCount(",",$Types )
+	$index = 0
+	$maxnum =0
+	$result = ""
+	WHILE $index <= $NumItems
+		$index = $index + 1
+		$thistype	= Extract($Types, "," , $Index)
+		$text	= Extract($Names, "," , $Index)
+		$text1 = $text
+		$GCID = Extract($GCIDs, ",", $Index)
+		$text2	= Extract($Typenums, "," , $Index)
+		BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $thistype = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $text2 + ".gif' />"
+		ENDCASE
+		
+		IF $thistype = "G"
+			$text = $TypeImage + " " + "<a href='http://www.geocaching.com/mark/nearest.aspx?a=" + $OwnerID + "'>" + $text + "</a>"
+		ELSE
+			$text = $TypeImage + " " + $GCIDPrefix + $GCID + $GCIDSuffix + $text + "</a>"
+		ENDIF	
+	
+		SHOWSTATUS msg="$LangStatus25 $text1" Width=350
+		$_sql = "SELECT count(Code) from $DB WHERE CacheType='$thistype'"
+		$num = Val(Sqlite("sql",$_sql))
+		# Include benchmarks here
+#		IF $thistype = "G"
+#			$num = $BenchmarkFinds
+#		ENDIF
+		# Include waymarks here
+#		IF $thistype = "Y"
+#			$num = $WaymarkFinds
+#		ENDIF
+		IF $num > $maxnum
+			$maxnum = $num
+		ENDIF
+		IF $num >0
+			$result = $result + "$text,$num;"
+		ENDIF
+	ENDWHILE
+	GOSUB Name=SortResult
+	$note = ""
+	$maxwidth = 120
+		$_sql = "Select count(DISTINCT Code) from $DB  "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+	GOSUB Name=Table2Col
+ENDSUB #Type
+
+
+BEGINSUB Name=SortResult
+	$numitems = RegExCount(";",$result)
+	$Sorted   = ""
+	WHILE $numitems > 0
+		#find largest
+		$index   = 1
+		$max     = 0
+		$maxitem = 1
+		$tmpS    = ""
+		WHILE $index<=$numitems
+			$key = Val(Extract(Extract($result,";",$index),",",2))
+			IF $key > $max
+				$max = $key
+				$maxitem = $index
+			ENDIF
+			$index=$index+1
+		ENDWHILE
+		$Sorted = $Sorted + Extract($result,";",$maxitem) + ";"
+		$index = 1
+		WHILE $index < $maxitem
+			$tmpS = $tmpS + Extract($result,";",$index) + ";"
+			$index=$index+1
+		ENDWHILE
+		$index = $maxitem + 1
+		WHILE $index <= $numitems
+			$tmpS = $tmpS + Extract($result,";",$index) + ";"
+			$index=$index+1
+		ENDWHILE
+		$result = $tmpS
+		$numitems = $numitems - 1
+	ENDWHILE
+	$result = $Sorted
+ENDSUB #SortResult
+
+
+BEGINSUB Name=Distance
+	# Initialise Section variables
+	$colspan = 2
+
+	$text = "$LangHeaderDistPlacementsBy $distunits $LangStatus22b"
+	GOSUB Name=SectionHead
+	SHOWSTATUS msg="$text" Width=350
+	$Bands = "5,10,15,20,25,50,100,250,500,999999999"
+	$NumItems = RegExCount(",",$Bands )
+	$index = 0
+	$last = 0
+	$maxnum = 0
+	$result = ""
+	WHILE $index <= $NumItems
+		$index = $index + 1
+		$this = Val(Extract($Bands, "," , $Index))
+		IF $ExcludeLocationless
+			$_sql = "SELECT count(Distance) from $DB WHERE Distance>=$last and Distance<$this and CacheType <>'L' and Exclude <> '1'"
+		ELSE
+			$_sql = "SELECT count(Distance) from $DB WHERE Distance>=$last and Distance<$this"
+		ENDIF
+		$num = Val(Sqlite("sql",$_sql))
+		#write data
+		IF $last = 0
+			$text = "%lt $this"
+		ELSE
+			IF $this = 999999999
+				$text = "%gt $last"
+			ELSE
+				$text = "$last - $this"
+			ENDIF
+		ENDIF
+		SHOWSTATUS msg="$LangStatus23a $distunits $LangStatus23b $text" Width=350
+		IF $num > $maxnum
+			$maxnum = $num
+		ENDIF
+		$result = $result + "$text,$num;"
+		$last = $this
+	ENDWHILE
+	IF $excludeLocationLess
+		$note="<i>$Lang38a</i>"
+	ELSE
+		$note=""
+	ENDIF
+	$maxwidth = 150
+		$_sql = "Select count(DISTINCT Code) from $DB  "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+	GOSUB Name=Table2Col
+	
+	IF $ExcludeLocationless
+		$_sql = "SELECT avg(Distance) from $DB WHERE Type <>'L' and Exclude <> '1'"
+	ELSE
+		$_sql = "SELECT avg(Distance) from $DB"
+	ENDIF
+	$num = Int(Val(Sqlite("sql",$_sql)))
+		
+	$out = AddStr(2,"add","<br /><i>$Lang131: <b>$num</b> $distunits</i>" + $CR)
+		
+ENDSUB #Distance
+
+BEGINSUB Name=OutputFoundChartLine
+	$bold = ""
+	$boldoff = ""
+	
+  BEGINCASE
+  CASE $Skipflag
+  	$cellstyle = $st2c1
+  	$text = "X"
+	CASE $num > 0  # number of found caches
+		
+		IF $UseHeatMap
+			$heatnum = $num
+	  	$heatmax = $maxcellF
+	  	GOSUB Name=GetHeatColor
+	  ENDIF
+	  
+	  IF $num = $maxcellF
+	  	# Check if also a FTF this date
+	  	IF $x > 0
+	  		$cellstyle = $stDiffTerrhi
+	  		$cellstyle = Replace("#B00000","url(" +$Imageurl + "foundftf.gif)",$cellstyle)
+	  	ELSE
+	  		IF $UseHeatMap
+	  			$cellstyle = $heatstyle
+	  		ELSE
+		  		$cellstyle = $stDiffTerrhi
+		  	ENDIF
+			ENDIF
+		  $bold = "<b>"
+			$boldoff = "</b>"
+	  ELSE
+	  	# Check if have any FTFs this date - $x > 0
+	  	IF $UseHeatMap
+	  			$cellstyle = $heatstyle
+	  	ELSE
+		  		$cellstyle = $stDiffTerr
+		  ENDIF
+	  	IF $x > 0
+	  		IF $UseHeatMap
+	  			$cellstyle = $cellstyle + "font-style:italic;font-weight:bold;"
+	  			$cellstyle = Replace("color: #FFFFFF;","color: #000000;",$cellstyle)
+	  		ELSE
+	  			$cellstyle = $cellstyle + "font-style:italic;font-weight:bold;"
+		  		$cellstyle = Replace("005BB7","488E48",$cellstyle)
+		  	ENDIF
+		  ENDIF
+			
+		ENDIF
+	OTHERWISE
+		$cellstyle = $stTab2cHead
+		$text = " "
+	ENDCASE
+	IF $indext = 1
+		$out = AddStr(2,"add","    <td style='$cellstyle' width='$cellwidth' align='center'>$bold$text$boldoff</td>" + $CR)
+	ELSE
+		$out = AddStr(2,"add","    <td style='$cellstyle' align='center'>$bold$text$boldoff</td>" + $CR)
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=ByFoundDate
+$_sql = "DROP TABLE IF EXISTS FindsByDayPlacedCaches"
+$status = Sqlite("sql",$_sql)
+
+# Initialise Variables
+$day = 1
+$month = 1
+$maxcellF = 0                              # maximum value of found cell
+$numcombF = 0                              # number of found Month/Day Combinations
+$monthday = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,;"
+
+$_sql = "CREATE table FindsByDayPlacedCaches as Select cast(strftime('%m',lDate) as integer) as Month, cast(strftime('%d',lDate) as integer) as Day, Count(lParent) as Count, 0 as FTF  from PlacedLogs WHERE g_foundlog(ltype) GROUP BY strftime('%m',lDate), strftime('%d',lDate)"
+$status = Sqlite("sql",$_sql)
+
+SHOWSTATUS msg="Chart of month/day..." Width=350
+	WHILE $month <= 12
+		WHILE $day <= 31
+			$_sql = "SELECT Count from FindsByDayPlacedCaches where Month=$month AND Day=$day"
+			$num = Val(Sqlite("sql",$_sql))
+			$_sql = "SELECT CASE WHEN FTF>0 THEN 'F' ELSE '' END from FindsByDayPlacedCaches where Month=$month AND Day=$day"
+			$tmpS = Sqlite("sql",$_sql)
+			$monthday = $monthday  + "$num" + $tmpS + ","
+			IF $num > 0  # found cell
+				$numcombF = $numcombF + 1
+  			IF $num > $maxcellF
+  				$maxcellF = $num
+  			ENDIF
+			ENDIF
+			$day = $day + 1
+		ENDWHILE
+		$monthday = $monthday + ";"
+		$month = $month + 1
+		$day  = 1
+	ENDWHILE
+	
+	# Max month count
+	$_sql = "select Sum(Count) as sum from FindsByDayPlacedCaches group by Month order by sum desc limit 1"
+	$max = Val(Sqlite("sql",$_sql))
+	
+	# Max Day count
+	$_sql = "select Sum(Count) as sum from FindsByDayPlacedCaches group by Day order by sum desc limit 1"
+	$maxitem = Val(Sqlite("sql",$_sql))
+	
+	$colspan = 1
+	$text="Placed caches found by Found Date"
+	GOSUB Name=SectionHead
+
+	$out = AddStr(2,"add","<table  cellspacing ='1'cellpadding = '0' width='$maxtablewidth' style='text-align: left; font-size: 9px;'>" + $CR)
+	
+	$cellwidth = Int($maxtablewidth/12.5)
+	$headerwidth = $maxtablewidth - (11 * $cellwidth)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$day  = 1
+	$month = 1
+	
+	# Title row
+	#$out = AddStr(2,"add","<tr><td style='$stTab2cHead'></td><td style='$stTab2cHead' colspan='32' align='center'><B>$Lang32</B></td></tr>" + $CR)
+	$out = AddStr(2,"add","<tr><td height='16' style='$stTab2cHead' colspan='32' align='center'><B>$Lang32</B></td></tr>" + $CR)
+	#$out = AddStr(2,"add","<tr><td style='$stTab2cHead' rowspan='13' width='$headerwidth' align='center'><B>$Lang12</B></td>" + $CR)
+	#$out = AddStr(2,"add","<tr><td style='$stTab2cHead' rowspan='13' width='2' align='center'></td>" + $CR)
+	$out = AddStr(2,"add","<tr>" + $CR)
+
+	$out = AddStr(2,"add","<td height='16' style='$st2c1'></td>")
+	# Get one data line
+	$data = Extract($monthday, ";" , $indexd)
+	WHILE $indext < 31
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$tmpB = FALSE
+		$_sql = "select count(distinct substr(ldate,6)) from placedlogs where cast (substr(ldate,9) as integer) = $text AND g_foundlog(ltype) "
+		$tmpN = Val(Sqlite("sql",$_sql))
+		BEGINCASE
+			CASE ($indext <= 29)
+				$tmpB = $tmpN = 12
+			CASE ($indext = 30)
+				$tmpB = $tmpN = 11
+			CASE ($indext = 31)
+				$tmpB = $tmpN = 7
+			ENDCASE
+		IF $tmpB
+			$out = AddStr(2,"add","<td style='$st2c1' width='$cellwidth' align='center'><B><font color='green'>$text</font></B></td>" + $CR)
+		ELSE
+			$out = AddStr(2,"add","<td style='$st2c1' width='$cellwidth' align='center'><B>$text</B></td>" + $CR)
+		ENDIF
+	ENDWHILE
+	
+	# Row Total
+	$out = AddStr(2,"add","<td width='$cellwidth'></td>" + $CR)
+	$out = AddStr(2,"add","</tr>" + $CR)
+	
+	# Month language string
+	$tmpS = $Lang13 + ";" + $Lang14 + ";" + $Lang15 + ";" + $Lang16 + ";" + $Lang17 + ";" + $Lang18 + ";" + $Lang19 + ";" + $Lang20 + ";" + $Lang21 + ";" + $Lang22 + ";" + $Lang23 + ";" + $Lang24
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 13
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($monthday, ";" , $indexd)
+		#$tindexd = replace(",",".",numtoStr($month),true)
+		$tindexd = Extract($tmpS,";",$month)
+		
+		$tmpB = FALSE
+		$_sql = "SELECT count(distinct substr(ldate,9)) from placedlogs WHERE cast (substr(ldate,6,2) as integer) = $month AND g_foundlog(ltype)"
+		$tmpN = Val(Sqlite("sql",$_sql))
+		BEGINCASE
+			CASE ($month=2)
+				$tmpB = $tmpN = 29
+			CASE ($month=4 OR $month=6 OR $month = 9 OR $month=11)
+				$tmpB = $tmpN = 30
+			OTHERWISE
+				$tmpB = $tmpN = 31
+			ENDCASE
+		IF $tmpB
+			$out = AddStr(2,"add","<tr><td height='16' style='$st2c1' width='$cellwidth'><b><font color='green'> $tindexd</font></b></td>" + $CR)
+		ELSE
+			$out = AddStr(2,"add","<tr><td height='16' style='$st2c1' width='$cellwidth'><b> $tindexd</b></td>" + $CR)
+		ENDIF
+		$tmpN = 0
+		WHILE $indext < 31
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			# Set $x > 0 to shade green showing has FTF on this date
+			$x = At("F",$text)
+			$text = Extract($text,"F", 1)			
+			$num = Val($text)
+			IF ($indexd = 3 AND $indext > 29) OR ($indexd = 10 AND $indext > 30) OR ($indexd = 5 AND $indext > 30) OR ($indexd = 7 AND $indext > 30) OR ($indexd = 12 AND $indext > 30)
+				$Skipflag = TRUE
+			ELSE
+				$Skipflag = FALSE
+			ENDIF
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputFoundChartLine
+			$day = $day + 1
+		ENDWHILE
+				
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		# Max count?
+		
+		IF $num >= $max
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		
+		$out = AddStr(2,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$indext = 0
+		$out = AddStr(2,"add","</tr>" + $CR)
+		$month = $month + 1
+		$day  = 1
+	ENDWHILE
+
+	$out = AddStr(2,"add","<tr><td></td>" + $CR)
+	$day  = 1
+	# Column Totals
+	WHILE $day <= 31
+		$_sql = "SELECT sum(Count) from FindsByDayPlacedCaches where Day=$day"
+  	$num = Val(Sqlite("sql",$_sql))
+  	$text = NumToStr($num)
+  	
+  	IF $num >= $maxitem
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		
+		$out = AddStr(2,"add","<td height='16' style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$day = $day + 1
+	ENDWHILE
+
+	$out = AddStr(2,"add","</table>" + $CR + "<br />")
+	
+	$tmpN = Int(1000*$numcombF/366)/10
+
+	# Found statistics
+  $out = AddStr(2,"add","<i><b>$numcombF</b> $Lang155 <b>366</b> ($tmpN" + "%) </i>" + $CR)
+  $out = AddStr(2,"add","<br />" + $CR ) 
+  
+# Number of FTF days
+  
+#  $_sql = "SELECT count(*) from FindsByDayPlacedCaches where FTF"
+#  $numcombF = Val(Sqlite("sql",$_sql))
+#  $tmpN = Int(1000*$numcombF/366)/10
+#  $out = $out + "<br/><i><b>$numcombF</b> FTF $Lang155 <b>366</b> ($tmpN" + "%) </i>" + $CR
+    
+#  $out = $out + "<br/><span style='$stSmall'><i>$Lang177</i></span>" + $CR
+
+ENDSUB # Name=ByFoundDate
+
+BEGINSUB Name=ByWeekday
+	# Determine the number of finds you've made on each weekday
+	# Initialise Section variables
+	$colspan = 2
+	SHOWSTATUS msg="$LangStatus37" Width=350
+
+	#Initialize Variables
+	$result = ""
+	$maxnum = 0
+	# a bit of a fudge so the week starts on Monday (2)
+	$day = 0
+	WHILE $day < 7
+		$day = $day + 1
+		IF $day = 7
+			$daynum = 0
+		ELSE
+			$daynum = $day
+		ENDIF
+		$dayname = Extract("$Lang51",";", $daynum + 1)
+		#SHOWSTATUS msg="$LangStatus39a $dayname$LangStatus39b" Width=350
+		$_sql = "SELECT count(lParent) from placedlogs WHERE strftime('%w',ldate) = '$daynum' AND g_foundlog(ltype)"
+		$tmpN = Val(Sqlite("sql",$_sql))
+		$result = $result + "$dayname, $tmpN;"
+		IF $tmpN > $maxnum
+			$maxnum = $tmpN
+		ENDIF
+	ENDWHILE
+	# Generate output
+	$text="Placed caches found by Weekday"
+	$note=""
+	$maxwidth=150
+		$_sql = "Select count(lParent) from placedlogs WHERE g_foundlog(ltype) "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+	GOSUB Name=SectionHead
+	IF $PieCharts
+		GOSUB Name=Table2Pi
+	ELSE
+		GOSUB Name=Table2Col
+	ENDIF
+
+# x weekend (xx%), y weekday (yy%)
+# Weekend finds
+$_sql="SELECT count(lParent) from placedlogs WHERE g_foundlog(ltype)" 
+$FindsWithDuplicates = Val(Sqlite("sql",$_sql))
+
+$_sql="SELECT count(lParent) from placedlogs WHERE strftime('%w',ldate) in('0','6') AND g_foundlog(ltype)" 
+$num = Val(Sqlite("sql",$_sql))
+$pc = Int(1000*$num/$FindsWithDuplicates)/10
+$out = AddStr(2,"add","<span style='$stSmall'><i><b>$num</b> $Lang162 ($pc%) :" )
+$num = $FindsWithDuplicates - $num
+$pc = 100 - $pc
+$out = AddStr(2,"add"," <b>$num</b> $Lang163 ($pc%)</i><br /></span>" )
+ENDSUB # ByWeekday
+
+BEGINSUB Name=ByMonth
+	# Determine the number of finds you've made in each month
+	# Initialise Section variables
+	$colspan = 2
+	SHOWSTATUS msg="$LangStatus37" Width=350
+
+	#Initialize Variables
+	$result = ""
+	$maxnum = 0
+	$month = 1
+	$tmpS = $Lang13 + ";" + $Lang14 + ";" + $Lang15 + ";" + $Lang16 + ";" + $Lang17 + ";" + $Lang18 + ";" + $Lang19 + ";" + $Lang20 + ";" + $Lang21 + ";" + $Lang22 + ";" + $Lang23 + ";" + $Lang24
+	WHILE $month <= 12
+		$dayname = Extract("$tmpS",";",$month)
+		$text6 = Right("0" + "$month",2)
+		$_sql = "SELECT count(lParent) from placedlogs WHERE strftime('%m',ldate) = '$text6' AND g_foundlog(ltype)"
+		$tmpN = Val(Sqlite("sql",$_sql))
+		$result = $result + "$dayname, $tmpN;"
+		IF $tmpN > $maxnum
+			$maxnum = $tmpN
+		ENDIF
+		$month = $month + 1
+	ENDWHILE
+	# Generate output
+	$text="Placed caches found by Month"
+	$note=""
+	$maxwidth=150
+		$_sql = "Select count(lParent) from placedlogs WHERE g_foundlog(ltype) "
+		$totalpercent= Val(Sqlite("sql",$_sql))
+	GOSUB Name=SectionHead
+	IF $PieCharts
+		GOSUB Name=Table2Pi
+	ELSE
+		GOSUB Name=Table2Col
+	ENDIF
+
+ENDSUB # ByMonth
+
+BEGINSUB Name=InitLanguage
+	Declare Var=$LangHeaderNumbers Type=String
+		Declare Var=$LangMostNorth Type=String
+		Declare Var=$LangMostSouth Type=String
+		Declare Var=$LangMostWest Type=String
+		Declare Var=$LangMostEast Type=String
+		Declare Var=$LangNearest Type=String
+		Declare Var=$LangFurthest Type=String
+		Declare Var=$LangNewest Type=String	
+		Declare Var=$LangOldest Type=String	
+	Declare Var=$LangHeaderDistPlacementsBy Type=String
+	Declare Var=$LangHeaderCacheType Type=String
+	Declare Var=$LangHeaderDifficulty Type=String
+	Declare Var=$LangHeaderTerrain Type=String
+	Declare Var=$LangHeaderDiffTerrChart Type=String
+		Declare Var=$LangDiffTerrCombinations Type=String	
+		Declare Var=$LangDiffTerrRated3OrGreater Type=String	
+		
+	# default: English
+		$LangHeaderNumbers="Some Numbers on Placed caches"
+			$LangMostNorth="Most Northerly cache placed"
+			$LangMostSouth="Most Southerly cache placed"
+			$LangMostWest="Most Westerly cache placed"
+			$LangMostEast="Most Easterly cache placed"
+			$LangNearest="Nearest cache placed"
+			$LangFurthest="Furthest cache placed"
+			$LangNewest="Youngest cache placed"
+			$LangOldest="Oldest cache placed"
+		$LangHeaderDistPlacementsBy="Placed caches by" #km/miles from home
+		$LangHeaderCacheType="Placed caches by Type"
+		$LangHeaderDifficulty="Placed caches by Difficulty Rating"
+		$LangHeaderTerrain="Placed caches by Terrain Rating"
+		$LangHeaderDiffTerrChart="Placed Caches Difficulty / Terrain Chart"
+			$LangDiffTerrCombinations="combinations placed, out of"
+			$LangDiffTerrRated3OrGreater="placed caches were rated with Diff or Terr of 3 or greater"
+			
+	IF $Language = "Deutsch"
+		$LangHeaderNumbers="Einige Statistiken versteckter Caches"
+			$LangMostNorth="Nördlichste Cache-Versteck"
+			$LangMostSouth="Südlichste Cache-Versteck"
+			$LangMostWest="Westlichste Cache-Versteck"
+			$LangMostEast="Östlichste Cache-Versteck"
+			$LangNearest="Am nächsten liegende Cache-Versteck"
+			$LangFurthest="Am weitesten entfernte Cache-Versteck"
+			$LangNewest="Neuste Cache-Versteck"
+			$LangOldest="Älteste Cache-Versteck"
+		$LangHeaderDistPlacementsBy="Verstecke nach"  #km/miles from home
+		$LangHeaderCacheType="Verstecke nach Typ "
+		$LangHeaderDifficulty="Verstecke nach Aufgabenschwierigkeit"
+		$LangHeaderTerrain="Verstecke nach Geländeschwierigkeit "
+		$LangHeaderDiffTerrChart="Übersicht Schwierigkeit / Gelände versteckter Caches"
+			$LangDiffTerrCombinations="Kombinationen versteckt, von"
+			$LangDiffTerrRated3OrGreater="Verstecke haben eine Schwierigkeit/Gelände von 3 oder größer "
+	ENDIF
+	
+	IF $Language = "Nederlands"
+		$LangHeaderNumbers="Statistieken voor eigen caches"
+			$LangMostNorth="Meest noordelijke eigen cache"
+			$LangMostSouth="Meest zuidelijke eigen cache"
+			$LangMostWest="Meest westelijke eigen cache"
+			$LangMostEast="Meest oostelijke eigen cache"
+			$LangNearest="Dichtstbijzijnde eigen cache"
+			$LangFurthest="Verst weg liggende eigen cache"
+			$LangNewest="Jongste eigen cache"
+			$LangOldest="Oudste eigen cache"
+		$LangHeaderDistPlacementsBy="Eigen caches naar" #km/miles from home
+		$LangHeaderCacheType="Eigen caches per cachetype"
+		$LangHeaderDifficulty="Eigen caches per moeilijkheidsgraad "
+		$LangHeaderTerrain="Eigen caches per terrein moeilijkheidsgraad"
+		$LangHeaderDiffTerrChart="Tabel moeilijkheidsgraad/terrein eigen caches"
+			$LangDiffTerrCombinations="combinaties geplaatst, van de"
+			$LangDiffTerrRated3OrGreater="eigen caches zijn gewaardeerd met Diff of Terr 3 of groter"
+	ENDIF	
+
+	IF $Language = "Francais"
+		$LangHeaderNumbers="Quelques chiffres sur mes caches"
+			$LangMostNorth="La plus au Nord"
+			$LangMostSouth="La plus au Sud"
+			$LangMostWest="La plus à l'Ouest"
+			$LangMostEast="La plus à l'Est"
+			$LangNearest="La plus proche"
+			$LangFurthest="La plus éloignée"
+			$LangNewest="La plus jeune"
+			$LangOldest="La plus ancienne"
+		$LangHeaderDistPlacementsBy="Distance" #km/miles de la maison
+		$LangHeaderDifficulty="Difficulté de mes caches"
+		$LangHeaderTerrain="Terrain de mes caches"
+		$LangHeaderDiffTerrChart="Tableau Difficulté/Terrain sur mes caches"
+			$LangDiffTerrCombinations="combinaisons placé, sur"
+			$LangDiffTerrRated3OrGreater="de mes caches ayant un niveau de difficulté de 3 ou plus"
+	ENDIF		
+	
+	
+	###########################################
+	# Modify below for your own language
+	# If you post this section in the forum, I'll include the translations in the next version of the plugin
+	IF $Language = "<your language here>"
+	
+		$LangHeaderNumbers="Some Numbers on Placed caches"
+			$LangMostNorth="Most Northerly cache placed"
+			$LangMostSouth="Most Southerly cache placed"
+			$LangMostWest="Most Westerly cache placed"
+			$LangMostEast="Most Easterly cache placed"
+			$LangNearest="Nearest cache placed"
+			$LangFurthest="Furthest cache placed"
+			$LangNewest="Youngest cache placed"
+			$LangOldest="Oldest cache placed"
+		$LangHeaderDistPlacementsBy="Placed caches by" #km/miles from home
+		$LangHeaderCacheType="Placed caches by Type"
+		$LangHeaderDifficulty="Placed caches by Difficulty Rating"
+		$LangHeaderTerrain="Placed caches by Terrain Rating"
+		$LangHeaderDiffTerrChart="Placed Caches Difficulty / Terrain Chart"
+			$LangDiffTerrCombinations="combinations placed, out of"
+			$LangDiffTerrRated3OrGreater="placed caches were rated with Diff or Terr of 3 or greater"
+			
+	ENDIF
+	###########################################
+	
+ENDSUB
+
+
+
+

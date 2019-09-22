@@ -1,0 +1,257 @@
+' =========================================================================
+'
+'   File....... SW21-EX34-Serial_IO.BS2
+'   Purpose.... Serial communications with PC
+'   Author..... (C) 2000 - 2006, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 16 AUG 2006
+'
+'   {$STAMP BS2}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' This program demonstrates serial communications with a PC, using flow
+' control to ensure the BASIC Stamp is ready before the PC attempts to
+' send new information.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+TX              PIN     15                      ' transmit to PC
+RTS             PIN     14                      ' Request To Send
+RX              PIN     13                      ' receive from PC
+CTS             PIN     12                      ' Clear To Send
+
+DQ              CON     4                       ' DS1620.1 (data I/O)
+Clock           CON     5                       ' DS1620.2
+Reset           CON     6                       ' DS1620.3
+
+LEDs            VAR     OUTA                    ' LED outputs
+
+
+' -----[ Constants ]-------------------------------------------------------
+
+#SELECT $STAMP
+  #CASE BS2, BS2E, BS2PE
+    T1200       CON     813
+    T2400       CON     396
+    T4800       CON     188
+    T9600       CON     84
+    T19K2       CON     32
+    TMidi       CON     12
+    T38K4       CON     6
+  #CASE BS2SX, BS2P
+    T1200       CON     2063
+    T2400       CON     1021
+    T4800       CON     500
+    T9600       CON     240
+    T19K2       CON     110
+    TMidi       CON     60
+    T38K4       CON     45
+  #CASE BS2PX
+    T1200       CON     3313
+    T2400       CON     1646
+    T4800       CON     813
+    T9600       CON     396
+    T19K2       CON     188
+    TMidi       CON     108
+    T38K4       CON     84
+#ENDSELECT
+
+SevenBit        CON     $2000
+Inverted        CON     $4000
+Open            CON     $8000
+Baud            CON     T9600
+
+CMenu           CON     $FF                     ' show command menu
+CGetId          CON     $F0                     ' get string ID
+CSetId          CON     $F1                     ' set string ID
+CTemp           CON     $A0                     ' get DS1620 - display raw count
+CTmpC           CON     $A1                     ' get DS1620 - display in C
+CTmpF           CON     $A2                     ' get DS1620 - display in F
+CGetLeds        CON     $B0                     ' get digital output status
+CSetLeds        CON     $B1                     ' set LED outputs
+
+RdTmp           CON     $AA                     ' read temperature
+WrHi            CON     $01                     ' write TH (high temp)
+WrLo            CON     $02                     ' write TL (low temp)
+RdHi            CON     $A1                     ' read TH
+RdLo            CON     $A2                     ' read TL
+RdCntr          CON     $A0                     ' read counter
+RdSlope         CON     $A9                     ' read slope
+StartC          CON     $EE                     ' start conversion
+StopC           CON     $22                     ' stop conversion
+WrCfg           CON     $0C                     ' write config register
+RdCfg           CON     $AC                     ' read config register
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+cmd             VAR     Byte                    ' command from PC/terminal
+eeAddr          VAR     Byte                    ' EE address pointer
+param           VAR     Byte                    ' parameter to/from
+tempIn          VAR     Word                    ' raw data from DS1620
+sign            VAR     tempIn.BIT8             ' 1 = negative temperature
+tC              VAR     Word                    ' degrees C in tenths
+tF              VAR     Word                    ' degrees F in tenths
+
+
+' -----[ EEPROM Data ]-----------------------------------------------------
+
+ID              DATA    "StampWorks 2.1", CR    ' CR-terminated string
+
+
+' -----[ Initialization ]--------------------------------------------------
+
+Setup:
+  DIRA = %1111                                  ' LED pins are outputs
+
+  HIGH Reset                                    ' alert the DS1620
+  SHIFTOUT DQ, Clock, LSBFIRST, [WrCfg, %10]    ' use with CPU; free-run
+  LOW Reset
+  PAUSE 10
+  HIGH Reset
+  SHIFTOUT DQ, Clock, LSBFIRST, [StartC]        ' start conversions
+  LOW Reset
+
+  GOSUB Show_Menu
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  cmd = 0
+  SERIN RX\CTS, Baud, [WAIT ("?"), HEX cmd]
+
+  SELECT cmd
+    CASE CMenu
+      GOSUB Show_Menu                           ' refresh menu
+
+    CASE CGetId
+      GOSUB Show_ID                             ' show ID string
+
+    CASE CSetId
+      GOSUB Set_ID                              ' set new ID
+      GOSUB Show_ID                             ' confirm new ID
+
+    CASE CTemp
+      GOSUB Show_Temp                           ' show raw counts
+
+    CASE CTmpC
+      GOSUB Show_Temp_C                         ' show tC (tenths)
+
+    CASE CTmpF
+      GOSUB Show_Temp_F                         ' show tF (tenths)
+
+    CASE CGetLeds
+      GOSUB Show_Leds                           ' show LED status
+
+    CASE CSetLeds
+      GOSUB Set_Leds                            ' set LED status
+      GOSUB Show_Leds                           ' confirm new status
+
+    CASE ELSE
+      SEROUT TX\RTS, Baud, ["Invalid command.", CR]
+  ENDSELECT
+
+  GOTO Main
+
+
+' -----[ Subroutines ]-----------------------------------------------------
+
+Show_Menu:
+  SEROUT TX\RTS, Baud, [CLS,
+                        "========================", CR,
+                        "   StampWorks Monitor   ", CR,
+                        "========================", CR,
+                        "?FF - Show Menu", CR,
+                        "?F0 - Display ID", CR,
+                        "?F1 - Set ID", CR,
+                        "?A0 - DS1620 (Raw count)", CR,
+                        "?A1 - Temperature (C)", CR,
+                        "?A2 - Temperature (F)", CR,
+                        "?B0 - Display LED Status", CR,
+                        "?B1 - Set LEDs", CR,
+                        CR,
+                        "Please enter a command.", CR, CR]
+  RETURN
+
+
+Show_ID:
+  SEROUT TX\RTS, Baud, ["ID = "]                ' label output
+  eeAddr = ID                                   ' point to first character
+  DO
+    READ eeAddr, param                          ' read a character
+    SEROUT TX\RTS, Baud, [param]                ' print it
+    eeAddr = eeAddr + 1                         ' point to next
+  LOOP UNTIL (param = CR)
+  RETURN
+
+
+Set_ID:
+  eeAddr = ID                                   ' point to ID location
+  DO
+    SERIN RX\CTS, Baud, [param]                 ' get character from PC
+    WRITE eeAddr, param                         ' write to EE
+    eeAddr = eeAddr + 1                         ' point to next location
+  LOOP UNTIL (param = CR)                       ' CR = end of new ID
+  RETURN
+
+
+Show_Temp:                                      ' display raw counts
+  GOSUB Read_DS1620                             ' read temperature
+  tempIn = tempIn & $1FF                        ' return to 9 bits
+  SEROUT TX\RTS, Baud, ["DS1620 = ", DEC tempIn, CR]
+  RETURN
+
+
+Show_Temp_C:
+  GOSUB Read_DS1620
+  param = tC.BIT15 * 2 + "+"                    ' create sign char
+  SEROUT TX\RTS, Baud, ["TempC = ",             ' label
+                        param,                  ' display sign
+                        DEC (ABS tC / 10), ".", ' whole degrees
+                        DEC1 (ABS tC), CR]      ' fractional degrees
+  RETURN
+
+
+Show_Temp_F:
+  GOSUB Read_DS1620
+  param = tF.BIT15 * 2 + "+"                    ' create sign char
+  SEROUT TX\RTS, Baud, ["TempF = ",             ' label
+                        param,                  ' display sign
+                        DEC (ABS tF / 10), ".", ' whole degrees
+                        DEC1 (ABS tF), CR]      ' fractional degrees
+  RETURN
+
+
+Read_DS1620:
+  HIGH Reset                                    ' alert the DS1620
+  SHIFTOUT DQ, Clock, LSBFIRST, [RdTmp]         ' give command to read temp
+  SHIFTIN DQ, Clock, LSBPRE, [tempIn\9]         ' read it in
+  LOW Reset                                     ' release the DS1620
+  tempIn.BYTE1 = -sign                          ' extend sign bit
+  tC = tempIn * 5                               ' convert to tenths
+
+  IF (tC.BIT15 = 0) THEN                        ' temp C is positive
+    tF = tC */ $01CC + 320                      ' convert to F
+  ELSE                                          ' temp C is negative
+    tF = 320 - ((ABS tC) */ $01CC)              ' convert to F
+  ENDIF
+  RETURN
+
+
+Show_Leds:
+  SEROUT TX\RTS, Baud, ["Status = ", BIN4 LEDs, CR]
+  RETURN
+
+
+Set_Leds:
+  SERIN RX\CTS, Baud, [BIN param]               ' use binary input
+  LEDs = param.LOWNIB                           ' set the outputs
+  RETURN

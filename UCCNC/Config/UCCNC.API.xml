@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<!--
+	@author Robertspark
+	@version 1.0 26-09-2016
+	-->
+<NotepadPlus>
+  <AutoComplete language="UCCNC">
+    <Environment ignoreCase="no" startFunc="( " stopFunc=" )" paramSeparator="," terminal=";" additionalWordChar="."></Environment>
+    <KeyWord name="AS3.Additemtolist" func="yes">
+      <Overload retVal="{void}" descr="Adds a string value to a Listbox with the corresponding labelnumber">
+        <Param name="string val" />
+		<Param name="int labelnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.GetLED" func="yes">
+      <Overload retVal="{bool}" descr="returns&gt;logic state of a LED screen object">
+        <Param name="int LEDnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Getbutton" func="yes">
+      <Overload retVal="{bool}" descr="returns&gt;true if button is current being pressed/input triggered">
+        <Param name="int BUTTONnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Getbuttonstate" func="yes">
+      <Overload retVal="{bool}" descr="returns&gt;true if button is in toggled ON state">
+        <Param name="int BUTTONnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Getfield" func="yes">
+      <Overload retVal="{string}" descr="Gets/reads the value of a field object (eg DRO)">
+        <Param name="int FIELDnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.SetLED" func="yes">
+      <Overload retVal="{void}" descr="Sets the logic state of a LED screen object">
+        <Param name="bool state" />
+        <Param name="int LEDnumber"></Param>
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Setfield" func="yes">
+      <Overload retVal="{void}" descr="Sets value of field (eg numeric DRO).  Call ValidateField nxt">
+        <Param name="double value" />
+        <Param name="int FIELDnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Setfieldtext" func="yes">
+      <Overload retVal="{void}" descr="Sets value of field (eg text DRO).  Call ValidateField nxt">
+        <Param name="string value" />
+        <Param name="int FIELDnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Switchbutton" func="yes">
+      <Overload retVal="{void}" descr="Sets toggle type buttons and switches the button to on/off states">
+        <Param name="bool Ison" />
+        <Param name="int BUTTONnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="AS3.Validatefield" func="yes">
+      <Overload retVal="{void}" descr="Validates the value of a field object (Setfield &amp; Setfieldtext)">
+        <Param name="int FIELDnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="Button" />
+    <KeyWord name="Controls.Add" />
+    <KeyWord name="Convert.ToDouble" func="yes">
+      <Overload retVal="{double}" descr="convert to a double">
+        <Param name="type" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="Convert.ToString" func="yes">
+      <Overload retVal="{string}" descr="convert to a string">
+        <Param name="type" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="EventHandler" />
+    <KeyWord name="MessageBox.Show" />
+    <KeyWord name="ShowDialog" />
+    <KeyWord name="System.Drawing.Point" />
+    <KeyWord name="System.Drawing.Size" />
+    <KeyWord name="bool" />
+    <KeyWord name="break" />
+    <KeyWord name="byte" />
+    <KeyWord name="case" />
+    <KeyWord name="char" />
+    <KeyWord name="default" />
+    <KeyWord name="decimal" />
+    <KeyWord name="do" />
+    <KeyWord name="double" />
+	<KeyWord name="exec.AddStatusmessage" func="yes">
+      <Overload retVal="{void}" descr="Adds a message to the Status Listbox">
+        <Param name="string &quot;..StatusMessage..&quot;" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Callbutton" func="yes">
+      <Overload retVal="{void}" descr="calls an internal function of the UCCNC software">
+        <Param name="int BUTTONnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Clroutpin" func="yes">
+      <Overload retVal="{void}" descr="sets the selected output pin to low leve">
+        <Param name="int PORTnumber" />
+        <Param name="int PINnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Code" func="yes">
+      <Overload retVal="{void}" descr="execute G-code from inside a macro">
+        <Param name="string &quot;..code..&quot;" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Configplugin" func="yes">
+      <Overload retVal="{int {0-3}}" descr="calls the Config event of a UCCNC plugin installed.">
+        <Param name="string pluginfilename" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetAllModbusArray" func="yes">
+      <Overload retVal="{ushort[]}" descr="Reads the whole modbus register table">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetAmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of A axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetApos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of A axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetBmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of B axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetBpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of B axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetCmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of C axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetCpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of C axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetModbusregister" func="yes">
+      <Overload retVal="{bool}" descr="Reads a single register from the modbus register table">
+        <Param name="int Registernumber" />
+        <Param name="out ushort Value" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetModbusregisters" func="yes">
+      <Overload retVal="{bool}" descr="Reads multiply registers from the modbus register table">
+        <Param name="int Startregister" />
+        <Param name="int Registercount" />
+        <Param name="out ushort[] Values" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetXmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of X axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetXpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of X axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetYmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of Y axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetYpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of Y axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetZmachpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual machine position of Z axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.GetZpos" func="yes">
+      <Overload retVal="{double}" descr="returns&gt; actual position of Z axis inc. selected offset &amp; tool offset">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Getanaloginput" func="yes">
+      <Overload retVal="{int}" descr="returns&gt; actual value of an analog INPUT channel signal">
+        <Param name="int channel" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Getanalogoutput" func="yes">
+      <Overload retVal="{int}" descr="returns&gt; actual value of an analog OUTPUT channel signal">
+        <Param name="int" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Getcurrenttool" func="yes">
+      <Overload retVal="{int}" descr="returns current selected tool number">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Getnewtool" func="yes">
+      <Overload retVal="{void}" descr="sets current tool number">
+        <Param name="int" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.IsLoading" func="yes">
+      <Overload retVal="{bool}" descr="returns&gt; true if software is loading a g-code file">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.IsMoving" func="yes">
+      <Overload retVal="{bool}" descr="returns&gt; true if software is executing motion or function">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Ismacrostopped" func="yes">
+      <Overload retVal="{bool}" descr="checks if a stop was pressed by the user on the UCCNC software GUI">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Loadfile" func="yes">
+      <Overload retVal="{void}" descr="loads a g-code file. The parameter is a string which is the full path of the file to be loaded.">
+        <Param name="string &quot;path/filename&quot;" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Pluginshowup" func="yes">
+      <Overload retVal="{void}" descr="calls a Plugin file's Showup_event(); function">
+        <Param name="string Pluginfilename" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Question" func="yes">
+      <Overload retVal="{double}" descr="shows a Question form &amp; waits for a DOUBLE value as the answer">
+        <Param name="string &quot;Questiontext&quot;" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Readkey" func="yes">
+      <Overload retVal="{string}" descr="reads a key value from the profile (.pro) file">
+        <Param name="string section" />
+        <Param name="string key" />
+        <Param name="string defaultvalue" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Resetswapaxis" func="yes">
+      <Overload retVal="{void}" descr="resets swap axis sequences">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.SetModbusregister" func="yes">
+      <Overload retVal="{bool}" descr="Writes a single register in the modbus register table">
+        <Param name="int Registernumber" />
+        <Param name="ushort Value" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.SetModbusregisters" func="yes">
+      <Overload retVal="{bool}" descr="Writes multiply registers in the modbus register table">
+        <Param name="int Startregister" />
+        <Param name="ushort[] Values" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Setcurrenttool" func="yes">
+      <Overload retVal="{void}" descr="sets the selected tool number in the UCCNC software">
+        <Param name="int toolnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Setofflinemode" func="yes">
+      <Overload retVal="{void}" descr="sets machine to offline mode or online mode">
+        <Param name="bool true/false" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Setoutpin" func="yes">
+      <Overload retVal="{void}" descr="Sets the selected output pin to high level">
+        <Param name="int portnumber" />
+        <Param name="int pinnumber" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Showplugin" func="yes">
+      <Overload retVal="{int (0-3)}" descr="calls the Showup event of a UCCNC plugin installed in the /Plugins directory">
+        <Param name="string pluginfilename" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Slaveaxis" func="yes">
+      <Overload retVal="{void}" descr="slaves an axis to an axis (to clear, set slave to 0 eg (4,0))">
+        <Param name="int masteraxis" />
+        <Param name="int slaveaxis" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Stop" func="yes">
+      <Overload retVal="{void}" descr="causes an instant stop on all axis">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.StopWithDeccel" func="yes">
+      <Overload retVal="{void}" descr="stops all axis using set decceleration profile">
+        <Param name="void" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Swapaxis" func="yes">
+      <Overload retVal="{void}" descr="swaps step &amp; direction pin numbers &amp; pin negate settings of one axis with another axis">
+        <Param name="int axis1" />
+        <Param name="int axis2" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.TextQuestion" func="yes">
+      <Overload retVal="{string}" descr="shows a Question form &amp; waits for a STRING as the answer">
+        <Param name="string &quot;Questiontext&quot;" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Wait" func="yes">
+      <Overload retVal="{void}" descr="causes loop to stop for set amount of time in milliseconds">
+        <Param name="int milliseconds" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.WriteModbusString" func="yes">
+      <Overload retVal="{void}" descr="Converts a string into an ushort array &amp; writes it into the modbus register table">
+        <Param name="string String"></Param>
+        <Param name="int Startregister" />
+        <Param name="bool HightoLowByteorder" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="exec.Writekey" func="yes">
+      <Overload retVal="{void}" descr="writes a key value into the profile (.pro) file">
+        <Param name="string section" />
+        <Param name="string key" />
+        <Param name="string value" />
+      </Overload>
+    </KeyWord>
+    <KeyWord name="float" />
+    <KeyWord name="false" />
+    <KeyWord name="for" />
+    <KeyWord name="if" />
+    <KeyWord name="int" />
+    <KeyWord name="long" />
+    <KeyWord name="return" />
+    <KeyWord name="sbyte" />
+    <KeyWord name="short" />
+    <KeyWord name="string" />
+    <KeyWord name="switch" />
+    <KeyWord name="true" />
+    <KeyWord name="uint" />
+    <KeyWord name="ulong" />
+    <KeyWord name="ushort" />
+    <KeyWord name="while" />
+  </AutoComplete>
+</NotepadPlus>

@@ -1,0 +1,30 @@
+<!-- http://redmine.scolring.org/projects/tutorials/wiki/Notepad++ -->
+
+<Language name='Scol' imagelistpath=''>
+<CommList param1='//' param2='' />
+<CommList param1='/\*' param2='\*/' />
+<Group name='FUNCTION' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*fun[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='TYPEOF' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*typeof[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='VAR' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*var[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='PROTO' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*proto[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='STRUCT' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*struct[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='TYPEDEF' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*typedef[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='DEFCOM' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*defcom[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+<Group name='DEFCOMVAR' subgroup='' icon='0' child='0' autoexp='0' matchcase='1' fendtobbeg='' bbegtobend=''>
+    <Rules regexbeg='^[ \t]*defcomvar[ \t]+' regexfunc='[a-zA-Z0-9_]+' regexend='' bodybegin='\=' bodyend=';;' sep='' />
+</Group>
+</Language>

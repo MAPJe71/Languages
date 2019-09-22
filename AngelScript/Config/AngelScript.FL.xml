@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id= "angelscript_syntax"        userDefinedLangName="AngelScript"     />
+			<association id= "angelscript_syntax"        ext=".j2as"                           />
+			<association id= "angelscript_syntax"        ext=".asc"                            />
+			<association id= "angelscript_syntax"        ext=".mut"                            />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="AngelScript"
+				id         ="angelscript_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?s:\x2F\x2A.*?\x2A\x2F)                        # Multi Line Comment
+							|	(?m-s:\x2F{2}.*$)                               # Single Line Comment
+							"
+			>
+				<classRange
+					mainExpr    ="^[\t\x20]*(shared\s+)?(((abstract|mixin|final)\s+)?class|interface)\s+[A-Za-z_]\w*\s*(:\s*(::\s*)?[A-Za-z_](\w|\s*(,|::)\s*[A-Za-z_])*\s*)?\{"
+					openSymbole ="\{"
+					closeSymbole="\}"
+				>
+					<className>
+						<nameExpr expr="\w+(?=\s*[:{])" />
+					</className>
+					<function
+						mainExpr="^[\t\x20]*((private|protected)\s+)?(\s|~|(const\s+)?(::\s*)?([A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*\s*(\x3C[\w\s:@\x3C\x3E,]*\x3E)?\s*(\s|@|\x26|@\s*\x26))\s*(?!(if|while|for|switch))[A-Za-z_]\w*\s*\([^\{\};]*\)\s*(const\s*)?(override|final)*\s*\{"
+					>
+						<functionName>
+							<funcNameExpr expr="[\w~]+(?=\s*\()" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="^[\t\x20]*(shared\s+)?(const\s+)?(::\s*)?([A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*\s*(\x3C[\w\s:@\x3C\x3E,]*\x3E)?\s*(\s|@|\x26|@\s*\x26)\s*(?!(if|while|for|switch))[A-Za-z_]\w*\s*\([^\{\};]*\)\s*\{"
+				>
+					<functionName>
+						<nameExpr expr="\w+(?=\s*\()" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

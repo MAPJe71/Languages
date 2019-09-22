@@ -1,0 +1,16 @@
+on guidToSymbol(str)
+    if str.char[1] = "{" then delete char 1 of str
+    if the last char of str = "}" then delete the last char of str
+    repeat with n in [9,14,19,24]
+        put "_" into char n of str
+    end repeat
+    return str
+end
+
+on getFileType (tFileName)
+    od = the itemdelimiter
+    the itemdelimiter = "."
+    tType = the last item of tFileName
+    the itemdelimiter = od
+    return tType
+end 

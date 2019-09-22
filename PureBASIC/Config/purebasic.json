@@ -1,0 +1,69 @@
+{
+  "scopeName": "source.purebasic",
+  "name": "PureBasic",
+  "fileTypes":
+  [
+    "pb",
+    "pbi"
+  ],
+  "patterns":
+  [
+    {
+      "include": "source.purebasic.pureunit"
+    },
+    {
+      "match": "\\\"[^\"]*\\\"",
+      "name": "string.quoted.double.purebasic"
+    },
+    {
+      "match": "(;.*)$",
+      "name": "comment.line.purebasic"
+    },
+    {
+      "match": "\\b(?i:Break|Case|Continue|Default|Else|End|EndIf|EndSelect|ElseIf|Else|For|ForEach|ForEver|If|Next|Repeat|Select|To|Until|Wend|While)\\b",
+      "name": "keyword.control.purebasic"
+    },
+    {
+      "match": "\\b(?i:And|Not|Or|XOr)\\b",
+      "name": "keyword.operator.logical.purebasic"
+    },
+    {
+      "match": "(<|>|<>|<=|>=)",
+      "name": "keyword.operator.comparison.purebasic"
+    },
+    {
+      "match": "=",
+      "name": "keyword.operator.assignment.purebasic"
+    },
+    {
+      "match": "\\b(?i:Debug|Declare|EnableASM|EnableExplicit|NewList|Enumeration|EndEnumeration|Procedure|ProcedureDLL|ProcedureReturn|EndProcedure|Macro|EndMacro|DataSection|EndDataSection|Structure|Extends|EndStructure|IncludeFile|XIncludeFile|DeclareModule|EndDeclareModule|Module|EndModule|UseModule|UnuseModule)\\b",
+      "name": "keyword.other.purebasic"
+    },
+    {
+      "match": "\\b(?i:CompilerSelect|CompilerIf|CompilerElse|CompilerError|CompilerWarning|CompilerEndIf|CompilerSelect|CompilerCase|CompilerDefault|CompilerEndSelect)\\b",
+      "name": "keyword.other.purebasic"
+    },
+    {
+      "match": "\\b(?i:Global|Protected|Static)\\b",
+      "name": "storage.modifier.purebasic"
+    },
+    {
+      "match": "#([\\w_]+)\\b",
+      "name": "constant.language.purebasic"
+    },
+    {
+      "match": "\\b\\d+(\\.\\d+)?\\b",
+      "name": "constant.numeric.purebasic"
+    },
+    {
+      "match": "[^\\.](\\b\\w[\\w\\d]*|[^\\w]@[\\w\\d]*)\\(",
+      "captures":
+      {
+        "1":
+        {
+          "name": "entity.name.function.purebasic"
+        }
+      }
+    }
+  ]
+}

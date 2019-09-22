@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="mq4" userDefinedLangName="mq4" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="MQL4"
+				id         ="mql4"
+				commentExpr="(?s-m:/\*.*?\*/)|(?m-s://.*?$)"
+			>
+				<function
+					mainExpr="^[\t\x20]*((static|const|virtual)\s+)?[\w:]+(\s+\w+)?(\s+|\*\s+|\s+\*|\s+\*\s+)(\w+\s*::)?(?!(if|while|for))\w+\s*\([^\)\(]*\)(\s*const\s*)?[\n\s]*\{"
+				>
+					<functionName>
+						<nameExpr expr="(?!(if|while|for))[\w~]+\s*\(" />
+						<nameExpr expr="(?!(if|while|for))[\w~]+" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

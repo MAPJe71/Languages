@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="18" id="vb_function"         /> <!-- L_VB           -->
+    </associationMap>
+    <parsers>
+      <!--                                                     [vb_function] >
+      <parser 
+          id="vb_function" 
+          displayName="Visual Basic (.NET|Script|for Applications)" 
+          commentExpr="(('.*?$)|(REM.*?$))" >
+        <function 
+            mainExpr="(sub|function|property([\s]+(get|let))?)[\s]+[[:alpha:]][\w]*([\s]+lib[\s]+&quot;[\w]+&quot;([\s]+alias[\s]+&quot;[\w]+&quot;)?)?[\s]*\([^\)\(]*\)" 
+            displayMode="$className->$functionName">
+          <functionName>
+            <nameExpr expr="((sub|function|property)[\s]+)?\K((let|get)?[\s]+)?[\w&quot;]+([\s]+lib[\s]+&quot;[\w]+&quot;([\s]+alias[\s]+&quot;[\w]+&quot;)?)?"/>
+          </functionName>
+        </function>
+      </parser>
+          commentExpr="((^[\s\t]?'.*?$)|(^[\s\t]?REM .*?$))"> 
+          commentExpr="(?&lt;=&apos;|(?i:REM))(?:[\t ].*)?$"> 
+          commentExpr="(?:&apos;|(?i:REM))(?:[\t ].*)?$"> 
+          commentExpr="(?&lt;=&apos;|(?i:REM))(?:[\t ].*)?$"> 
+          commentExpr="(&apos;.*|(?i:REM)([\t ].*)?)$"> 
+          commentExpr="(?s:((?&lt;=&apos;).*?[\r\n])|((?&lt;=(?i:REM))([\t ].*?)?[\r\n]))"> <!-# ~OK #->
+        <function 
+            mainExpr="(sub|function|property([\s]+(get|let))?)[\s]+[[:alpha:]_][\w]*([\s]+lib[\s]+&quot;[\w]+&quot;([\s]+alias[\s]+&quot;[\w]+&quot;)?)?[\s]*\([^\)\(]*\)[^\n\r]*" 
+            displayMode="$functionName">
+        </function>
+-->
+      <!-- (sub | function |...                       =   one of the following: sub, function                                                                     -->
+      <!-- ... | property([\s]+(get|let))?)           =   OR one of the following: property, property get, property let (VB.NET has no get/let outside the prop)  -->
+      <!-- [\s]+[[:alpha:]_][\w]*                     =   1+ whitespaces, 1 non-digit char, 0+ char   (VB.NET allows preceding underscore in name declaration)    -->
+      <!-- ([\s]+lib[\s]+&quot;[\w]+&quot;            =   possible appearance of: 1+ whitespaces lib "libname"                                                    -->
+      <!-- ...([\s]+alias[\s]+&quot;[\w]+&quot;)?)?   =   with possible appearence of: 1+ whitespaces alias "aliasname"                                           -->
+      <!-- [\s]*\([^\)\(]*\)                          =   0+ whitespaces, parentheses containing parameters, can be multiline                                     -->
+      <!-- [^\n\r]*                                   =   everthing but line breaks                                                                               -->
+      <parser 
+          id="vb_function" 
+          displayName="Visual Basic (.NET|Script|for Applications)"  
+          commentExpr="(?m:((?&lt;=&apos;).*?$)|((?i:REM)([\t ].*?)?$))"> 
+        <function 
+            mainExpr="^[\t ]*(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)" 
+            displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+          </functionName>
+        </function>
+      </parser>      
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

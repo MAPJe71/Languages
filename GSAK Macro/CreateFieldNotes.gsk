@@ -1,0 +1,323 @@
+#*******************************************
+# MacDescription = Create Field Notes file for import into GC.com
+# MacFileName = CreateFieldNotes.gsk
+# MacAuthor = Lignumaqua
+# MacVersion=0.3
+# MacUrl=
+#*******************************************
+# Creates the field notes file geocache_visits.txt ready for uploading to GC.com
+# Runs on current database, filter and sort. Make sure that only caches to be added to file are in view
+# and are in the correct logging order.
+#
+# The macro will only create logs and field notes for caches that are both marked 'Found' AND 
+# that currently have no 'Found' log from you.
+
+# GC18H5V,2008-02-20T07:53Z,Found it,""
+
+#*******************************************
+
+VERCHECK Version=7.2.1.38 (Note: this macro requires the latest GSAK "patch" - please see the 7.2.1 patch thread here: http://gsak.net/board/index.php?showforum=6)
+
+
+$datafilepath = Sysinfo("MacroPath")
+$DataFile = $datafilepath + "\CreateFieldNotes.dat"
+
+IF (FileExists($DataFile))
+	$variables = GetFile($DataFile)
+	$TimeZoneString = Extract($variables,";",1)
+	$Filepath = Extract($variables,";",2)
+ELSE
+	$TimeZoneString = "-6"
+	$Filepath = $datafilepath
+ENDIF
+
+$TimeZoneOffset = Val($TimeZoneString)
+
+WHILE TRUE
+	$result = Form($form2,"")
+	# Reset the screen position of the menu form to where the user left it
+ 	$form2 = EditForm($Form2,"Form2","Top",$_FormTop)
+ 	$Form2 = EditForm($Form2,"Form2","Left",$_FormLeft)
+  	
+ 	BEGINCASE #Buttons
+ 		CASE $Cancel2
+ 			CANCEL
+		CASE $OK2
+			$TimeZoneOffset = Val($TimeZoneString)
+			$variables = "$TimeZoneString;$Filepath"
+			$result = PutFile($datafile, $variables)
+			IF Left($result, 7) = "*Error*"
+				# If theres any error abort the macro
+				CANCEL Msg="Unable to write to $datafile!"
+			ENDIF
+			BREAK
+    OTHERWISE 
+ 			CANCEL
+ 	ENDCASE	
+  	
+ENDWHILE # Form Loop
+
+
+$data = ""
+#$Hours = 14 + $TimeZoneOffset
+$Hours = 8 - $TimeZoneOffset
+$Minutes = 0
+
+$edittime = "$Hours" + ":" + "$Minutes"
+
+$fieldnotesfile = $filepath + "\FieldNotes_" + DateToString($_Today) + Remove(Time(),":","C") + ".txt"
+
+#SPEEDMODE Status=Off
+
+$Count = 0
+$skipedit = FALSE
+	
+# Filter to found caches
+MFILTER Expression=$d_Found
+IF $_FilterCount > 0
+	GOTO position=top
+ 
+	WHILE NOT($_EOL)
+		$LogFound = FALSE
+		TABLE Active=Logs Scope=parent
+		WHILE NOT($_EOL)
+			IF IsOwner()
+				$lt = left($d_lType,5)
+				IF ($lt="Found" or $lt="Atten" or $lt="Webca")
+   				$LogFound= TRUE
+   			ENDIF
+			ENDIF
+			GOTO Position=Next
+		ENDWHILE
+		TABLE Active=caches
+		IF NOT($LogFound)
+			$Count = $Count + 1
+			$Minutes = $Minutes + 1
+			IF $Minutes >= 60
+				$Minutes = $Minutes - 60
+				$Hours = $Hours + 1
+			ENDIF
+			$LogDate = $d_FoundByMeDate
+			$LogText = Extract($d_UserNote,"$~",2)
+			IF NOT($skipedit)
+				SPEEDMODE Status=Off
+				GOSUB name=EditLog
+				SPEEDMODE Status=On
+			ENDIF
+			$LogText = Replace($_Quote,"'",$LogText,TRUE)
+			GOSUB name=CreateDate
+			$line = $d_Code + "," + $DateTime + "," + "Found it" + "," + Quote($LogText) + $_NewLine
+			$data = $data + $line
+		ENDIF
+		GOTO position=next
+	ENDWHILE
+	
+ENDIF
+
+#SPEEDMODE Status=ON
+CANCELFILTER
+$data = UTF16($data,"e")
+
+IF $count >0
+	$result = PutFile($fieldnotesfile, $data)
+	IF Left($result, 7) = "*Error*"
+		# If theres any error abort the macro
+		CANCEL Msg="Unable to write to $fieldnotesfile!"
+	ELSE
+		MSGOK msg="File $fieldnotesfile created"
+	ENDIF
+ELSE
+	CANCEL Msg="No Found caches without Found logs in this database."
+ENDIF
+
+
+BEGINSUB name=CreateDate
+	# Enter with $LogDate, $Houra and $Minutes
+	# Exit with $DateTime
+	
+	#$HoursCorrected = $Hours - $TimeZoneOffset
+	$HoursCorrected = $Hours
+		
+	IF $HoursCorrected >= 24
+		$HoursCorrected = $HoursCorrected - 24
+		$LogDate = $Logdate + 1
+	ENDIF
+	
+	IF $HoursCorrected < 0
+		$HoursCorrected = $HoursCorrected + 24
+		$LogDate = $LogDate - 1
+	ENDIF
+	$HourString = right("00$HoursCorrected",2)
+	$MinuteString = right("00$minutes",2)
+	
+	$DateTime = DateToString($LogDate)
+	$DateTime = Left($DateTime,4) + "-" + SubStr($DateTime,5,2) + "-" + SubStr($DateTime,7,2)	
+	$DateTime = $DateTime + "T" + $HourString + ":" + $MinuteString + "Z"
+	
+ENDSUB #createdate
+
+BEGINSUB name=EditLog
+	$Form = EditForm($Form,"CacheName","Caption","Edit log for: $d_code: $d_name")
+	WHILE TRUE
+		$result = Form($form,"")
+		# Reset the screen position of the menu form to where the user left it
+		$Form = EditForm($Form,"Form1","Top",$_FormTop)
+  	$Form = EditForm($Form,"Form1","Left",$_FormLeft)  	
+  	BEGINCASE #Buttons
+  		CASE $Cancel
+   			CANCEL
+			CASE $OK
+				#Strip out double quotes
+				$LogText = Replace($_Quote,"'",$LogText,TRUE)
+				$d_UserNote = Extract($d_UserNote,"$~",1) + "$~" + $LogText
+				BREAK
+			CASE $skip
+				$skipedit = TRUE
+				BREAK
+			OTHERWISE 
+				CANCEL
+		ENDCASE	
+	ENDWHILE # Form Loop
+ENDSUB
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Sun 16-Mar-2008 16:20:12
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Height = 447
+  Width = 600
+
+Name = LogText
+  Type = Memo
+  Height = 280
+  Left = 20
+  Top = 50
+  Width = 551
+  Taborder = 8
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 73
+  Top = 360
+  Width = 100
+  Taborder = 9
+  Caption = OK
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 423
+  Top = 360
+  Width = 100
+  Taborder = 10
+  Caption = Cancel Macro
+
+Name = CacheName
+  Type = Label
+  Color = 16744448
+  Height = 16
+  Left = 50
+  Size = 10
+  Style = bold
+  Top = 20
+  Width = 52
+  Caption = Log for:
+
+Name = skip
+  Type = Button
+  Height = 25
+  Left = 248
+  Top = 360
+  Width = 100
+  Taborder = 11
+  Caption = Skip Editing Logs
+
+<enddata>
+
+<Data> VarName=$form2
+#********************************************************************
+# Form generated by GSAK form designer on Tue 25-Mar-2008 09:50:35
+#********************************************************************
+
+Name = Form2
+  Type = Form
+  Height = 251
+  Width = 331
+
+Name = Label1
+  Type = Label
+  Color = 16711680
+  Height = 24
+  Left = 83
+  Size = 14
+  Top = 10
+  Width = 156
+  Caption = Create Field Notes
+
+Name = Label2
+  Type = Label
+  Height = 16
+  Left = 96
+  Size = 10
+  Top = 50
+  Width = 132
+  Caption = Please select options:
+
+Name = Label3
+  Type = Label
+  Height = 16
+  Left = 25
+  Size = 10
+  Top = 90
+  Width = 100
+  Caption = Time Zone offset
+
+Name = Label4
+  Type = Label
+  Height = 16
+  Left = 25
+  Size = 10
+  Top = 124
+  Width = 124
+  Caption = Field Notes File Path
+
+Name = OK2
+  Type = Button
+  Height = 25
+  Left = 54
+  Top = 180
+  Width = 75
+  Taborder = 8
+  Caption = OK
+
+Name = Cancel2
+  Type = Button
+  Height = 25
+  Left = 194
+  Top = 180
+  Width = 75
+  Taborder = 9
+  Caption = Cancel
+
+Name = TimeZoneString
+  Type = Combobox
+  Height = 21
+  Left = 157
+  Top = 90
+  Values = -12;-11;-10;-9;-8;-7;-6;-5;-4;-3;-2;-1;0;1;2;3;4;5;6;7;8;9;10;11;12
+  Width = 55
+  Taborder = 10
+
+Name = Filepath
+  Type = Folder
+  Height = 21
+  Left = 157
+  Top = 120
+  Width = 150
+  Taborder = 11
+
+<enddata>

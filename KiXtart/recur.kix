@@ -1,0 +1,20 @@
+;  RECUR.SCR
+;
+;  KiXtart demo script
+;
+;  24-Aug-1995
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+break ON
+:start
+$recurcount=$recurcount+1
+at (2,0) "Current call level : $recurcount"
+get $anykey
+if $anykey = 'Q' goto end endif
+Call RECUR.KIX
+$recurcount=$recurcount-1
+at (2,0) "Current call level : $recurcount "
+:end

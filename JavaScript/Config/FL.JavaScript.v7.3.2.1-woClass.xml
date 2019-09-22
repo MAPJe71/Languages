@@ -1,0 +1,33 @@
+			<parser
+				displayName="[#4 TODO] JavaScript v7.3.2.1 (w/o class)"
+				id         ="javascript_function_v7.3.2.1"
+				commentExpr="(?x)
+								(?s:/\*.*?\*/)
+							|	(?m-s://.*?$)
+							"
+			>
+				<function
+					mainExpr="(?x)
+							(
+								(  ^  |  \s+  |  [;\}\.]  )  (  [A-Za-z_]\w*  \.  )*  [A-Za-z_]\w*  \s*  [=:]
+							|	   ^
+							|	        [\s;\}]+
+							)
+							\s*  function
+							(
+								\s+  [A-Za-z_]?\w*  \(  [^()]*  \)
+							|	                    \(  [^()]*  \)
+							)
+							[\n\s]*  \{
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_]\w*\s*[=:]|[A-Za-z_]?\w*\s*\(" />
+						<nameExpr expr="[A-Za-z_]?\w*" />
+					</functionName>
+					<className>
+						<nameExpr expr="([A-Za-z_]\w*\.)*[A-Za-z_]\w*\." />
+						<nameExpr expr="([A-Za-z_]\w*\.)*[A-Za-z_]\w*" />
+					</className>
+				</function>
+			</parser>

@@ -1,0 +1,266 @@
+#*******************************************
+# MacDescription = FSG Plugin - generates a list of up to 81 caches on the way to a filled D/T-matrix
+# MacFileName = FSGPlugin_WayTo81.gsk
+# MacAuthor = dellwo
+# MacVersion=1.00
+# MacUrl=http://gsak.net/board/index.php?showtopic=21625
+#*******************************************
+# Changes:
+#  V1.00 2012-03-08  First public version 
+
+
+
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_WayTo81</plugin>"
+ENDIF
+
+SHOWSTATUS msg="Macro FSGPlugin_WayTo81 running" Width=350
+
+GOSUB Name=DeclareVariables
+
+# init some variables
+GOSUB Name=InitVariables
+
+## alle 81 Kombis sortiert nach D/T
+# Länge setzen
+array(1,0) = "81"
+$x = 1
+$difficulty = 1
+SHOWSTATUS msg="FSGPlugin_WayTo81 - Getting first 81 caches"
+WHILE $difficulty <= 5
+	$terrain  = 1
+	WHILE $terrain <= 5
+	    $_sql = "Select FoundByMeDate, difficulty, terrain, Code, Name, lLogid,CacheType from AllFinds where difficulty=$difficulty and terrain = $terrain order by ldate asc, usersort asc, llogid asc limit 1"
+		$work = Sqlite("sql",$_sql)
+		if $work = ""
+			array(1,$x) = "$marker;$difficulty;$terrain;$empty;$empty;$empty;$empty"
+		else
+			array(1,$x) = $work
+		endif			
+		$terrain = $terrain+0.5
+		$x = $x + 1
+	ENDWHILE
+	$difficulty = $difficulty+0.5
+ENDWHILE
+
+#sort nach Datum, D/T
+array(1,-2) = ""
+
+$lastdate = [00000000]
+$daysdiff = "&nbsp;"
+$x = 1
+
+SHOWSTATUS msg="FSGPlugin_WayTo81 - Creating output"
+	
+$out = AddStr(1,"add","<!-- Macro FSGPlugin_WayTo81 - Version $MacroVersion -->$_CrLf")
+$out = AddStr(1,"add","<center><div style='width:740px; font-family: Verdana, Arial, sans-serif; font-size: 12px;'><center>$_CrLf")
+
+$out = AddStr(1,"add","<table width='100%'>")
+$out = AddStr(1,"add","<tr>")
+$out = AddStr(1,"add","<td style='$styleTDHead text-align: left'>$Lang37</td>$_CrLf")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: left'><b>$Lang32</b></th>")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: left'><b>$Lang33</b></th>")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: left'><b>$Lang94</b></th>")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: left'><b>$Lang35</b></th>")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: left'><b>$LangForm64</b></th>")
+$out = AddStr(1,"add","<th style='$styleTDHead text-align: center'><b>D/T</b></th>")
+$out = AddStr(1,"add","</tr>")
+
+while $x <= 81
+	$line   = array(1,$x)
+	$date   = Extract($line,";",1)
+	$diffS  = Replace(",",".",NumToStr(Val(Extract($line,";",2))))
+	$terr   = Replace(",",".",NumToStr(Val(Extract($line,";",3))))
+	GOSUB Name=SetCellStyle		
+	$code   = Extract($line,";",4)
+	$name   = Extract($line,";",5)
+	$lLogid = Extract($line,";",6)
+	$CType  = Extract($line,";",7)
+	GOSUB Name=StripCodeType		
+	
+	if $date = $marker
+		$date = $empty
+		$daysdiff = "&nbsp;"
+		$code = $empty
+		$TypeImage = "&nbsp;"
+	else
+		$LogDateDate = SQLTODate($date)
+		$LogidSubstitute = Val($lLogid)
+		$date = "<a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>" + DateFormat($LogDateDate) + "</a>"
+		IF not($lastdate = [00000000])
+			#Pluralize correctly
+			IF DateDiff($lastdate, $LogDateDate) = 1
+				$daysdiff = NumToStr(Abs(DateDiff($lastdate, $LogDateDate))) + " $lang36a"
+			ELSE
+				IF DateDiff($lastdate, $LogDateDate) < 1
+					$daysdiff = NumToStr(Abs(DateDiff($lastdate, $LogDateDate))) + " $lang36d"
+				ELSE
+					$daysdiff = NumToStr(Abs(DateDiff($lastdate, $LogDateDate))) + " $Lang36b"
+				ENDIF
+			ENDIF
+		ENDIF
+		$lastdate = $LogDateDate
+
+		$code = "<a href='http://coord.info/"+$code+ "'>" + $code + "</a>"
+	endif
+	
+	# Nummer / Datum / Abstand / Code / Name / Typ / D/T
+	
+	$out = AddStr(1,"add","<tr>")
+	$out = AddStr(1,"add","<td style='$styleTD'>$x</td>")
+	$out = AddStr(1,"add","<td style='$styleTD text-align: left'>$date</td>")
+	$out = AddStr(1,"add","<td style='$styleTD text-align: left'>$daysdiff</td>")
+	$out = AddStr(1,"add","<td style='$styleTD text-align: left'>$code</td>")
+	$out = AddStr(1,"add","<td style='$styleTD text-align: left'>$name</td>")
+	$out = AddStr(1,"add","<td style='$styleTD text-align: left'>$TypeImage</td>")
+	$out = AddStr(1,"add","<td style='$cellstyle'>$diffS/$terr</td>")
+	$out = AddStr(1,"add","</tr>")
+	
+	$x = $x + 1
+EndWhile
+
+$out = AddStr(1,"add","</table>")
+
+$out = AddStr(1,"add","<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/'>"+$_CrLf)  #todo link
+$out = AddStr(1,"add","FSGPlugin_WayTo81 $MacroVersion</a>"+$_CrLf)
+$out = AddStr(1,"add","</center></div></center>"+$_CrLf)
+
+#Output
+$p_FSGData = AddStr(1,"get")	
+
+
+
+#################### Sub routines
+
+BEGINSUB Name=InitVariables
+	$MacroVersion = MacHeader("MacVersion")
+	$out = AddStr(1,"clear")
+	$styleTD = $st2c1 + ""
+	$styleTDHead = $stTab2cHead + "font-weight: bold; "
+	$marker = "<<<<<XXXXXXX>>>>>>"
+	$empty = "?"
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+	GOSUB NAME=InitStyles
+ENDSUB
+
+BEGINSUB Name=DeclareVariables
+	Option Explicit=Yes
+	
+	Declare Var=$Types Type=String
+	Declare Var=$Typenums Type=String
+	Declare Var=$thistype Type=String
+	Declare Var=$TypeImage Type=String
+	Declare Var=$MacroVersion Type=String
+	Declare Var=$out Type=String
+	Declare Var=$x Type=Numeric
+	Declare Var=$difficulty Type=Numeric
+	Declare Var=$diffS Type=String
+	Declare Var=$work Type=String
+	Declare Var=$terrain Type=Numeric
+	Declare Var=$terr Type=String
+	Declare Var=$lastdate Type=Date
+	Declare Var=$LogDateDate Type=Date
+	Declare Var=$line Type=String
+	Declare Var=$date Type=String
+	Declare Var=$lLogid Type=String	
+	Declare Var=$styletd Type=String	
+	Declare Var=$styleTDHead Type=String	
+	Declare Var=$marker Type=String
+	Declare Var=$empty Type=String
+	Declare Var=$CType Type=String
+	Declare Var=$tempN Type=Numeric
+	Declare Var=$st2c2Extrem Type=String
+	Declare Var=$st2c2Hardcore Type=String
+	Declare Var=$st2c2Schwer Type=String
+	Declare Var=$stColor2c2Extrem Type=String
+	Declare Var=$stColor2c2Hardcore Type=String
+	Declare Var=$stColor2c2Leicht Type=String
+	Declare Var=$stColor2c2Schwer Type=String
+	Declare Var=$cellstyle Type=String
+ENDSUB
+
+BEGINSUB Name=StripCodeType
+	$tempN = At($CType,$Types)
+	$thistype = Extract($Typenums, "," , $tempN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB
+
+BEGINSUB Name=SetCellStyle
+	$difficulty = Val($diffS)
+	$terrain = Val($terr)
+	$cellstyle = $st2c2
+	IF ($difficulty >= 3) OR ($terrain >= 3)
+		$cellstyle = $st2c2Schwer
+	ENDIF
+	IF (($difficulty * $terrain) >= 12)
+		$cellstyle = $st2c2Extrem
+	ENDIF
+	IF ($difficulty >= 4) AND ($terrain >= 4)
+		$cellstyle = $st2c2Hardcore
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=InitStyles
+	# default: Style-colors for grey style
+	$stColor2c2Leicht = "#BEBEBE"
+	$stColor2c2Schwer = "#A8A8A8"
+	$stColor2c2Extrem = "#929292"
+	$stColor2c2Hardcore = "#7B7B7B"
+
+	IF $StyleSet = "Grey"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#BEBEBE"
+		$stColor2c2Schwer = "#A8A8A8"
+		$stColor2c2Extrem = "#929292"
+		$stColor2c2Hardcore = "#7B7B7B"
+	ENDIF
+	IF $StyleSet = "Red"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#D9B6B6"
+		$stColor2c2Schwer = "#BFA1A1"
+		$stColor2c2Extrem = "#A68B8B"
+		$stColor2c2Hardcore = "#8C7676"
+	ENDIF
+	IF $StyleSet = "Green"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B6D9B6"
+		$stColor2c2Schwer = "#A1BFA1"
+		$stColor2c2Extrem = "#8BA68B"
+		$stColor2c2Hardcore = "#768C76"
+	ENDIF
+	IF $StyleSet = "Blue"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B8B8D9"
+		$stColor2c2Schwer = "#A3A3BF"
+		$stColor2c2Extrem = "#8D8DA6"
+		$stColor2c2Hardcore = "#77778C"
+	ENDIF
+	IF $StyleSet = "Smooth"
+		# Style-colors for smooth style
+		$stColor2c2Leicht = "#E3DDC2"
+		$stColor2c2Schwer = "#C4BFA7"
+		$stColor2c2Extrem = "#A8A48F"
+		$stColor2c2Hardcore = "#918E7C"
+	ENDIF
+	
+	$st2c2Schwer  = "background: " + $stColor2c2Schwer + ";"
+	$st2c2Extrem  = "background: " + $stColor2c2Extrem + ";"
+	$st2c2Hardcore  = "background: " + $stColor2c2Hardcore + ";"
+
+	IF VarExists("StyleRounded") # only with newer versions of FSG
+		IF $StyleRounded
+			$st2c2Schwer    = $st2c2Schwer + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Extrem    = $st2c2Extrem + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Hardcore  = $st2c2Hardcore + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+		ENDIF
+	ENDIF
+ENDSUB
+

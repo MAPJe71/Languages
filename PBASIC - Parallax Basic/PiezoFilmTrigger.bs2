@@ -1,0 +1,21 @@
+'   File...... PiezoFilmTrigger.bs2
+'   Purpose... Detect Pulse On I/O
+'   Author.... Parallax Tech Support
+'   E-mail.... support@parallax.com
+'   {$STAMP BS2}
+'   {$PBASIC 2.5}
+' =========================================================================
+
+' -----[ Program Description ]---------------------------------------------
+' This program demonstrates using the LDT0 as a switch/trigger
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+TriggerPin      PIN     0               ' Input Pin From LDT0
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  IF TriggerPin = 0 THEN Main           ' Check For Trigger
+  DEBUG "Triggered!", CR                ' Display Result To DEBUG Window
+  GOTO Main

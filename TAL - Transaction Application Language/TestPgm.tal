@@ -1,0 +1,84 @@
+           TestPgm.tal
+   ?sql wheneverlist
+   ?source tal(directives)
+   ?syntax
+   name bbctestpgm;
+   !%
+   !-------------------------------------------------------------------------------
+   !
+   !            U P D A T E   A U D I T   T R A I L
+   !            ============================================
+   !
+   !  CHG #    DATE    PERSON    DESCRIPTION
+   !  -----  --------  ------  ----------------------------------------------------
+   !   1234  11/15/17   LAS   Created.
+   !-------------------------------------------------------------------------------
+   !%
+   ?source cmncode(some^data)
+   
+   ?source LUListst
+   ?source LUmlitst(LUmlits)
+   ?source bbcrtnst(common^literals)
+   int donestuff;
+   
+   literal stat^edit^error = 0,
+           max^errors      = 1,
+           max^ids   = 1,
+           idx^data^inc   = 0,
+           idx^data^incd   = 1,
+           idx^data^mrules   = 2;
+   
+   
+   int proc process^sqldata(table^nm,response^code,use^bbcsqlxb) variable;
+   
+      int table^nm;
+      string .response^code;
+      int use^bbcsqlxb;
+   
+   begin
+   
+      return true;
+   end;
+   
+   int proc just^for^compiling;
+   begin
+   
+          int subproc get^mtext(code,stat^id,response^code) variable;
+   
+             int msg^code,
+                 stat^id;
+             string .response^code;
+          
+          begin
+             return true;
+          end;
+   end;   ! just^for^compiling
+
+   ?section format^date^time
+   ?page
+   int proc format^date^time(tstamp,format^field);
+   
+      fixed tstamp;
+      string .format^field;
+   
+   begin
+      int dt[0:6];
+   
+      string month^name = 'p' := ["JanFebMarAprMayJunJulAugSepOctNovDec"];
+      call interprettimestamp(tstamp,dt);
+      call numout(format^field[0],dt[2],10,2);
+      format^field[2] gets month^name[((dt[1] - 1) * 3)] for 3;
+      call numout(format^field[5],dt[0],10,4);
+      format^field[9] := " ";
+      call numout(format^field[10],dt[3],10,2);
+      format^field[12] := ":";
+      call numout(format^field[13],dt[4],10,2);
+      format^field[15] := ":";
+      call numout(format^field[16],dt[5],10,2);
+   
+      return true;
+   end;
+
+   ?section procedure^end
+   ?endif 15
+   ?endif 15

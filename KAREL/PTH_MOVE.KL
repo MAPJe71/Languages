@@ -1,0 +1,229 @@
+-------------------------------------------------------------------------------
+----  PTH_MOVE.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about PTH_MOVE.kl
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----            ABORT                       Sec 4-A
+----    Clauses:
+----            WHEN                        Sec 4-A
+----            WITH                        Sec 4-D
+----            FROM                        Sec 3-A
+----            VIA                         Sec 4-D
+----    Conditions:
+----            ABORT                       Sec 4-A
+----    Data types:
+----            ARRAY OF REAL               Sec 2
+----            BOOLEAN                     Sec 2
+----            INTEGER                     Sec 2
+----            JOINTPOS6                   Sec 2
+----            PATH                        Sec 2
+----            XYZWPR                      Sec 2
+----    Directives:
+----            ALPHABETIZE                 Sec 1
+----            COMMENT                     Sec 1
+----            ENVIRONMENT                 Sec 1
+----    Built-in Functions & Procedures:
+----            PATH_LEN                    Sec 4-C
+----            CHR                         Sec 3-B; 4-B,D
+----            CNV_REL_JPOS                Sec 4-D
+----            SET_CURSOR                  Sec 4-B
+----    Statements:
+----            Abort                       Sec 4-C
+----            CONDITION...ENDCONDITION    Sec 4-A
+----            FOR...ENDFOR                Sec 4-D
+----            ROUTINE                     Sec 3-A, B
+----            WAIT FOR                    Sec 3-B
+----            WRITE                       Sec 3-B; 4-B,C,D
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B, 4
+----            CONST                       Sec 2
+----            END                         Sec 3-A,B: 4-D
+----            VAR                         Sec 2
+----            PROGRAM                     Sec 1
+----    Predefined File Names:
+----            TPFUNC                      Sec 3-B; 4-D
+----            TPDISPLAY                   Sec 4-B
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM PTH_MOVE -- Define the program name
+    %ALPHABETIZE        -- Create the variables in alphabetical order
+    %COMMENT = 'PATH MOVES'
+    %ENVIRONMENT PATHOP -- Necessary for PATH_LEN
+    %ENVIRONMENT SYSDEF -- Necessary for using the $MOTYPE in the
+    MOVEs
+    %ENVIRONMENT UIF    -- Necessary for SET_CURSOR
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declarations
+-------------------------------------------------------------------------------
+CONST
+    CH_ABORT = 1 -- Number associated with the
+                 -- abort Condition handler
+    CH_F1    = 2 -- Number associated with the
+                 -- F1 key Condition handler
+VAR
+    status   : INTEGER   -- Status from built-in calls
+    loop_pth : INTEGER   -- Used in a FOR loop counter
+    prg_abrt : BOOLEAN   -- Set when program is aborted
+    pth1     : PATH
+    strt_jnt : JOINTPOS6 -- starting position of a move
+    via_pos  : XYZWPR    -- via point for a circular move
+    des_pos  : XYZWPR    -- destination point
+    real_ary : ARRAY[6] OF REAL -- This is used for creating
+                                -- a joint position with 6 axes
+    index    : INTEGER   -- FOR loop counter
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  RANDOM Declaration
+----                ROUTINE TP_CLS FROM ROUT_EX -- ROUT_EX must also be loaded.
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  YES_NO Declaration
+----                Display maximum elements of ary_nam.
+----                Display choices on the function line of the TP.
+----                Asks for user response.
+----                F1 key is monitored by the Global condition handler
+----                [CH_F1] and the F2 is monitored here.
+----                If F1 is pressed the program will abort.
+----                But, if the F2 is pressed the program will continue.
+-------------------------------------------------------------------------------
+ROUTINE YES_NO
+BEGIN
+    WRITE TPFUNC (CHR(137))          -- Home Cursor in Function window
+    WRITE TPFUNC (' ABORT CONT')     -- Display Function key options
+    WAIT FOR TPIN[131]               -- Wait for user to respond to
+                                     -- continue. If the user presses
+                                     -- F1 (abort) condition handler
+                                     -- CH_ABORT will abort program.
+    WRITE TPFUNC (CHR(137))          -- Home Cursor in Function window
+    WRITE TPFUNC (' ABORT',chr(129)) -- Redisplay just Abort option and
+                                     -- clear rest of Function window
+END YES_NO
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- PTH_MOVE
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Global Condition Handler Declaration
+-------------------------------------------------------------------------------
+    CONDITION[CH_ABORT]:
+        WHEN ABORT DO -- When the program is aborting set prg_abrt flag.
+                      -- This will be triggered if this program aborts itself
+                      -- or if an external mechanism aborts this program.
+            prg_abrt = TRUE -- You may then have another task which detects
+                            -- prg_abrt being set, and does shutdown operations
+                            -- (ie: set DOUT/GOUT's, send signals to a PLC)
+    ENDCONDITION
+    CONDITION[CH_F1]:
+        WHEN TPIN[129] DO -- Monitor TP 'F1' Key. If 'F1' key is pressed,
+            ABORT -- abort the program.
+    ENDCONDITION
+
+    prg_abrt = false -- Initialize variable which is set only if
+                     -- the program is aborted and CH_ABORT is
+                     -- enabled.
+
+    ENABLE CONDITION[CH_ABORT] -- Start scanning abort condition as defined.
+    ENABLE CONDITION[CH_F1]    -- Start scanning F1 key condition as defined.
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Display banner message and wait for users response
+-------------------------------------------------------------------------------
+    TP_CLS -- Routine Call; Clears the TP USER
+           -- menu, and forces the TP USER menu
+           -- to be visible.
+    SET_CURSOR(TPDISPLAY,2,13, status) -- Set cursor position in TP USER menu
+
+    IF (status <> 0 ) THEN -- Verify that SET_CURSOR was successful
+        WRITE ('SET_CURSOR built-in failed with status = ',status,cr)
+        YES_NO -- Ask whether to quit, due to error.
+    ENDIF
+
+    --- Write heading in REVERSE video, then turn reverse video off
+    WRITE (chr(139),' PLEASE READ ',chr(143),CR)
+    WRITE (cr,' *** F1 Key is labelled as ABORT key *** ')
+    WRITE (cr,' Any time the F1 key is pressed the program')
+    WRITE (cr,' will abort. However, the F2 key is active ')
+    WRITE (cr,' only when the function key is labeled.',cr,cr)
+
+    YES_NO -- Wait for user response
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Verify PATH variable, pth1, has been taught
+-------------------------------------------------------------------------------
+    -- Check the number of nodes in the path
+    IF PATH_LEN(pth1) = 0 THEN -- Path is empty (has no nodes)
+        WRITE ('You need to teach the path.',cr) -- Display instructions to user
+        WRITE ('before executing this program.',cr)
+        WRITE ('Teach the PATH variable pth1', CR, ' and restart the program',cr)
+        ABORT -- Simply ABORT the task
+              -- do not continue since there
+    ENDIF -- are no nodes to move to
+
+-------------------------------------------------------------------------------
+----  Section 4-D:  Creating a joint position and moving along path's
+-------------------------------------------------------------------------------
+    FOR indx = 1 to 6 DO -- Set all joint angles to zero
+        real_ary[indx] = 0.0
+    ENDFOR
+    real_ary[5] = 90.0 -- Make sure that the position
+                       -- is not at a singularity point.
+
+    CNV_REL_JPOS(real_ary, strt_jnt, status) -- Convert real_ary values into
+                                             -- a joint position, strt_jnt
+    IF (status <> 0 ) THEN -- Converting joint position
+                           -- was NOT successful
+        WRITE ('CNV_REL_JPOS built-in failed with status = ',status,cr)
+        YES_NO -- Ask user if want to continue.
+    ELSE -- Converting joint position was
+        -- successful.
+        -- The start position, strt_jnt, has been created and is located at
+        -- axes 1-4 = 0.0, axes 5 = 90.0, axes 6 = 0.0.
+        via_pos = strt_jnt -- Copy the strt_jnt to via_pos
+        via_pos.x = via_pos.x +200 -- Add offset to the x location
+        via_pos.y = via_pos.y +200 -- Add offset to the y location
+        -- The via position, via_pos, has been created to be the same position
+        -- as strt_jnt except it has been offset in the x and y locations by
+        -- 200 mm.
+        des_pos = strt_jnt -- Copy the strt_jnt to des_pos
+        des_pos.x = des_pos.x + 400 -- Add offset to the x location
+        -- The destination position, des_pos, has been created to be the same
+        -- position as strt_jnt except it has been offset in the x location by
+        -- 200 mm.
+        MOVE TO strt_jnt -- Move to the start position
+        WRITE (cr,'Moving to Destination Position',cr)
+        WITH $MOTYPE = CIRCULAR MOVE TO des_pos VIA via_pos
+            -- Move robot to destination
+            -- position using circular motion
+            -- via the via_pos
+    ENDIF
+
+    --- Execute the same path for 5 times.
+    FOR loop_pth = 1 TO 5 DO
+        WRITE ('Moving Along pth1 ',loop_pth::2, ' times',cr)
+
+        -- Display the loop iteration
+        -- NOTICE: that "loop_pth::2" will cause 2 blanks to be
+        -- displayed after "pth1 '" and before loop_pth.
+        MOVE ALONG pth1
+    ENDFOR
+
+    WRITE TPFUNC (CHR(128),CHR(137)) -- Home Cursor and Clear to
+                                     -- End-of-line. This will remove
+                                     -- the ABORT displayed above F1.
+    WRITE ('pth_move Successfully Completed',cr)
+
+END PTH_MOVE

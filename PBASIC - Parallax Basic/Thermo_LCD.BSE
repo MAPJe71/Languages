@@ -1,0 +1,226 @@
+' ==============================================================================
+'
+'   File...... Thermo_LCD.BSE
+'   Purpose... LCD output for THERMO DEMO.BSE
+'   Author.... Jon Williams
+'   E-mail.... jwilliams@parallaxinc.com
+'   Started...
+'   Updated... 02 JUN 2002
+'
+'   {$STAMP BS2e}
+'
+' ==============================================================================
+
+
+' ------------------------------------------------------------------------------
+' Program Description
+' ------------------------------------------------------------------------------
+
+' This module provides LCD output for the THEMO DEMO program.  The main program
+' will pass a task value using Scratchpad RAM location 1.
+'
+' Task Values:
+'
+' 0     Initialize LCD
+' 1     Clear LCD
+' 2     Update LCD
+'
+' For task 2, the following values are passed via the Scratchpad
+'
+' mode (off, cool, heat, cool-running, heat-running)
+' temp.LowByte
+' temp.HighByte
+' setpoint.LowByte
+' setpoint.HighByte
+
+
+' ------------------------------------------------------------------------------
+' Revision History
+' ------------------------------------------------------------------------------
+
+
+' ------------------------------------------------------------------------------
+' I/O Definitions
+' ------------------------------------------------------------------------------
+
+E               CON     9                       ' LCD Enable pin  (1 = enabled)
+RW              CON     10                      ' LCD read/write (0 = write)
+RS              CON     11                      ' Register Select (1 = char)
+LcdBus          VAR     OutD                    ' 4-bit LCD data bus
+LcdBusDirs      VAR     DirD
+
+
+' ------------------------------------------------------------------------------
+' Constants
+' ------------------------------------------------------------------------------
+
+ClrLCD          CON     $01                     ' clear the LCD
+CrsrHm          CON     $02                     ' move cursor to home position
+CrsrLf          CON     $10                     ' move cursor left
+CrsrRt          CON     $14                     ' move cursor right
+DispLf          CON     $18                     ' shift displayed chars left
+DispRt          CON     $1C                     ' shift displayed chars right
+DDRam           CON     $80                     ' Display Data RAM control
+Line1           CON     $80                     ' DDRAM address of line 1
+Line2           CON     $C0                     ' DDRAM address of line 2
+
+LcdInit         CON     0                       ' initialize screen
+LcdClear        CON     1                       ' clear screen
+LcdUpdate       CON     2                       ' update screen
+
+Yes             CON     1
+No              CON     0
+
+PgmBank         CON     0                       ' main program in bank 0
+DataStart       CON     2                       ' data block starts at loc 2
+
+
+' ------------------------------------------------------------------------------
+' Variables
+' ------------------------------------------------------------------------------
+
+task            VAR     Nib
+mode            VAR     Nib                     ' A/C control mode
+running         VAR     mode.Bit3
+temp            VAR     Word                    ' current temperature
+setpoint        VAR     Word                    ' A/C setpoint
+tPrint          VAR     Word                    ' temp to print
+char            VAR     Byte                    ' character sent to LCD
+index           VAR     Byte                    ' loop counter
+eeAddr          VAR     Byte                    ' address of string char
+
+
+' ------------------------------------------------------------------------------
+' EEPROM Data
+' ------------------------------------------------------------------------------
+
+Msg_Off         DATA    "  OFF", 0
+Msg_Cool        DATA    " COOL", 0
+Msg_Heat        DATA    " HEAT", 0
+
+
+' ------------------------------------------------------------------------------
+' Initialization
+' ------------------------------------------------------------------------------
+
+Initialize:
+  GET 1, task
+  BRANCH task, [Init_LCD, Clear_LCD, Update_LCD]
+
+
+' ------------------------------------------------------------------------------
+' Program Code
+' ------------------------------------------------------------------------------
+
+Init_LCD:
+  LOW E                                         ' initialize LCD pins
+  LOW RW
+  LOW RS
+  LcdBusDirs = %1111                            ' make bus lines outputs
+
+  PAUSE 500                                     ' let the LCD settle
+  LCDbus = %0011                                ' 8-bit mode
+  PULSOUT E, 1
+  PAUSE 5
+  PULSOUT E, 1
+  PULSOUT E, 1
+  LCDbus = %0010                                ' 4-bit mode
+  PULSOUT E, 1
+  char = %00101000                              ' multi-line mode
+  GOSUB LCD_Command
+  char = %00001100                              ' disp on, crsr off, blink off
+  GOSUB LCD_Command
+  char = %00000110                              ' inc crsr, no disp shift
+  GOSUB LCD_Command
+
+
+Clear_LCD:
+  char = ClrLCD
+  GOSUB LCD_Command
+  GOTO Exit
+
+
+Update_LCD:
+  GET (DataStart + 0), mode                     ' retrieve data packet
+  GET (DataStart + 1), temp.LowByte
+  GET (DataStart + 2), temp.HighByte
+  GET (DataStart + 3), setpoint.LowByte
+  GET (DataStart + 4), setpoint.HighByte
+
+  char = Line1 + 0                              ' print temperature
+  GOSUB LCD_Command
+  tPrint = temp
+  GOSUB Print_Temperarature
+
+  char = Line1 + 4                              ' print (setpoint)
+  GOSUB LCD_Command
+  char = "("
+  GOSUB LCD_Write
+  tPrint = setpoint
+  GOSUB Print_Temperarature
+  char = ")"
+  GOSUB LCD_Write
+
+
+Show_Mode:
+  char = Line2 + 11                             ' show system mode
+  GOSUB LCD_Command
+  LOOKUP (mode & %0011), [Msg_Off, Msg_Cool, Msg_Heat], eeAddr
+
+Print_Char:
+  READ eeAddr, char
+  IF (char = 0) THEN Show_Fan
+  GOSUB LCD_Write
+  eeAddr = eeAddr + 1
+  GOTO Print_Char
+
+Show_Fan:
+  IF (running = No) THEN Exit
+  char = Line2 + 11                             ' show fan status
+  GOSUB LCD_Command
+  char = "*"                                    ' show on
+  GOSUB LCD_Write
+
+
+Exit:
+  RUN PgmBank
+
+
+' ------------------------------------------------------------------------------
+' Subroutines
+' ------------------------------------------------------------------------------
+
+Print_Temperarature:                            ' prints 3-digit, space padded
+  char = " "                                    ' clear old digit
+  GOSUB LCD_Write
+  IF (tPrint < 100) THEN Print_T10
+  char = CrsrLf
+  GOSUB LCD_Command
+  char = "0" + (tPrint DIG 2)                   ' convert 100's digit to ASCII
+  GOSUB LCD_Write
+
+Print_T10:
+  char = " "
+  GOSUB LCD_Write
+  IF (tPrint < 10) THEN Print_T01
+  char = CrsrLf
+  GOSUB LCD_Command
+  char = "0" + (tPrint DIG 1)                   ' convert 10's digit to ASCII
+  GOSUB LCD_Write
+
+Print_T01:
+  char = "0" + (tPrint DIG 0)                   ' convert 1's digit to ASCII
+  GOSUB LCD_Write
+  RETURN
+
+
+LCD_Command:
+  LOW RS                                        ' enter command mode
+
+LCD_Write:
+  LCDbus = char.HighNib                         ' output high nibble
+  PULSOUT E, 1                                  ' strobe the Enable line
+  LCDbus = char.LowNib                          ' output low nibble
+  PULSOUT E, 1
+  HIGH RS                                       ' return to character mode
+  RETURN

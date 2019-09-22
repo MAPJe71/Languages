@@ -1,0 +1,1332 @@
+################################################################################ 
+#                           M-94/CSP-488 CYLINDER CIPHER                       #
+#                                  by DocDiTTo                                 # 
+#                                                                              # 
+#                                                                              #
+# MacDescription = US Military M-94/CSP-488 Cylinder Cipher                    #
+# MacFileName = M94_Cipher.gsk    																				     #
+# MacAuthor = DocDiTTo                                                         #
+# MacVersion=1.0																															 #
+# MacUrl=http://gsak.net/board/index.php?showtopic=14798 											 #
+################################################################################
+
+# This M-94 (aka CSP-488) simulator is an accurate representation of the
+# cylinder cipher used by the US military.  Similar to other cylinder
+# ciphers like the those created by Major Bazeries and Thomas Jefferson, this one
+# uses lettered disks to encode a message.
+#
+# M-94 Cylinder Cipher Specifications:
+# 25 Alphabet wheels
+# 26 letters per wheel (each letter occurs once per wheel)
+# The first wheel is identified as number 1, or letter "B"
+# The last wheel is identified as number 25, or letter "Z"
+#
+# The order of the wheels is determined using a key word
+# according to these rules (taken from the US Military manual):
+#
+#1. The cipher key.-In order to use the cylindrical cipher device it is first 
+#necessary to assemble the disks on the shaft in a certain sequence which is 
+#determined by the key word or key phrase. The key word or key phrase to be used 
+#will be designated as indicated in paragraph 4, Part I, and should be at least 
+#15 letters in length:
+#
+#2. To set the key.-(a) Unscrew the thumb nut and remove the right end piece and 
+#all alphabet disks from the shaft. (Leave the end piece to which is attached  
+#the straightedge, on the shaft.) Lay all disks on their plane sides, identifying 
+#marks up, and in their numerical order from 1 to 25. (In these instructions the 
+#disks will be identified by their numbers rather than their letters.)
+#
+#(b) Write the series of numbers 1 to 25 equally spaced in a horizontal line on a 
+#sheet of paper, and then write the letters of the key word or key phrase beneath 
+#these numbers, repeating if necessary, until a letter is below the number 25. 
+#(If a key phrase consists of more than 25 letters, the letters beyond the 
+#twenty-fifth will be disregarded.) For example, using the key phrase, GENERAL 
+#ELECTRIC COMPANY, write thus:
+#
+#1 2 3 4 5 6 7 	8 9 10 11 12 13 14 15  16 17 18 19 20 21 22 23 24 25
+#G E N E R A L 	E L E  C  T  R  I  C 	 C  O  M  P  A  N  Y  G  E  N 	
+#
+#(c) Now proceed to place numbers under these letters, starting with number 1 
+#under the first letter of the alphabet that appears, i. e., under the first A 
+#put number 1; under subsequent A's (if there are any more in the key phrase) put 
+#number 2, 3, etc.; under the next letter of the alphabet that occurs, put the 
+#next consecutive number; and so on, always making the inspection of the letters 
+#from left to right thus:
+#
+#1 2 3 4 5 6 7 	8 9 10 11 12 13 14 15  16 17 18 19 20 21 22 23 24 25
+#G E N E R A L 	E L E  C  T  R  I  C 	 C  O  M  P  A  N  Y  G  E  N 	
+#	 6,etc	 1					 3					 4	 5					 2	
+#	
+#Continue until all letters have been assigned a number (25 will be the last 
+#number). The example above will then appear completed thus:
+#
+#1  2 3  4 5  6 7 	8 9  10 11 12 13 14 15   16 17 18 19 20 21 22 23 24 25
+#G  E N  E R  A L 	E L  E  C  T  R  I  C 	 C  O  M  P  A  N  Y  G  E  N 	
+#11 6 17 7 22 1 14  8 15 9	3	 24 23 13 4	   5	20 16 21 2  18 25 12 10 19	
+#
+#This sequence of numbers 11-6-17-7, etc., is the order in which the alphabet 
+#disks are placed upon the shaft; that is, disk No. 11 is placed first on the 
+#shaft (cup side toward threaded end of shaft); disk No. 6 next; disk No. 17  
+#next,and so on. When the last alphabet disk (No. 19 in the given example) has  
+#been placed on the shaft, put on the right end piece and screw down the thumb 
+#nut lightly to prevent disks slipping off the shaft in handling. The instrument 
+#is now set up ready for use either for enciphering or deciphering messages. 
+#
+# The above instructions copied from http://www.maritime.org/csp488man.htm
+
+
+$Number_Of_Wheels = 25
+$Letters_Per_Wheel = 26
+
+# Set up arrays that contain the wheels
+# Array 1 will change depending on the key
+array(1,0) = NumToStr($Number_Of_Wheels)
+
+#Array 3 holds the wheels in default order
+#and doesn't change.  Note the special ID
+#message on wheel 17.
+array(3,0) = NumToStr($Number_Of_Wheels)
+array(3,1) = "ABCEIGDJFVUYMHTQKZOLRXSPWN"
+array(3,2) = "ACDEHFIJKTLMOUVYGZNPQXRWSB"
+array(3,3) = "ADKOMJUBGEPHSCZINXFYQRTVWL"
+array(3,4) = "AEDCBIFGJHLKMRUOQVPTNWYXZS"
+array(3,5) = "AFNQUKDOPITJBRHCYSLWEMZVXG"
+array(3,6) = "AGPOCIXLURNDYZHWBJSQFKVMET"
+array(3,7) = "AHXJEZBNIKPVROGSYDULCFMQTW"
+array(3,8) = "AIHPJOBWKCVFZLQERYNSUMGTDX"
+array(3,9) = "AJDSKQOIVTZEFHGYUNLPMBXWCR"
+array(3,10) = "AKELBDFJGHONMTPRQSVZUXYWIC"
+array(3,11) = "ALTMSXVQPNOHUWDIZYCGKRFBEJ"
+array(3,12) = "AMNFLHQGCUJTBYPZKXISRDVEWO"
+array(3,13) = "ANCJILDHBMKGXUZTSWQYVORPFE"
+array(3,14) = "AODWPKJVIUQHZCTXBLEGNYRSMF"
+array(3,15) = "APBVHIYKSGUENTCXOWFQDRLJZM"
+array(3,16) = "AQJNUBTGIMWZRVLXCSHDEOKFPY"
+array(3,17) = "ARMYOFTHEUSZJXDPCWGQIBKLNV"
+array(3,18) = "ASDMCNEQBOZPLGVJRKYTFUIWXH"
+array(3,19) = "ATOJYLFXNGWHVCMIRBSEKUPDZQ"
+array(3,20) = "AUTRZXQLYIOVBPESNHJWMDGFCK"
+array(3,21) = "AVNKHRGOXEYBFSJMUDQCLZWTIP"
+array(3,22) = "AWVSFDLIEBHKNRJQZGMXPUCOTY"
+array(3,23) = "AXKWREVDTUFOYHMLSIQNJCPGBZ"
+array(3,24) = "AYJPXMVKBQWUGLOSTECHNZFRID"
+array(3,25) = "AZDNBUHYFWJLVGRCQMPSOEXTKI"
+
+$Memo1 = ""
+$ToBeShifted = ""
+$edtWheelOrder = ""
+$Order_Of_Wheels = ""
+
+GOSUB Name=WriteDirections
+GOSUB Name=SetWheelOrder	
+WHILE TRUE
+	$FormExit = Form($Form,"") #Display the menu form
+  $Form = EditForm($Form,"Form1","Top",$_FormTop)
+  $Form = EditForm($Form,"Form1","Left",$_FormLeft)
+  BEGINCASE 
+  	CASE $FormExit = "SystemExit"
+  		# We clicked the red X to close the main menu form, so exit macro
+  		BREAK
+    CASE $FormExit = "btnReorder"
+    	$edtWheelOrder = left(keep(upper($edtWheelOrder),"[A-Z]*","R"),$Number_Of_Wheels)
+    	IF $edtWheelOrder <> ""
+    		WHILE len($edtWheelOrder) < $Number_Of_Wheels
+    			# Per US Navy directions, if key is shorter than 25 chars repeat it.
+    			$edtWheelOrder = $edtWheelOrder + $edtWheelOrder
+    		ENDWHILE
+    		# And disregard any extra characters that might be in the key 
+    		$edtWheelOrder = left($edtWheelOrder,$Number_Of_Wheels)
+    	ENDIF	
+    	GOSUB Name=SetWheelOrder
+  	CASE $FormExit = "btn1R"
+  		    $Shiftline = 1
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn1L"
+  		$Shiftline = 1
+  		GOSUB Name=ShiftLeft
+  	CASE $FormExit = "btn2R"
+  		    $Shiftline = 2
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn2L"
+  		$Shiftline = 2
+  		GOSUB Name=ShiftLeft  		
+  	CASE $FormExit = "btn3R"
+  		    $Shiftline = 3
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn3L"
+  		$Shiftline = 3
+  		GOSUB Name=ShiftLeft  		
+  	CASE $FormExit = "btn4R"
+  		    $Shiftline = 4
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn4L"
+  		$Shiftline = 4
+  		GOSUB Name=ShiftLeft  		
+  	CASE $FormExit = "btn5R"
+  		    $Shiftline = 5
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn5L"
+  		$Shiftline = 5
+  		GOSUB Name=ShiftLeft  		
+  	CASE $FormExit = "btn6R"
+  		    $Shiftline = 6
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn6L"
+  		$Shiftline = 6
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn7R"
+  		    $Shiftline = 7
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn7L"
+  		$Shiftline = 7
+  		GOSUB Name=ShiftLeft
+      CASE $FormExit = "btn8R"
+  		    $Shiftline = 8
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn8L"
+  		$Shiftline = 8
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn9R"
+  		    $Shiftline = 9
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn9L"
+  		$Shiftline = 9
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn10R"
+  		    $Shiftline = 10
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn10L"
+  		$Shiftline = 10
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn11R"
+  		    $Shiftline = 11
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn11L"
+  		$Shiftline = 11
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn12R"
+  		    $Shiftline = 12
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn12L"
+  		$Shiftline = 12
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn13R"
+  		    $Shiftline = 13
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn13L"
+  		$Shiftline = 13
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn14R"
+  		    $Shiftline = 14
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn14L"
+  		$Shiftline = 14
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn15R"
+  		    $Shiftline = 15
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn15L"
+  		$Shiftline = 15
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn16R"
+  		    $Shiftline = 16
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn16L"
+  		$Shiftline = 16
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn17R"
+  		    $Shiftline = 17
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn17L"
+  		$Shiftline = 17
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn18R"
+  		    $Shiftline = 18
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn18L"
+  		$Shiftline = 18
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn19R"
+  		    $Shiftline = 19
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn19L"
+  		$Shiftline = 19
+  		GOSUB Name=ShiftLeft
+    CASE $FormExit = "btn20R"
+  		    $Shiftline = 20
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn20L"
+  		$Shiftline = 20
+  		GOSUB Name=ShiftLeft 		
+    CASE $FormExit = "btn21R"
+  		    $Shiftline = 21
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn21L"
+  		$Shiftline = 21
+  		GOSUB Name=ShiftLeft 		
+  	CASE $FormExit = "btn22R"
+  		    $Shiftline = 22
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn22L"
+  		$Shiftline = 22
+  		GOSUB Name=ShiftLeft
+  	CASE $FormExit = "btn23R"
+  		    $Shiftline = 23
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn23L"
+  		$Shiftline = 23
+  		GOSUB Name=ShiftLeft
+  	CASE $FormExit = "btn24R"
+  		    $Shiftline = 24
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn24L"
+  		$Shiftline = 24
+  		GOSUB Name=ShiftLeft 			
+  	CASE $FormExit = "btn25R"
+  		    $Shiftline = 25
+  		   	GOSUB Name=ShiftRight       
+  	CASE $FormExit = "btn25L"
+  		$Shiftline = 25
+  		GOSUB Name=ShiftLeft 		
+  	CASE $FormExit = "btnFlip"
+  		GOSUB Name=FlipText	
+  	CASE $FormExit = "btnDirections"
+  		GOSUB Name=WriteDirections
+  	CASE $FormExit = "btnSpeedCrypt"
+  		GOSUB Name=SpeedCrypt
+  ENDCASE
+ENDWHILE		
+
+
+
+
+# SetWheelOrder is used to reorder the discs on the cylinder.  The variable
+# $WheelOrderText contains the key. 
+BEGINSUB Name=SetWheelOrder
+$AlphaCount = 0
+$WheelOrderCount = 0
+$ThisLetterOccurance = 0
+$Order_of_wheels = ""
+$OverallLetterCount = 0
+$WheelOrderText = $edtWheelOrder  # Put the key into $WheelOrderText
+Array(2,0) = numtostr($Number_Of_Wheels)  # Set up array to hold numbers of the key
+IF alltrim($edtWheelOrder) = "" #No key given so reset to default order
+	WHILE $WheelOrderCount < $Number_Of_Wheels
+		$WheelOrderCount = $WheelOrderCount + 1
+		# Array 1 is the one we use for encoding, Array 3 is our static "reference" array with
+		# default wheel positions.  Array 2 is used to translate the key into wheel positions.
+		Array(1,$WheelOrderCount) = Array(3,$WheelOrderCount)
+		$Order_of_wheels = $Order_of_Wheels+NumToStr($WheelOrderCount)+" "
+	ENDWHILE
+ELSE
+	WHILE $AlphaCount < 26  #Loop through every letter
+		$AlphaCount = $AlphaCount + 1 #Keep track of which letter we're on
+  	$ThisLetterOccurance = RegExCount(Chr(64+$AlphaCount),$WheelOrderText) # get the number of times this letter appears in the key
+  	IF $ThisLetterOccurance > 0  # only continue if we have at least one of this letter
+			$LetterInstanceCount = 0 # reset instance counter for this letter
+			WHILE $LetterInstanceCount < $ThisLetterOccurance  #while we have more instances of this letter
+				$WheelOrderCount = $WheelOrderCount + 1  #add 1 to the wheel order counter
+				$LetterInstanceCount = $LetterInstanceCount + 1 # and increment the letter instance counter
+				$LetterPosition = RegExPos(chr(64+$AlphaCount),$WheelOrderText,$LetterInstanceCount) #get the position of the letter in the key
+				Array(2,$LetterPosition) = NumToStr($WheelOrderCount) #put the position of the letter in the wheel order array
+				Array(1,$LetterPosition ) = Array(3,$WheelOrderCount)
+			ENDWHILE
+		ENDIF
+	ENDWHILE
+	# Display the new numeric key order based on the text key
+	$LOOPCOUNT = 0
+	WHILE $LOOPCOUNT < $Number_Of_Wheels
+		$LOOPCOUNT = $LOOPCOUNT + 1
+		$Order_of_wheels = $Order_of_Wheels+Array(2,$LOOPCOUNT)+" "
+	ENDWHILE
+ENDIF
+GOSUB name=RefreshLabels
+$edtOrderDisplay = $Order_of_wheels
+ENDSUB
+
+#Shifts a wheel one step to the right
+BEGINSUB Name=ShiftRight
+	array(1,$ShiftLine) = Right(array(1,$ShiftLine),1) + Left(array(1,$ShiftLine),$Letters_Per_Wheel-1)
+	$Form = EditForm($Form,"label"+numtostr($Shiftline),"Caption",array(1,$Shiftline))
+ENDSUB
+
+#Shifts a wheel one step to the left
+BEGINSUB Name=ShiftLeft
+	array(1,$ShiftLine) = Right(array(1,$ShiftLine),Len(array(1,$ShiftLine))-1) + Left(array(1,$ShiftLine),1) 
+	$Form = EditForm($Form,"label"+numtostr($Shiftline),"Caption",array(1,$Shiftline))
+ENDSUB
+
+BEGINSUB name=RefreshLabels
+	$Counter = 0
+	WHILE $Counter < $Number_Of_Wheels
+		$Counter = $Counter + 1
+		$Form = EditForm($Form,"label"+numtostr($Counter),"Caption",array(1,$Counter))
+  ENDWHILE
+ENDSUB
+
+BEGINSUB Name=WriteDirections
+	$memo1 = "The 25 rows to the right equate to the 25 wheels on the M-94/CSP-488 "
+	$memo1 = $memo1 + "cylinder. Wheel 1 is the top row and wheel 25 is the "
+	$memo1 = $memo1 + "bottom row. To change the "
+	$memo1 = $memo1 + "encryption key (and therefore the order of the wheels on "
+	$memo1 = $memo1 + "the cylinder) enter text in the key edit box and click the  "
+	$memo1 = $memo1 + "Reorder button."
+	$memo1 = $memo1 + "Use the arrows to align your ciphertext or "
+	$memo1 = $memo1 + "plaintext down along the leftmost column."
+	$memo1 = $memo1 + "Use the SpeedCrypt button to enter 25 letters of text to be "
+	$memo1 = $memo1 + "ciphered all at once.  The Flip to Read button will copy the "
+	$memo1 = $memo1 + "vertical wheel text into this memo for easier reading." 
+ENDSUB
+
+# Fliptext flips the vertical text lines sideways into the memo field
+# to make them much easier to read.
+BEGINSUB Name=FlipText
+	$LoopCount1 = 0
+	$memo1 = ""
+	WHILE $LoopCount1 < $Letters_Per_Wheel
+			$LoopCount1 = $LoopCount1 + 1
+			$Oneline = ""
+			$LoopCount2 = 0
+		WHILE $LoopCount2 < $Number_Of_Wheels
+			$LoopCount2 = $LoopCount2 + 1 
+			$Oneline = $OneLine + substr(Array(1,$LoopCount2),$LoopCount1,1)
+		ENDWHILE
+		$memo1 = $memo1 + $Oneline + $_Newline
+	ENDWHILE
+ENDSUB
+
+
+#not really needed, just used for debugging so we can see the array contents in a  memo
+BEGINSUB Name=LoadMemoWithArray
+	$Count = 0
+	$Memo1 = ""
+	WHILE $Count < $Number_Of_Wheels
+		$Count = $Count + 1
+	  $Memo1 = $Memo1 + Array(1,$Count) + $_Newline
+	ENDWHILE
+ENDSUB
+
+# Speedcrypt asks for one line of text and will align the cipher wheels with
+# that text as the leftmost column, making encryption or decryption much faster
+BEGINSUB Name=SpeedCrypt
+	INPUT Msg="Enter 25 (or less) characters of plain or ciphertext" VarName=$SpeedLine
+	$SpeedLine = keep(upper($SpeedLine),"[A-Z]*","R")
+	IF len($SpeedLine) > $Number_Of_Wheels
+		$badlength = len($SpeedLine)
+		$SpeedLine = left($SpeedLine,$Number_Of_Wheels)
+		msgok msg=Max limit of $Number_Of_Wheels letters at a time. Your input was $badlength letters and has been truncated. 
+	ENDIF
+	$LoopCount = 0
+		WHILE $LoopCount < Len($Speedline)
+			$LoopCount = $LoopCount +1
+			showstatus msg=Aligning wheel $LoopCount
+			$CurrentChar = substr($Speedline,$LoopCount,1)
+      $Shiftline = $LoopCount
+      WHILE Left(array(1,$ShiftLine),1) <> $CurrentChar
+        GOSUB Name=ShiftLeft
+      ENDWHILE
+		ENDWHILE
+		SHOWSTATUS display=off
+		GOSUB Name=FlipText
+ENDSUB
+		
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Tue 09-Mar-2010 08:44:59
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = M-94/CSP-488 Cylinder Cipher
+  Height = 607
+  Width = 787
+
+Name = Memo1
+  Type = Memo
+  Font = Courier New
+  Height = 489
+  Left = 8
+  Size = 12
+  Top = 8
+  Width = 273
+  Taborder = 8
+
+Name = Label1
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 8
+  Width = 84
+  Caption = WHEEL 1
+
+Name = Label2
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 28
+  Width = 84
+  Caption = WHEEL 2
+
+Name = Label3
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 48
+  Width = 84
+  Caption = WHEEL 3
+
+Name = Label4
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 68
+  Width = 84
+  Caption = WHEEL 4
+
+Name = Label5
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 88
+  Width = 84
+  Caption = WHEEL 5
+
+Name = Label6
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 108
+  Width = 84
+  Caption = WHEEL 6
+
+Name = Label7
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 128
+  Width = 84
+  Caption = WHEEL 7
+
+Name = Label8
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 148
+  Width = 84
+  Caption = WHEEL 8
+
+Name = Label9
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 168
+  Width = 84
+  Caption = WHEEL 9
+
+Name = Label10
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 188
+  Width = 96
+  Caption = WHEEL 10
+
+Name = Label11
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 208
+  Width = 96
+  Caption = WHEEL 11
+
+Name = Label12
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 228
+  Width = 96
+  Caption = WHEEL 12
+
+Name = Label13
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 248
+  Width = 96
+  Caption = WHEEL 13
+
+Name = Label14
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 268
+  Width = 96
+  Caption = WHEEL 14
+
+Name = Label15
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 288
+  Width = 96
+  Caption = WHEEL 15
+
+Name = Label16
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 308
+  Width = 96
+  Caption = WHEEL 16
+
+Name = Label17
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 328
+  Width = 96
+  Caption = WHEEL 17
+
+Name = Label18
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 348
+  Width = 96
+  Caption = WHEEL 18
+
+Name = Label19
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 368
+  Width = 96
+  Caption = WHEEL 19
+
+Name = Label20
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 388
+  Width = 96
+  Caption = WHEEL 20
+
+Name = btn1L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 10
+  Width = 57
+  Taborder = 9
+  Caption = <--
+
+Name = btn1R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 10
+  Width = 57
+  Taborder = 10
+  Caption = -->
+
+Name = btn2L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 30
+  Width = 57
+  Taborder = 11
+  Caption = <--
+
+Name = btn2R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 30
+  Width = 57
+  Taborder = 12
+  Caption = -->
+
+Name = edtWheelOrder
+  Type = Edit
+  Height = 21
+  Left = 288
+  Top = 517
+  Width = 337
+  Taborder = 13
+
+Name = btn3L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 50
+  Width = 57
+  Taborder = 14
+  Caption = <--
+
+Name = btn4L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 70
+  Width = 57
+  Taborder = 15
+  Caption = <--
+
+Name = btn3R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 50
+  Width = 57
+  Taborder = 16
+  Caption = -->
+
+Name = btn4R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 70
+  Width = 57
+  Taborder = 17
+  Caption = -->
+
+Name = btn5R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 90
+  Width = 57
+  Taborder = 18
+  Caption = -->
+
+Name = btn5L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 90
+  Width = 57
+  Taborder = 19
+  Caption = <--
+
+Name = btn6R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 110
+  Width = 57
+  Taborder = 20
+  Caption = -->
+
+Name = btn6L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 110
+  Width = 57
+  Taborder = 21
+  Caption = <--
+
+Name = btn7L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 130
+  Width = 57
+  Taborder = 22
+  Caption = <--
+
+Name = btn7R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 130
+  Width = 57
+  Taborder = 23
+  Caption = -->
+
+Name = btn8L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 150
+  Width = 57
+  Taborder = 24
+  Caption = <--
+
+Name = btn8R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 150
+  Width = 57
+  Taborder = 25
+  Caption = -->
+
+Name = btn9R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 170
+  Width = 57
+  Taborder = 26
+  Caption = -->
+
+Name = btn9L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 170
+  Width = 57
+  Taborder = 27
+  Caption = <--
+
+Name = btn10R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 190
+  Width = 57
+  Taborder = 28
+  Caption = -->
+
+Name = btn10L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 190
+  Width = 57
+  Taborder = 29
+  Caption = <--
+
+Name = btn11L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 210
+  Width = 57
+  Taborder = 30
+  Caption = <--
+
+Name = btn11R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 210
+  Width = 57
+  Taborder = 31
+  Caption = -->
+
+Name = btn12L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 230
+  Width = 57
+  Taborder = 32
+  Caption = <--
+
+Name = btn12R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 230
+  Width = 57
+  Taborder = 33
+  Caption = -->
+
+Name = btn13R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 250
+  Width = 57
+  Taborder = 34
+  Caption = -->
+
+Name = btn13L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 250
+  Width = 57
+  Taborder = 35
+  Caption = <--
+
+Name = btn14R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 270
+  Width = 57
+  Taborder = 36
+  Caption = -->
+
+Name = btn14L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 270
+  Width = 57
+  Taborder = 37
+  Caption = <--
+
+Name = btn15L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 290
+  Width = 57
+  Taborder = 38
+  Caption = <--
+
+Name = btn15R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 290
+  Width = 57
+  Taborder = 39
+  Caption = -->
+
+Name = btn16L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 310
+  Width = 57
+  Taborder = 40
+  Caption = <--
+
+Name = btn16R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 310
+  Width = 57
+  Taborder = 41
+  Caption = -->
+
+Name = btn17R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 330
+  Width = 57
+  Taborder = 42
+  Caption = -->
+
+Name = btn17L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 330
+  Width = 57
+  Taborder = 43
+  Caption = <--
+
+Name = btn18R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 350
+  Width = 57
+  Taborder = 44
+  Caption = -->
+
+Name = btn18L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 350
+  Width = 57
+  Taborder = 45
+  Caption = <--
+
+Name = btn19L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 370
+  Width = 57
+  Taborder = 46
+  Caption = <--
+
+Name = btn19R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 370
+  Width = 57
+  Taborder = 47
+  Caption = -->
+
+Name = btn20L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 390
+  Width = 57
+  Taborder = 48
+  Caption = <--
+
+Name = btn20R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 390
+  Width = 57
+  Taborder = 49
+  Caption = -->
+
+Name = btnReorder
+  Type = Button
+  Height = 25
+  Left = 630
+  Top = 515
+  Width = 99
+  Taborder = 50
+  Caption = Reorder Wheels
+
+Name = lblKeyInput
+  Type = Label
+  Height = 13
+  Left = 208
+  Top = 520
+  Width = 71
+  Caption = Encryption Key
+
+Name = edtOrderDisplay
+  Type = Edit
+  Color = 13355446
+  Height = 21
+  Left = 288
+  Top = 541
+  Width = 337
+  Taborder = 51
+
+Name = lblWheelOrder
+  Type = Label
+  Height = 13
+  Left = 156
+  Top = 543
+  Width = 125
+  Caption = Wheel order based on key
+
+Name = Label21
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 407
+  Width = 156
+  Caption = WHEEL 21 ABCQ
+
+Name = Label22
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 426
+  Width = 96
+  Caption = WHEEL 22
+
+Name = Label23
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 445
+  Width = 156
+  Caption = WHEEL 23 ABCQ
+
+Name = Label24
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 465
+  Width = 156
+  Caption = WHEEL 24 ABCQ
+
+Name = Label25
+  Type = Label
+  Font = Courier New
+  Height = 23
+  Left = 314
+  Size = 15
+  Style = bold
+  Top = 485
+  Width = 156
+  Caption = WHEEL 25 ABCQ
+
+Name = btn22R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 429
+  Width = 57
+  Taborder = 52
+  Caption = -->
+
+Name = btn22L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 429
+  Width = 57
+  Taborder = 53
+  Caption = <--
+
+Name = btn21R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 410
+  Width = 57
+  Taborder = 54
+  Caption = -->
+
+Name = btn21L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 410
+  Width = 57
+  Taborder = 55
+  Caption = <--
+
+Name = btn24R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 469
+  Width = 57
+  Taborder = 56
+  Caption = -->
+
+Name = btn24L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 469
+  Width = 57
+  Taborder = 57
+  Caption = <--
+
+Name = btn23R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 449
+  Width = 57
+  Taborder = 58
+  Caption = -->
+
+Name = btn23L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 449
+  Width = 57
+  Taborder = 59
+  Caption = <--
+
+Name = btn25L
+  Type = Button
+  Height = 20
+  Left = 634
+  Top = 489
+  Width = 57
+  Taborder = 60
+  Caption = <--
+
+Name = btn25R
+  Type = Button
+  Height = 20
+  Left = 692
+  Top = 489
+  Width = 57
+  Taborder = 61
+  Caption = -->
+
+Name = btnFlip
+  Type = Button
+  Height = 17
+  Left = 8
+  Top = 504
+  Width = 73
+  Taborder = 62
+  Caption = Flip To Read
+
+Name = btnDirections
+  Type = Button
+  Height = 17
+  Left = 88
+  Top = 504
+  Width = 75
+  Taborder = 63
+  Caption = Directions
+
+Name = Label26
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 288
+  Size = 15
+  Style = bold
+  Top = 8
+  Width = 12
+  Caption = 1
+
+Name = Label27
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 288
+  Size = 15
+  Style = bold
+  Top = 89
+  Width = 12
+  Caption = 5
+
+Name = Label28
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 285
+  Size = 15
+  Style = bold
+  Top = 188
+  Width = 24
+  Caption = 10
+
+Name = Label29
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 285
+  Size = 15
+  Style = bold
+  Top = 288
+  Width = 24
+  Caption = 15
+
+Name = Label30
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 285
+  Size = 15
+  Style = bold
+  Top = 388
+  Width = 24
+  Caption = 20
+
+Name = Label31
+  Type = Label
+  Color = 16711680
+  Font = Courier New
+  Height = 23
+  Left = 285
+  Size = 15
+  Style = bold
+  Top = 486
+  Width = 24
+  Caption = 25
+
+Name = btnSpeedCrypt
+  Type = Button
+  Height = 25
+  Left = 8
+  Top = 536
+  Width = 75
+  Taborder = 64
+  Caption = SpeedCrypt
+
+<enddata>
+
+
+
+
+
+
+
+
+
+
+
+

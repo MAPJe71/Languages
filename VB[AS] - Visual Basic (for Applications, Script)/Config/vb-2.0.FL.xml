@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="18" id="vb_function"         /> <!-- L_VB           -->
+    </associationMap>
+    <parsers>
+      <!--                                                     [vb_function] >
+        <classRange
+            mainExpr="^[\t ]*(class|struct)[\t ]+[\w]+[\s]*(:[\s]*(public|protected|private)[\s]+[\w]+[\s]*)?\{"
+            openSymbole = "\{"
+            closeSymbole = "\}"
+            displayMode="node" >
+          <className>
+            <nameExpr expr="(class|struct)[\t ]+[\w]+" />
+            <nameExpr expr="[\t ]+[\w]+" />
+            <nameExpr expr="[\w]+" />
+          </className>
+          <function
+              mainExpr="^[\t ]*((static|const|virtual)[\s]+)?([\w]+([\s]+[\w]+)?([\s]+|\*[\s]+|[\s]+\*|[\s]+\*[\s]+))?([\w]+[\s]*::)?(?!(if|while|for|switch))[\w~]+[\s]*\([^\)\(]*\)([\s]*const[\s]*)?[\n\s]*\{" >
+            <functionName>
+              <funcNameExpr expr="(?!(if|while|for|switch))[\w~]+[\s]*\(" />
+              <funcNameExpr expr="(?!(if|while|for|switch))[\w~]+" />
+            </functionName>
+          </function>
+        </classRange>
+            openSymbole = "[\r\n]"
+            closeSymbole = "(?i:END[\t ](?:CLASS|TYPE))"
+        <function 
+            mainExpr="^[\t ]*(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)" 
+            displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+          </functionName>
+        </function>
+-->
+      <!-- (sub | function |...                       =   one of the following: sub, function                                                                     -->
+      <!-- ... | property([\s]+(get|let))?)           =   OR one of the following: property, property get, property let (VB.NET has no get/let outside the prop)  -->
+      <!-- [\s]+[[:alpha:]_][\w]*                     =   1+ whitespaces, 1 non-digit char, 0+ char   (VB.NET allows preceding underscore in name declaration)    -->
+      <!-- ([\s]+lib[\s]+&quot;[\w]+&quot;            =   possible appearance of: 1+ whitespaces lib "libname"                                                    -->
+      <!-- ...([\s]+alias[\s]+&quot;[\w]+&quot;)?)?   =   with possible appearence of: 1+ whitespaces alias "aliasname"                                           -->
+      <!-- [\s]*\([^\)\(]*\)                          =   0+ whitespaces, parentheses containing parameters, can be multiline                                     -->
+      <!-- [^\n\r]*                                   =   everthing but line breaks                                                                               -->
+      <parser 
+          id="vb_function" 
+          displayName="Visual Basic (.NET|Script|for Applications)"  
+          commentExpr="(?m:((?&lt;=&apos;).*?$)|((?i:REM)([\t ].*?)?$))"> 
+        <classRange
+            mainExpr="(?s:(?&lt;SCOPE&gt;(?i:CLASS|TYPE)).*?(?i:END[\t ]\k&lt;SCOPE&gt;))"
+            displayMode="node" >
+          <className>
+            <nameExpr expr="(?i:CLASS|TYPE)[\t ]+(?:[A-Za-z_][\w]*\b)(?:.*?[\r\n])" />
+            <nameExpr expr="[\t ]+(?:[A-Za-z_][\w]*\b)" />
+            <nameExpr expr="[A-Za-z_][\w]*" />
+          </className>
+          <function
+              mainExpr="(?m:^[\t ]*(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$))" >
+            <functionName>
+              <funcNameExpr expr="(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+              <funcNameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+              <funcNameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+            </functionName>
+          </function>
+        </classRange>
+        <function 
+            mainExpr="^[\t ]*(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)" 
+            displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="(?i:(?:(?:PRIVATE|PUBLIC)[\t ]+)?(?:STATIC[\t ]+)?(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="(?i:(?:SUB|FUNCTION|PROPERTY)).*?(?:\(|$)"/>
+            <nameExpr expr="[A-Za-z_][\w]*(?=[\t ]*\()"/>
+          </functionName>
+        </function>
+      </parser>      
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

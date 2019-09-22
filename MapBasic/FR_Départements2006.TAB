@@ -1,0 +1,14 @@
+!table
+!version 450
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 7
+    Code_Département Char (2) Index 1 ;
+    Nom_Département Char (23) Index 2 ;
+    Code_Région Char (2) ;
+    Nom_Région Char (50) ;
+    Population Float ;
+    Superficie Float ;
+    Densité Float ;

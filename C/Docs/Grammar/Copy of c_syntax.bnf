@@ -1,0 +1,134 @@
+(?x)
+(?'DECL_SPECS'
+  (?:
+    \b
+    (?:
+      (?-i:auto|register|static|extern|typedef)
+    |
+      (?'TYPE_SPEC'
+        (?-i:void|char|short|int|long|float|double|(?:un)?signed)
+      |
+        (?-i:struct|union|enum)\s+(?&VALID_ID)                                  # Struct, Union or Enum Spec (simplified)
+      |
+        (?&VALID_ID)                                                            # Type-definition name
+      )
+    |
+      (?'TYPE_QUALIFIER'
+        (?-i:const|volatile)
+      )
+    )
+    \b
+    \s*
+  )+
+)?
+(?'DECLARATOR'
+  (?'POINTER'
+    \*
+    \s*
+    (?:
+      \b(?&TYPE_QUALIFIER)\b
+      \s*
+    )*
+    (?&POINTER)?
+  )?
+  (?'DIRECT_DECLARATOR'
+    (?'VALID_ID'
+        \b(?!(?-i:
+            auto
+        |	break
+        |	c(?:ase|har|on(?:st|ntinue))
+        |	d(?:efault|o(?:uble)?)
+        |	e(?:lse|num|xtern)
+        |	f(?:loat|or)
+        |	goto
+        |	i(?:f|n(?:t|line))
+        |	long
+        |	while
+        |	re(?:gister|strict|turn)
+        |	s(?:hort|i(?:gned|zeof)|t(?:atic|ruct)|witch)
+        |	typedef
+        |	un(?:ion|signed)
+        |	vo(?:id|latile)
+        |	_(?:
+                A(?:lignas|lignof|tomic)
+            |	Bool
+            |	Complex
+            |	Generic
+            |	Imaginary
+            |	Noreturn
+            |	Static_assert
+            |	Thread_local
+            )
+        )\b)
+        [A-Za-z_\x7F-\xFF][\w\x7F-\xFF]*
+    )
+  |
+    \(
+    (?&DECLARATOR)
+    \)
+  |
+    (?&DIRECT_DECLARATOR)
+    \[
+    (?&CONST_EXP)?
+    \]
+  |
+    (?&DIRECT_DECLARATOR)
+    \(
+    (?:
+      (?'PARAM_TYPE_LIST'
+        (?'PARAM_DECL'
+          (?&DECL_SPECS)
+          (?:
+            (?&DECLARATOR)
+          |
+            (?'ABSTRACT_DECLARATOR'
+              (?&POINTER)
+              (?'DIRECT_ABSTRACT_DECLARATOR'
+                \(
+                (?&ABSTRACT_DECLARATOR)
+                \)
+              |
+                (?&DIRECT_ABSTRACT_DECLARATOR)?
+                (?:
+                  \[
+                  [^\];{]*?
+                  \]
+                |
+                  \(
+                  (?&PARAM_TYPE_LIST)?
+                  \)
+                )
+              )
+            |
+              (?&POINTER)
+            |
+              (?&DIRECT_ABSTRACT_DECLARATOR)
+            )
+          )?
+        )
+        (?:
+          ,
+          \s*
+          (?&PARAM_DECL)
+        )*
+        (?:
+          ,
+          \s*
+          \.{3}
+        )?
+      )
+    |
+      (?&VALID_ID)
+      (?:
+        ,
+        \s*
+        (?&VALID_ID)
+      )*
+    )?
+    \)
+  )
+)
+(?'COMPOUND_STAT'
+  \s*
+  \{
+)

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="9" id="xml_node" />
+    </associationMap>
+    <parsers>
+      <!-- Version: 1.0.0.0                                       [xml_node] -->
+      <parser 
+          id="xml_node" 
+          displayName="XML Node" 
+          commentExpr="&lt;!--([^-]|-(?!-&gt;))*--&gt;" >
+        <function
+            mainExpr="&lt;(?!\?[Xx][Mm][Ll])[\w?]+(?:[\t \r\n]+\w+[\t ]*=[\t ]*(?&lt;QUOTEGROUP&gt;['&quot;])[^\&lt;QUOTEGROUP&gt;]*?\k&lt;QUOTEGROUP&gt;)*"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="[^&lt;\s]*" />
+          </functionName>
+        </function>
+      </parser>
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

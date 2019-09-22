@@ -1,0 +1,1813 @@
+################################################################################ 
+#                          GSAK Extract Logs from HTML                         # 
+# AddLogs.gsk  written by Kai Team and Lignumaqua 2007, 2008                   # 
+#                                                                              # 
+# This script downloads and parses a local copy of the GC.com cache page       #
+# showing FULL logs and extracts the individual logs                           #
+# The logs are checked for duplicates and then added to the cache database     #
+#                                                                              #
+# 1.46 For new version of GC.com after July 2008                               #
+# 1.47 For new version of GC.com after October 9 2008                          #
+# 1.48 Bug fix if <100 logs in checked database                                #
+# 1.49 Delete dowloaded ID file after use to avoid any duplicated IDs          #
+# 1.50 Remove $d_Changed updates                                               #
+# MacDescription = Add missing logs to a waypoint
+# MacFileName = AddLogs.gsk
+# MacAuthor = Kai Team & Lignumaqua
+# MacVersion=1.50
+# MacUrl=http://gsak.net/board/index.php?showtopic=5009&view=findpost&p=30045
+################################################################################
+
+#Check status of Ctrl key
+PreProcess Ctrl=$CtrlKey
+
+# Version check
+VERCHECK Version=7.2.3.26 (You can find the latest version of GSAK in the forums at http://support.gsak.net/.)
+
+GOSUB Name=DeclareVariables
+$Revision = "V1.50"
+
+IF $_FilterActive=TRUE
+    $FilterSaved=TRUE 
+    $SavedFilter = SaveFilter()
+ENDIF
+
+$form = Editform($form,"VersionLabel","caption","$Revision")
+
+SPEEDMODE status=on
+
+# Set defaults & initialize variables
+
+# Set and validate file paths
+  $Htmlfilepath = $_Install + "\html"
+	IF NOT(FolderExists($htmlfilepath))
+  	 $BatFile = $_Install + "\babel.bat"
+  	 $result = PutFile($BatFile, "MD " + quote($htmlfilepath))
+  	 FileOpen File="$BatFile" Wait=yes
+	ENDIF
+
+$HTMLFile= $Htmlfilepath + "\logs.html"
+$IDfile= $Htmlfilepath + "\id.html"
+$FindOwners=TRUE
+$Date=""
+$dblist = SysInfo("databases")
+$SelectDBBx=$_CurrentDatabase
+$Db=$_CurrentDatabase
+$FoundBx=TRUE
+$OwnerIDFile=$_Install + "\Macros\OwnerID.dat"
+$DataFile=$_Install + "\Macros\AddLogsData.dat"
+$dblist = "*Not Selected*" + ";" + SysInfo("databases")
+$OwnerSearch=""
+$Record=0
+$FullLogsURL="http://www.geocaching.com/seek/cache_details.aspx?ID=%gcid&log=y&decrypt="
+
+$tmp = PutFile($Htmlfilepath + "\GetHTML.vbs", MimeDecode($GetHTML))
+$tmp = PutFile($Htmlfilepath + "\GetSecureLogs.vbs", MimeDecode($GetSecureLogs))
+
+IF FileExists($OwnerIDFile)=FALSE
+    GOSUB Name=DBSearch Form
+ENDIF    
+
+# Check if the data-file exists?
+IF (FileExists($DataFile))
+	
+	# If the file exists then read the saved values and assign them to variables
+	# now $line will hold the contents of the file
+	FILEREAD File=$DataFile
+	
+	# Geocaching user name
+	$UserName = Extract($line, ";", 1)
+
+	# GC.com password
+	$UserPWD = Extract($line, ";", 2)
+	
+	#Status of Check Boxes on last run:
+	IF Extract($line, ";", 18)<>""
+	    $FoundBx=StrToBool(Extract($line, ";", 3))
+	    $DNFBx=StrToBool(Extract($line, ";", 4))
+	    $NoteBx=StrToBool(Extract($line, ";", 5))
+	    $OwnerMainBx=StrToBool(Extract($line, ";", 6))
+	    $TempDisBx=StrToBool(Extract($line, ";", 7))
+	    $EnableBx=StrToBool(Extract($line, ";", 8))
+	    $ArchiveBx=StrToBool(Extract($line, ";", 9))
+	    $RevNoteBx=StrToBool(Extract($line, ";", 10))
+	    $PublishBx=StrToBool(Extract($line, ";", 11))
+	    $AddManBx=StrToBool(Extract($line, ";", 12))
+	    $FrmDat2=StringToDate(Extract($line, ";", 13))
+	    $WillAttendBx=StrToBool(Extract($line, ";", 14))
+	    $NeedsMaintBx=StrToBool(Extract($line, ";", 15))
+	    $NeedsArchBx=StrToBool(Extract($line, ";", 16))
+	    $FlagBx=StrToBool(Extract($line, ";", 17))
+	    $NextBx=StrToBool(Extract($line, ";", 18))
+	ELSE
+	    # Set Check boxes if not previously set in existing datafile due to version upgrade
+      $FoundBx=TRUE
+	    $DNFBx=TRUE
+	    $NoteBx=TRUE
+	    $OwnerMainBx=TRUE
+	    $TempDisBx=TRUE
+	    $EnableBx=TRUE
+	    $ArchiveBx=TRUE
+	    $RevNoteBx=TRUE
+	    $PublishBx=TRUE
+	    $AddManBx=TRUE
+	    $WillAttendBx=TRUE
+	    $NeedsMaintBx=TRUE
+	    $NeedsArchBx=TRUE
+	    $FrmDat2=StringToDate("20000101")    
+	ENDIF 
+
+	ENDREAD
+	
+ELSE
+
+# No saved file so set defaults for form
+	
+	# Geocaching user name
+	$UserName="$d_PlacedBy"
+	
+	# GC.com password
+	$UserPWD = ""
+	
+	#Check boxes
+    $FoundBx=TRUE
+	$DNFBx=TRUE
+	$NoteBx=TRUE
+	$OwnerMainBx=TRUE
+	$TempDisBx=TRUE
+	$EnableBx=TRUE
+	$ArchiveBx=TRUE
+	$RevNoteBx=TRUE
+	$PublishBx=TRUE
+	$AddManBx=TRUE
+	$WillAttendBx=TRUE
+	$NeedsMaintBx=TRUE
+	$NeedsArchBx=TRUE
+	$FrmDat2=StringToDate("20000101")
+	
+	
+	IF Showform($Logininfo)
+		IF $CancelBtn
+		    # Save the value into $datafile to be reused the next time the macro is run
+            $variables = $UserName + ";" + $UserPWD + ";" + BoolToStr($FoundBx,"T","F") + ";" + BoolToStr($DNFBx, "T", "F") + ";"+ BoolToStr($NoteBx,"T","F")+ ";"
+            $variables=$variables + BoolToStr($OwnerMainBx,"T","F") + ";" + BoolToStr($TempDisBx,"T","F") + ";" + BoolToStr($EnableBx,"T","F") + ";" 
+            $variables=$variables + BoolToStr($ArchiveBx,"T","F") + ";" + BoolToStr($RevNoteBx,"T","F") + ";" + BoolToStr($PublishBx,"T","F") + ";" + BoolToStr($AddManBx,"T","F") + ";" + DateToString($FrmDat2) + ";"
+            $variables=$variables + BoolToStr($WillAttendBx,"T","F") + ";" + BoolToStr($NeedsMaintBx,"T","F") + ";" + BoolToStr($NeedsArchBx,"T","F") + ";"
+	        $variables=$variables + BoolToStr($FlagBx,"T","F") + ";" BoolToStr($NextBx,"T","F") + ";"
+	        $result = PutFile($datafile, $variables)
+	        IF Left($result, 7) = "*Error*"
+		        # If theres any error abort the macro
+		        CANCEL Msg="Unable to write to $datafile!"
+	        ENDIF
+    	CANCEL msg="Add logs cancelled"
+  	    ENDIF
+	    ELSE
+  	        CANCEL msg="Macro cancelled"
+	    ENDIF 
+
+# If we get to here then the user must have clicked on the OK button
+					
+ENDIF
+
+# Save the value into $datafile to be reused the next time the macro is run
+    $variables = $UserName + ";" + $UserPWD + ";" + BoolToStr($FoundBx,"T","F") + ";" + BoolToStr($DNFBx, "T", "F") + ";"+ BoolToStr($NoteBx,"T","F")+ ";"
+    $variables=$variables + BoolToStr($OwnerMainBx,"T","F") + ";" + BoolToStr($TempDisBx,"T","F") + ";" + BoolToStr($EnableBx,"T","F") + ";" 
+    $variables=$variables + BoolToStr($ArchiveBx,"T","F") + ";" + BoolToStr($RevNoteBx,"T","F") + ";" + BoolToStr($PublishBx,"T","F") + ";" + BoolToStr($AddManBx,"T","F") + ";" + DateToString($FrmDat2) + ";"
+    $variables=$variables + BoolToStr($WillAttendBx,"T","F") + ";" + BoolToStr($NeedsMaintBx,"T","F") + ";" + BoolToStr($NeedsArchBx,"T","F") + ";"
+	$variables=$variables + BoolToStr($FlagBx,"T","F") + ";" + BoolToStr($NextBx,"T","F") + ";"
+	$result = PutFile($datafile, $variables)
+	IF Left($result, 7) = "*Error*"
+		# If theres any error abort the macro
+		CANCEL Msg="Unable to write to $datafile!"
+	ENDIF
+
+# ============= Form ==============
+
+IF $CtrlKey=FALSE
+    WHILE ShowForm($form)
+    		# Reset the screen position of the menu form to where the user left it
+      	$Form = EditForm($Form,"Form1","Top",$_FormTop)
+      	$Form = EditForm($Form,"Form1","Left",$_FormLeft)
+      	IF $cancelform
+            $variables = $UserName + ";" + $UserPWD + ";" + BoolToStr($FoundBx,"T","F") + ";" + BoolToStr($DNFBx, "T", "F") + ";"+ BoolToStr($NoteBx,"T","F")+ ";"
+            $variables=$variables + BoolToStr($OwnerMainBx,"T","F") + ";" + BoolToStr($TempDisBx,"T","F") + ";" + BoolToStr($EnableBx,"T","F") + ";" 
+            $variables=$variables + BoolToStr($ArchiveBx,"T","F") + ";" + BoolToStr($RevNoteBx,"T","F") + ";" + BoolToStr($PublishBx,"T","F") + ";" + BoolToStr($AddManBx,"T","F") + ";" + DateToString($FrmDat2) + ";"
+            $variables=$variables + BoolToStr($WillAttendBx,"T","F") + ";" + BoolToStr($NeedsMaintBx,"T","F") + ";" + BoolToStr($NeedsArchBx,"T","F") + ";"
+    	    $variables=$variables + BoolToStr($FlagBx,"T","F") + ";" + BoolToStr($NextBx,"T","F") + ";"
+    	    $result = PutFile($datafile, $variables)
+    	    IF Left($result, 7) = "*Error*"
+    		    # If theres any error abort the macro
+    		    CANCEL Msg="Unable to write to $datafile!"
+    	    ENDIF
+      	    CANCELFILTER
+        	CANCEL msg="Extraction cancelled"
+      	ENDIF 
+    
+        IF $OK OR NOT ($cancelform)
+            $variables = $UserName + ";" + $UserPWD + ";" + BoolToStr($FoundBx,"T","F") + ";" + BoolToStr($DNFBx, "T", "F") + ";"+ BoolToStr($NoteBx,"T","F")+ ";"
+            $variables=$variables + BoolToStr($OwnerMainBx,"T","F") + ";" + BoolToStr($TempDisBx,"T","F") + ";" + BoolToStr($EnableBx,"T","F") + ";" 
+            $variables=$variables + BoolToStr($ArchiveBx,"T","F") + ";" + BoolToStr($RevNoteBx,"T","F") + ";" + BoolToStr($PublishBx,"T","F") + ";" + BoolToStr($AddManBx,"T","F") + ";" + DateToString($FrmDat2) + ";"
+            $variables=$variables + BoolToStr($WillAttendBx,"T","F") + ";" + BoolToStr($NeedsMaintBx,"T","F") + ";" + BoolToStr($NeedsArchBx,"T","F") + ";"
+    	    $variables=$variables + BoolToStr($FlagBx,"T","F") + ";" + BoolToStr($NextBx,"T","F") + ";"
+    	    $result = PutFile($datafile, $variables)
+    	    IF Left($result, 7) = "*Error*"
+    		    # If theres any error abort the macro
+    		    CANCEL Msg="Unable to write to $datafile!"
+    	    ENDIF
+            GOSUB Name=RunMACRO
+        ENDIF
+        
+        IF $SelecAllBtn
+        	GOSUB Name=Setall
+        ENDIF
+        
+        IF $ClearAllBtn
+        	GOSUB Name=Clearall
+        ENDIF
+        
+        IF $FrmBtn1
+            GOSUB Name=DBSearch Form
+        ENDIF    
+        
+    ENDWHILE 
+ENDIF
+
+IF $CtrlKey=TRUE
+    GOSUB Name=RunMACRO
+ENDIF
+
+CANCEL msg="Macro cancelled"
+
+# If we get to here then the user must have clicked on the OK button
+
+# ========== Form End ==============
+
+###############
+# Subroutines #
+###############
+BEGINSUB Name=DBSearch Form
+WHILE Showform($SDBform)
+    IF $SDBCancelMacro
+        CANCEL
+    ENDIF
+    
+    IF $Search
+        GOSUB Name=DBSearch
+        EXITSUB
+    ENDIF    
+ ENDWHILE       
+ENDSUB 
+#######################
+BEGINSUB Name=LoadSourceManually
+	WEB URL=$FullLogsURL
+	IF Showform($Form2)
+		IF $Frm2cancelform
+			CANCEL
+		ENDIF
+	ENDIF
+ENDSUB
+#######################
+BEGINSUB Name=AddManually
+    		IF $AddManBx=TRUE
+			$OwnerIDEditBx="0"
+			$OwnerNameFrm="$By"
+			DELAY MS=2000
+		    WEB URL=http://www.geocaching.com/profile/?guid=$GUID
+     	    IF Showform($AddManForm)
+       	        IF $CancelIDAdd 
+        	       $OwnerID = 0
+        	       EXITSUB
+                ENDIF  
+                
+                IF $SkipAllBtn
+        	       $AddManBx=FALSE
+        	       $OwnerID = 0
+        	       EXITSUB
+                ENDIF
+             
+                IF $AddID=TRUE AND $OwnerIDEditBx<>"0"
+        	       $OwnerID=Val($OwnerIDEditBx)
+        	       $OwnerIDData=$OwnerIDData + $By + ";" + Trim(Str($OwnerID,8,0)) + ";"
+        	       $IDsSaved=$IDsSaved+1
+        	       $Data=PutFile($OwnerIDFile,$OwnerIDData)
+                ENDIF
+            ENDIF
+        ENDIF      
+ENDSUB	
+
+#######################
+
+BEGINSUB name=GetID
+    #$ShowName=UTF8($By,"d")
+    $ShowName = $By
+    # Overwrite any existing data to avoid accidental duplication
+    $result = PutFile($IDFile, "blank")
+    
+	SHOWSTATUS msg="Getting online ID file for $ShowName, please wait..." Width=350
+	DELAY MS=5000
+	# Use external VBS file to get the HTML file
+	#check if log cutoff date has been reached skip add if it has
+    IF $LogDate>$FrmDat2-1
+        $IdURL="http://www.geocaching.com/profile/?guid=$GUID"
+	    $VBSFile = Quote($Htmlfilepath + "\GetSecureLogs.vbs")
+	    $Arguments = " " + Quote($IdURL) + " " + Quote($IDfile) + " " + Quote($Username) + " " + Quote($UserPWD)
+	    $result = $VBSFile + $Arguments
+	    RUNPGM pgm=$VBSFile parms=$Arguments wait=yes
+	    SHOWSTATUS Msg="Done" Display=off
+	
+	    #Open the saved HTML source
+        $IdHTML = GetFile($IDFile)
+        IF Left($IdHTML,7) = "*Error*"
+            Pause Msg="$IdHTML"
+            CANCEL
+        ENDIF
+        
+        # Check if data was good, if not the user is on their own!
+        $title = Extract($IdHTML,"</title>",1)
+        $title = Extract($title,"<title>",2)
+        IF NOT(At("Error Occurred",$title)=0) OR $IdHTML = "blank"
+    	    GOSUB Name=AddManually
+    	    EXITSUB
+        ENDIF
+    
+        $tmp = Extract($IdHTML,"CODE=getalluser&amp;mid=",2)
+        $tmp = Extract($tmp,"$_Quote>",1)
+        $OwnerID = Val(Trim($tmp))
+        $IDsSaved=$IDsSaved+1
+    
+        IF $OwnerID <> 0
+    	    $OwnerIDData=$OwnerIDData + $By + ";" + Trim(Str($OwnerID,8,0)) + ";"
+    	    $Data=PutFile($OwnerIDFile,$OwnerIDData)
+  	    ENDIF
+    ENDIF
+ENDSUB
+
+BEGINSUB Name=DBSearch
+    $LogsScanned=0
+	$IDsSaved=0
+	$Pass=1
+	
+    IF FileExists($OwnerIDFile)
+	    $OwnerIDData=GetFile($OwnerIDFile)
+	    IF Left($OwnerIDData,7) = "*Error*"
+            Pause Msg="$OwnerIDData"
+            CANCEL
+        ENDIF
+    ELSE
+        $OwnerIDData=";" 
+    ENDIF
+	
+    WHILE $Pass < 5
+        IF $Pass=1
+            $DatabaseSelected=$SelectDBBox1
+        ENDIF            
+
+        IF $Pass=2
+            $DatabaseSelected=$SelectDBBox2
+        ENDIF 
+        
+        IF $Pass=3
+            $DatabaseSelected=$SelectDBBox3
+        ENDIF 
+        
+        IF $Pass=4
+            $DatabaseSelected=$SelectDBBox4
+        ENDIF 
+		$Pass=$Pass +1	
+		IF $DatabaseSelected <> "*Not Selected*"
+        # Change to search database if we need to
+            IF $_CurrentDatabase <> $DatabaseSelected
+	             DATABASE Name=$DatabaseSelected Action=Select
+            ENDIF
+
+            #capture each Owner Name and OwnerID
+            TABLE Active=logs Scope=All
+            $status = "Processing Logs"
+            WHILE NOT($_EOL)
+                $OwnerSearch = ";" + $d_lBy + ";"
+                IF At($OwnerSearch,$OwnerIDData)=0 AND $d_lOwnerId<>0
+                    $OwnerIDData=$OwnerIDData + $d_lBy + ";" + Trim(Str($d_lOwnerId,8,0)) + ";"
+                    $IDsSaved=$IDsSaved + 1
+                ENDIF
+                $Record=$Record +1
+                # Show status of analysis
+                # only show status every 100 records
+                IF frac($Record/100) = 0
+                    $status = "Processing Log: " + "$Record" + " of " + "$_Count" + " from database: " + $DatabaseSelected
+                    ShowStatus msg="$status" Width=350 Title="Scanning $DatabaseSelected Database"
+                ENDIF 
+                GOTO Position=next
+            ENDWHILE
+            ShowStatus msg="$status" Width=350 Display=Off
+            TABLE Active=caches
+            $LogsScanned=$LogsScanned + $Record
+            $Record=0
+        ENDIF   
+    ENDWHILE  
+    
+    # Change database back if we need to
+	IF $_CurrentDatabase <> $Db
+	    DATABASE Name="$Db" Action=Select
+	ENDIF
+	
+	MSGOK msg=$IDsSaved Owner IDs saved from $LogsScanned logs scanned
+    $IDsSaved=0
+
+	$Data=PutFile($OwnerIDFile,$OwnerIDData)
+	IF Left($Data,7) = "*Error*"
+        PAUSE Msg="$Data"
+        CANCEL
+    ENDIF
+
+ENDSUB 
+
+BEGINSUB Name=RunMacro
+$GCcode = $d_Code
+# Filter down to just this one cache
+MFILTER Expression=$GCcode = $d_Code
+
+GOSUB Name=GetHtml
+GOSUB Name=OpenHTML
+GOSUB Name=GrabCacheCode
+GOSUB Name=ExtractLogs
+
+# Grab each log (all text between class='logContainer or logcontainerAlt, clean it up and remove HTML tags 
+
+$NumberLogs=0
+
+WHILE IsEmpty($Log)=FALSE
+
+  $Log = Extract($HTML, "logContainer" , 2)
+    
+  IF NOT($log = "")
+
+    # Date
+    $HTML = Right($HTML, (Len($HTML) - Len($Log) - 12))
+    
+    $LogType = Extract($Log, ">&nbsp;", 1)
+    $Date = Right($Log, (Len($Log) - Len($LogType) - 7))
+    
+    $Log = $Date
+    $Date = Extract ($Date, " by", 1)
+    $Date = Alltrim($Date)
+    
+    #Logs for the current year have no year shown - add it on
+    $YearNow = (Left(DateToString($_Today),4))
+    
+        
+    IF At(",",$Date) = 0
+    	$Date = $Date + ", " + $YearNow
+    ENDIF
+        
+    GOSUB name=ParseDate
+    GOSUB name=LogType
+    GOSUB name=ParseLogs
+    
+  ENDIF
+ENDWHILE
+
+	# Count the found logs
+	IF Seek($GCcode)
+		$NumberFound = 0
+		TABLE Active=Logs Scope=Parent
+		WHILE NOT($_EOL)
+  		IF $d_lType = "Found it" OR $d_lType = "Webcam Photo Taken" OR $d_lType="Attended"
+	    	$NumberFound = $NumberFound + 1
+  	    ENDIF
+  	GOTO Position=Next
+  	ENDWHILE
+	
+		TABLE Active=caches
+		#$d_UserSort = $NumberFound
+	ENDIF
+	
+	RESYNCLOGS
+	CANCELFILTER
+		
+	IF $FilterSaved=TRUE
+        $RestoreFilter=RestoreFilter($SavedFilter,TRUE)
+  ENDIF
+  
+  SPEEDMODE status=off
+	$tmpB = Seek($GCcode)
+	SPEEDMODE status=on
+
+   #Update the changed date for older versions of GSAK
+  IF $_Version < "7.5"
+		IF $NumberLogs>0
+  		$d_Changed=$_Today
+  	ENDIF 
+	ENDIF
+    
+	MSGOK msg=" Logs added: $NumberLogs $_Newline Total Found logs: $NumberFound $_Newline New Owner ID's Saved: $IDsSaved"
+
+    IF $FlagBx=TRUE
+        USERFLAG type=set range=1 
+    ENDIF
+    
+    IF $NextBx=TRUE
+        	GOTO Position=Next
+    ENDIF
+
+    RETURN
+
+ENDSUB
+
+#############################
+BEGINSUB Name=GetHTML
+	SHOWSTATUS msg="Getting online HTML file, please wait..." Width=350
+	# Use external VBS file to get the HTML file
+	$VBSFile = Quote($Htmlfilepath + "\GetHTML.vbs")
+	$Arguments = " " + Quote($FullLogsURL) + " " + Quote($HTMLFile)
+	$result = $VBSFile + $Arguments
+	RUNPGM pgm=$VBSFile parms=$Arguments wait=yes
+	SHOWSTATUS Msg="Done" Display=off
+ENDSUB 
+
+#############################
+
+BEGINSUB Name=GetSecureHTML
+	SHOWSTATUS msg="Getting secure online HTML file, please wait..." Width=350
+	# Use external VBS file to get the HTML file
+	$VBSFile = Quote($Htmlfilepath + "\GetSecureLogs.vbs")
+	$Arguments = " " + Quote($FullLogsURL) + " " + Quote($HTMLFile) + " " + Quote(HttpEncode($Username)) + " " + Quote(HttpEncode($UserPWD))
+	$result = $VBSFile + $Arguments
+	RUNPGM pgm=$VBSFile parms=$Arguments wait=yes
+	SHOWSTATUS Msg="Done" Display=off
+ENDSUB 
+
+#############################
+
+BEGINSUB Name=OpenHTML
+    #Open the saved HTML source
+    $HTML = GetFile($HTMLFile)
+    IF Left($HTML,7) = "*Error*"
+        Pause Msg="$HTML"
+        Cancel
+    ENDIF
+    # Check if data was good, if not try logging in
+    $title = Extract($HTML,"</title>",1)
+    $title = Extract($title,"<title>",2)
+    IF NOT(At("Error Occurred",$title)=0)
+    	GOSUB  Name=GetSecureHTML
+    	#Open the saved HTML source
+    	$HTML = GetFile($HTMLFile)
+    	IF Left($HTML,7) = "*Error*"
+        Pause Msg="$HTML"
+        Cancel
+    	ENDIF
+    ENDIF
+    
+    # Check if data was good, if not the user is on their own!
+    $title = Extract($HTML,"</title>",1)
+    $title = Extract($title,"<title>",2)
+    IF NOT(At("Error Occurred",$title)=0) OR NOT(At("Login",$title)=0)
+    	GOSUB  Name=LoadSourceManually
+    	#Open the saved HTML source
+    	$HTML = GetFile($HTMLFile)
+    	IF Left($HTML,7) = "*Error*"
+        Pause Msg="$HTML"
+        Cancel
+    	ENDIF
+    ENDIF
+    
+ENDSUB
+
+###########################
+BEGINSUB Name=GrabCacheCode
+#Grab the GC Code for the Cache
+$GCCode = RegExSub("(GC.*?) ",$HTML,1,1)
+#$GCcode=$d_Code
+ENDSUB
+
+ ########################
+BEGINSUB Name=ExtractLogs
+    # Trim down to the logs only
+$SearchString = "<span id=" + $_Quote + "CacheLogs" + $_Quote + ">"
+$HTML = Extract($HTML, $SearchString,2)
+$HTML = Extract($HTML, "</span>",1)
+
+# Strip off the table opening tag
+$Log = Extract($HTML, "logContainer" , 1)
+$HTML = Right($HTML, (Len($HTML) - Len($Log) - 12))
+ENDSUB
+
+##########################
+BEGINSUB name=ParseDate
+	$Month = Upper(Left(Extract($date," ",1),3))
+	$Day = Extract($date," ",2)
+	$Day = Extract($Day,",",1)
+	$Year = Extract($date," ",3)
+	$Months = "JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC"
+	$MonthNum = At($Month,$Months)
+	$MonthNum = ($MonthNum - 1)/4 + 1
+	$Month = NumToStr($MonthNum)
+	
+	IF Len($Month)<2
+		$Month = "0" + $Month
+	ENDIF
+	
+	IF Len($Day)<2
+		$Day = "0" + $Day
+	ENDIF
+	
+	$Date = $Year + $Month + $Day
+	$LogDate = StringToDate($Date)
+			
+ENDSUB
+
+########################
+BEGINSUB Name=LogType
+      # Log Type
+    
+    	# Trim to before the ".gif"
+    $LogType = Extract($LogType,".gif" , 1)
+    	# How many / are there?
+    $CountSlashes = RegExCount("/",$LogType)
+    	# Extract after the last /
+    $LogType = Extract($LogType, "/",($CountSlashes +1))
+    
+    $LogType = Alltrim($LogType)
+        
+    $FoundFlag=FALSE
+    $LogFlag=FALSE    
+        
+    IF $LogType = "icon_camera" AND $FoundBx=TRUE
+    	$LogType = "Webcam Photo Taken"
+    	$FoundFlag = TRUE
+    ENDIF
+       
+    IF $LogType = "icon_attended" AND $FoundBx=TRUE
+    	$LogType = "Attended"
+    	$FoundFlag = TRUE
+    ENDIF  
+
+    IF $LogType = "icon_smile" AND $FoundBx=TRUE
+    	$LogType = "Found it"
+    	$FoundFlag = TRUE
+    ENDIF
+    
+    IF $LogType = "icon_sad" AND $DNFBx=TRUE
+    	$LogType = "Didn't find it"
+    	$LogFlag = TRUE
+    ENDIF
+    
+    IF $LogType = "icon_note" AND $NoteBx=TRUE
+    	$LogType = "Write note"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "icon_maint" AND $OwnerMainBx=TRUE
+    	$LogType = "Owner Maintenance"
+    	$LogFlag = TRUE
+    ENDIF
+    
+    IF $LogType = "coord_update" AND $OwnerMainBx=TRUE
+    	$LogType = "Update Coordinates"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "icon_disabled" AND $TempDisBx=TRUE
+    	$LogType = "Temporarily Disable Listing"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "icon_enabled" AND $EnableBx=TRUE
+    	$LogType = "Enable Listing"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "traffic_cone" AND $ArchiveBx=TRUE
+    	$LogType = "Archive"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "big_smile" AND $RevNoteBx=TRUE
+    	$LogType = "Post Reviewer Note"
+    	$LogFlag = TRUE
+    ENDIF
+
+    IF $LogType = "icon_greenlight" AND $PublishBx=TRUE
+    	$LogType = "Publish Listing"
+    	$LogFlag = TRUE
+    ENDIF
+
+		IF $LogType = "icon_rsvp" AND $WillAttendBx=TRUE
+    	$LogType = "Will Attend"
+    	$LogFlag = TRUE
+    ENDIF
+    
+		IF $LogType = "icon_needsmaint" AND $NeedsMaintBx=TRUE
+    	$LogType = "Needs Maintenance"
+    	$LogFlag = TRUE
+    ENDIF
+
+		IF $LogType = "icon_remove" AND $NeedsArchBx=TRUE
+    	$LogType = "Needs Archived"
+    	$LogFlag = TRUE
+    ENDIF
+#$WillAttendBx $NeedsMaintBx $NeedsArchBx
+
+ENDSUB    
+
+############################
+BEGINSUB Name=ParseLogs
+    
+    IF $FoundFlag=TRUE OR $LogFlag=TRUE
+    
+    	#GUID
+        $GUID = Extract($Log,"?guid=", 2)
+        $GUID = Extract($GUID, $_Quote, 1)
+       
+  	    # Log ID #
+  	    $Log = Replace("name=","NAME=",$log,FALSE)
+        $SearchString = "NAME=" + $_Quote
+    	$LogID = Extract($Log, $SearchString, 2)
+    	$Log = $LogID
+    	$LogID = Extract($LogID, $_Quote, 1)
+    	$LogID = Alltrim($LogID)
+    	
+    	$Log = Extract($Log,"?guid=",2)
+        
+    	# Name
+    	$By = Extract($Log,"</", 1)
+    	$Log = Right($Log, (Len($Log) - Len($By) - 1))
+#    	$By = Extract ($By, ">", 2) #modified in next line to allow for user name with ">" in Name
+        $By = substr($By, at(">",$By) + 1, 0)
+    	$By = Alltrim($By)
+    	$By = EntityDecode($By)
+    	
+			# Text
+#    	$LogText = Extract($Log, "<br>", 1)
+#    	$LogText = Right($Log, (Len($Log) - Len($LogText) - 4))
+#    	$LogText = Extract($LogText,"<br>[<", 1)
+    	
+    	# For new version of GC.com site end July 2008
+    	$LogText = Extract($Log, "<br />", 1)   
+    	$LogText = Right($Log, (Len($Log) - Len($LogText) - 6)) 	    	
+    	$LogText = Extract($LogText, "<br />[", 1)
+    	
+    	# Replace line feeds
+    	$LogText = Replace("<p>",$_NewLine + $_NewLine,$LogText,True)
+    	$LogText = Replace("<br>",$_NewLine,$LogText,True)
+    	
+    	# Strip out all other <> delimited tags.
+    	
+    	$LogText = RegExReplace("<(.|\n)+?>", $LogText, "")
+    	
+    	# Replace &nbsp; with spaces
+    	$Logtext = Replace("&nbsp;"," ",$Logtext,TRUE)
+    	
+    	$LogText = Alltrim($LogText)
+            
+
+			#Use the GC Code to position the GSAK pointer to the correct cache
+			IF Seek($GCcode)
+																				
+				#############################################
+				# Add the log here Variables are as follows:
+				# Code = $GCcode
+				# Log Type = $LogType
+				# Log date = $LogDate
+				# Finders name = $By
+				# Log ID = $LogID
+				# Owner ID = $OwnerID
+				# Log text = $LogText
+				#############################################
+								
+#				MSGOK msg="$Logtype, $logdate, $by, $logid, $Ownerid, $logtext"
+				TABLE Active=Logs Scope=Parent
+				#$ShowName=UTF8($By,"d")
+				$ShowName=$By
+				SHOWSTATUS msg="Checking log for: $ShowName on $LogDate" Width=350
+												
+				#Check to see if we have a log on this date from this Finder already
+				$Duplicate = FALSE
+    		    IF Seek($logID)
+                    $Duplicate = TRUE
+                ENDIF 
+				
+				$OwnerID=0
+		    IF NOT($Duplicate)AND $LogDate>$FrmDat2-1
+    	    # Try and find OwnerID
+			    IF $FindOwners 
+			        GOSUB Name=LookupID
+			        IF At($OName,$OwnerIDData)=0 AND $AddManBx=TRUE
+			            GOSUB Name=GetID
+			        ENDIF
+			        IF At($OName,$OwnerIDData)=0
+			            GOSUB Name=AddManually
+			        ENDIF
+		        ELSE
+			        $OwnerID=0
+			    ENDIF
+			    #check if log cutoff date has been reached skip add if it has
+            ADDNEW 
+			        $NumberLogs=$NumberLogs+1
+				    $d_lType=$LogType
+				    $d_lText=UTF8($LogText,"d")
+				    #$d_lBy=UTF8($By,"d")
+				    $d_lBy=$By
+				    $d_lDate=$LogDate
+				    $d_lLogId=Val($LogID)
+				
+				    IF $OwnerID<>0
+	    			    $d_lOwnerId=$OwnerID
+				    ENDIF 
+			ENDIF
+			TABLE Active=caches
+		ENDIF
+	ENDIF
+ENDSUB
+
+#######################
+BEGINSUB Name=LookupID
+    $OwnerIDFile=$_Install + "\Macros\OwnerID.dat"
+    $OwnerIDData=GetFile($OwnerIDFile)
+    $ONum=0
+    $Position=0
+    $OName=";"+ $By + ";"
+	
+	IF $By=""
+        EXITSUB
+	ENDIF
+	
+	# Search the local list of Owner ID Numbers & retrieve from list if found
+	IF At($OName,$OwnerIDData)<>0
+	    $Position = At($OName,$OwnerIDData)
+        $Position = $Position + Len($OName)
+        $ONum = Val(SubStr($OwnerIDData,$Position,$Position + 8))
+        $OwnerID=$ONum
+    ENDIF
+ENDSUB 
+
+#######################
+
+BEGINSUB Name=Setall
+  $FoundBx = TRUE
+  $DNFBx  = TRUE
+  $NoteBx = TRUE
+  $OwnerMainBx = TRUE
+  $TempDisBx = TRUE
+  $EnableBx = TRUE
+  $ArchiveBx = TRUE
+  $RevNoteBx = TRUE
+  $PublishBx = TRUE
+  $WillAttendBx = TRUE
+  $NeedsMaintBx = TRUE
+  $NeedsArchBx = TRUE
+ENDSUB
+    
+#######################
+    
+BEGINSUB Name=Clearall
+  $FoundBx = FALSE
+  $DNFBx  = FALSE
+  $NoteBx = FALSE
+  $OwnerMainBx = FALSE
+  $TempDisBx = FALSE
+  $EnableBx = FALSE
+  $ArchiveBx = FALSE
+  $RevNoteBx = FALSE
+  $PublishBx = FALSE
+  $WillAttendBx = FALSE
+  $NeedsMaintBx = FALSE
+  $NeedsArchBx = FALSE 
+ENDSUB
+
+#######################
+
+BEGINSUB Name=DeclareVariables
+#*******************************************************
+#   Variable declarations for
+#   AddLogs.gsk
+#
+#   Generated 05-07-07 11:05:28 PM on GSAKVariables.gsk Rev V0.20 B3
+#
+#*******************************************************
+
+Option Explicit=Yes
+
+Declare Var=$AddManBx Type=Boolean
+Declare Var=$AddManForm Type=String
+Declare Var=$ArchiveBx Type=Boolean
+Declare Var=$Arguments Type=String
+Declare Var=$BatFile Type=String
+Declare Var=$By Type=String
+DECLARE Var=$CtrlKey Type=Boolean
+Declare Var=$CountSlashes Type=Numeric
+DECLARE Var=$Data Type=String
+DECLARE Var=$DatabaseSelected Type=String
+Declare Var=$DataFile Type=String
+Declare Var=$Date Type=String
+Declare Var=$Day Type=String
+Declare Var=$Db Type=String
+Declare Var=$dblist Type=String
+Declare Var=$DNFBx Type=Boolean
+Declare Var=$Duplicate Type=Boolean
+Declare Var=$EnableBx Type=Boolean
+Declare Var=$Filter Type=String
+DECLARE Var=$FilterSaved Type=Boolean
+Declare Var=$FindOwners Type=Boolean
+DECLARE Var=$FlagBx Type=Boolean
+Declare Var=$Form Type=String
+Declare Var=$form2 Type=String
+DECLARE Var=$FrmDat2 Type=Date
+Declare Var=$FoundBx Type=Boolean
+Declare Var=$FoundFlag Type=Boolean
+Declare Var=$FullLogsURL Type=String
+Declare Var=$GCcode Type=String
+Declare Var=$GetHTML Type=String
+Declare Var=$GetSecureLogs Type=String
+Declare Var=$GUID Type=String
+Declare Var=$HTML Type=String
+Declare Var=$HTMLFile Type=String
+Declare Var=$Htmlfilepath Type=String
+Declare Var=$IDfile Type=String
+Declare Var=$IdHTML Type=String
+Declare Var=$IDsSaved Type=Numeric
+DECLARE Var=$IdURL Type=String
+Declare Var=$Log Type=String
+Declare Var=$LogDate Type=Date
+Declare Var=$LogFlag Type=Boolean
+Declare Var=$LogID Type=String
+Declare Var=$LoginInfo Type=String
+DECLARE Var=$LogsScanned Type=Numeric
+Declare Var=$LogText Type=String
+Declare Var=$LogType Type=String
+Declare Var=$Month Type=String
+Declare Var=$MonthNum Type=Numeric
+Declare Var=$Months Type=String
+DECLARE Var=$NextBx Type=Boolean
+Declare Var=$NoteBx Type=Boolean
+Declare Var=$NumberFound Type=Numeric
+Declare Var=$NumberLogs Type=Numeric
+Declare Var=$OName Type=String
+Declare Var=$ONum Type=Numeric
+Declare Var=$OwnerID Type=Numeric
+Declare Var=$OwnerIDData Type=String
+Declare Var=$OwnerIDEditBx Type=String
+Declare Var=$OwnerIDFile Type=String
+Declare Var=$OwnerMainBx Type=Boolean
+Declare Var=$OwnerNameFrm Type=String
+Declare Var=$OwnerSearch Type=String
+Declare Var=$Pass Type=Numeric
+Declare Var=$Position Type=Numeric
+Declare Var=$PublishBx Type=Boolean
+DECLARE Var=$WillAttendBx Type=Boolean
+DECLARE Var=$NeedsMaintBx Type=Boolean
+DECLARE Var=$NeedsArchBx Type=Boolean
+Declare Var=$Record Type=Numeric
+DECLARE Var=$RestoreFilter Type=Numeric
+Declare Var=$result Type=String
+Declare Var=$Revision Type=String
+Declare Var=$RevNoteBx Type=Boolean
+DECLARE Var=$SavedFilter Type=String
+Declare Var=$SDBform Type=String
+Declare Var=$SearchString Type=String
+Declare Var=$SelectDBBx Type=String
+DECLARE Var=$ShowName Type=String
+Declare Var=$status Type=String
+Declare Var=$TempDisBx Type=Boolean
+Declare Var=$tmpB Type=Boolean
+Declare Var=$title Type=String
+Declare Var=$tmp Type=String
+Declare Var=$UserName Type=String
+Declare Var=$UserPWD Type=String
+Declare Var=$variables Type=String
+Declare Var=$VBSFile Type=String
+Declare Var=$Year Type=String
+Declare Var=$YearNow Type=String
+
+ENDSUB
+
+#######################
+
+#Filter data for Macroset
+
+<data> VarName=$Filter
+cbxLogDate=6
+edtLogDateF=     39187
+edtLogDateT=     39187
+cbxLogInclude=0
+edtLogDateDuring=
+cbxLogDateDuring=0
+cbxLogCount=0
+edtLogFrom=
+edtLogTo=
+chkLogFound=True
+chkLogNotFound=True
+chkLogNote=True
+chkLogMatch=True
+rbtExact=True
+rbtWild=False
+rbtId=False
+chkLogNeedsA=True
+chkLogSearchFound=True
+chkLogSearchNotFound=True
+chkLogSearchNote=True
+cbxLogsToSearch=0
+
+<enddata>
+
+##############################
+
+<data> VarName=$GetHTML
+JyBWQlMgZmlsZSB0byBnZXQgdGhlIHNvdXJjZSBodG1sIG9mIGEgd2ViIHBhZ2UNCicgDQonIFRha2Vz
+IHR3byBjb21tYW5kIGxpbmUgcGFyYW1ldGVyczoNCicgRmlyc3QgaXMgdGhlIGZ1bGwgVVJMIG9mIHRo
+ZSBwYWdlIHRvIGdldA0KJyBTZWNvbmQgaXMgdGhlIGZ1bGwgcGF0aCB0byB0aGUgZmlsZSB0byBzdG9y
+ZSBpdCBpbg0KJyBUaGF0J3MgaXQgLSBubyBmcmlsbHMuDQonIEZyZWUgZm9yIHVzZSB1bmRlciBHTlUg
+R1BMDQonIExpZ251bWFxdWENCicgNC0yOS0wNyBWMC4xIEINCg0KDQoNCg0KU2V0IG9iakFyZ3MgPSBX
+U2NyaXB0LkFyZ3VtZW50cw0KcmVxdWlyZWRVUkwgPSBvYmpBcmdzKDApDQpyZXF1aXJlZEZpbGUgPSBv
+YmpBcmdzKDEpDQoNCkNhbGwgR2V0SFRNTCAocmVxdWlyZWRVUkwscmVxdWlyZWRGaWxlKQ0KDQonLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQoNCkZ1bmN0aW9uIEdldEhUTUwoZmls
+ZVVSTCxoZExvY2F0aW9uKQ0KJ2Nvbm5lY3QgdG8gYSBVUkwgYW5kIGRvd25sb2FkcyB0aGUgZmlsZQ0K
+DQoJU2V0IHhtbEhUVFAgPSBDcmVhdGVPYmplY3QoIk1TWE1MMi5TZXJ2ZXJYTUxIVFRQIikNCg0KCQl4
+bWxIVFRQLm9wZW4gIkdFVCIsIGZpbGVVUkwsIGZhbHNlDQoJICAgIAl4bWxIVFRQLnNlbmQoKQ0KCQkN
+CglzZXQgbXlTdHJlYW0gPSBDcmVhdGVPYmplY3QoIkFET0RCLlN0cmVhbSIpDQoNCgkJbXlTdHJlYW0u
+T3Blbg0KCQlteVN0cmVhbS5UeXBlID0gMSAnYWRUeXBlQmluYXJ5DQoJIA0KCQlteVN0cmVhbS5Xcml0
+ZSB4bWxIVFRQLlJlc3BvbnNlQm9keSAJJ0dpdmUgdGhlIFhNTCBzdHJpbmcgdG8gdGhlIEFETyBTdHJl
+YW0NCgkJbXlTdHJlYW0uUG9zaXRpb24gPSAwICAgIAkJJ1NldCB0aGUgc3RyZWFtIHBvc2l0aW9uIHRv
+IHRoZSBzdGFydA0KDQoJc2V0IEZTTyA9IENyZWF0ZW9iamVjdCgiU2NyaXB0aW5nLkZpbGVTeXN0ZW1P
+YmplY3QiKQ0KDQoJCWlmIGZzby5GaWxlZXhpc3RzKGhkTG9jYXRpb24pIHRoZW4gDQoNCgkJCUZzby5E
+ZWxldGVGaWxlIGhkTG9jYXRpb24NCg0KCQlFbmQgSWYJCQ0KCQ0KCQlteVN0cmVhbS5TYXZlVG9GaWxl
+IGhkTG9jYXRpb24NCgkJbXlTdHJlYW0uQ2xvc2UNCg0KCXNldCBGU08gPSBOb3RoaW5nDQoJU2V0IG15
+U3RyZWFtID0gTm90aGluZw0KCVNldCB4bWxIVFRQID0gTm90aGluZw0KDQpFbmQgRnVuY3Rpb24=
+<enddata>
+
+##############################
+
+<data> VarName=$GetSecureLogs
+DQpTZXQgb2JqQXJncyA9IFdTY3JpcHQuQXJndW1lbnRzDQpyZXF1aXJlZFVSTCA9IG9iakFyZ3MoMCkN
+CnJlcXVpcmVkRmlsZSA9IG9iakFyZ3MoMSkNCnN0clVzZXJuYW1lID0gb2JqQXJncygyKQ0Kc3RyUGFz
+c3dvcmQgPSBvYmpBcmdzKDMpDQoNCkNhbGwgR2V0U2VjdXJlSFRNTCAocmVxdWlyZWRVUkwscmVxdWly
+ZWRGaWxlLCBzdHJVc2VybmFtZSwgc3RyUGFzc3dvcmQpDQoNCictLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQonIEdldFNlY3VyZUxvZ3MgVjEuMSA4LTE2LTA3DQoNClN1YiBHZXRTZWN1
+cmVIVE1MIChmaWxlVVJMLGhkTG9jYXRpb24sIFVzZXJuYW1lLCBQYXNzd29yZCkNCgkNCgknR2V0IHRo
+ZSBiYXNlIHBhZ2UsIG5vdCBsb2dnZWQgaW4sIHNvIHlvdSBjYW4gZ2V0IHRoZSB2aWV3c3RhdGUNCglm
+aWxlVVJMID0gImh0dHA6Ly93d3cuZ2VvY2FjaGluZy5jb20vbG9naW4vZGVmYXVsdC5hc3B4P1JFU0VU
+PVkmcmVkaXI9IiAmIHVybEVuY29kZShmaWxlVVJMKQ0KDQoJU2V0IHhtbEhUVFAgPSBDcmVhdGVPYmpl
+Y3QoIk1TWE1MMi5TZXJ2ZXJYTUxIVFRQIikNCg0KCXhtbEhUVFAub3BlbiAiR0VUIiwgZmlsZVVSTCwg
+RmFsc2UNCiAgICAJeG1sSFRUUC5zZW5kKCkNCgkJDQoJc2V0IG15U3RyZWFtID0gQ3JlYXRlT2JqZWN0
+KCJBRE9EQi5TdHJlYW0iKQ0KDQoJbXlTdHJlYW0uT3Blbg0KCW15U3RyZWFtLlR5cGUgPSAyICdhZFRl
+eHQNCgkgDQoJbXlTdHJlYW0uV3JpdGVUZXh0IHhtbEhUVFAuUmVzcG9uc2VUZXh0IAknR2l2ZSB0aGUg
+WE1MIHN0cmluZyB0byB0aGUgQURPIFN0cmVhbQ0KCW15U3RyZWFtLlBvc2l0aW9uID0gMCAgICAJCSdT
+ZXQgdGhlIHN0cmVhbSBwb3NpdGlvbiB0byB0aGUgc3RhcnQNCglzdHJCZWZvcmVMb2dpbiA9IG15U3Ry
+ZWFtLlJlYWRUZXh0DQogICAgCQ0KICAgIAknR2V0IHRoZSBWaWV3IFN0YXRlDQogICAgCXN0clZpZXdT
+dGF0ZSA9IEdldFZpZXdTdGF0ZShzdHJCZWZvcmVMb2dpbikNCiAgICAJc3RyRXZlbnRWYWxpZGF0aW9u
+ID0gR2V0RXZlbnRWYWxpZGF0aW9uKHN0ckJlZm9yZUxvZ2luKQ0KDQoJJ0xvZyBpbiBhbmQgZ2V0IHRo
+ZSBwYWdlIHdpdGggbG9ncw0KICAgIAlTZW5kU3RyaW5nPSgiX19WSUVXU1RBVEU9IiAmIHVybGVuY29k
+ZShzdHJWaWV3U3RhdGUpICYgIiZteVVzZXJuYW1lPSIgJiB1c2VybmFtZSAmICImbXlQYXNzd29yZD0i
+ICYgcGFzc3dvcmQgJiAiJmNvb2tpZT1vbiZCdXR0b24xPUxvZ2luJl9fRVZFTlRWQUxJREFUSU9OPSIg
+JiB1cmxlbmNvZGUoc3RyRXZlbnRWYWxpZGF0aW9uKSkNCglTZXQgeG1sSFRUUCA9IENyZWF0ZU9iamVj
+dCgiTVNYTUwyLlNlcnZlclhNTEhUVFAiKQ0KCXhtbEhUVFAub3BlbiAiUE9TVCIsIGZpbGVVUkwsIEZh
+bHNlDQoJeG1saHR0cC5zZXRSZXF1ZXN0SGVhZGVyICJDb250ZW50LVR5cGUiLCAiYXBwbGljYXRpb24v
+eC13d3ctZm9ybS11cmxlbmNvZGVkIg0KCXhtbEhUVFAuc2VuZCBTZW5kU3RyaW5nDQogICAgCQkJDQoJ
+c2V0IG15U3RyZWFtID0gQ3JlYXRlT2JqZWN0KCJBRE9EQi5TdHJlYW0iKQ0KCW15U3RyZWFtLk9wZW4N
+CglteVN0cmVhbS5UeXBlID0gMSAnYWRUeXBlQmluYXJ5DQoJbXlTdHJlYW0uV3JpdGUgeG1sSFRUUC5S
+ZXNwb25zZUJvZHkgCSdHaXZlIHRoZSBYTUwgc3RyaW5nIHRvIHRoZSBBRE8gU3RyZWFtDQoJbXlTdHJl
+YW0uUG9zaXRpb24gPSAwICAgIAkJJ1NldCB0aGUgc3RyZWFtIHBvc2l0aW9uIHRvIHRoZSBzdGFydA0K
+DQoJc2V0IEZTTyA9IENyZWF0ZW9iamVjdCgiU2NyaXB0aW5nLkZpbGVTeXN0ZW1PYmplY3QiKQ0KDQoJ
+SWYgZnNvLkZpbGVleGlzdHMoaGRMb2NhdGlvbikgVGhlbiANCgkJRnNvLkRlbGV0ZUZpbGUgaGRMb2Nh
+dGlvbg0KCUVuZCBJZgkJDQoJDQoJbXlTdHJlYW0uU2F2ZVRvRmlsZSBoZExvY2F0aW9uDQoJbXlTdHJl
+YW0uQ2xvc2UNCg0KCXNldCBGU08gPSBOb3RoaW5nDQoJU2V0IG15U3RyZWFtID0gTm90aGluZw0KCVNl
+dCB4bWxIVFRQID0gTm90aGluZw0KDQpFbmQgU3ViDQoNClByaXZhdGUgRnVuY3Rpb24gR2V0Vmlld1N0
+YXRlKFJlc3BvbnNlKQ0KDQoJJ0V4dHJhY3QgVklFV1NUQVRFIGZyb20gIlJlc3BvbnNlIg0KCURpbSBp
+bnRTdGFydCwgaW50RW5kIA0KCQ0KCWludFN0YXJ0ID0gaW5zdHIoaW5zdHIoMSxSZXNwb25zZSwgImlk
+PSIiX19WSUVXU1RBVEUiIiIpKzE3LFJlc3BvbnNlLCIiIiIpKzENCglpbnRFbmQgPSBpbnN0cihpbnRz
+dGFydCsyLFJlc3BvbnNlLCIiIiIpDQoJR2V0Vmlld1N0YXRlID0gbWlkKFJlc3BvbnNlLGludFN0YXJ0
+LCBpbnRFbmQgLSBpbnRTdGFydCkNCg0KRW5kIEZ1bmN0aW9uDQoNClByaXZhdGUgRnVuY3Rpb24gR2V0
+RXZlbnRWYWxpZGF0aW9uKFJlc3BvbnNlKQ0KDQoJJ0V4dHJhY3QgRVZFTlRWQUxJREFUSU9OIGZyb20g
+IlJlc3BvbnNlIg0KCURpbSBpbnRTdGFydCwgaW50RW5kIA0KCQ0KCWludFN0YXJ0ID0gaW5zdHIoaW5z
+dHIoMSxSZXNwb25zZSwgImlkPSIiX19FVkVOVFZBTElEQVRJT04iIiIpKzIzLFJlc3BvbnNlLCIiIiIp
+KzENCglpbnRFbmQgPSBpbnN0cihpbnRzdGFydCsyLFJlc3BvbnNlLCIiIiIpDQoJR2V0RXZlbnRWYWxp
+ZGF0aW9uPSBtaWQoUmVzcG9uc2UsaW50U3RhcnQsIGludEVuZCAtIGludFN0YXJ0KQ0KDQpFbmQgRnVu
+Y3Rpb24NCg0KUHVibGljIEZ1bmN0aW9uIFVSTEVuY29kZShzUmF3VVJMKQ0KDQoJRGltIGlMb29wJyBB
+cyBJbnRlZ2VyDQoJRGltIHNSdG4gJ0FzIFN0cmluZw0KCURpbSBzVG1wICdBcyBTdHJpbmcNCglDb25z
+dCBzVmFsaWRDaGFycyA9ICIxMjM0NTY3ODkwQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZn
+aGlqa2xtbm9wcXJzdHV2d3h5ei4iDQoNCglJZiBMZW4oc1Jhd1VSTCkgPiAwIFRoZW4NCgkJJyBMb29w
+IHRocm91Z2ggZWFjaCBjaGFyDQoJCUZvciBpTG9vcCA9IDEgVG8gTGVuKHNSYXdVUkwpDQoJCQlzVG1w
+ID0gTWlkKHNSYXdVUkwsIGlMb29wLCAxKQ0KCQkJSWYgSW5TdHIoMSwgc1ZhbGlkQ2hhcnMsIHNUbXAs
+IHZiQmluYXJ5Y29tcGFyZSkgPSAwIFRoZW4NCgkJCQknIElmIG5vdCBWYWxpZENoYXIsIGNvbnZlcnQg
+dG8gSEVYIGFuZCBwcmVmaXggd2l0aCAlDQoJCQkJc1RtcCA9IEhleChBc2Moc1RtcCkpDQoJCQkJSWYg
+c1RtcCA9ICIyMCIgVGhlbg0KCQkJCQlzVG1wID0gIisiDQoJCQkJRWxzZUlmIExlbihzVG1wKSA9IDEg
+VGhlbg0KCQkJCQlzVG1wID0gIiUwIiAmIHNUbXANCgkJCQlFbHNlDQoJCQkJCXNUbXAgPSAiJSIgJiBz
+VG1wDQoJCQkJRW5kIElmDQoJCQlFbmQgSWYNCgkJCXNSdG4gPSBzUnRuICYgc1RtcA0KCQlOZXh0DQoJ
+CVVSTEVuY29kZSA9IHNSdG4NCglFbmQgSWYNCg0KRW5kIEZ1bmN0aW9uDQo=
+<enddata>
+
+##############################
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Fri 02-Jan-2009 20:07:50
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Delay = 1
+  Height = 488
+  Width = 582
+
+Name = FrmGrp1
+  Type = Groupbox
+  Caption = Logs (Check to Add):
+  Height = 166
+  Left = 33
+  Top = 94
+  Width = 508
+  Taborder = 0
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Run Options
+  Height = 55
+  Left = 33
+  Top = 342
+  Width = 508
+  Taborder = 6
+
+Name = FrmLbl6
+  Type = Label
+  Color = 16711680
+  Height = 20
+  Left = 158
+  Size = 13
+  Style = bold
+  Top = 16
+  Width = 258
+  Caption = HTML File Log Extraction Tool
+
+Name = ok
+  Type = Button
+  Enter = yes
+  Height = 25
+  Left = 140
+  Top = 413
+  Width = 75
+  Taborder = 1
+  Caption = OK
+
+Name = cancelform
+  Type = Button
+  Escape = yes
+  Height = 25
+  Left = 358
+  Top = 413
+  Width = 75
+  Taborder = 2
+  Caption = Cancel
+
+Name = FoundLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 48
+  Top = 25
+  Width = 77
+  Caption = Found (all types)
+
+Name = DNFLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 48
+  Top = 50
+  Width = 22
+  Caption = DNF
+
+Name = NoteLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 48
+  Top = 77
+  Width = 23
+  Caption = Note
+
+Name = OwnerMainLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 220
+  Top = 25
+  Width = 96
+  Caption = Owner Maintenance
+
+Name = TempDisLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 220
+  Top = 50
+  Width = 68
+  Caption = Temp. Disable
+
+Name = EnableLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 220
+  Top = 75
+  Width = 33
+  Caption = Enable
+
+Name = ArchiveLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 400
+  Top = 25
+  Width = 36
+  Caption = Archive
+
+Name = RevNoteLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 400
+  Top = 50
+  Width = 71
+  Caption = Reviewer Note
+
+Name = PublishLbl
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 400
+  Top = 75
+  Width = 67
+  Caption = Publish Listing
+
+Name = FoundBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 28
+  Top = 25
+  Width = 15
+  Taborder = 0
+
+Name = DNFBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 28
+  Top = 50
+  Width = 15
+  Taborder = 1
+
+Name = NoteBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 28
+  Top = 75
+  Width = 15
+  Taborder = 2
+
+Name = OwnerMainBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 200
+  Top = 25
+  Width = 15
+  Taborder = 3
+
+Name = TempDisBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 200
+  Top = 50
+  Width = 15
+  Taborder = 4
+
+Name = EnableBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 200
+  Top = 75
+  Width = 15
+  Taborder = 5
+
+Name = ArchiveBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 380
+  Top = 25
+  Width = 15
+  Taborder = 6
+
+Name = RevNoteBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 380
+  Top = 50
+  Width = 15
+  Taborder = 7
+
+Name = PublishBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 380
+  Top = 75
+  Width = 15
+  Taborder = 8
+
+Name = AddManLbl
+  Type = Label
+  Height = 13
+  Left = 52
+  Top = 286
+  Width = 386
+  Caption = Get OwnerID# from GC.com if NOT found in GSAK DB (open online profile page)?
+
+Name = AddManBx
+  Type = Checkbox
+  Height = 17
+  Left = 444
+  Top = 285
+  Width = 15
+  Taborder = 3
+
+Name = SelecAllBtn
+  Type = Button
+  Container = FrmGrp1
+  Height = 25
+  Left = 103
+  Top = 128
+  Width = 75
+  Taborder = 9
+  Caption = Select All
+
+Name = ClearAllBtn
+  Type = Button
+  Container = FrmGrp1
+  Height = 25
+  Left = 323
+  Top = 128
+  Width = 75
+  Taborder = 10
+  Caption = Clear All
+
+Name = FrmBtn1
+  Type = Button
+  Height = 28
+  Left = 167
+  Top = 48
+  Width = 240
+  Taborder = 4
+  Caption = Create/Update Local Owner ID List
+
+Name = FrmLbl1
+  Type = Label
+  Height = 13
+  Left = 52
+  Top = 310
+  Width = 266
+  Caption = Log Cutoff Date (ignore all logs created before this date):
+
+Name = FrmDat2
+  Type = Date
+  Height = 21
+  Left = 325
+  Top = 307
+  Width = 94
+  Taborder = 5
+
+Name = VersionLabel
+  Type = Label
+  Height = 13
+  Left = 526
+  Top = 441
+  Width = 90
+  Caption = version= $Revision
+
+Name = WillAttendBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 28
+  Top = 100
+  Width = 15
+  Taborder = 11
+
+Name = Label2
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 48
+  Top = 102
+  Width = 51
+  Caption = Will Attend
+
+Name = NeedsMaintBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 200
+  Top = 100
+  Width = 15
+  Taborder = 12
+
+Name = Label3
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 220
+  Top = 100
+  Width = 96
+  Caption = Needs Maintenance
+
+Name = NeedsArchBx
+  Type = Checkbox
+  Container = FrmGrp1
+  Height = 17
+  Left = 380
+  Top = 100
+  Width = 15
+  Taborder = 13
+
+Name = Label4
+  Type = Label
+  Container = FrmGrp1
+  Height = 13
+  Left = 400
+  Top = 100
+  Width = 76
+  Caption = Needs Archived
+
+Name = FlagBx
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 26
+  Top = 22
+  Width = 15
+  Taborder = 0
+
+Name = Label1
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 50
+  Top = 24
+  Width = 125
+  Caption = Set User Flag When Done
+
+Name = NextBx
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 266
+  Top = 22
+  Width = 15
+  Taborder = 1
+
+Name = Label5
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 290
+  Top = 24
+  Width = 173
+  Caption = Move to Next Waypoint When Done
+
+<enddata>
+
+<Data> Varname=$SDBform
+#********************************************************************
+# Form generated by GSAK form designer on Sat 05-May-2007 14:56:23
+#********************************************************************
+
+Name = SearchDB
+  type = form
+  height = 279
+  width = 503
+  caption = Search Database for Owner ID
+
+Name = FrmLbl2
+  type = Label
+  left = 44
+  top = 78
+  height = 13
+  width = 168
+  caption = Select the first Database to Search:
+
+Name = FrmLbl3
+  type = Label
+  left = 9
+  top = 15
+  height = 16
+  width = 470
+  caption = You may select up to four databases to search. For best results,
+  Color = 16711680
+  Size = 11
+  style = bold
+
+Name = FrmLbl6
+  type = Label
+  left = 12
+  top = 34
+  height = 16
+  width = 432
+  caption = select the database(s) with the most logs by other geocachers.
+  Color = 16711680
+  Size = 11
+  style = bold
+
+Name = SelectDBBox1
+  type = ComboBox
+  left = 243
+  top = 75
+  height = 21
+  width = 216
+  values = $dblist
+
+Name = SelectDBBox2
+  type = ComboBox
+  left = 243
+  top = 104
+  height = 21
+  width = 216
+  values = $dblist
+
+Name = SelectDBBox3
+  type = ComboBox
+  left = 243
+  top = 134
+  height = 21
+  width = 216
+  values = $dblist
+
+Name = SelectDBBox4
+  type = ComboBox
+  left = 243
+  top = 163
+  height = 21
+  width = 216
+  values = $dblist
+
+Name = Search
+  type = Button
+  left = 117
+  top = 204
+  height = 25
+  width = 75
+  caption = Search
+
+Name = SDBCancelMacro
+  type = Button
+  left = 310
+  top = 203
+  height = 25
+  width = 75
+  caption = Cancel Macro
+
+Name = FrmLbl1
+  type = Label
+  left = 44
+  top = 108
+  height = 13
+  width = 187
+  caption = Select the second Database to Search:
+
+Name = FrmLbl4
+  type = Label
+  left = 44
+  top = 136
+  height = 13
+  width = 172
+  caption = Select the third Database to Search:
+
+Name = FrmLbl5
+  type = Label
+  left = 44
+  top = 166
+  height = 13
+  width = 179
+  caption = Select the fourth Database to Search:
+
+<EndData>
+
+<Data> Varname=$AddManForm
+#********************************************************************
+# Form generated by GSAK form designer on Sat 28-Apr-2007 11:32:48
+#********************************************************************
+
+Name = Form3
+  type = form
+  height = 141
+  width = 356
+  caption = Add OwnerID Manually
+
+Name = OwnerIDEditBx
+  type = Edit
+  left = 183
+  top = 37
+  height = 21
+  width = 62
+
+Name = FrmLbl6
+  type = Label
+  left = 19
+  top = 40
+  height = 13
+  width = 161
+  caption = Enter the Owner ID Number:
+  style = bold
+
+Name = AddID
+  type = Button
+  left = 15
+  top = 74
+  height = 23
+  width = 75
+  caption = Add ID
+  enter = yes
+
+Name = CancelIDAdd
+  type = Button
+  left = 167
+  top = 73
+  height = 23
+  width = 75
+  caption = Skip Current
+
+Name = FrmLbl1
+  type = Label
+  left = 16
+  top = 12
+  height = 13
+  width = 116
+  caption = Owner Name to Lookup:
+
+Name = OwnerNameFrm
+  type = Edit
+  left = 144
+  top = 8
+  height = 21
+  width = 187
+
+Name = SkipAllBtn
+  type = Button
+  left = 258
+  top = 72
+  height = 23
+  width = 75
+  caption = Skip All
+
+<EndData>
+
+<Data> Varname=$form2
+#********************************************************************
+# Form generated by GSAK form designer on Sun 06-May-2007 18:46:18
+#********************************************************************
+
+Name = Form2
+  type = form
+  height = 234
+  width = 446
+
+Name = Frm2Lbl1
+  type = Label
+  left = 100
+  top = 10
+  height = 20
+  width = 242
+  caption = HTML File Log Extraction Tool
+  color = 16744448
+  style = bold
+  size = 13
+  
+Name = Frm2Lbl2
+  type = Label
+  left = 81
+  top = 35
+  height = 13
+  width = 268
+  caption = The macro cannot get this cache page without logging in
+  
+Name = Frm2Lbl2a
+  type = Label
+  left = 92
+  top = 51
+  height = 13
+  width = 246
+  caption = the cache must either be archived or Members Only.
+
+Name = Frm2Lbl3
+  type = Label
+  left = 107
+  top = 81
+  height = 13
+  width = 207
+  caption = The cache page is opening in your browser,
+
+Name = Frm2Lbl3a
+  type = Label
+  left = 47
+  top = 96
+  height = 13
+  width = 341
+  caption = please save the page source on your local drive and then select it below:
+
+Name = Frm2Lbl4
+  type = Label
+  left = 40
+  top = 130
+  height = 13
+  width = 87
+  caption = HTML file to parse
+
+Name = HTMLFile
+  type = File
+  left = 200
+  top = 125
+  height = 21
+  width = 200
+
+Name = Frm2ok
+  type = Button
+  caption = OK
+  left = 95
+  top = 161
+  height = 25
+  width = 75
+  enter = yes
+
+Name = Frm2cancelform
+  type = Button
+  left = 265
+  top = 159
+  caption = Cancel
+  height = 25
+  width = 75
+  escape = yes
+
+<EndData>
+
+<Data> Varname=$LoginInfo
+#********************************************************************
+# Form generated by GSAK form designer on Mon 07-May-2007 19:39:57
+#********************************************************************
+
+Name = LoginForm
+  type = form
+  height = 154
+  width = 339
+  caption = Enter your geocaching.com login information:
+
+Name = UserNameLbl
+  type = Label
+  left = 17
+  top = 14
+  height = 13
+  width = 81
+  caption = Your User Name:
+
+Name = UserPWDLbl
+  type = Label
+  left = 17
+  top = 45
+  height = 13
+  width = 74
+  caption = Your Password:
+
+Name = UserPWD
+  type = Edit
+  left = 114
+  top = 43
+  height = 21
+  width = 204
+
+Name = UserName
+  type = Edit
+  left = 114
+  top = 12
+  height = 21
+  width = 204
+
+Name = SaveBtn
+  type = Button
+  left = 54
+  top = 80
+  height = 25
+  width = 75
+  caption = Save
+
+Name = CancelBtn
+  type = Button
+  left = 196
+  top = 82
+  height = 25
+  width = 75
+  caption = Cancel Macro
+
+<EndData>

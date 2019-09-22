@@ -1,0 +1,21 @@
+
+function function_name1 () {
+   PARM1=$1
+   PARM2=$2
+ 
+   echo "$PARM1 $PARM2"
+}
+
+function function_name2 {
+   PARM1=$1
+   PARM2=$2
+ 
+   echo "$PARM1 $PARM2"
+}
+
+function_name3 () {
+   PARM1=$1
+   PARM2=$2
+ 
+   echo "$PARM1 $PARM2"
+}

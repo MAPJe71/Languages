@@ -1,0 +1,1129 @@
+
+/************************************************************************
+    dgtrace2.mac is a package of Maxima functions which 
+    contains code for symbolic trace calculations
+    and is part of the Dirac package.
+    
+    Copyright (C) 2010, 2011,  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+/* file dgtrace2.mac
+   4-13-11
+   
+   simp_Dexpand1  controls calls to Dexpand1 (called by Dexpand),
+   
+        calls mplusp, getppos1, rpl, Dexpand1,mtimesp,
+                           massp, scalar_part.
+   
+   Dexpand  calls Dexpand1 (controlled by simp_Dexpand1)
+   
+   ev_Ds  calls Dexpand.
+   
+   simp_Gexpand1  calls getSpos1,remL1, massp, Gexpand1,rpl,getppos1,scalar_part
+   
+   Gexpand  calls Gexpand1 (controlled by simp_Gexpand1)
+   
+   simp_tr1 calls index_rep, Gtr1, scon,
+                    pullpsL, mrindL, mLIfac, tr1, do_con, pair, reduce
+   
+   TR1 calls G5prep, ev_invar, sumToList,
+             Eps1_con, Eps_post, tr1, more_index, UIGm_con        
+             
+       called by tr and nc_tr
+   
+   tr calls Gexpand, sumToList, NDfac, strip_ops2, TR1
+             
+   
+   Gtr  calls tr
+   
+   Gtr1   calls tr1
+    
+    */
+    
+    
+
+ 
+/*  supporting utilities:
+
+ Mindex   is used in dirac2.mac to declare n1,n2,... index symbols
+ 
+  indexL       is a  maintained list of index symbols
+  
+ indexp
+ 
+ unindex
+ 
+ Mscalar, scalarL, unscalar
+ 
+ dummyp
+ 
+massp
+
+massL    list of mass symbols maintained
+
+Mmass    used to declare (m,M) mass symbols (in dirac2.mac)
+        so massp(m) --> true  and massL --> [m,M]
+
+G5p
+
+butlast
+
+mtimesp
+
+mplusp
+
+Sargp
+
+getppos1
+
+getSpos1
+
+pair
+
+remL1
+
+reduce
+
+G5prep  calls G5p, called by TR1
+
+more_index
+
+sumToList
+ 
+
+*/
+
+
+ /************************************************************/
+ 
+/*** transferred to dirac2.mac
+   load ("simplifying-new.lisp")$ ***************/
+ 
+ 
+  /* indexL is a list that holds the  
+     lorentz index symbols */
+     
+ indexL : [ ]$
+     
+     
+     /* mindex (j,k,...) adds symbols to indexL and declares symbol
+         to be of type index.
+          doesn't check to see if list already contains symbol */
+  
+ Mindex ([v]) := ( indexL : append (indexL, v),
+                       apply ('declare, [v,'index]))$
+                       
+/*
+(%i1) v:[n1,n2,n3]$
+(%i2) indexL : []$
+(%i3) append (indexL,v);
+(%o3) [n1,n2,n3]
+*/
+ 
+ G5p(e) := atom (e) and e = G5$
+ 
+declare (index, feature)$
+
+indexp (e) := featurep (e,'index)$
+
+
+/* old code (new code is in dirac2.mac)
+   and uses string manipulation to identify
+   dummy summation variables N1,N2,...
+   
+declare (dummy, feature)$
+dummyp (e) := featurep (e, 'dummy)$
+
+*/
+
+declare (mass, feature);
+massp (e) := featurep (e,'mass);
+
+/* declare ([m,M], mass); */
+
+  massL : []$
+
+ Mmass ([v]) := ( massL : append (massL,v),
+                   apply ('declare, [v,'mass]),
+                    for vk in v do assume (vk > 0))$
+                    
+ 
+
+butlast(a) := rest(a,-1)$  
+
+mtimesp(e) := ?mtimesp(e)$
+
+mplusp(e) := ?mplusp(e)$
+
+Sargp(e) := not atom(e) and op(e) = S$
+
+/* unindex([v]) removes some index symbols from the list indexL.
+         pos and remL1 are list utilities defined in dgcon.mac 
+         
+(%i24) indexL : [la,mu,nu,rh,si,ta,al,be,ga,n1,n2,n3,n4,n5,n6,n7];
+(%o24) [la,mu,nu,rh,si,ta,al,be,ga,n1,n2,n3,n4,n5,n6,n7]
+(%i25) unindex(n5,n7)$
+indexL = [la,mu,nu,rh,si,ta,al,be,ga,n1,n2,n3,n4,n6]        
+         
+         
+ */
+    
+ unindex([v]) := 
+     block ([jj,_np%,_pp% ],
+       for jj thru length (v) do (
+         _pp% : v[jj],
+         if indexp (_pp%) then (
+           _np% : pos (indexL,_pp%),
+           indexL : remL1 (indexL, _np% ) ) ),
+       display (indexL) )$    
+       
+       
+       
+   scalarL : []$
+   
+  /********** Mscalar(a,b) declares a and b to be scalars and
+    adds them to the list scalarL  ******************/ 
+   
+   Mscalar ([v]) := 
+    block ( [jj,_pp%],
+     for jj thru length (v) do (
+       _pp% : v[jj],
+       apply ('declare,[_pp%,'scalar] ),       
+       scalarL : cons (_pp%, scalarL) ),
+       
+     scalarL : reverse (scalarL),
+     display (scalarL) )$ 
+     
+    /********** unscalar (a,b) removes a and b from the
+      list scalarL and removes the scalar property for each ************/ 
+                 
+   unscalar ([v]) := 
+    block ([jj,_np%,_pp% ],
+       for jj thru length (v) do (
+         _pp% : v[jj],
+         if not lfreeof (scalarL, _pp%) then (
+         apply ('remove,[_pp%,'scalar] ),
+           _np% : pos (scalarL,_pp%),
+           scalarL : remL1 (scalarL, _np% ) ) ),
+       display (scalarL) )$      
+       
+            
+        
+
+
+
+
+/****  getppos1 
+           return list position of first multiple
+     term arg  */     
+
+  getppos1([w]) := block ([%j,%n],
+    for %j thru length (w) do
+      if mplusp (inpart(w,%j)) then (
+        %n : %j,
+        return()),
+    %n)$
+
+ /******  getSpos1  
+              return list position of first S(sv)
+    or S(sv,Sp) arg  */     
+
+  getSpos1([w]) := block ([%j,%n],
+    for %j thru length (w) do
+      if Sargp (inpart(w,%j)) then (
+        %n : %j,
+        return()),
+    %n)$
+    
+/*
+(%i16) getSpos1(a,S(sv),b,c);
+(%o16) 2
+(%i17) getSpos1(a,b,S(sv),c);
+(%o17) 3
+(%i18) getSpos1(S(sv,Sp),a,b,c);
+(%o18) 1
+*/
+
+
+
+
+
+/********* pair                *****/
+ 
+ 
+ pair (a,b) := block (
+   if a = b and indexp(a) then Gm(a,a)
+   else if a = b then D(a,b)     
+   else if indexp(a) and indexp(b) then Gm(a,b)
+   else if indexp (a) then UI(b,a)
+   else if indexp (b) then UI(a,b)
+   else D(a,b))$
+   
+ /******** remL1(aL,n)   
+            returns the list aL with element n removed.
+      copied from dgeval.mac 
+      
+(%i14) remL1([ [n1,n2],[n3,n4]],1);
+(%o14) [[n3,n4]]
+(%i15) remL1([ [n1,n2],[n3,n4]],2);
+(%o15) [[n1,n2]]      
+      
+  */
+  
+  remL1 (_aL% ,_mm%) := 
+    block ([ln],
+     ln : length (_aL%),
+     if _mm% > ln then (
+       disp ("remL1: n > length (list)"),
+       return () ),
+       
+     if _mm% = 1 then rest ( _aL%, 1 )
+     else if _mm% = ln then rest ( _aL%, -1 ) 
+     else flatten ( cons (rest ( _aL%, -(ln - _mm% + 1 ) ),
+                  rest ( _aL%, _mm% ) ) ) )$
+                  
+   /************ reduce (a,b,c,d,...)    
+            uses fundamental anticommutation
+      properties of Dirac gamma matrices to pull out pairs 
+      of args into pair(x,y)*tr1(rest of args)
+      Use this only for length(v) even and > 2  
+       */
+      
+                  
+  reduce ([v2]) := block ([%vm,%vl,%rsum,%j],
+       %vm : rest (v2,-1),
+       %vl : last (v2),
+       %rsum : 0,
+       for %j thru (length (v2) -1) do
+         %rsum : %rsum + (-1)^(%j + 1) * 
+            apply ('pair,[inpart(%vm,%j),%vl]) * 
+            apply ('tr1, remL1(%vm,%j)),
+       %rsum )$
+ 
+       
+    /******************* G5prep([gL]) 12-21-10   *************************/
+  
+    
+  /*     calls G5p,
+         Called by TR1.
+  
+         G5prep([gL]) looks for gamma5's represented by the symbol G5
+        in the list gL, and if an even number, removes them,
+        (using G5^2 = 1) and returns the list [fac,newgL]
+        
+        If an odd number, reduces the number to one and places G5 
+        on the far left end of the list.
+        
+        The anticommutation property of gamma5 with the gammas
+        may produce an overall change of sign, so 
+        calculates overall sign change factor fac,and defines
+        newgL as a list of args with a G5 at the left end.   */
+        
+        
+    G5prep([gL]) := 
+     block ([lg,g5list,_pp%,jj,lg5 ,lg5r,fac:1,newgL,kk1,kk2,nmid,nleft,g5p ],
+        /* disp ("t2.mac: G5prep"),  */
+       lg : length (gL),
+        /* display (gL,lg),  */
+       
+       /* newgL, for now, is the list gL with all G5's removed.
+          and g5list is a list of the positions of the G5's */             
+          
+       newgL : [],
+       g5list : [],
+       /* disp(" start do loop"), */
+       
+       for jj thru lg do (
+          _pp% : inpart (gL,jj),
+         /* display (jj,_pp%), */
+              
+          g5p : G5p(_pp%),
+         /* display (g5p), */
+          
+          if g5p then g5list : cons (jj,g5list)
+           else newgL : cons (_pp%, newgL)),
+          
+       newgL : reverse (newgL),   
+       lg5 : length (g5list),   
+        /* display (g5list,lg5,newgL), */
+       
+       lg5r : lg5,       
+         
+         /* Determine whether returned fac is +1 or -1.
+            g5list holds the positions of G5's ,for
+            example [9,6,3] has the farthest right G5 at list position 9.     
+            move farthest right G5 to the left until it removes the next G5 to
+            its left, using G5^2 = 1. Keep track of how many gammas G5 
+            must anti commute with to reach its nearest partner .  */
+            
+          while lg5r > 1 do (  
+            
+          kk2 : g5list[1],
+          kk1 : g5list[2],
+          nmid : kk2 - kk1 -1,
+          /* display(nmid), */
+          fac : fac*(-1)^nmid,
+          /* display (fac), */
+          g5list : rest (g5list,2),
+          /* display (g5list), */
+          lg5r : length (g5list) ),
+          
+         /* disp(" end of do loop"),
+          display (lg5,fac,newgL),
+         */
+          
+      /* case even number of G5's disappear, leaving
+         a possible overall sign change incorporated
+         in fac */
+          
+       if evenp (lg5) then  return ( [fac, newgL] ),
+          
+       /* case odd number of G5's  */
+       
+       newgL : cons (G5, newgL),
+       
+       /* now newgL includes G5 as the first element */
+       
+       /* g5list now has the form [3], for example */
+       
+       nleft : g5list[1] -1,
+       /* display (nleft), */
+       fac : fac*(-1)^nleft,
+       /* disp(" return to tr with "),
+          display (fac,newgL),
+        */
+       
+       [fac, newgL] )$
+            
+            
+   /********** end G5prep ([gL]) 12-21-10     ***********************/
+   
+ /*
+ 
+ (%i130) G5prep(G5,mu,nu,rh,al);
+(%o130) [1,[G5,mu,nu,rh,al]]
+(%i131) G5prep(mu,G5,nu,rh,al);
+(%o131) [-1,[G5,mu,nu,rh,al]]
+(%i132) G5prep(mu,nu,G5,rh,al);
+(%o132) [1,[G5,mu,nu,rh,al]]
+(%i133) G5prep(mu,nu,rh,G5,al);
+(%o133) [-1,[G5,mu,nu,rh,al]]
+(%i134) G5prep(mu,nu,rh,al,G5);
+(%o134) [1,[G5,mu,nu,rh,al]]
+ 
+ 
+ */
+ 
+  /************* simp_Dexpand1 (a,b,c,...)  3-30-11  *************************/
+  /* simp_Dexpand1 controls calls to Dexpand1 
+         calls mplusp, getppos1, rpl, Dexpand1,mtimesp,
+               massp, scalar_part */
+
+  simp_Dexpand1 ([vgL]) :=  block ([inflag : true,spos,Sargs,%t1,ppos,fac,aL,vk,spvk,
+                              mfac,mL,temp ],
+  
+     /* disp ("temp19: simp_Dexpand1 "), */
+     
+     /* expansion of multiple term args */  
+      
+  if some ('mplusp,vgL) then  (
+    /* disp(" expand multiple term arg here"), */
+    ppos : apply ('getppos1,vgL),
+    /* display(ppos), */
+    map ('lambda ([r],rpl (vgL,ppos,r)), args (vgL[ppos])),
+    
+    map ('lambda ([rr], apply ('Dexpand1,rr)), %%),
+    /* display (temp), */
+    return (xreduce ("+", %%)))
+    
+         
+  /* pull out constants and scalars here. */  
+  
+  else if some ('mtimesp,vgL) then (
+    fac : 1,
+    aL : [],    
+    for vk in vgL do      
+      if mtimesp (vk) then (
+        spvk : scalar_part (vk),
+        fac : fac*first (spvk),
+        aL : cons (second (spvk),aL))        
+      else aL : cons (vk,aL),
+    
+    return (fac*apply ('Dexpand1, reverse(aL))))
+    
+   
+    /*  Mass factors typically enter the picture
+      because for finite mass, we start with say
+      D (p+m,q-M,r+m,s+M) for example, and after
+      expanding multiple term args, we end up with
+      terms like D (p,M,r,M) etc.
+      
+      pull out mass factors after constants and
+       scalars are pulled out.  */
+      
+  else if some('massp, vgL) then (
+    /* disp (" pull out mass factors here "), */
+     mfac : 1,
+     mL : [],
+    /* display (mfac,mL), */
+     for vk in vgL do (
+         /* display (vk), */
+        if massp (vk) then  mfac : mfac * vk else mL : cons (vk,mL) /* , display (mfac,mL) */),
+        
+     mL : reverse (mL),     
+     if mL = [] then temp : mfac
+        
+     else temp : mfac * apply ('Dexpand1, mL),
+     
+     /* display (temp), */
+     return (temp))
+  
+
+  else return (apply ('D,vgL)) )$
+  
+  /********** end simp_Dexpand1 *********************/
+     
+     
+     
+  simplifying ('Dexpand1, 'simp_Dexpand1)$   
+     
+     
+  /************ Dexpand, ev_Ds    ******************/
+  /********** new 3-30-11  **********************/
+  
+  Dexpand(expr) := (subst (D = Dexpand1 ,expr), expand (%%))$
+  
+   ev_Ds (eeexpr) := ( Dexpand (eeexpr),
+                ev (%%, invarR), expand (%%))$
+                
+                
+ /*
+  (%i2) Dexpand(D(a,b));
+(%o2) D(a,b)
+(%i3) Dexpand(D(a,b+c));
+(%o3) D(a,c)+D(a,b)
+(%i4) Dexpand(D(a,b+m));
+(%o4) D(a)*m+D(a,b)
+(%i5) Dexpand(D(a+m,b+M));
+(%o5) m*M+D(a)*M+D(b)*m+D(a,b)
+(%i6) Dexpand(D(2*a+m,b/3+M));
+(%o6) m*M+2*D(a)*M+D(b)*m/3+2*D(a,b)/3
+(%i7) Dexpand(D(2*c1*a+m,b/3+M));
+(%o7) m*M+2*c1*D(a)*M+D(b)*m/3+2*c1*D(a,b)/3
+(%i8) Dexpand ( D(a,b+c) + D(e,f+g) );
+(%o8) D(e,g)+D(e,f)+D(a,c)+D(a,b)
+(%i9) Dexpand ( r*D(a,b+c)/D(e,f) );
+(%o9) D(a,c)*r/D(e,f)+D(a,b)*r/D(e,f)
+(%i10) Dexpand ( r*D(a,b+c)/(s*D(e,f+g)) );
+(%o10) D(a,c)*r/(D(e,g)*s+D(e,f)*s)+D(a,b)*r/(D(e,g)*s+D(e,f)*s)
+
+*/
+                
+                
+                
+  
+      /************* simp_Gexpand1 (a,b,c,...)  3-23-11  *************************/
+   /** depending on context, calls getSpos1,remL1, massp, Gexpand1,rpl,getppos1,scalar_part **/
+   
+
+  simp_Gexpand1 ([vgL]) :=  block ([inflag : true,spos,Sargs,%t1,ppos,fac,aL,vk,spvk,
+                              mfac,mL,temp ],
+  
+     /* disp ("temp19: simp_Gexpand1 "), */
+     
+     /* 3-30-11  add next three lines but may need
+        reconsideration  */
+        
+     if vgL = [] then  return (G())
+     
+     else if vgL = [1] then return (G(1))
+     
+     else if vgL = [-1] then return (-G(1))
+     
+     
+         
+
+     /* if arg S(sv) or S(sv,Sp) found, replace with
+     (1 + sv*G5)/2 or (1 + sv*G5*Sp)/2 respectively  */
+  
+  else if some ('Sargp,vgL) then (
+    /* disp (" simp_Gexpand1, case Sargp "),
+     display(vgL),
+    */
+    spos : apply ('getSpos1,vgL),
+    /* display (spos), */
+    temp : remL1 (vgL,spos),
+    if temp = [] then %t1 : G(1)/2
+    else %t1 : apply ('Gexpand1,temp)/2,
+    /* display (%t1), */
+    Sargs : args (inpart (vgL,spos)),
+    /* display (Sargs), */
+    if length (Sargs) = 1 then
+      return (%t1 + first (Sargs) * 
+               apply ('Gexpand1, rpl (vgL,spos,G5))/2)
+    else return (%t1 + first (Sargs) * 
+         apply ('Gexpand1, flatten (rpl (vgL,spos,[G5,second (Sargs)])))/2 ))
+         
+  
+    /* expansion of multiple term args */  
+      
+  else if some ('mplusp,vgL) then  (
+    /* disp(" expand multiple term arg here"), */
+    ppos : apply ('getppos1,vgL),
+    /* display(ppos), */
+    map ('lambda ([r],rpl (vgL,ppos,r)), args (vgL[ppos])),
+    
+    map ('lambda ([rr], apply ('Gexpand1,rr)), %%),
+    /* display (temp), */
+    return (xreduce ("+", %%)))
+    
+         
+  /* pull out constants and scalars here. */  
+  
+  else if some ('mtimesp,vgL) then (
+    fac : 1,
+    aL : [],    
+    for vk in vgL do      
+      if mtimesp (vk) then (
+        spvk : scalar_part (vk),
+        fac : fac*first (spvk),
+        aL : cons (second (spvk),aL))        
+      else aL : cons (vk,aL),
+    
+    return (fac*apply ('Gexpand1, reverse(aL))))
+    
+   
+    /*  Mass factors typically enter the picture
+      because for finite mass, we start with say
+      G (p+m,q-M,r+m,s+M) for example, and after
+      expanding multiple term args, we end up with
+      terms like G (p,M,r,M) etc.
+      
+      pull out mass factors after constants and
+       scalars are pulled out.  */
+      
+  else if some('massp, vgL) then (
+    /* disp (" pull out mass factors here "), */
+     mfac : 1,
+     mL : [],
+    /* display (mfac,mL), */
+     for vk in vgL do (
+         /* display (vk), */
+        if massp (vk) then  mfac : mfac * vk else mL : cons (vk,mL) /* , display (mfac,mL) */),
+        
+     mL : reverse (mL),
+     
+     if mL = [] then temp : mfac*G(1)
+        
+     else temp : mfac * apply ('Gexpand1, mL),
+     
+     /* display (temp), */
+     return (temp))  
+  
+
+  else return (apply ('G,vgL)) )$
+  
+  /********** end simp_Gexpand1 *********************/
+  
+  
+  simplifying ('Gexpand1, 'simp_Gexpand1)$
+  
+  
+    /******* Gexpand (G(a,b,c,..))  3-30-11  *******************/
+  /***  Gexpand calls Gexpand1  ***/
+  
+  /*  new code 3-30-11 */
+  
+  Gexpand(expr) := (subst (G = Gexpand1 ,expr), expand (%%))$
+  
+  
+  /*********************************************************/          
+       
+  
+ 
+ 
+  /*  simp_tr1  3-27-11: we have  removed the expansion parts */
+  
+    /************ simp_tr1 controls tr1  ****************************/
+   /*  for G5 traces which have 6 or 8 multiplying gamma matrices,
+       simp_tr1 generates dummy summation indices N1,N2,... and objects
+       Eps1(n1,n2,...Nj) which contain a dummy index which will also
+       appear in a multiplying Gm. See examples below.  */
+   
+   /** depending on the context, simp_tr1 calls index_rep, Gtr1, scon,
+      pullpsL, mrindL, mLIfac, tr1, do_con, pair, reduce.  **/
+
+ 
+  simp_tr1 ([v]) := block([inflag : true,spos,%t1,Sargs,ppos,fac,vk,spvk,
+                    mfac,mL,aL,eL3,eLr,%nnext,%ndum,
+                    eL1,rL4,rL1,rL2,rL3,g1,g2,g3,rval,temp,
+                    pmuL,amuL,%RindL],
+                    
+     /* disp("simp_tr1"),
+        display (v),      
+      */
+     
+          
+  if v  = [] or v = [1] then return(4)
+  
+  else if  v = [-1] then return (-4),
+  
+  
+  
+      
+  /************* case have G5 in pos 1 ***********************/
+               
+  if v[1] = G5 then (
+    
+        /* disp("in simp_tr1, case G5 "), */
+                
+      if length (v) < 5 then return (0),
+      
+      /* case repeated Lorentz indices, automatically contract
+          using scon here. (do_con is used later for non G5 case.) */
+      
+      if apply ('index_rep,v) then (
+      
+          return ( (scon (apply ('G,v)), Gtr1 (%%) ))),
+      
+     
+      aL : rest (v),
+      /* display (aL), */
+    
+      if oddp (length (aL)) then return (0),
+    
+      if length (aL) > 8 then (
+          disp ("simp_tr1: present version of tr only returns nonzero gamma5 traces for"),
+          disp (" G5 times a product of 4,6,or 8 gammas"),
+           return (apply ('Gamma5trace,v))),
+           
+      [ pmuL,amuL ] : pullpsL (aL),
+      
+       /* display (pmuL,amuL),  */
+      
+      /* case l = 4 */
+           
+      if length (amuL) = 4 then (
+        /* disp (" case l = 4"), */
+         %RindL : mrindL (amuL),
+        /* display (%RindL), */
+         
+        if length (%RindL) > 0 then (
+          disp ("simp_tr1: case l = 4, found  repeated indices, return 0 "), 
+          return(0))
+        
+        else (
+        
+         /* disp (" case no repeated index symbols "), */
+         
+         rval : apply ('Eps, amuL),
+         /* display (rval), */         
+               
+       return (-4*%i *  mLIfac(pmuL) * rval))),
+       
+       /* disp (" end of case l = 4"), */
+       
+       
+      
+      /* case length(amuL) is 6 or 8.    */      
+      
+      
+       /* disp (" case l = 6 or 8 "), */
+            
+      eL3 : rest(amuL,-(length(amuL)-3)),
+   
+      eLr : rest (amuL,3),
+   
+     
+      %nnext : Nlast + 1,   
+      Nlast : %nnext,
+      %ndum : concat (N,%nnext),
+      apply ('declare, [%ndum, index]),   
+      
+      eL1 : append (eL3,[%ndum]),
+      rL4 : cons (%ndum, eLr),
+      /* display (eL1,rL4),  */
+   
+      rL1 : flatten (cons ([G5,eL3[1]],eLr)),
+      rL2 : flatten (cons ([G5,eL3[2]],eLr)),
+      rL3 : flatten (cons ([G5,eL3[3]],eLr)),
+      /* display (rL1,rL2,rL3), */
+   
+   
+   
+      g1 : Gm (eL3[2],eL3[3]),
+      g2 : Gm (eL3[1],eL3[3]),
+      g3 : Gm (eL3[1],eL3[2]),
+      /*  display (g1,g2,g3), */
+   
+      return (
+         expand (mLIfac(pmuL)*(g1*apply ('tr1,rL1) - g2*apply ('tr1,rL2) + g3*apply ('tr1,rL3) -
+       %i*apply ('Eps1,eL1) * apply ('tr1,rL4))))),
+      
+    
+      
+      
+   /********* case v does not contain G5's *********************/
+   
+   
+   /* the trace of a product of an odd number of
+      dirac gamma matrices is zero:     */   
+  
+  if oddp (length (v)) then return (0)
+  
+  /* now we know length is even */
+  
+  /* look for repeated index symbols */    
+  
+  else if apply ('index_rep,v) then (
+    /* disp(" in simp_tr1,call do_con"),
+        display (v),
+     */
+     
+     return (apply ('do_con,v)))  
+  
+  else if length (v) = 2 then return (4*apply ('pair,v))
+  
+  
+  else if evenp (length (v)) and length (v) > 2 then
+                       return (expand (apply ('reduce,v)))
+  
+  else simpfunmake ('tr1,v))$
+  
+ 
+ 
+  
+  /**********  end simp_tr1 3-27-11   **********************/
+  
+  
+
+    simplifying ('tr1, 'simp_tr1 )$ 
+
+
+ 
+ 
+
+
+/*
+
+in dirac2.mac we have the mass
+  declaration:
+  
+  declare ([m,M], mass);
+
+(%i2) tr1(a,b);
+(%o2) 4*D(a,b)
+(%i3) tr1(a+m,b);
+(%o3) 4*D(a,b)
+(%i4) tr1(a+m,b+M);
+(%o4) 4*m*M+4*D(a,b)
+(%i5) tr1(a+b,c);
+(%o5) 4*D(b,c)+4*D(a,c)
+(%i6) tr1 (a+b,c+d);
+(%o6) 4*D(b,d)+4*D(b,c)+4*D(a,d)+4*D(a,c)
+(%i8) tr1(2*a,b);
+(%o8) 8*D(a,b)
+(%i9) tr1 (2*a,b/3);
+(%o9) 8*D(a,b)/3
+
+(%i2) tr1(a,b);
+(%o2) 4*D(a,b)
+(%i3) tr1 (c*a,b);
+(%o3) 4*a*D(b,c)
+(%i4) declare ([c1,c2],scalar)$
+(%i5) tr1 (c1*a,b);
+(%o5) 4*c1*D(a,b)
+(%i6) tr1 (c1*a,c2*b);
+(%o6) 4*c1*c2*D(a,b)
+
+(%i29) tr1 (c1*a,b/c2);
+(%o29) 4*c1*D(a,b)/c2
+
+(%i7) tr1 (c1*a + c2*b,c);
+(%o7) 4*c2*D(b,c)+4*c1*D(a,c)
+
+Examples of Eps1 outputs with G5 traces done
+by tr1. tr does post trace massaging with
+Eps1_con and then Eps_post:
+If the Eps contains a dummy index which will also
+occur in an accompnanying Gm, Eps --> Eps1 in the code
+of simp_tr1.
+This property is used (?) in Eps1_con to help
+simplify the output.
+
+
+(%i2) tr1 (G5,n1,n2,n3,n4,n5,n6);
+(%o2) -4*%i*Eps1(n1,n2,n3,N1)*Gm(n4,n5)*Gm(n6,N1)
+       +4*%i*Eps1(n1,n2,n3,N1)*Gm(n4,n6)*Gm(n5,N1)
+       -4*%i*Eps1(n1,n2,n3,N1)*Gm(n4,N1)*Gm(n5,n6)
+       -4*%i*Gm(n1,n2)*Eps(n3,n4,n5,n6)+4*%i*Gm(n1,n3)*Eps(n2,n4,n5,n6)
+       -4*%i*Eps(n1,n4,n5,n6)*Gm(n2,n3)
+(%i3) tr1 (G5,p1,n2,n3,n4,n5,n6);
+(%o3) -4*%i*Gm(n2,n3)*LI(p1,N2)*Eps(N2,n4,n5,n6)
+       -4*%i*Gm(n4,n5)*Gm(n6,N3)*LI(p1,N2)*Eps1(N2,n2,n3,N3)
+       +4*%i*Gm(n4,n6)*Gm(n5,N3)*LI(p1,N2)*Eps1(N2,n2,n3,N3)
+       -4*%i*Gm(n4,N3)*Gm(n5,n6)*LI(p1,N2)*Eps1(N2,n2,n3,N3)
+       +4*%i*Eps(n2,n4,n5,n6)*Gm(n3,N2)*LI(p1,N2)
+       -4*%i*Gm(n2,N2)*Eps(n3,n4,n5,n6)*LI(p1,N2)
+(%i4) tr1 (G5,p1,p2,n3,n4,n5,n6);
+(%o4) 4*%i*Gm(n3,N4)*LI(p1,N4)*LI(p2,N5)*Eps(N5,n4,n5,n6)
+       -4*%i*Gm(n4,n5)*Gm(n6,N6)*LI(p1,N4)*LI(p2,N5)*Eps1(N4,N5,n3,N6)
+       +4*%i*Gm(n4,n6)*Gm(n5,N6)*LI(p1,N4)*LI(p2,N5)*Eps1(N4,N5,n3,N6)
+       -4*%i*Gm(n4,N6)*Gm(n5,n6)*LI(p1,N4)*LI(p2,N5)*Eps1(N4,N5,n3,N6)
+       -4*%i*Eps(n3,n4,n5,n6)*LI(p1,N4)*LI(p2,N5)*Gm(N4,N5)
+       -4*%i*Gm(n3,N5)*LI(p1,N4)*LI(p2,N5)*Eps(N4,n4,n5,n6)
+       
+(%i5) tr1 (G5,p1,p2,p3,n4,n5,n6);
+(%o5) -4*%i*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)*Gm(N7,N8)*Eps(N9,n4,n5,n6)
+       -4*%i*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)*Eps(N7,n4,n5,n6)*Gm(N8,N9)
+       +4*%i*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)*Gm(N7,N9)*Eps(N8,n4,n5,n6)
+       -4*%i*Gm(n4,n5)*Gm(n6,N10)*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)
+         *Eps1(N7,N8,N9,N10)
+       +4*%i*Gm(n4,n6)*Gm(n5,N10)*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)
+         *Eps1(N7,N8,N9,N10)
+       -4*%i*Gm(n4,N10)*Gm(n5,n6)*LI(p1,N7)*LI(p2,N8)*LI(p3,N9)
+         *Eps1(N7,N8,N9,N10)
+
+
+*/
+
+   /*********** more_index(expr)  3-19-11 *****************/
+
+  /* more_index expects one term only
+      returns true or false   */
+
+  more_index(%tp) := block ([%fac,%rterm,oopL],
+     /* disp ("more_index"),
+        display (%tp),
+      */
+      
+    if constantp (%tp) then return (false),    
+         
+    [%fac,%rterm] : NDfac (%tp),        
+    
+       /* display (%fac,%rterm),  */       
+      
+    oopL : prodToList2 (%rterm),
+    oopL : opList (oopL),
+        
+       /* display (oopL), */
+       
+    if (inlist (oopL,UI) or inlist (oopL,Gm)) then
+      return (true)
+    else return (false))$
+    
+ /*
+ (%i71) more_index(-32*m^4);
+(%o71) false
+(%i72) more_index(16*m^2*UI(p2,nu)*UI(p4,nu));
+(%o72) true   
+  */
+    
+    /*********** sumToList(expr)  3-19-11 **************/
+    
+ /*
+ 
+ (%i25) mplusp(a+b);
+(%o25) true
+(%i26) not mplusp(a);
+(%o26) true
+    
+ */
+        
+   sumToList(ssum) :=  (
+     
+      if not mplusp(ssum) then [ssum]
+      
+      else subst("[","+", ssum))$
+      
+      
+/*
+
+(%i68) sumToList(-1);
+(%o68) [-1]
+(%i69) sumToList(a);
+(%o69) [a]
+(%i70) sumToList (a+b);
+(%o70) [a,b]
+(%i37) sumToList(-16*m^2*u-8*s^2+32*m^2*s+16*m^2*UI(p3,nu)*UI(p4,nu)
+                  +16*m^2*UI(p2,nu)*UI(p4,nu)+16*m^2*UI(p1,nu)*UI(p3,nu)
+                  +16*m^2*UI(p1,nu)*UI(p2,nu)-32*m^4);
+(%o37) [-32*m^4,16*m^2*UI(p1,nu)*UI(p2,nu),16*m^2*UI(p1,nu)*UI(p3,nu),
+        16*m^2*UI(p2,nu)*UI(p4,nu),16*m^2*UI(p3,nu)*UI(p4,nu),32*m^2*s,-8*s^2,
+        -16*m^2*u]
+
+*/
+
+
+/************* TR1 3-26-11 ************************/
+   
+   /* because the gamma5 trace algorithm used involves calculation
+      of non-gamma5 traces, I need to keep both types of traces
+      in the same simplifying function, so use tr1.
+    Depending on situation, TR1 calls G5prep, ev_invar, sumToList,
+      Eps1_con, Eps_post, tr1, more_index, UIGm_con        
+    */
+   
+   TR1 ([_w%]) := block ([%fac5,%newL,g5sum,g5sumL,rsum,wg,rsumL,G5case:false ],
+   
+      /* disp (" in TR1 "), */
+   
+     if _w% = [1] then return (4),
+     if _w% = [-1] then return (-4),
+     if _w% = [] then return (4),
+     
+     /* define rsum depending of presence of G5's */
+     
+     /***********   case _w% contains G5's ***********************/
+     
+     if some (G5p,_w%) then (
+        [%fac5,%newL] : apply ('G5prep, _w%),
+        /* display (fac5,newL),  */
+      
+      /***** case still have a G5 in pos 1 ********/
+               
+       if %newL[1] = G5 then (
+    
+          /* disp("in TR1, case G5 present"), */
+          
+          G5case : true,
+                
+          if length (%newL) < 5 then return (0),
+        
+          g5sum :  expand (%fac5*apply ('tr1,%newL)),
+          
+          if invar_flag then g5sum : ev_invar (g5sum),
+    
+          g5sum : expand (g5sum),
+          
+          g5sumL : sumToList (g5sum),          
+          
+          rsum : 0,          
+          for wg in g5sumL do
+                 rsum : rsum + expand (apply ('Eps1_con,[wg])),            
+          g5sumL : sumToList (rsum),          
+          rsum : 0,          
+          for wg in g5sumL do           
+                 rsum : rsum + expand (apply ('Eps_post, [wg])))
+        
+       else rsum : expand (%fac5*apply ('tr1,%newL)))
+      
+     else rsum : expand (apply ('tr1,_w%)),
+     
+     /* do we actually need to use UIGm_con for G5 cases?? */
+     
+     if not G5case then (
+     
+         if invar_flag then rsum : ev_invar (rsum),
+    
+         rsum : expand (rsum),
+     
+         rsumL : sumToList (rsum),
+     
+         rsum : 0,
+     
+         for wg in rsumL do      
+            if more_index(wg) then rsum : rsum + expand (apply ('UIGm_con, [wg]))
+             else rsum : rsum + wg),
+             
+     rsum )$
+     
+   /*********** end TR1  3-26-11 *********************/
+   
+  
+   /************  tr 3-26-11 *****************************/
+   /**  tr calls Gexpand, sumToList, NDfac, strip_ops2, TR1
+             in that order  **/
+             
+   
+   tr ([v1]) := block ( [expan,expanL,trsum,vex,%fac,vex1,GL,vex2,anerr:false,Gargs ],
+   
+   /* disp ("tr 3-26-11 "), */
+     
+    if v1 = [1] then return (4),
+    if v1 = [-1] then return (-4),
+    
+    /* first do any possible expansions of multiple arg terms,
+        helicity projection operators, masses, scalars,
+         using Gexpand (G(a,b,c,..)) */
+    
+    expan : apply ('Gexpand, [ apply ('G,v1)]),
+    
+    /* display (expan), */ 
+    
+    expanL : sumToList (expand (expan)),
+    
+    /* for each term of expan, send args of the single G factor
+      to TR1 for calc of trace */
+    
+    trsum : 0,
+    
+    for vex in expanL do (
+    
+      [%fac,vex1] : NDfac (vex),
+      
+      [GL,vex2] : strip_ops2 (vex1,G),
+      
+      if GL = [] then (
+        disp ("tr: no G factor from Gexpand in term "),
+        anerr : true,
+        return ()),
+        
+      if length (GL) > 1 then (
+        disp ("tr: more than one G factor in a term from Gexpand"),
+        anerr : true,
+        return ()),
+        
+      %fac : %fac*vex2,
+      Gargs : args (GL[1]),
+      /* display (%fac,Gargs), */
+      
+      trsum : trsum + expand (%fac*apply ('TR1,Gargs))),
+      
+    if anerr then return (apply ('TRfail,v1)),
+      
+    trsum )$
+    
+  /************* end tr 3-26-11 ***********************/
+  
+  /************ Gtr and Gtr1  **********************/
+  
+  
+  Gtr (expr) := (subst ('tr,G,expr),ev(%%),expand (%%))$     
+   
+   Gtr1 (expr) := (subst ('tr1,G,expr),expand(%%))$
+   
+  
+ /*    
+  (%i2) tr(G5,n1,n2,n3,n4);
+(%o2) -4*%i*Eps(n1,n2,n3,n4)
+(%i3) tr(G5,n1,n2,n3,n1);
+(%o3) 0
+
+(%i112) tr(S(1,Sp1));
+(%o112) 2
+(%i136) tr(G5,mu,nu,rh,al);
+(%o136) -4*%i*Eps(mu,nu,rh,al)
+(%i137) tr(mu,G5,nu,rh,al);
+(%o137) 4*%i*Eps(mu,nu,rh,al)
+(%i138) tr(mu,nu,G5,rh,al);
+(%o138) -4*%i*Eps(mu,nu,rh,al)
+(%i139) tr(mu,nu,rh,G5,al);
+(%o139) 4*%i*Eps(mu,nu,rh,al)
+(%i140) tr(mu,nu,rh,al,G5);
+(%o140) -4*%i*Eps(mu,nu,rh,al)
+
+ */
+ 

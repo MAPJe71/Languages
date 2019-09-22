@@ -1,0 +1,251 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Generates a Diff/Terr chart of your FTF finds
+# MacAuthor = Lignumaqua
+# MacFileName = FSGPlugin_FTFDiffTerr.gsk
+#*******************************************
+
+# 8-17-12 Version 1.0 
+
+#*******************************************
+# Note that this is a FindStatGen Plugin
+# and can only be run through that macro
+# To use, add this line to one of your Notes sections
+# and enable that Section
+# (Without the preceding #)
+#
+# <plugin>FSGPlugin_FTFDiffTerr</plugin>
+#
+#*******************************************
+
+#TIMER Status=On Msg=No
+
+IF $_MacroLevel = 1
+	RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly.
+ENDIF
+
+GOSUB name=FTFDiffTerrChart
+
+RETURN
+
+
+BEGINSUB Name=FTFDiffTerrChart
+	# Initialise Variables
+	$terrain  = 1
+	$difficulty = 1
+	$diffterr     = ""
+	$maxdiffterr  = 0
+	$diffterr = "1,1.5,2,2.5,3,3.5,4,4.5,5,;"
+	$count = 0
+	
+	$out = AddStr(9,"clear")
+	
+	$_sql = "Select count(Code) as c from Allfinds where FTF group by difficulty order by c desc limit 1"
+	$maxdif = Val(Sqlite("sql",$_sql))
+	
+	$_sql = "Select count(Code) as c from Allfinds where FTF group by terrain order by c desc limit 1"
+	$maxterr = Val(Sqlite("sql",$_sql))
+
+	WHILE $difficulty <=5
+		WHILE $terrain <=5
+			SHOWSTATUS msg="$LangStatus18 $difficulty/$terrain" Width=350
+			$_sql = "Select count(Code) from AllFinds WHERE Difficulty=$difficulty and Terrain=$terrain and FTF"
+			$num = Val(Sqlite("sql",$_sql))
+			$diffterr = $diffterr + "$num,"
+			IF $num >0
+				$count = $count + 1
+			ENDIF
+			IF $num>$maxdiffterr
+				$maxdiffterr = $num
+			ENDIF
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		$diffterr = $diffterr + ";"
+		$difficulty = $difficulty + 0.5
+		$terrain  = 1
+	ENDWHILE
+	
+	$out = AddStr(9,"add","<table width='$maxtablewidth' style='text-align: left;margin-left: auto;margin-right: auto;'>" + $CR)
+
+	$cellwidth = Int($maxtablewidth/12.5)
+	$headerwidth = $maxtablewidth - (11 * $cellwidth)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$terrain  = 1
+	$difficulty = 1
+
+	# Title row
+
+	$out = AddStr(9,"add","<tr><td style='$stTab2cHead'></td><td style='$stTab2cHead' colspan='10' align='center'><B>$Lang28b</B></td></tr>" + $CR)
+	$out = AddStr(9,"add","<tr><td style='$stTab2cHead' rowspan='10' width='$headerwidth' valign='middle' align='center'><B>$Lang28a</B></td>" + $CR)
+
+	$out = AddStr(9,"add","<td style='$st2c1'></td>")
+	# Get one data line
+	$data = Extract($diffterr, ";" , $indexd)
+	WHILE $indext < 9
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$out = AddStr(9,"add","<td style='$st2c1' width='$cellwidth' align='center'><B>$text</B></td>" + $CR)
+	ENDWHILE
+	# Row Total
+	$out = AddStr(9,"add","<td width='$cellwidth'></td>" + $CR)
+	$out = AddStr(9,"add","</tr>" + $CR)
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 10
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($diffterr, ";" , $indexd)
+		$tindexd = Replace(",",".",NumToStr($difficulty),true)
+		$out = AddStr(9,"add","<tr><td style='$st2c1'><b> $tindexd</b></td>" + $CR)
+		$tmpN = 0
+		WHILE $indext < 9
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputFTFChartLine
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		IF $num >= $maxdif
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		$out = AddStr(9,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$indext = 0
+		$out = AddStr(9,"add","</tr>" + $CR)
+		$difficulty = $difficulty + 0.5
+		$terrain  = 1
+	ENDWHILE
+
+	$out = AddStr(9,"add","<tr><td></td><td></td>" + $CR)
+	$rating  = 1
+	# Column Totals
+	WHILE $rating <=5
+		# Deal with use of "," as separator
+		#$trating = replace(",",".",numtoStr($rating),true)
+		$_sql = "Select count(Code) from AllFinds WHERE Terrain=$rating and FTF"
+		$num = Val(Sqlite("sql",$_sql))
+		$text = NumToStr($num)
+		IF $num >= $maxterr
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		$out = AddStr(9,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$rating=$rating + 0.5
+	ENDWHILE
+
+	$out = AddStr(9,"add","</table>" + $CR + "<br />")
+
+	# Count caches where difficulty/terrain is greater or equal to 3 as 'Hard' caches
+	$_sql = "Select count(Code) from AllFinds WHERE (Terrain >=3 OR Difficulty >=3) and FTF"
+	$num = Val(Sqlite("sql",$_sql))
+	$_sql = "Select count(Code) as c from Allfinds where FTF"
+	$tmpN1 = Val(Sqlite("sql",$_sql))
+	$tmpN = Int(1000*$num/$tmpN1)/10
+	$_sql = "Select count(Code) as c from Allfinds where FTF"
+	$tmpN1 = Val(Sqlite("sql",$_sql))
+	$out = AddStr(9,"add","<i><b>$count</b>" + " $LangT5 " + $Lang104 + " <b>81</b> " + $Lang104a + "<br /><b>$num</b> ($tmpN" + "%) " + $Lang127 + "</i>" + $CR)
+
+	$p_FSGData = AddStr(9,"get")
+	$out = AddStr(9,"clear")
+
+ENDSUB
+
+
+BEGINSUB Name=OutputFTFChartLine
+	$bold = ""
+	$boldoff = ""
+	$cellstyle = $st2c2
+	
+	$begRed = 20
+	$redChange = 180
+	$begGreen = 50
+	$greenChange = 150
+	$begBlue = 0
+	$blueChange = 0
+
+	IF $num > 0
+		IF $num = $maxdiffterr
+			$cellstyle = $stDiffTerrhi
+			$bold = "<b>"
+			$boldoff = "</b>"
+		ELSE
+			
+			# Use heat map shading
+			IF $UseHeatMap
+				IF $maxdiffterr > 0
+					# Use log scale to enhance color differences
+					IF $maxdiffterr = 1 AND $num = 1
+						$x = 1
+					ELSE
+						$x = Log($maxdiffterr,$num)
+					ENDIF
+					$y = 1-($num/$maxdiffterr)
+					# Scale so one color is always at full intensity
+					IF $x >= $y
+						$y = $y/$x
+						$x = 1
+					ELSE
+						$x = $x/$y
+						$y = 1
+					ENDIF
+				ENDIF
+				$cellstyle = $stDiffTerr
+				$red=$begRed+($redChange*$x)
+				$dec=$red
+				GOSUB Name=dectohex
+				$redhex=$hex
+				$green=$begGreen+($greenChange*$y)
+				$dec=$green
+				GOSUB Name=dectohex
+				$greenhex=$hex
+				$blue=$begBlue+($blueChange*$x)
+				$dec=$blue
+				GOSUB Name=dectohex
+				$bluehex=$hex
+				$cellstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+			ELSE
+				$cellstyle = $stDiffTerr
+			ENDIF
+					
+		ENDIF
+	ELSE
+		$text = " "
+	ENDIF
+	IF $indext = 1
+		$out = AddStr(9,"add","    <td style='$cellstyle' width='$cellwidth' align='center'>$bold$text$boldoff</td>" + $CR)
+	ELSE
+		$out = AddStr(9,"add","    <td style='$cellstyle' align='center'>$bold$text$boldoff</td>" + $CR)
+	ENDIF
+ENDSUB
+
+BEGINSUB name=dectohex
+	# Takes input from 0-255 as a decimal number in $dec
+	# and returns it as a two character hex string in $hex
+
+	$hexlookup="0123456789ABCDEF"
+	$c_d = Int($dec)
+	$c_q = Int($c_d/16)
+	$c_r = $c_d - ($c_q*16)
+	$hex = Substr($hexlookup,$c_q+1,1) + Substr($hexlookup,$c_r+1,1)
+ENDSUB

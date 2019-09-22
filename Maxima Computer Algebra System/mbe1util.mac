@@ -1,0 +1,131 @@
+/* mbe1util.mac -- utility functions used by the series
+ * of notes: Maxima by Example.
+ *
+ * Copyright 2009 by Edwin L. Woollett
+ * I release this file under the terms of the GNU General Public License.
+ *
+ *   Edwin L Woollett, July, 2009
+ *   woollett@charter.net
+ *   http://www.csulb.edu/~woollett
+ *   last edit  08-11-09 with v. 5.19.0
+ */
+
+
+
+/* file mbe1util.mac  contains the functions
+
+   fll(alist)
+   mattrib()
+   mclean()
+   mstate()      
+   qplot ( exprlist, prange, [hvrange])
+   rtt(e)
+   to_atan(e,y,x)
+   to_atan2(e,y,x)
+   totan(e,v)
+   totan2(e,v)
+   ts(e,v)
+*/
+ 
+ 
+/*  qplot is a quick interface to plot2d, mainly of
+ *   use for quick plots of a function or a set of
+ *   functions. Features: stronger line thickness and color,
+ *   grid, stronger axes, better default plotting of
+ *   fast changing parametric functions.
+ *   See Maxima by Example, Ch. 2, Two Dimensional
+ *   Plots and Least Squares Fits, for an introduction
+ *   to plot2d and qplot.
+ *   Simple examples:
+ *   qplot ( x^3, [x,-2,2])$
+ *   qplot ( [x^3, x^2, x], [x,-2,2] )$
+ *   qplot ( [u^3, u^2, u], [u,-2,2], [x,-3,3])$
+ *   qplot ( [u^3, u^2, u], [u,-2,2], [x,-3,3], [y,-10,10])$
+ */
+    
+/* disp("qplot(exprlist, prange, hvrange),  hvrange lists are optional ")$ */
+ 
+qplot ( exprlist, prange, [hvrange]) := 
+    block([optlist, plist],
+      optlist : [ [nticks,100], [legend, false], 
+           [ylabel, " "], [gnuplot_preamble, "set grid; set zeroaxis lw 2;"] ], 
+      optlist : cons ( [style,[lines,5]], optlist ),
+      if length (hvrange) = 0 then plist : [] 
+            else   plist : hvrange, 
+      plist : cons (prange,plist), 
+      plist : cons (exprlist,plist),
+      plist : append ( plist, optlist ),
+      apply (plot2d, plist ) )$
+      
+      
+/* kind of another trigreduce */
+
+rtt(e) := radcan(trigrat(trigsimp(e)))$
+
+/* if trigsimp is not working, then use */
+
+ts(e,v) := ratsubst(1,cos(v)^2 + sin(v)^2, e)$
+
+/* replace atan2(y,x) by atan(y/x) */
+
+to_atan(e,y,x) := ratsubst(atan(y/x),atan2(y,x),e)$
+
+/* replace atan(y/x) by atan2(y,x)  */
+
+to_atan2(e,y,x) := ratsubst(atan2(y,x), atan(y/x), e)$
+
+
+/* explicit reduction to tan(x) 
+totan(e,v):= (ratsubst(1/sqrt(1+tan(v)^2),cos(v),e),
+             ratsubst(tan(v)/sqrt(1+tan(v)^2),sin(v),%%))$
+ */
+ 
+ /* implicit reduction using t = tan(v).
+     after getting eqn in terms of t solve for
+     t */
+ 
+totan(e,v):= (ratsubst(1/sqrt(1+t^2),cos(v),e),
+             ratsubst(t/sqrt(1+t^2),sin(v),%%))$
+             
+/* implicit reduction using t = tan(v/2) 
+
+We need to help out Maxima twice with this
+method, once to know (remember) the  facts that 
+sin(v) = 2*t/(1+t^2), cos(v) = (1-t^2)/(1+t^2),
+and finally that 
+  tan(v) = 2*tan(v/2)/(1-tan(v/2)^2).
+  or tan(v) = 2*t/(1 - t^2) once we have solved for t */
+  
+totan2(e,v) := (ratsubst( (1-t^2)/(1+t^2),cos(v),e),
+                 ratsubst( 2*t/(1+t^2), sin(v),%%) )$
+
+
+
+mstate() := (
+    print("  [fpprec,fpprintprec,display2d] = ",[fpprec,fpprintprec,display2d]),
+    print("  [radexpand, domain] = ",[radexpand, domain] ),    
+    print("  [algebraic,listarith,simp,simpsum] = ",[algebraic,listarith,simp,simpsum]),
+    for i in [1,2,3,5,6,7,8,9,10,11] do
+            print("  ",infolists[i]," =  ",ev(infolists[i])),
+    print("   facts() = ",facts()),
+    print("   tellrat() = ",tellrat() ),
+    print("  ") )$
+    
+    
+mattrib() := (
+     print("   facts() = ",facts()),
+     print("   dependencies = ",dependencies),
+     print("   props = ",props),
+     print("  ") )$
+     
+
+mclean() := ( kill( allbut( mstate, mclean, mattrib, rtt,ts,to_atan,to_atan2, totan, totan2, qplot, fll )),
+            reset(fpprintprec,fpprec,display2d,radexpand,domain),            
+            print("----- clean start"),
+            print("  "))$
+
+
+
+fll(x) := [first(x),last(x),length(x)]$
+
+declare(fll,evfun)$

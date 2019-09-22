@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="PowerShell" ext="ps1">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="yes" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="yes" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;&apos;0&quot;&apos;0</Keywords>
+            <Keywords name="Folder+">{ (</Keywords>
+            <Keywords name="Folder-">} )</Keywords>
+            <Keywords name="Operators">% * / + &lt; = &gt;</Keywords>
+            <Keywords name="Comment"> 1&lt;# 2#&gt; 0#</Keywords>
+            <Keywords name="Words1">Add-Computer Add-Content Add-History Add-Member Add-PSSnapin Add-Type Checkpoint-Computer Clear-Content Clear-EventLog Clear-History Clear-Item Clear-ItemProperty Clear-Variable Compare-Object Complete-Transaction Connect-WSMan ConvertFrom-Csv ConvertFrom-SecureString ConvertFrom-StringData Convert-Path ConvertTo-Csv ConvertTo-Html ConvertTo-SecureString ConvertTo-Xml Copy-Item Copy-ItemProperty Debug-Process Disable-ComputerRestore Disable-PSBreakpoint Disable-PSSessionConfiguration Disable-WSManCredSSP Disconnect-WSMan Enable-ComputerRestore Enable-PSBreakpoint Enable-PSRemoting Enable-PSSessionConfiguration Enable-WSManCredSSP Enter-PSSession Exit-PSSession Export-Alias Export-Clixml Export-Console Export-Counter Export-Csv Export-FormatData Export-ModuleMember Export-PSSession ForEach-Object Format-Custom Format-List Format-Table Format-Wide Get-Acl Get-Alias Get-AuthenticodeSignature Get-ChildItem Get-Command Get-ComputerRestorePoint Get-Content Get-Counter Get-Credential Get-Culture Get-Date Get-Event Get-EventLog Get-EventSubscriber Get-ExecutionPolicy Get-FormatData Get-Help Get-History Get-Host Get-HotFix Get-Item Get-ItemProperty Get-Job Get-Location Get-Member Get-Module Get-PfxCertificate Get-Process Get-PSBreakpoint Get-PSCallStack Get-PSDrive Get-PSProvider Get-PSSession Get-PSSessionConfiguration Get-PSSnapin Get-Random Get-Service Get-TraceSource Get-Transaction Get-UICulture Get-Unique Get-Variable Get-WinEvent Get-WmiObject Get-WSManCredSSP Get-WSManInstance Group-Object Import-Alias Import-Clixml Import-Counter Import-Csv Import-LocalizedData Import-Module Import-PSSession Invoke-Command Invoke-Expression Invoke-History Invoke-Item Invoke-WmiMethod Invoke-WSManAction Join-Path Limit-EventLog Measure-Command Measure-Object Move-Item Move-ItemProperty New-Alias New-Event New-EventLog New-Item New-ItemProperty New-Module New-ModuleManifest New-Object New-PSDrive New-PSSession New-PSSessionOption New-Service New-TimeSpan New-Variable New-WebServiceProxy New-WSManInstance New-WSManSessionOption Out-Default Out-File Out-GridView Out-Host Out-Null Out-Printer Out-String Pop-Location Push-Location Read-Host Receive-Job Register-EngineEvent Register-ObjectEvent Register-PSSessionConfiguration Register-WmiEvent Remove-Computer Remove-Event Remove-EventLog Remove-Item Remove-ItemProperty Remove-Job Remove-Module Remove-PSBreakpoint Remove-PSDrive Remove-PSSession Remove-PSSnapin Remove-Variable Remove-WmiObject Remove-WSManInstance Rename-Item Rename-ItemProperty Reset-ComputerMachinePassword Resolve-Path Restart-Computer Restart-Service Restore-Computer Resume-Service Select-Object Select-String Select-Xml Send-MailMessage Set-Acl Set-Alias Set-AuthenticodeSignature Set-Content Set-Date Set-ExecutionPolicy Set-Item Set-ItemProperty Set-Location Set-PSBreakpoint Set-PSDebug Set-PSSessionConfiguration Set-Service Set-StrictMode Set-TraceSource Set-Variable Set-WmiInstance Set-WSManInstance Set-WSManQuickConfig Show-EventLog Sort-Object Split-Path Start-Job Start-Process Start-Service Start-Sleep Start-Transaction Start-Transcript Stop-Computer Stop-Job Stop-Process Stop-Service Stop-Transcript Suspend-Service Tee-Object Test-ComputerSecureChannel Test-Connection Test-ModuleManifest Test-Path Test-WSMan Trace-Command Undo-Transaction Unregister-Event Unregister-PSSessionConfiguration Update-FormatData Update-List Update-TypeData Use-Transaction Wait-Event Wait-Job Wait-Process Where-Object Write-Debug Write-Error Write-EventLog Write-Host Write-Output Write-Progress Write-Verbose Write-Warning ac asnp clc cli clp clv cpi cpp cvpa diff epal epcsv fc fl % ft fw gal gc gci gcm gdr ghy gi gl gm gp gps group gsv gsnp gu gv gwmi iex ihy ii ipal ipcsv mi mp nal ndr ni nv oh rdr ri rni rnp rp rsnp rv rvpa sal sasv sc select si sl sleep sort sp spps spsv sv tee ? write cat cd clear cp h history kill lp ls mount mv popd ps pushd pwd r rm rmdir echo cls chdir copy del dir erase move rd ren set type</Keywords>
+            <Keywords name="Words2">break continue do for foreach while if switch until where function filter else elseif in return exit param</Keywords>
+            <Keywords name="Words3">-eq -ne -ge -gt -lt -le -like -notlike -match -notmatch -replace -contains -notcontains -ieq -ine -ige -igt -ile -ilt -ilike -inotlike -imatch -inotmatch -ireplace -icontains -inotcontains -ceq -cne -cge -cgt -clt -cle -clike -cnotlike -cmatch -cnotmatch -creplace -ccontains -cnotcontains -is -isnot -as = += -= *= /= %= -and -or -band -bor</Keywords>
+            <Keywords name="Words4">$</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="10" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

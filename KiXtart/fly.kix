@@ -1,0 +1,19 @@
+;
+; KiXtart demo script
+;
+
+CLS
+BIG
+$X = 1
+
+DO
+   COLOR w/n
+   AT ( $X,$X*2 ) "KIXTART"
+   $X = $X+1
+UNTIL $X = 10
+
+COLOR g+/n
+AT ( $X,$X*2 ) "KIXTART"
+
+AT (23,0)
+SMALL

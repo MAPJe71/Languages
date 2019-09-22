@@ -1,0 +1,989 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html><head>
+   <title> Objective-C grammar for Lex/Yacc Flex/Bison
+   </title>
+   <link rel="Index" href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/index.html">
+   <link rel="made" href="mailto:macosx-dev%40omnigroup.com?Subject=Objective-C%20grammar%20for%20Lex/Yacc%20Flex/Bison&amp;In-Reply-To=">
+   <meta name="robots" content="index,nofollow">
+   <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+   <link rel="Previous" href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022977.html">
+   <link rel="Next" href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022982.html">
+ </head>
+ <body data-pinterest-extension-installed="ff1.37.9" bgcolor="#ffffff">
+   <h1>Objective-C grammar for Lex/Yacc Flex/Bison</h1>
+    <b>Erik M. Buck</b> 
+    <a href="mailto:macosx-dev%40omnigroup.com?Subject=Objective-C%20grammar%20for%20Lex/Yacc%20Flex/Bison&amp;In-Reply-To=" title="Objective-C grammar for Lex/Yacc Flex/Bison">buck.erik at mcleodusa.net
+       </a><br>
+    <i>Sat Mar 17 07:51:21 PST 2001</i>
+    <p></p><ul>
+        <li>Previous message: <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022977.html">Objective-C grammar for Lex/Yacc Flex/Bison
+</a></li>
+        <li>Next message: <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022982.html">Objective-C grammar for Lex/Yacc Flex/Bison
+</a></li>
+         <li> <b>Messages sorted by:</b> 
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/date.html#22979">[ date ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/thread.html#22979">[ thread ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/subject.html#22979">[ subject ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/author.html#22979">[ author ]</a>
+         </li>
+       </ul>
+    <hr>  
+<!--beginarticle-->
+<pre>The grammar for C is in the back of K &amp; R C
+The grammar for Objective-C is in the back of "Object Oriented Programming &amp;
+Objective-C"
+
+Here it is as I have typed it:
+
+
+
+ObjectiveC.y:
+%{
+#import &lt;Foundation/NSData.h&gt;
+#import &lt;Foundation/NSDictionary.h&gt;
+#import &lt;Foundation/NSString.h&gt;
+
+#define YYDEBUG 1
+
+extern void yyerror(const char *);
+extern yylex(), yyparse();
+extern void _VSetDataToScan(NSData *someData);
+extern void _VRegisterTypeName(const char *aTypeName);
+extern BOOL _VIsKnownTypeName(const char *aTypeName);
+extern char _VCurrentIdentifier[512];
+
+%}
+
+%token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
+%token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
+%token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
+%token SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
+%token XOR_ASSIGN OR_ASSIGN TYPE_NAME
+
+%token TYPEDEF EXTERN STATIC AUTO REGISTER
+%token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
+%token STRUCT UNION ENUM ELLIPSIS
+
+%token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
+
+%token DECLSPEC DLLIMPORT DLLEXPORT
+
+%token INTERFACE IMPLEMENTATION PROTOCOL END CLASS PRIVATE PUBLIC PROTECTED
+
+%start translation_unit
+
+%%
+
+primary_expression
+        : IDENTIFIER
+        | CONSTANT
+        | STRING_LITERAL
+        | '(' expression ')'
+        ;
+
+postfix_expression
+        : primary_expression
+        | postfix_expression '[' expression ']'
+        | postfix_expression '(' ')'
+        | postfix_expression '(' argument_expression_list ')'
+        | postfix_expression '.' IDENTIFIER
+        | postfix_expression PTR_OP IDENTIFIER
+        | postfix_expression INC_OP
+        | postfix_expression DEC_OP
+        ;
+
+argument_expression_list
+        : assignment_expression
+        | argument_expression_list ',' assignment_expression
+        ;
+
+unary_expression
+        : postfix_expression
+        | INC_OP unary_expression
+        | DEC_OP unary_expression
+        | unary_operator cast_expression
+        | SIZEOF unary_expression
+        | SIZEOF '(' type_name ')'
+        ;
+
+unary_operator
+        : '&amp;'
+        | '*'
+        | '+'
+        | '-'
+        | '~'
+        | '!'
+        ;
+
+cast_expression
+        : unary_expression
+        | '(' type_name ')' cast_expression
+        ;
+
+multiplicative_expression
+        : cast_expression
+        | multiplicative_expression '*' cast_expression
+        | multiplicative_expression '/' cast_expression
+        | multiplicative_expression '%' cast_expression
+        ;
+
+additive_expression
+        : multiplicative_expression
+        | additive_expression '+' multiplicative_expression
+        | additive_expression '-' multiplicative_expression
+        ;
+
+shift_expression
+        : additive_expression
+        | shift_expression LEFT_OP additive_expression
+        | shift_expression RIGHT_OP additive_expression
+        ;
+
+relational_expression
+        : shift_expression
+        | relational_expression '&lt;' shift_expression
+        | relational_expression '&gt;' shift_expression
+        | relational_expression LE_OP shift_expression
+        | relational_expression GE_OP shift_expression
+        ;
+
+equality_expression
+        : relational_expression
+        | equality_expression EQ_OP relational_expression
+        | equality_expression NE_OP relational_expression
+        ;
+
+and_expression
+        : equality_expression
+        | and_expression '&amp;' equality_expression
+        ;
+
+exclusive_or_expression
+        : and_expression
+        | exclusive_or_expression '^' and_expression
+        ;
+
+inclusive_or_expression
+        : exclusive_or_expression
+        | inclusive_or_expression '|' exclusive_or_expression
+        ;
+
+logical_and_expression
+        : inclusive_or_expression
+        | logical_and_expression AND_OP inclusive_or_expression
+        ;
+
+logical_or_expression
+        : logical_and_expression
+        | logical_or_expression OR_OP logical_and_expression
+        ;
+
+conditional_expression
+        : logical_or_expression
+        | logical_or_expression '?' expression ':' conditional_expression
+        ;
+
+assignment_expression
+        : conditional_expression
+        | unary_expression assignment_operator assignment_expression
+        ;
+
+assignment_operator
+        : '='
+        | MUL_ASSIGN
+        | DIV_ASSIGN
+        | MOD_ASSIGN
+        | ADD_ASSIGN
+        | SUB_ASSIGN
+        | LEFT_ASSIGN
+        | RIGHT_ASSIGN
+        | AND_ASSIGN
+        | XOR_ASSIGN
+        | OR_ASSIGN
+        ;
+
+expression
+        : assignment_expression
+        | expression ',' assignment_expression
+        ;
+
+constant_expression
+        : conditional_expression
+        ;
+
+declaration
+        : declaration_specifiers ';'
+        | type_declaration ';'
+        | declaration_specifiers init_declarator_list ';'
+        ;
+
+declaration_specifiers
+        : storage_class_specifier
+        | storage_class_specifier declaration_specifiers
+        | type_specifier
+        | type_specifier declaration_specifiers
+        | type_qualifier
+        | type_qualifier declaration_specifiers
+ | declspec storage_class_specifier
+ | declspec storage_class_specifier declaration_specifiers
+ | declspec type_specifier
+ | declspec type_specifier declaration_specifiers
+ | declspec type_qualifier
+ | declspec type_qualifier declaration_specifiers
+        ;
+
+init_declarator_list
+        : init_declarator
+        | init_declarator_list ',' init_declarator
+        ;
+
+init_declarator
+        : declarator
+        | declarator '=' initializer
+        ;
+
+declspec_type
+ : DLLIMPORT
+ | DLLEXPORT
+ ;
+
+declspec
+ : DECLSPEC '(' declspec_type ')'
+ ;
+
+storage_class_specifier
+        : EXTERN
+        | STATIC
+        | AUTO
+        | REGISTER
+        ;
+
+type_declarator
+        : pointer type_direct_declarator
+        | type_direct_declarator
+        ;
+
+type_direct_declarator
+        : IDENTIFIER
+         {
+  _VRegisterTypeName(_VCurrentIdentifier);
+  }
+        | '(' type_declarator ')'
+        | type_direct_declarator '[' constant_expression ']'
+        | type_direct_declarator '[' ']'
+        | type_direct_declarator '(' parameter_type_list ')'
+        | type_direct_declarator '(' identifier_list ')'
+        | type_direct_declarator '(' ')'
+        ;
+
+type_declaration
+        : TYPEDEF declaration_specifiers type_declarator
+ ;
+
+type_specifier
+        : VOID
+        | CHAR
+        | SHORT
+        | INT
+        | LONG
+        | FLOAT
+        | DOUBLE
+        | SIGNED
+        | UNSIGNED
+        | struct_or_union_specifier
+        | enum_specifier
+        | TYPE_NAME
+        ;
+
+struct_or_union_specifier
+        : struct_or_union IDENTIFIER '{' struct_declaration_list '}'
+         {
+  _VRegisterTypeName(_VCurrentIdentifier);
+  }
+        | struct_or_union '{' struct_declaration_list '}'
+        | struct_or_union IDENTIFIER
+         {
+  _VRegisterTypeName(_VCurrentIdentifier);
+  }
+        ;
+
+struct_or_union
+        : STRUCT
+        | UNION
+        ;
+
+struct_declaration_list
+        : struct_declaration
+        | struct_declaration_list struct_declaration
+        ;
+
+struct_declaration
+        : specifier_qualifier_list struct_declarator_list ';'
+        ;
+
+specifier_qualifier_list
+        : type_specifier specifier_qualifier_list
+        | type_specifier
+        | type_qualifier specifier_qualifier_list
+        | type_qualifier
+        ;
+
+struct_declarator_list
+        : struct_declarator
+        | struct_declarator_list ',' struct_declarator
+        ;
+
+struct_declarator
+        : declarator
+        | ':' constant_expression
+        | declarator ':' constant_expression
+        ;
+
+enum_specifier
+        : ENUM '{' enumerator_list '}'
+        | ENUM IDENTIFIER '{' enumerator_list '}'
+         {
+  _VRegisterTypeName(_VCurrentIdentifier);
+  }
+        | ENUM IDENTIFIER
+         {
+  _VRegisterTypeName(_VCurrentIdentifier);
+  }
+        ;
+
+enumerator_list
+        : enumerator
+        | enumerator_list ',' enumerator
+        ;
+
+enumerator
+        : IDENTIFIER
+        | IDENTIFIER '=' constant_expression
+        ;
+
+type_qualifier
+        : CONST
+        | VOLATILE
+        ;
+
+declarator
+        : pointer direct_declarator
+        | direct_declarator
+        ;
+
+direct_declarator
+        : IDENTIFIER
+        | '(' declarator ')'
+        | direct_declarator '[' constant_expression ']'
+        | direct_declarator '[' ']'
+        | direct_declarator '(' parameter_type_list ')'
+        | direct_declarator '(' identifier_list ')'
+        | direct_declarator '(' ')'
+        ;
+
+pointer
+        : '*'
+        | '*' type_qualifier_list
+        | '*' pointer
+        | '*' type_qualifier_list pointer
+        ;
+
+type_qualifier_list
+        : type_qualifier
+        | type_qualifier_list type_qualifier
+        ;
+
+
+parameter_type_list
+        : parameter_list
+        | parameter_list ',' ELLIPSIS
+        ;
+
+parameter_list
+        : parameter_declaration
+        | parameter_list ',' parameter_declaration
+        ;
+
+parameter_declaration
+        : declaration_specifiers declarator
+        | declaration_specifiers abstract_declarator
+        | declaration_specifiers
+        ;
+
+identifier_list
+        : IDENTIFIER
+        | identifier_list ',' IDENTIFIER
+        ;
+
+type_name
+        : specifier_qualifier_list
+        | specifier_qualifier_list abstract_declarator
+        ;
+
+abstract_declarator
+        : pointer
+        | direct_abstract_declarator
+        | pointer direct_abstract_declarator
+        ;
+
+direct_abstract_declarator
+        : '(' abstract_declarator ')'
+        | '[' ']'
+        | '[' constant_expression ']'
+        | direct_abstract_declarator '[' ']'
+        | direct_abstract_declarator '[' constant_expression ']'
+        | '(' ')'
+        | '(' parameter_type_list ')'
+        | direct_abstract_declarator '(' ')'
+        | direct_abstract_declarator '(' parameter_type_list ')'
+        ;
+
+initializer
+        : assignment_expression
+        | '{' initializer_list '}'
+        | '{' initializer_list ',' '}'
+        ;
+
+initializer_list
+        : initializer
+        | initializer_list ',' initializer
+        ;
+
+statement
+        : labeled_statement
+        | compound_statement
+        | expression_statement
+        | selection_statement
+        | iteration_statement
+        | jump_statement
+        ;
+
+labeled_statement
+        : IDENTIFIER ':' statement
+        | CASE constant_expression ':' statement
+        | DEFAULT ':' statement
+        ;
+
+compound_statement
+        : '{' '}'
+        | '{' statement_list '}'
+        | '{' declaration_list '}'
+        | '{' declaration_list statement_list '}'
+        ;
+
+declaration_list
+        : declaration
+        | declaration_list declaration
+        ;
+
+statement_list
+        : statement
+        | statement_list statement
+        ;
+
+expression_statement
+        : ';'
+        | expression ';'
+        ;
+
+selection_statement
+        : IF '(' expression ')' statement
+        | IF '(' expression ')' statement ELSE statement
+        | SWITCH '(' expression ')' statement
+        ;
+
+iteration_statement
+        : WHILE '(' expression ')' statement
+        | DO statement WHILE '(' expression ')' ';'
+        | FOR '(' expression_statement expression_statement ')' statement
+        | FOR '(' expression_statement expression_statement expression ')'
+statement
+        ;
+
+jump_statement
+        : GOTO IDENTIFIER ';'
+        | CONTINUE ';'
+        | BREAK ';'
+        | RETURN ';'
+        | RETURN expression ';'
+        ;
+
+translation_unit
+        : external_declaration
+        | translation_unit external_declaration
+        ;
+
+external_declaration
+        : function_definition
+        | declaration
+ | class_interface
+ | class_implementation
+ | category_interface
+ | category_implementation
+ | protocol_declaration
+ | class_declaration_list
+        ;
+
+function_definition
+        : declaration_specifiers declarator declaration_list
+compound_statement
+        | declaration_specifiers declarator compound_statement
+        | declarator declaration_list compound_statement
+        | declarator compound_statement
+        ;
+
+class_interface
+ : INTERFACE class_name instance_variables interface_declaration_list END
+ | INTERFACE class_name ':' superclass_name instance_variables
+interface_declaration_list END
+ | INTERFACE protocol_reference_list instance_variables
+interface_declaration_list END
+ | INTERFACE class_name ':' superclass_name protocol_reference_list
+instance_variables interface_declaration_list END
+ ;
+
+class_implementation
+ : IMPLEMENTATION class_name instance_variables
+implementation_definition_list END
+ | IMPLEMENTATION class_name ':' superclass_name instance_variables
+implementation_definition_list END
+ ;
+
+category_interface
+ : INTERFACE class_name '(' category_name ')' interface_declaration_list END
+ | INTERFACE class_name '(' category_name ')' protocol_reference_list
+interface_declaration_list END
+ ;
+
+category_implementation
+ : IMPLEMENTATION class_name '(' category_name ')'
+implementation_definition_list END
+ ;
+
+protocol_declaration
+ : PROTOCOL protocol_name interface_declaration_list END
+ | PROTOCOL protocol_name protocol_reference_list interface_declaration_list
+END
+ ;
+
+class_declaration_list
+ : CLASS class_list
+ ;
+
+class_list
+ : class_name
+ | class_list ',' class_name
+ ;
+
+protocol_reference_list
+ : '&lt;' protocol_list '&gt;'
+ ;
+
+protocol_list
+ : protocol_name
+ | protocol_list ',' protocol_name
+ ;
+
+class_name
+ : IDENTIFIER
+ ;
+
+superclass_name
+ : IDENTIFIER
+ ;
+
+category_name
+ : IDENTIFIER
+ ;
+
+protocol_name
+ : IDENTIFIER
+ ;
+
+instance_variables
+ : '{' struct_declaration_list '}'
+ | '{' visibility_specification struct_declaration_list '}'
+ | '{' struct_declaration_list instance_variables '}'
+ | '{' visibility_specification struct_declaration_list instance_variables
+'}'
+ ;
+
+visibility_specification
+ : PRIVATE
+ | PUBLIC
+ | PROTECTED
+ ;
+
+interface_declaration_list
+ : declaration
+ | method_declaration
+ | interface_declaration_list declaration
+ | interface_declaration_list method_declaration
+ ;
+
+method_declaration
+ : class_method_declaration
+ | instance_method_declaration
+ ;
+
+class_method_declaration
+ : '+' method_selector ';'
+ | '+' method_type method_selector ';'
+ ;
+
+instance_method_declaration
+ : '-' method_selector ';'
+ | '-' method_type method_selector ';'
+ ;
+
+implementation_definition_list
+ : function_definition
+ | declaration
+ | method_definition
+ | implementation_definition_list function_definition
+ | implementation_definition_list declaration
+ | implementation_definition_list method_definition
+ ;
+
+method_definition
+ : class_method_definition
+ | instance_method_definition
+ ;
+
+class_method_definition
+ : '+' method_selector compound_statement
+ | '+' method_type method_selector compound_statement
+ | '+' method_selector declaration_list compound_statement
+ | '+' method_type method_selector declaration_list compound_statement
+ ;
+
+instance_method_definition
+ : '-' method_selector compound_statement
+ | '-' method_type method_selector compound_statement
+ | '-' method_selector declaration_list compound_statement
+ | '-' method_type method_selector declaration_list compound_statement
+ ;
+
+method_selector
+ : unary_selector
+ | keyword_selector
+ | keyword_selector ',' ELLIPSIS
+ | keyword_selector ',' parameter_type_list
+ ;
+
+unary_selector
+ : selector
+ ;
+
+keyword_selector
+ : keyword_declarator
+ | keyword_selector keyword_declarator
+ ;
+
+keyword_declarator
+ : ':' IDENTIFIER
+ | ':' method_type IDENTIFIER
+ | selector ':' IDENTIFIER
+ | selector ':' method_type IDENTIFIER
+ ;
+
+selector
+ : IDENTIFIER
+ ;
+
+method_type
+ : '(' type_name ')'
+ ;
+
+%%
+#include &lt;stdio.h&gt;
+
+extern char yytext[];
+extern int column;
+
+char _VCurrentIdentifier[512];
+
+void yyerror(const char *s)
+{
+        fflush(stdout);
+        printf("\n%*s\n%*s\n", column, "^", column, s);
+}
+
+
+BOOL ParsePreProcessedC(NSData *someData)
+{
+  _VSetDataToScan(someData); /* sets up lex to scan the data */
+
+  return yyparse();
+}
+
+
+static NSMutableDictionary *typeNameDictionary = nil;
+
+
+void _VRegisterTypeName(const char *aTypeName)
+{
+  //fprintf(stderr, "-----------------&gt; %s &lt;------------------\n",
+aTypeName);
+
+  if(nil == typeNameDictionary) {
+    typeNameDictionary = [[NSMutableDictionary alloc] init];
+  }
+
+  [typeNameDictionary setObject:[NSString stringWithCString:aTypeName]
+forKey:[NSString stringWithCString:aTypeName]];
+}
+
+
+BOOL _VIsKnownTypeName(const char *aTypeName)
+{
+  return (nil != [typeNameDictionary objectForKey:[NSString
+stringWithCString:aTypeName]]);
+}
+
+
+
+
+ObjectiveC.l:
+%{
+#import &lt;Foundation/NSData.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;malloc.h&gt;
+
+extern char _VCurrentIdentifier[512];
+
+void comment();
+int check_type();
+void _VSetDataToScan(NSData *someData);
+extern BOOL _VIsKnownTypeName(const char *aTypeName);
+
+static const char * _VCurrentDataBytes = NULL;
+static NSData *_VCurrentData = nil;
+static int _VCurrentDataBytesIndex = 0;
+
+#ifdef _WIN32
+
+/* Windows doesn't define the isatty() function.
+   As we always read from a file, we can easily
+   provide the following simple implementation: */
+
+int isatty (int fd)
+{
+    return 0;
+}
+#endif
+
+%}
+
+D                       [0-9]
+L                       [a-zA-Z_]
+H                       [a-fA-F0-9]
+E                       [Ee][+-]?{D}+
+FS                      (f|F|l|L)
+IS                      (u|U|l|L)*
+
+%{
+#include &lt;stdio.h&gt;
+#include "y.tab.h"
+
+void count();
+%}
+
+%%
+"/*"                    { comment(); }
+
+"auto"                  { count(); return(AUTO); }
+"break"                 { count(); return(BREAK); }
+"case"                  { count(); return(CASE); }
+"char"                  { count(); return(CHAR); }
+"const"                 { count(); return(CONST); }
+"continue"              { count(); return(CONTINUE); }
+"default"               { count(); return(DEFAULT); }
+"do"                    { count(); return(DO); }
+"double"                { count(); return(DOUBLE); }
+"else"                  { count(); return(ELSE); }
+"enum"                  { count(); return(ENUM); }
+"extern"                { count(); return(EXTERN); }
+"float"                 { count(); return(FLOAT); }
+"for"                   { count(); return(FOR); }
+"goto"                  { count(); return(GOTO); }
+"if"                    { count(); return(IF); }
+"int"                   { count(); return(INT); }
+"long"                  { count(); return(LONG); }
+"register"              { count(); return(REGISTER); }
+"return"                { count(); return(RETURN); }
+"short"                 { count(); return(SHORT); }
+"signed"                { count(); return(SIGNED); }
+"sizeof"                { count(); return(SIZEOF); }
+"static"                { count(); return(STATIC); }
+"struct"                { count(); return(STRUCT); }
+"switch"                { count(); return(SWITCH); }
+"typedef"               { count(); return(TYPEDEF); }
+"union"                 { count(); return(UNION); }
+"unsigned"              { count(); return(UNSIGNED); }
+"void"                  { count(); return(VOID); }
+"volatile"              { count(); return(VOLATILE); }
+"while"                 { count(); return(WHILE); }
+"__declspec"  { count(); return(DECLSPEC); }
+"dllimport"  { count(); return(DLLIMPORT); }
+"dllexport"  { count(); return(DLLEXPORT); }
+
+
+{L}({L}|{D})*           { count(); return(check_type()); }
+
+0[xX]{H}+{IS}?          { count(); return(CONSTANT); }
+0{D}+{IS}?              { count(); return(CONSTANT); }
+{D}+{IS}?               { count(); return(CONSTANT); }
+L?'(\\.|[^\\'])+'       { count(); return(CONSTANT); }
+
+{D}+{E}{FS}?            { count(); return(CONSTANT); }
+{D}*"."{D}+({E})?{FS}?  { count(); return(CONSTANT); }
+{D}+"."{D}*({E})?{FS}?  { count(); return(CONSTANT); }
+
+L?\"(\\.|[^\\"])*\"     { count(); return(STRING_LITERAL); }
+
+"..."                   { count(); return(ELLIPSIS); }
+"&gt;&gt;="                   { count(); return(RIGHT_ASSIGN); }
+"&lt;&lt;="                   { count(); return(LEFT_ASSIGN); }
+"+="                    { count(); return(ADD_ASSIGN); }
+"-="                    { count(); return(SUB_ASSIGN); }
+"*="                    { count(); return(MUL_ASSIGN); }
+"/="                    { count(); return(DIV_ASSIGN); }
+"%="                    { count(); return(MOD_ASSIGN); }
+"&amp;="                    { count(); return(AND_ASSIGN); }
+"^="                    { count(); return(XOR_ASSIGN); }
+"|="                    { count(); return(OR_ASSIGN); }
+"&gt;&gt;"                    { count(); return(RIGHT_OP); }
+"&lt;&lt;"                    { count(); return(LEFT_OP); }
+"++"                    { count(); return(INC_OP); }
+"--"                    { count(); return(DEC_OP); }
+"-&gt;"                    { count(); return(PTR_OP); }
+"&amp;&amp;"                    { count(); return(AND_OP); }
+"||"                    { count(); return(OR_OP); }
+"&lt;="                    { count(); return(LE_OP); }
+"&gt;="                    { count(); return(GE_OP); }
+"=="                    { count(); return(EQ_OP); }
+"!="                    { count(); return(NE_OP); }
+";"                     { count(); return(';'); }
+("{"|"&lt;%")              { count(); return('{'); }
+("}"|"%&gt;")              { count(); return('}'); }
+","                     { count(); return(','); }
+":"                     { count(); return(':'); }
+"="                     { count(); return('='); }
+"("                     { count(); return('('); }
+")"                     { count(); return(')'); }
+("["|"&lt;:")              { count(); return('['); }
+("]"|":&gt;")              { count(); return(']'); }
+"."                     { count(); return('.'); }
+"&amp;"                     { count(); return('&amp;'); }
+"!"                     { count(); return('!'); }
+"~"                     { count(); return('~'); }
+"-"                     { count(); return('-'); }
+"+"                     { count(); return('+'); }
+"*"                     { count(); return('*'); }
+"/"                     { count(); return('/'); }
+"%"                     { count(); return('%'); }
+"&lt;"                     { count(); return('&lt;'); }
+"&gt;"                     { count(); return('&gt;'); }
+"^"                     { count(); return('^'); }
+"|"                     { count(); return('|'); }
+"?"                     { count(); return('?'); }
+
+[ \t\v\n\f]             { count(); }
+.                       { /* ignore bad characters */ }
+
+%%
+
+void comment()
+{
+        char c, c1;
+
+loop:
+        while ((c = input()) != '*' &amp;&amp; c != 0)
+                putchar(c);
+
+        if ((c1 = input()) != '/' &amp;&amp; c != 0)
+        {
+                unput(c1);
+                goto loop;
+        }
+
+        if (c != 0)
+                putchar(c1);
+}
+
+
+int column = 0;
+
+void count()
+{
+        int i;
+
+        for (i = 0; yytext[i] != '\0'; i++)
+                if (yytext[i] == '\n')
+                        column = 0;
+                else if (yytext[i] == '\t')
+                        column += 8 - (column % 8);
+                else
+                        column++;
+
+        ECHO;
+}
+
+
+int check_type()
+{
+  strncpy(_VCurrentIdentifier, yytext, 511);
+
+  if(_VIsKnownTypeName(yytext)) {
+    return(TYPE_NAME);
+  } else {
+    return(IDENTIFIER);
+  }
+}
+
+
+/* inits the global string to the one we will parse */
+void _VSetDataToScan(NSData *someData)
+{
+  [someData retain];
+  [_VCurrentData release];
+  _VCurrentData = someData;
+  _VCurrentDataBytesIndex = 0;
+  _VCurrentDataBytes = [_VCurrentData bytes];
+  if (_VCurrentDataBytes != NULL) {
+    yy_scan_string(_VCurrentDataBytes);
+  }
+}
+
+/* tells lex there's really no more input when we're done */
+int yywrap() {
+    return 1;
+}
+
+
+
+</pre>
+<!--endarticle-->
+    <hr>
+    <p></p><ul>
+        <!--threads-->
+	<li>Previous message: <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022977.html">Objective-C grammar for Lex/Yacc Flex/Bison
+</a></li>
+	<li>Next message: <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/022982.html">Objective-C grammar for Lex/Yacc Flex/Bison
+</a></li>
+         <li> <b>Messages sorted by:</b> 
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/date.html#22979">[ date ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/thread.html#22979">[ thread ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/subject.html#22979">[ subject ]</a>
+              <a href="https://www.omnigroup.com/mailman/archive/macosx-dev/2001-March/author.html#22979">[ author ]</a>
+         </li>
+       </ul>
+
+<hr>
+<a href="http://www.omnigroup.com/mailman/listinfo/macosx-dev">More information about the MacOSX-dev
+mailing list</a><br>
+
+</body></html>

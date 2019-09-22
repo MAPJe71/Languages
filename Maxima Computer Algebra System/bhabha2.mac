@@ -1,0 +1,763 @@
+/* bhabha2.mac finite mass Bhabha scattering 
+   E. L. Woollett
+   woollett@charter.net     
+   April 15, 2011,
+   
+   e(-,p1,m) e(+,p2,m) --> e(-,p3,m) e(+,p4,m) elastic scatt
+     of an electron with a positron  
+     
+ references 
+   H. J. Bhabha, 1936
+
+   BLP QED, Sec. 81
+   B/D RQM, Sec. 7.9
+   G/R QED, Sec. 3.4
+   Renton EI, Sec. 4.3
+*/
+
+  
+ " ======================================================"$
+ "  file bhabha2.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+"             BHABHA SCATTERING                   "$
+" Finite mass, Arbitrary Energy, CENTER OF MOMENTUM FRAME  "$
+"  e(-,p1,s1) + e(+,p2,s2) --> e(-,p3,s3) + e(+,p4,s4) "$
+
+" ------------------------------------------ "$
+
+   " SYMBOLIC TRACES FOR UNPOLARIZED DIFFERENTIAL CROSS SECTION "$
+  " Supply s, t, and u expressions for dot products "$ 
+  " ---------------------------------------------- "$
+  invar (D(p1,p1) = m^2,
+         D(p1,p2) = s/2 - m^2,
+         D(p1,p3) = m^2 - t/2,
+         D(p1,p4) = m^2 - u/2,
+         D(p2,p2) = m^2,
+         D(p2,p3) = m^2 - u/2,
+         D(p2,p4) = m^2 - t/2,
+         D(p3,p3) = m^2,
+         D(p3,p4) = s/2 - m^2,
+         D(p4,p4) = m^2)$
+         
+         
+  " With a sum over all helicities implied,"$
+  " |Mfi|^2 = M1n/t^2 + M2n/s^2 -M12n/(t*s) - M21n/(t*s) "$
+  " M1n = t^2 * M1*conj(M1), M2n = s^2 * M2*conj(M2) "$
+  " M12n = (t*s)*M1*conj(M2), M21n = (t*s)*M2*conj(M1), and: "$
+  
+
+  
+  M1n : Con ( tr (p3+m,mu,p1+m,nu)*tr(p2-m,mu,p4-m,nu), mu,nu);
+  
+  M2n : Con ( tr(p2-m,mu,p1+m,nu)*tr(p3+m,mu,p4-m,nu), mu,nu);
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+  "  LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n :  tr (p3+m,mu,p1+m,nu,p2-m,mu,p4-m,nu);
+  
+  M21n :  tr (p2-m,mu,p1+m,nu,p3+m,mu,p4-m,nu);
+  
+  " sum over spins of |Mfi|^2 in terms of s,t,u "$
+  
+  MfiSQ : M1n/t^2 + M2n/s^2 - M12n/(t*s) - M21n/(t*s);
+  
+  " replace s, t, u in terms of scatt. angle th "$
+  
+  assume (E>0, p > 0, th >= 0, th <= %pi )$
+  
+  comp_def ( p1( E,0,0,p),
+             
+             p2( E,0,0,-p),
+             
+             p3 (E,p*sin(th),0,p*cos(th)),
+             
+             p4 (E,-p*sin(th),0,-p*cos(th)))$ 
+             
+  E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+             
+  s_th : VP (p1+p2,p1+p2);
+  
+  t_th : factor (VP (p1-p3,p1-p3));
+  
+  u_th : factor (VP (p1-p4,p1-p4));
+  
+ " ------------------------------------------------- "$
+ 
+ MfiSQ_th : sub_stu (MfiSQ)$
+ 
+ " replace E^2 by m^2 + p^2 "$
+ 
+  MfiSQ_p : E_pm (MfiSQ_th)$
+  
+  MfiSQ_p : trigsimp (MfiSQ_p);
+  
+  " ------------------------------------------------"$
+  " compare to Greiner, Reinhardt expression p. 148 "$
+  
+  GR1 : (m^4 + 4*p^2*m^2*cos(th/2)^2 
+            + 2*p^4*(1 + cos(th/2)^4))/(p^4*sin(th/2)^4);
+            
+  GR2 : (3*m^4 + 4*p^2*m^2 + p^4*(1+cos(th)^2))/E^4;
+  
+  GR3 : -(3*m^4 + 8*p^2*m^2*cos(th/2)^2 
+            + 4*p^4*cos(th/2)^4)/(E^2*p^2*sin(th/2)^2);
+            
+  " replace th/2 and E^2 for comparison "$
+  
+  GR1_r : fr_ao2(GR1,th)$
+  
+  GR2_r : E_pm (GR2)$
+  
+  GR3_r : E_pm (fr_ao2 (GR3,th))$
+  
+  GR : trigsimp (expand (GR1_r + GR2_r + GR3_r))$
+  
+  trigsimp (GR - MfiSQ_p/4);
+  
+  " which shows the equivalence we need "$
+  " dividing MfiSQ by 4 comes from averaging over"$
+  " the initial helicities "$
+  " We have absorbed e^4 into A, with e^2 = 4*%pi*alpha "$        
+  " to get the unpolarized differential cross section (CM)"$
+  
+  A : alpha^2/(4*s_th)$    
+  
+  GR_expr : GR1 + GR2 + GR3$
+  
+  dsigdo_unpol_CM : A*GR_expr$
+  
+  (display2d:true,display (dsigdo_unpol_CM),display2d:false)$
+  
+  " which agrees with G/R, Exer. 3.8, eqn. 21, p. 148 "$
+  
+ " =========================================================== "$
+  " POLARIZED DIRAC SPINOR AMPLITUDES                        "$
+  " ---------------------------------------------------------"$ 
+  
+  /* E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$  */
+  
+  p_Em (expr) := expand (ratsubst(E^2-m^2,p^2,expr))$
+  
+  Ep_m(expr) := expand (ratsubst (m,sqrt(E-p)*sqrt(E+p),expr))$
+                                            
+  Ep_Mm (expr) := (expand (ratsubst (M^2/4 -m^2,p^2,expr)),
+                   expand (ratsubst (M/2,E,%%)))$
+  
+                   
+  " -----------------------------------------------"$
+  " convert t_th to th/2 form "$
+  
+  t_th2 : to_ao2 (t_th,th);
+  
+    
+    " dirac spinor amplitude given global s1,s2,s3,s4 "$
+  
+  dA() := (
+  
+   (up1 : UU(E,p,0,0,s1), up3b : sbar (UU(E,p,th,0,s3)),
+       vp2b : sbar (VV (E,p,%pi,0,s2)), vp4 :  VV (E,p,%pi-th,%pi,s4) ),       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a42 : vp2b.Gam[mu].vp4,
+                  mcon (a13*a42, mu),
+                  Ep_m (%%),
+                  E_pm (%%),trigsimp (%%)),
+  
+  M1 : Mt/t_th2,  
+   
+  Ms : ( a12 : vp2b.Gam[mu].up1,
+                 a43 : up3b.Gam[mu].vp4,
+                   mcon (a12*a43, mu),
+                   Ep_m (%%),
+                   E_pm (%%),trigsimp (%%)),                   
+    
+  M2 : Ms/s_th,  
+  
+    -M1 + M2 )$  
+   
+   " example: RR --> RR  "$
+   
+   [s1,s2,s3,s4]:[1,1,1,1];
+            
+   dA();
+   
+   " =========================================================== "$
+   
+   " table of polarized amplitudes generates global mssq "$
+  
+    block ([sL,sv1,sv2,sv3,sv4,temp ], sL : [1,-1],
+    mssq : 0,
+    print ("  "),
+    print (" s1  s2  s3  s4         amplitude     "),
+    print ("  "),            
+    for sv1 in sL do
+      for sv2 in sL do
+        for sv3 in sL do
+          for sv4 in sL do (
+            [s1,s2,s3,s4] : [sv1,sv2,sv3,sv4],
+            temp :  dA(),
+            print ("  "),
+            print (s1,s2,s3,s4," ",temp ),
+            temp : E_pm (temp),
+            mssq : mssq + Avsq (temp)),
+            
+    mssq : E_pm (mssq), 
+            
+    mssq : expand (fr_ao2 (mssq,th)),
+    
+    mssq : trigsimp (mssq) )$   
+    "------------------------------------------"$
+    
+    " sum of squares of polarized amplitudes:"$ 
+        
+    mssq;    
+    
+   
+    " SHOW THIS IS THE SAME AS MfiSQ_th computed above with traces "$        
+        
+    MfiSQ_p : E_pm (MfiSQ_th)$
+    
+    trigsimp (mssq - MfiSQ_p);
+    
+    " which shows equality."$
+    " =========================================================== "$
+  
+  
+  
+  
+  
+  
+  
+ 
+ 
+  
+/* old polarized spinor code from bhabha2
+
+" Define the needed Dirac spinors and barred spinors. "$
+                                      
+ " For example, RR --> RR matrix element without factor e^2, and"$
+ " either t or s as the photon propagator . All 3-momenta"$
+ " magnitudes are equal and called p."$
+ "  All particle energies are equal and called E."$
+  "  e(-,p1,R)  e(+,p2,R) --> e(-,p3,R)  e(+,p4,R) "$
+  " The initial and final electron are both righthanded "$
+  " The initial and final positron are both righthanded "$
+    "For a given set of helicity quantum numbers,  the amplitude is the"$
+ " sum of two terms: t_RR_RR/t + s_RR_RR/s .  "$
+  " --------------------------------------------------"$
+                                            
+  (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       vp2b : sbar (VV (E,p,%pi,0,1)), vp4 :  VV (E,p,%pi-th,%pi,1) )$
+       
+  " -------------------------------------------------"$
+  
+  t_RR_RR : ( a13 : up3b.Gam[mu].up1,      
+                 a42 : vp2b.Gam[mu].vp4,
+                  -mcon (a13*a42, mu),
+                   E_pm (%%),trigsimp (%%) );
+  
+  
+ s_RR_RR : ( a12 : vp2b.Gam[mu].up1,  
+                 a43 : up3b.Gam[mu].vp4,
+                   mcon (a12*a43, mu),
+                   E_pm (%%),trigsimp (%%) );
+    
+  
+                      
+  A_RR_RR : ratsimp ( t_RR_RR/t_th + s_RR_RR/s_th)$
+  
+  
+   (display2d:true,display (A_RR_RR),display2d:false)$   
+   "-------------------------------------------------------"$
+   " A_RR_RR is a function of (th/2). For ease of comparison "$
+   " with following matrix trace methods, replace p^2 in numerator "$
+   " with E^2 - m^2 and replace (th/2) by th "$
+   
+   A_RR_RR : p_Em (A_RR_RR)$
+   
+   A_RR_RR : fr_ao2 (A_RR_RR,th);
+   
+   */
+     
+  
+  
+  
+  
+  
+  
+         
+         
+   /* from old bhabha2 
+         
+" tr, scon route, expressing in terms of s,t,u "$
+  " and massaging the three terms to get the form "$
+  " displayed by Greiner/Reinhardt, page 148 "$
+  
+  E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+  
+  p_Em (expr) := expand (ratsubst(E^2-m^2,p^2,expr))$
+  
+  a11 : tr (p3+m,mu,p1+m,nu);
+  
+  a12 : tr (p2-m,mu,p4-m,nu);
+  
+  a1sq : scon (a11*a12,mu,nu);
+  
+  a1 : sub_stu (a1sq);
+  
+  a1 : E_pm (a1);  
+  
+  a1 : pullfac (a1,64);
+  
+  
+  a21 : tr (p2-m,mu,p1+m,nu);
+  
+  a22 : tr (p3+m,mu,p4-m,nu);
+  
+  a2sq : scon (a21*a22,mu,nu);
+  
+  a2 : sub_stu (a2sq);
+  
+  a2 : E_pm (a2);  
+  
+  a2 : trigsimp (fr_ao2(a2,th));
+  
+  a2 : pullfac (a2,64);
+  
+  
+  a1a2sq :  tr (p3+m,mu,p1+m,nu,p2-m,mu,p4-m,nu);
+  
+  a2a1sq : tr (p2-m,mu,p1+m,nu,p3+m,mu,p4-m,nu);
+  
+  a3 : -(a1a2sq + a2a1sq);
+  
+  a3 : sub_stu (a3);
+  
+  a3 : E_pm (a3);  
+    
+  a3 : pullfac (a3,64);
+  
+  " The structure of the spin sum of |M|^2 is "$
+  "mssq1 : a1sq/t_th^2 + a2sq/s_th^2  - "$
+  "               (a1a2sq + a2a1sq)/(s_th*t_th) "$
+  " -------------------------------------------- "$
+  
+  mssq1 : a1/t_th^2 + a2/s_th^2 + a3/(s_th*t_th) $
+  
+  " averaging over spins of the incident electron and positron"$
+  " means we need to divide the spin sum of the squared " $
+  " amplitudes by 4 "$
+  
+  mssq1_o4 : divout (mssq1,4)$
+  
+    
+  " having absorbed e^4 into a factor A which multiplies"$
+  " |M|^2, and using e^2 = 4*%pi*alpha,"$
+  " in general, A = alpha^2*(pf/pi)/(4*Ecm^2) "$
+  " but here (CM frame), pf = pi = p, and Ecm^2 = s_th, so "$
+  
+  A : alpha^2/(4*s_th);
+  
+    
+  dsigdo_unpol : A*(MSSQ1_OVER_4)$
+  
+  (display2d:true, display (dsigdo_unpol), display2d:false)$
+  
+  "WHERE MSSQ1_OVER_4 IS "$
+  
+   (display2d:true,display (mssq1_o4),display2d:false)$ 
+  
+  "---------------------------------------------------"$
+  " which agrees with G/R, Exer. 3.8, eqn. 21, p. 148 "$
+  
+  
+  */
+
+
+
+
+/* (moller2 code
+
+ M1n : Con ( tr (p3+m,mu,p1+m,nu)*tr (p4+m,mu,p2+m,nu), mu,nu);
+  
+  M2n : Con ( tr (p4+m,mu,p1+m,nu)*tr (p3+m,mu,p2+m,nu), mu,nu);
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+  " LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n :  tr (p3+m,mu,p1+m,nu,p4+m,mu,p2+m,nu);
+  
+  M21n :  tr (p4+m,mu,p1+m,nu,p3+m,mu,p2+m,nu);
+  
+   ) */
+
+
+
+
+
+/* (old bhabha2.mac code see 8-3-10 file 
+
+" The kinematics are the same as for Moller scattering. "$
+
+assume ( p > 0, E > 0, m > 0, th >= 0, th <= %pi )$
+
+ " For finite mass and polarized Amp^2, we need to "$
+ " define the righthanded spin 4-vectors assoc. with "$
+ " the 4-momenta "$
+ 
+comp_def ( p1( E,0,0,p),
+             Sp1 (p/m,0,0,E/m),
+             p2( E,0,0,-p),
+             Sp2 (p/m,0,0,-E/m),
+             p3 (E,p*sin(th),0,p*cos(th)),
+             Sp3 (p/m,E*sin(th)/m,0,E*cos(th)/m),
+             p4 (E,-p*sin(th),0,-p*cos(th)),
+             Sp4 (p/m,-E*sin(th)/m,0,-E*cos(th)/m) )$ 
+             
+ "-------------------------------------------------"$
+" the photon propagator for the photon exchange diagram "$
+" is t = (p1 - p3)^2. The photon propagator for the pair"$
+" annihilation/creation diagram is s = (p1 + p2)^2 "$
+"-------------------------------------------------------"$
+  " evaluate s, t and u in the CM frame  "$  
+  " s_th, t_th, and u_th are used by sub_stu "$
+  " Here, t_th and u_th are defined in terms of (th/2)"$
+  
+  
+  s_th : VP (p1+p2,p1+p2);  
+    
+  t_th : factor (to_ao2 ( VP (p1-p3,p1-p3),th));  
+    
+  u_th : factor (trigsimp (to_ao2 ( VP (p1-p4,p1-p4),th)));
+ "------------------------------------------------"$
+  
+  " SYMBOLIC TRACE CALCULATION OF UNPOLARIZED RESULT. "$
+ "--------------------------------------------------"$
+ " POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES. "$
+ 
+  " ---------------------------------------------------"$
+  invar (D(p1,p1) = m^2, D(p2,p2) = m^2, D(p3,p3) = m^2,
+               D(p4,p4) = m^2)$
+  
+  invar (D(p1,p2) = s/2 - m^2,D(p1,p3) = -t/2 + m^2,
+           D(p1,p4) = -u/2 + m^2,D(p2,p3) = -u/2 + m^2,
+            D(p2,p4) = -t/2 + m^2, D(p3,p4) = s/2 - m^2 )$              
+  
+  "------------------------------------------------------"$
+  invarR;
+  " tr, scon route, expressing in terms of s,t,u "$
+  " and massaging the three terms to get the form "$
+  " displayed by Greiner/Reinhardt, page 148 "$
+  
+  E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+  
+  p_Em (expr) := expand (ratsubst(E^2-m^2,p^2,expr))$
+  
+  a11 : tr (p3+m,mu,p1+m,nu);
+  
+  a12 : tr (p2-m,mu,p4-m,nu);
+  
+  a1sq : scon (a11*a12,mu,nu);
+  
+  a1 : sub_stu (a1sq);
+  
+  a1 : E_pm (a1);  
+  
+  a1 : pullfac (a1,64);
+  
+  
+  a21 : tr (p2-m,mu,p1+m,nu);
+  
+  a22 : tr (p3+m,mu,p4-m,nu);
+  
+  a2sq : scon (a21*a22,mu,nu);
+  
+  a2 : sub_stu (a2sq);
+  
+  a2 : E_pm (a2);  
+  
+  a2 : trigsimp (fr_ao2(a2,th));
+  
+  a2 : pullfac (a2,64);
+  
+  
+  a1a2sq :  tr (p3+m,mu,p1+m,nu,p2-m,mu,p4-m,nu);
+  
+  a2a1sq : tr (p2-m,mu,p1+m,nu,p3+m,mu,p4-m,nu);
+  
+  a3 : -(a1a2sq + a2a1sq);
+  
+  a3 : sub_stu (a3);
+  
+  a3 : E_pm (a3);  
+    
+  a3 : pullfac (a3,64);
+  
+  " The structure of the spin sum of |M|^2 is "$
+  "mssq1 : a1sq/t_th^2 + a2sq/s_th^2  - "$
+  "               (a1a2sq + a2a1sq)/(s_th*t_th) "$
+  " -------------------------------------------- "$
+  
+  mssq1 : a1/t_th^2 + a2/s_th^2 + a3/(s_th*t_th) $
+  
+  " averaging over spins of the incident electron and positron"$
+  " means we need to divide the spin sum of the squared " $
+  " amplitudes by 4 "$
+  
+  mssq1_o4 : divout (mssq1,4)$
+  
+    
+  " having absorbed e^4 into a factor A which multiplies"$
+  " |M|^2, and using e^2 = 4*%pi*alpha,"$
+  " in general, A = alpha^2*(pf/pi)/(4*Ecm^2) "$
+  " but here (CM frame), pf = pi = p, and Ecm^2 = s_th, so "$
+  
+  A : alpha^2/(4*s_th);
+  
+    
+  dsigdo_unpol : A*(MSSQ1_OVER_4)$
+  
+  (display2d:true, display (dsigdo_unpol), display2d:false)$
+  
+  "WHERE MSSQ1_OVER_4 IS "$
+  
+   (display2d:true,display (mssq1_o4),display2d:false)$ 
+  
+  "---------------------------------------------------"$
+  " which agrees with G/R, Exer. 3.8, eqn. 21, p. 148 "$
+  
+  
+  
+  /*
+  mssq1 : a1sq/t_th^2 + a2sq/s_th^2 -(a1a2sq + a2a1sq)/(s_th*t_th) ;
+  */
+  
+  
+  
+  
+  p_Em (expr) := expand (trigsimp ( expand (ratsubst (E^2-m^2, p^2, expr ))))$
+  "-------------------------------------------------- "$
+  
+  
+  "------------------------------------------------------------"$
+
+  " POLARIZED AMPLITUDES USING EXPLICIT DIRAC SPINORS "$
+  "-------------------------------------------------------"$
+  
+
+  Ep_m(expr) := ratsubst (m,sqrt(E-p)*sqrt(E+p),expr)$
+  
+
+                                            
+ " Define the needed Dirac spinors and barred spinors. "$
+                                      
+ " For example, RR --> RR matrix element without factor e^2, and"$
+ " either t or s as the photon propagator . All 3-momenta"$
+ " magnitudes are equal and called p."$
+ "  All particle energies are equal and called E."$
+  "  e(-,p1,R)  e(+,p2,R) --> e(-,p3,R)  e(+,p4,R) "$
+  " The initial and final electron are both righthanded "$
+  " The initial and final positron are both righthanded "$
+    "For a given set of helicity quantum numbers,  the amplitude is the"$
+ " sum of two terms: t_RR_RR/t + s_RR_RR/s .  "$
+  " --------------------------------------------------"$
+                                            
+  (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       vp2b : sbar (VV (E,p,%pi,0,1)), vp4 :  VV (E,p,%pi-th,%pi,1) )$
+       
+  " -------------------------------------------------"$
+  
+  t_RR_RR : ( a13 : up3b.Gam[mu].up1,      
+                 a42 : vp2b.Gam[mu].vp4,
+                  -mcon (a13*a42, mu),
+                   E_pm (%%),trigsimp (%%) );
+  
+  
+ s_RR_RR : ( a12 : vp2b.Gam[mu].up1,  
+                 a43 : up3b.Gam[mu].vp4,
+                   mcon (a12*a43, mu),
+                   E_pm (%%),trigsimp (%%) );
+    
+  
+                      
+  A_RR_RR : ratsimp ( t_RR_RR/t_th + s_RR_RR/s_th)$
+  
+  
+   (display2d:true,display (A_RR_RR),display2d:false)$   
+   "-------------------------------------------------------"$
+   " A_RR_RR is a function of (th/2). For ease of comparison "$
+   " with following matrix trace methods, replace p^2 in numerator "$
+   " with E^2 - m^2 and replace (th/2) by th "$
+   
+   A_RR_RR : p_Em (A_RR_RR)$
+   
+   A_RR_RR : fr_ao2 (A_RR_RR,th);
+   
+   
+  
+  " POLARIZED SQUARED AMPLITUDES USING EXPLICIT DIRAC MATRICES "$
+  "-------------------------------------------------------"$
+  
+  a11 : m_tr (S(1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu)$
+  
+  a12 : m_tr (S(1,Sp2),p2-m,mu,S(1,Sp4),p4-m,nu)$
+  
+  a1sq : mcon (a11*a12,mu,nu)$
+  
+  time (%);
+  
+  " For ease of comparison with previous work, replace p^2 "$
+  " with E^2-m^2 and leave as function of th since the pieces "$
+  " of Amp_sq are simplest in terms of th "$
+  
+  a1sq :  p_Em (a1sq);  
+  
+  
+  a21 : m_tr (S(1,Sp2),p2-m,mu,S(1,Sp1),p1+m,nu)$
+  
+  a22 : m_tr (S(1,Sp3),p3+m,mu,S(1,Sp4),p4-m,nu)$
+  
+  a2sq : mcon (a21*a22,mu,nu)$
+  
+  time (%);
+  
+  a2sq :  p_Em (a2sq);  
+  
+  
+  a1a2sq : mcon (
+           m_tr (S(1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu,S(1,Sp2),p2-m,mu,S(1,Sp4),p4-m,nu),mu,nu)$
+           
+   time (%);
+           
+   a1a2sq : p_Em (a1a2sq);
+           
+  
+  
+  a2a1sq : mcon (
+           m_tr (S(1,Sp2),p2-m,mu,S(1,Sp1),p1+m,nu,S(1,Sp3),p3+m,mu,S(1,Sp4),p4-m,nu),mu,nu)$
+           
+   time (%);
+           
+  a2a1sq : p_Em (a2a1sq);             
+  
+  a3sq : a1a2sq + a2a1sq;  
+  
+  " The structure of the spin sum of |M|^2 is "$
+  "mssq1 : a1sq/t_th^2 + a2sq/s_th^2  - "$
+  "               (a1a2sq + a2a1sq)/(s_th*t_th) "$
+  " s_th is independent of th and depends on E^2."$
+  "  Express t_th and u_th as a function of th  and E^2 "$
+  
+  t_th : p_Em (fr_ao2 (t_th,th));
+  
+  u_th : p_Em (fr_ao2 (u_th,th));
+  
+  " -------------------------------------------- "$
+  
+  Amp_sq : expand (a1sq/t_th^2 + a2sq/s_th^2 - a3sq/(s_th*t_th))$    
+  
+   trigsimp ( Amp_sq - expand (A_RR_RR^2) );
+  "-------------------------------------------------"$
+  " which shows agreement with the square polarized amplitude"$
+  "----------------------------------------------------------"$
+ 
+  
+  "*********************************************"$
+" "$
+" SQUARE OF POLARIZED AMPLITUDE USING SYMBOLIC METHODS"$
+"----------------------------------------------------------"$  
+  invar (D(p1,Sp1) = 0, D(Sp1,Sp1) = -1,
+        D(p2,Sp2) = 0, D(Sp2,Sp2) = -1,
+        D(p3,Sp3) = 0, D(Sp3,Sp3) = -1,
+        D(p4,Sp4) = 0, D(Sp4,Sp4) = -1 )$
+        
+   invarR;
+   
+ "----------------------------------------------------------"$
+ 
+  b11 : nc_tr (S(1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu)$
+  
+  b12 : nc_tr (S(1,Sp2),p2-m,mu,S(1,Sp4),p4-m,nu)$
+  
+  b1sq : econ (b11*b12,mu,nu)$
+  
+  time (%);
+  
+  " For ease of comparison with previous work, replace p^2 "$
+  " with E^2-m^2 and leave as function of th since the pieces "$
+  " of Amp_sq are simplest in terms of th "$
+  
+  b1sq :  p_Em (b1sq);  
+  
+  " compare with m_tr method "$
+  
+  b1sq - a1sq;
+  
+  
+  
+  
+  
+  
+  b21 : nc_tr (S(1,Sp2),p2-m,mu,S(1,Sp1),p1+m,nu)$
+  
+  b22 : nc_tr (S(1,Sp3),p3+m,mu,S(1,Sp4),p4-m,nu)$
+  
+  b2sq : econ (b21*b22,mu,nu)$
+  
+  time(%);
+  
+  b2sq :  p_Em (b2sq);  
+  
+  b2sq - a2sq;
+  
+  
+  
+  b1b2sq : nc_tr (S(1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu,S(1,Sp2),p2-m,mu,S(1,Sp4),p4-m,nu)$
+           
+  time (%);
+           
+  b1b2sq : p_Em (b1b2sq);
+  
+  b1b2sq - a1a2sq;
+           
+  
+  
+  b2b1sq : nc_tr (S(1,Sp2),p2-m,mu,S(1,Sp1),p1+m,nu,S(1,Sp3),p3+m,mu,S(1,Sp4),p4-m,nu)$
+           
+  time (%);
+           
+  b2b1sq : p_Em (b2b1sq);             
+  
+  b2b1sq - a2a1sq;
+  
+  
+  
+  /*
+  
+  a3sq : a1a2sq + a2a1sq;  
+  
+  
+  
+  " The structure of the spin sum of |M|^2 is "$
+  "mssq1 : a1sq/t_th^2 + a2sq/s_th^2  - "$
+  "               (a1a2sq + a2a1sq)/(s_th*t_th) "$
+  " s_th is independent of th and depends on E^2."$
+  "  Express t_th as a function of th  and E^2 "$
+  
+  t_th : p_Em (fr_ao2 (t_th,th));
+  
+  " -------------------------------------------- "$
+  
+  Amp_sq : expand (a1sq/t_th^2 + a2sq/s_th^2 - a3sq/(s_th*t_th))$    
+  
+   trigsimp ( Amp_sq - expand (A_RR_RR^2) );
+   
+   */
+   
+   end old code  ) */

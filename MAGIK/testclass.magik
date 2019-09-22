@@ -1,0 +1,1201 @@
+#% text_encoding = iso8859_1
+## ====================================================================
+##
+## Description
+## An Engine to change display modes for geometries of
+## transferred assets
+## 
+## ====================================================================
+
+_package sw
+$
+
+#remex(:tls_at_display_change_engine)
+#$
+
+_pragma(classify_level=advanced, topic={TLS,NBN,ASSET_TRANSFER})
+def_slotted_exemplar(:tls_at_display_change_engine,
+	{
+		{:log_stream, _unset},
+		{:request, _unset},    # the tls_at_asset_request which is to be processed
+		{:processed_rwo_cache, _unset},
+		{:statistics, _unset}
+	})
+$
+
+tls_at_display_change_engine.define_slot_access(
+	:request,
+	## slot for the request to be processed. This is required to
+	## create TIPs that are related to the request.
+	:read
+)
+$
+
+
+tls_at_display_change_engine.define_slot_access(
+	:statistics,
+	## slot to gather statistics about processed RWOs
+	:read
+)
+$
+
+_pragma(classify_level=advanced, topic={TLS,NBN,ASSET_TRANSFER})
+tls_at_display_change_engine.define_shared_constant(
+	:processing_method,
+	## methods mapped to RWO types. Based on the RWO type the
+	## engine can use these methods to process specific RWOs
+	property_list.new_with(
+		:underground_route, :process_route|()|,
+		:aerial_route, :process_route|()|,
+		:mit_terminal_enclosure, :process_structure|()|,
+		:uub, :process_structure|()|,
+		:pole, :process_structure|()|,
+		:mit_tower, :process_structure|()|,
+		:tls_housing, :process_structure|()|,
+		:lockbox, :process_structure|()|,
+		:midspan_junction, :process_structure|()|,
+		:building, :process_building|()|, # this can be an end structure for a route
+		:copper_cable, :process_cable_or_conduit|()|,
+		:mit_conduit, :process_cable_or_conduit|()|
+		      ),
+	:private
+)
+$
+
+_pragma(classify_level=advanced, topic={TLS,NBN,ASSET_TRANSFER})
+tls_at_display_change_engine.define_shared_constant(
+	:sort_proc,
+	## Returns a procedure to sort tls_display_change_records
+	_proc (p_display_change_rec1, p_display_change_rec2)
+		>> p_display_change_rec1.sort_index < p_display_change_rec2.sort_index
+	_endproc,
+	:private
+)
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.new(p_request)
+	
+	## Creates a new Asset Transfer Display Change Engine
+	##
+	## Input:
+	##    P_REQUEST an asset transfer request record
+	##
+	## Returns :
+	##    A new Instance of self
+	##
+
+	_return _clone.init(p_request)
+	
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_private _method tls_at_display_change_engine.init(p_request)
+
+	## Initialises self 
+	##
+	## Input:
+	##    P_REQUEST an asset transfer request record
+	##
+	## Returns :
+	##    _self
+	##
+
+	.request << p_request
+	.processed_rwo_cache << rwo_set.new()
+	.statistics << equality_hash_table.new()
+	_return _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.copy_geometry(p_rwo,
+						   p_from_geom_name,
+						   p_to_geom_name)
+	## Copies a geometries from one geometry field on P_RWO to
+	## another.
+	## P_FROM_GEOM_NAME is the geometry field name for the source
+	## geometry 
+	## P_TO_GEOM_NAME is the geometry field name of the target
+	## geometry
+	## Note that the two geometry fields must have the same geom
+	## category.
+
+	_local src_field << p_rwo.field(p_from_geom_name)
+	_local dest_field << p_rwo.field(p_to_geom_name)
+
+	# check whether the geometry fields exist
+	_local (src_geom_cat, dest_geom_cat) <<
+		_if src_field _isnt _unset _andif
+		    dest_field _isnt _unset 
+		_then
+			>> src_field.geom_category,
+			   dest_field.geom_category
+		_else
+			condition.raise(:tls_at_display_geom_fields_not_found,
+				:asset_type, p_rwo.external_name,
+				:tls_id, p_rwo.tls_id,
+				:from_geom, p_from_geom_name,
+				:to_geom, p_to_geom_name)
+			_return 
+		_endif
+
+	# check whether the geom category is matching 
+	_if src_geom_cat <> dest_geom_cat
+	_then
+		condition.raise(:tls_at_display_geom_categories_dont_match,
+				:asset_type, p_rwo.external_name,
+				:tls_id, p_rwo.tls_id,
+				:from_geom, p_from_geom_name,
+				:to_geom, p_to_geom_name)
+		_return 
+	_endif
+
+	# now copy the geometry. Based on the category pass arguments
+	_local source_geom << p_rwo.perform(p_from_geom_name)
+	_if source_geom _isnt _unset # if there is no source geometry then nothing needs to be copied
+	_then
+		_dynamic !current_world! << source_geom.world
+		_dynamic !current_dsview! << p_rwo.source_view
+
+		_local dest_geom << p_rwo.perform(p_to_geom_name)
+
+		# only do the following if there isnt already a destination geometry
+		_if dest_geom _is unset
+		_then			
+			_local gc << source_geom.geom_category
+			_if gc _is :text
+			_then
+				# copy all attributes of a text
+				p_rwo.make_geometry(p_to_geom_name,
+						    source_geom.sectors,
+						    source_geom.string,
+						    source_geom.orientation,
+						    source_geom.justification,
+						    source_geom.font_orientation,
+						    source_geom.height)
+			_elif gc _is :point
+			_then
+				# copy all attributes of a point
+				p_rwo.make_geometry(p_to_geom_name,
+						    source_geom.sectors,
+						    source_geom.orientation,
+						    source_geom.scale,
+						    source_geom.mirror,
+						    source_geom.draw_coord)
+			_else
+				# this is a line or an area. They only have sectors.
+				# Note that we do not have rasters or tins in this part of the
+				# data model.
+				p_rwo.make_geometry(p_to_geom_name,
+						    source_geom.sectors)
+			_endif
+			_self.log(p_rwo, " copied ", p_from_geom_name, " to ", p_to_geom_name)
+		_else
+			_self.log(p_rwo, " ", p_to_geom_name, " already exists - nothing copied")
+		_endif
+	_endif
+
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.copy_route_geoms_to_erf(p_route, p_source_mode)
+	## Copies a route to the ERF mode. This includes
+	## copying the structure endpoints, the route geometry and the
+	## annotations to the ERF mode. The source mode from where
+	## the geometries are copied are taken from a hierarchical
+	## check for the route, checking for a geometry in CAC, DA, CC
+	## in that order. Whichever mode in that hierarchy first returns
+	## a route geometry is chosen as the source.
+	
+	_local dest_mode << :erf
+
+	# copy the route
+	source_gfd << :tls_ + p_source_mode + :_route
+	target_gfd << :tls_ + dest_mode + :_route
+	_self.copy_geometry(p_route, source_gfd, target_gfd)
+
+	_self.copy_aux_geoms_to_erf(p_route, p_source_mode)
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.copy_building_geoms_to_erf(p_building, p_source_mode )
+	## Copies a route to the ERF mode. This includes
+	## copying the structure endpoints, the route geometry and the
+	## annotations to the ERF mode. The source mode from where
+	## the geometries are copied are taken from a hierarchical
+	## check for the route, checking for a geometry in CAC, DA, CC
+	## in that order. Whichever mode in that hierarchy first returns
+	## a route geometry is chosen as the source.
+
+	#DEBUG write(_self, ".copy_building_geoms_to_erf(", p_building, ",", p_source_mode)
+	_local dest_mode << :erf
+
+	_local geom_denominators << {:location, :boundary, :connection_location}
+	_for geom_denominator _over geom_denominators.fast_elements()
+	_loop
+		source_gfd << :tls_ + p_source_mode + :_ + geom_denominator
+		target_gfd << :tls_ + dest_mode + :_ + geom_denominator
+		_self.copy_geometry(p_building, source_gfd, target_gfd)
+	_endloop
+
+	_self.copy_aux_geoms_to_erf(p_building, p_source_mode)
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.copy_structure_geoms_to_erf(p_structure, p_source_mode)
+	## Copies a route to the ERF mode. This includes
+	## copying the structure endpoints, the route geometry and the
+	## annotations to the ERF mode. The source mode from where
+	## the geometries are copied are taken from a hierarchical
+	## check for the route, checking for a geometry in CAC, DA, CC
+	## in that order. Whichever mode in that hierarchy first returns
+	## a route geometry is chosen as the source.
+	
+	_local dest_mode << :erf
+	
+	# first copy the structure location
+	source_gfd << :tls_ + p_source_mode + :_location
+	target_gfd << :tls_ + dest_mode + :_location
+	_self.copy_geometry(p_structure, source_gfd, target_gfd)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.copy_aux_geoms_to_erf(p_mit_object, p_source_mode)
+	## Copies any non-route geometries of a route to the ERF mode. 
+	## 
+	_local geom_denominators << {:cable_annotation,
+				     :conduit_annotation,
+				     :cons_location,
+				     :country_annotation,
+				     :cpair_annotation,
+				     :duct_annotation,
+				     :exchange_annotation,
+				     :length_annotation,
+				     :sub_annotation,
+				     :annotation,
+				     :pair_annotation,
+				     :main_annotation,
+				     :fap_annotation,
+				     :ss_cable_annotation,
+				     :shared_location}
+	# loop over all geometry fields and copy wherever we have a
+	# geometry field in both the source and the destination mode
+	_local geom_fields << p_mit_object.geometry_field_names
+	_for geom_denominator _over geom_denominators.fast_elements()
+	_loop @next_geom_denominator
+		_local source_gfn << write_string("tls_", p_source_mode,
+						  "_", geom_denominator).as_symbol()
+		# check whether we have a field for the source
+		_if geom_fields.includes?(source_gfn)
+		_then
+			_local dest_gfn << write_string("tls_erf_",
+						        geom_denominator).as_symbol()
+			# check whether we have a field for the destination
+			_if geom_fields.includes?(dest_gfn)
+			_then
+				# now copy the geometry
+				_self.copy_geometry(p_mit_object, source_gfn, dest_gfn)
+			_endif 
+		_endif
+	_endloop
+					    
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_cable_or_conduit(p_cable_or_cond)
+	## Process a cable
+	## This will update the mode on the cable.
+	## Note that this must be dopne last after the route has
+	## already been copied 
+
+	_self.update_mode(p_cable_or_cond, "NBN")
+
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_route(p_route, p_source_mode)
+	## Change the diplsay of a tranferred route on the map. This
+	## copies any relevant geometries to ERF mode and update the
+	## annotations. 
+	##
+	## Note that we do NOT delete any geometry from a mode because
+	## at this stage we may not be able to copy the geomtry to ERF
+	## mode due to missing geometry fields (e.g. any pair
+	## annotations). These geometries should rather display an
+	## empty string but keep their position so they can be copied
+	## with release 2 and then possibly deleted from the original
+	## mode. 
+	##
+
+	# first get the source mode
+	_if p_source_mode _is _unset 
+	_then
+		condition.raise(:tls_at_display_cannot_determine_source_mode,
+				:asset_type, p_route.external_name,
+				:tls_id, p_route.tls_id)
+		_return 
+	_endif
+	
+	# copy the main route geometries (including end structures) to
+	# ERF mode
+	_self.copy_route_geoms_to_erf(p_route, p_source_mode)
+		
+	# update the cable display properties on the mit_cables
+	_self.update_cable_display_properties(p_route, p_source_mode)
+	
+	# now update all annotation strings.
+	p_route.update_text_fields()
+
+	# cleanup orphaned geometries after supressed splits
+	p_route.post_split_orphaned_geom_cleanup()
+
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_structure(p_structure, _optional p_source_mode)
+	## Change the display of the structure (UUB, Pole etc.)
+	## copies any relevant geometries to ERF mode and update the
+	## annotations. 
+	##
+	## Note that we do NOT delete any geometry from a mode because
+	## at this stage we may not be able to copy the geomtry to ERF
+	## mode due to missing geometry fields (e.g. any pair
+	## annotations). These geometries should rather display an
+	## empty string but keep their position so they can be copied
+	## with release 2 and then possibly deleted from the original
+	## mode. 
+	##
+
+	# first check the source mode
+	_if p_source_mode _is _unset 
+	_then
+		condition.raise(:tls_at_display_cannot_determine_source_mode,
+				:asset_type, p_structure.external_name,
+				:tls_id, p_structure.tls_id)
+		_return 
+	_endif
+	
+	# copy the main route geometries (including end structures) to
+	# ERF mode
+	_self.copy_structure_geoms_to_erf(p_structure, p_source_mode)
+
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_building(p_building, p_source_mode)
+	## Copy building fgeometries to ERF mode
+	##
+
+	# first get the source mode
+	_if p_source_mode _is _unset 
+	_then
+		condition.raise(:tls_at_display_cannot_determine_source_mode,
+				:asset_type, p_building.external_name,
+				:tls_id, p_building.tls_id)
+		_return 
+	_endif
+	
+	# copy the main route geometries (including end structures) to
+	# ERF mode
+	_self.copy_building_geoms_to_erf(p_building, p_source_mode)
+			
+	# now update all annotation strings.
+	p_building.update_text_fields()
+
+_endmethod
+$
+
+
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_rwo(p_rwo, _optional p_source_mode)
+	## Processes a single RWO
+	##
+
+	# handle supressed route splits in ERF (=NBN) mode by placing
+	# a tip
+	_handling tls_supressed_route_split _with _self.supressed_route_split_handler
+
+	# turn off database notification and a bunch of triggers as we
+	# do not want to run these things for simply copying an
+	# external geometry from one mode to another
+	_dynamic !notify_database_data_changes?! << _false
+	_dynamic !ignore_trigger! << _true
+	_dynamic !tls_run_geometry_triggers?! << _false
+	_dynamic !tls_require_conduit_section_creation! << _false
+	_dynamic !tls_splitting_route?! << _false
+	_dynamic !tls_replace_structures?! << _false
+	_dynamic !tls_run_rwo_triggers?! << _false 
+	# since the dashboard is not usually run in ERF mode set the following
+	_dynamic !tls_use_other_mode?! << _true
+	# set the following ti unset as we do not want to split NBN
+	# routes for this process
+	!tls_nbn_split_route_map! << _unset 
+
+	_if _not _self.rwo_already_processed?(p_rwo)
+	_then		
+		_local processing_method << _self.processing_method[p_rwo.rwo_type]
+		_if processing_method _isnt _unset 
+		_then
+			_self.perform(processing_method, p_rwo, p_source_mode)
+			_self.gather_statistics(p_rwo, "updated display")
+			_self.cache_processed_rwo(p_rwo)
+		_else
+			_self.log("Missing processing method for RWO ", p_rwo)
+			_self.gather_statistics(p_rwo, "missing mapping")
+		_endif
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_rwo_set(p_rwo_set)
+	## Processes an entire set of RWOs.
+	##
+
+	# loop over all RWOs in the set, determine their processing
+	# method and process accordingly
+	_local dr_set << _self.pre_process_rwo_set(p_rwo_set)
+	_for i_display_change_record _over dr_set.fast_elements()
+	_loop
+		_self.process_display_change_record(i_display_change_record)
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_private _method tls_at_display_change_engine.reset_cache()
+	## Reset the processed RWO cache
+	## 
+	.processed_rwo_cache << rwo_set.new()
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_private _method tls_at_display_change_engine.reset_statistics()
+	## Reset the statistics for processed objects
+	## 
+	.statistics << equality_hash_table.new()
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.cache_processed_rwo(p_rwo)
+	## Add a processed RWO to the cache. This way the engine knows
+	## the RWO has been processed and won;t try to process it again 
+	
+	>> .processed_rwo_cache.add(p_rwo)
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.rwo_already_processed?(p_rwo)
+	## Check the cache whether an RWO already has been processed
+	## 
+	>> .processed_rwo_cache.includes?(p_rwo)
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.reset()
+	## Call this when running the engine repeatedly to clear the
+	## cached processedRWOs
+	
+	_self.reset_cache()
+	_self.reset_statistics()
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.gather_statistics(p_rwo_or_condition, prefix)
+	## Gather statistics for a processed RWO
+	##
+
+	key << _if p_rwo_or_condition.is_kind_of?(condition)
+	       _then
+		       # cond_type << p_rwo_or_condition.taxonomy.first
+		       >> write_string("Condition - ", condition.name)
+	       _else
+		       _local rwo_type << p_rwo_or_condition.rwo_type
+		       >> write_string(prefix, " - ", rwo_type)
+	       _endif
+	
+	_if .statistics[key] _is _unset
+	_then
+		.statistics[key] << 1
+	_else
+		.statistics[key] +<< 1
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.processed_rwos(_optional p_rwo_type)
+	## Returns the number of processed objects. If the optional
+	## parameter P_RWO_TYPE is given then the number of objects of
+	## that particular rwo type is returned.
+
+	_local prefix << "updated display - "
+	>> _if p_rwo_type _isnt _unset 
+	   _then
+		   >> _self.statistics[prefix + p_rwo_type].default(0)
+	   _else
+		   _local sum << 0
+		   _for key, num _over _self.statistics.fast_keys_and_elements()
+		   _loop
+			   _if key.matches?(prefix + %*)
+			   _then
+				   sum +<< num
+			   _endif 
+		   _endloop
+		   >> sum
+	   _endif
+	
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.update_mode(p_cable_or_conduit, p_tls_mode)
+	## Updates the mode field on a cable
+	##
+
+	# setting the following dynamic dramatically speeds up processing.
+	# since we already update annotation this is not necessary here
+	_dynamic !tls_run_update_text_fields?! << _false 
+	
+	_if p_cable_or_conduit.responds_to?(:|tls_mode<<|)
+	_then
+		_local hmode << p_tls_mode.write_string.uppercase
+		_if p_cable_or_conduit.tls_mode <> hmode
+		_then
+			_self.log(p_cable_or_conduit, " update tls_mode to ", hmode)
+			_local tr << record_transaction.new_update(p_cable_or_conduit,
+								   property_list.new_with(
+									   :tls_mode, hmode))
+			tr.run()
+		_else
+			_self.log(p_cable_or_conduit, " tls_mode is already ", hmode)
+		_endif
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.update_cable_display_properties(p_route, p_source_mode)
+	## Loop over all mit_cables on the route and update the cable
+	## display properties (:cable, :make, :pairs) for ERF (=NBN)
+	## mode to make them the same as in the source mode
+
+
+	_for cable _over p_route.cables.fast_elements()
+	_loop
+		_for property _over {:pairs,:make}.fast_elements()
+		_loop
+			# get the existing value in the source mode
+			_local value << cable.tls_get_display_property(property,p_source_mode)
+			# set the same value in ERF (-NBN) mode
+			cable.tls_set_display_property(property,:erf,value)
+		_endloop
+		cable.tls_set_display_property(:cable,:erf,_true)
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.pre_process_rwo_set(p_rwo_set)
+	## Does some pre-processing to the rwo set
+	## This filters out any irrelevant RWOs and returns a sorted
+	## collection of tls_display_change_records. Sorting is
+	## important as we want to process all objects in a specific
+	## order (e.g. structures first, then routes and finally
+	## conduits and cables.
+	## This method returns a sorted collection of
+	## tls_display_change_records.
+	
+	_local sc << sorted_collection.new(_unset, _self.sort_proc)
+	_local done_objects << rwo_set.new()
+	_for i_rwo _over p_rwo_set.fast_elements()
+	_loop
+		_self.gather_statistics(i_rwo, "requested")
+		# look at conduits and cables
+		_local rwo_type << i_rwo.rwo_type
+		_if {:copper_cable, :mit_conduit}.includes?(rwo_type)
+		_then
+			# add the cable or conduit
+			_local co_dcr << tls_display_change_record.new(i_rwo)
+			_if _not done_objects.includes?(i_rwo)
+			_then
+				sc.add(co_dcr)
+				done_objects.add(i_rwo)
+			_endif 
+			# loop over the structures to find the routes
+			_for str _over i_rwo.structures()
+			_loop
+				_if str _isnt _unset _andif
+				    {:underground_route, :aerial_route}.includes?(str.rwo_type)
+				_then
+					# get the structure end points
+					(start_point, end_point) << str.tls_fail_safe_actual_end_structures()
+					# wrap up the tructure (route) and its end points in a
+					# tls_display_change_record and add it to the result set
+					_for mit_object _over {start_point, end_point, str}.fast_elements()
+					_loop
+						_if mit_object _isnt _unset _andif
+						    _not done_objects.includes?(mit_object)
+						_then
+							_local dcr << tls_display_change_record.new(mit_object)
+							# now add this to the result set
+							sc.add(dcr)
+							done_objects.add(mit_object)
+						_endif
+					_endloop
+				_endif 
+			_endloop
+		_endif
+	_endloop
+	# return the result set
+	>> sc
+_endmethod
+
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_display_change_record(p_display_change_record) 
+	## Processes a display change rwo 
+	##
+	_local source_mode << p_display_change_record.source_mode
+	_self.process_rwo(p_display_change_record.rwo, source_mode)
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.supressed_route_split_handler
+	## Returns a handler for condition tls_supressed_route_split.
+	## The handler will eventually create a tip at the position of
+	## the supressed route split.
+	_local engine << _self
+	>> _proc (p_condition)
+		   _import engine
+		   _local data << property_list.new_with(_scatter p_condition.data)
+		   _local route << data[:route]
+		   _local geom_splits << data[:geom_splits]
+		   engine.log("Detected route split at ", route)
+		   engine.create_tip_for_object(route, geom_splits)
+	   _endproc
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.create_tip_for_object(p_route, p_geom_splits)
+	## Create a TIP at a position where the split of a route was
+	## supressed. 
+
+	# first find a common coordinate
+	_local coord
+	_if p_geom_splits.size = 1
+	_then
+		coord << p_geom_splits.an_element().last_coord
+	_else
+		_local min_dist << float.infinity
+		_local geom1 << p_geom_splits[1]
+		coord << geom1.last_coord
+		# compare all combinations for first and last coordinate to
+		# find the one with the minimal distance
+		_for i _over 2.upto(p_geom_splits.size)
+		_loop
+			geom2 << p_geom_splits[i]
+			_if (dist << geom2.first_coord.distance_to(geom1.first_coord)) < min_dist
+			_then
+				coord << geom2.first_coord
+				min_dist << dist
+			_endif
+			_if (dist << geom2.last_coord.distance_to(geom1.first_coord)) < min_dist
+			_then
+				coord << geom2.last_coord
+				min_dist << dist
+			_endif
+			_if (dist << geom2.first_coord.distance_to(geom1.last_coord)) < min_dist
+			_then
+				coord << geom2.first_coord
+				min_dist << dist
+			_endif
+			_if (dist << geom2.last_coord.distance_to(geom1.last_coord)) < min_dist
+			_then
+				coord << geom2.last_coord
+				min_dist << dist
+			_endif
+		_endloop
+		#DEBUG write("Found coord, min distance is ", min_dist)
+	_endif
+
+	#_local design << swg_dsn_admin_engine.active_scheme
+	#_local design_name << design.name
+
+	_local view << mit_manager.main_pni_dataset
+	_local tip_table << view.collections[:tip]
+	_local tip_rel_table << view.collections[:tip_object_relshp]
+	_local request << .request
+	_local job_name << write_string(request.request_id, " (SAM ", request.sam_id, ")")
+	_local route_tls << p_route.tls_id
+	_local remarks << write_string(p_route.external_name, " TLS_ID = ", route_tls,
+				      " was split due to interacting structure")
+				      
+
+	# create the TIP
+	_local vals << property_list.new_with(
+			       :tip_status,  "Review",
+			       :type,        "Validation",
+			       :severity,    "Warning",
+			       :job_name,    job_name,
+			       :description, "NBN Asset Transfer, Cable Display Updates, Split Route",
+			       :remarks,     remarks,
+			       :owner,       system.user_name,
+			       :timestamp,   date_time.now(),
+			       :autogenerated?, "Yes")
+	_local transaction << record_transaction.new_insert(tip_table, vals)
+	_local tip << transaction.run()
+
+	_self.log("Supressed route split for ", p_route, " - created TIP: ", tip)
+	_self.gather_statistics(tip, "created TIP")
+
+	# set the geometry on the TIP in ERF (=NBN) mode
+	_local secs << sector_rope.new_with(sector.new_with(coord))
+	_if tip _isnt _unset 
+	_then
+		tip.make_geometry(:tls_erf_location, secs)
+	_endif
+
+	# create a relationship to the route
+	_local rel_vals
+	rel_vals << property_list.new_with(
+			    :tips,           tip,
+			    :tip_id,         tip.id,
+			    :tip_name,       job_name,
+			    :object_id,      p_route.id,
+			    :object_name,    p_route.rwo_type,
+			    :object_dataset, p_route.source_view.name)
+	transaction << record_transaction.new_insert(tip_rel_table, rel_vals)
+	transaction.run()
+	
+	# create a relationship to the request
+	rel_vals << property_list.new_with(
+			    :tips,           tip,
+			    :tip_id,         tip.id,
+			    :tip_name,       job_name,
+			    :object_id,      request.id,
+			    :object_name,    request.rwo_type,
+			    :object_dataset, request.source_view.name)
+	transaction << record_transaction.new_insert(tip_rel_table, rel_vals)
+	transaction.run()
+	
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.process_request(_optional progress_receiver)
+	## Processes the request for which the engine was initialised 
+	## PROGRESS_RECEIVER is an object that can receive the progress
+	## notification. Typivcally this would be a caller (e.g. a
+	## pluging) that uses this engine and displays a progress
+	## reporter. By default the progress receiver is self.
+	## The progress receiver will get a message :progress with the
+	## percentage of processed objects.
+
+	# set the default if required
+	progress_receiver << progress_receiver.default(_self)
+
+	_local engine << _self 
+	# initialize some handler
+	_local error_handler << _proc (p_condition)
+					_import engine
+					engine.log_traceback(p_condition)
+					engine.gather_statistics(p_condition, "")
+					_throw @go_on_updating_map_displays
+				_endproc
+	_local warning_handler << _proc (p_condition)
+					  _import engine
+					  engine.gather_statistics(p_condition, "")
+					  engine.log("WARNING - ", p_condition.report_contents_string)
+				  _endproc 
+
+	
+	# get my request
+	_local request << .request
+	
+	# get all the transferred assets from the request
+	_local transferred_rwos << request.verified_rwo_set()
+	#xDEBUG write("WARNING!!! - replaced transferred RWOs with Test Set")
+	#xDEBUG transferred_rwos << user:dc_test_set()
+
+	# now work out the objects for which the display has to be
+	# updated. Note that e.g. it is a copper cable that is
+	# transferred, however its route is the one that has to update
+	# its annotation, although the route itself is not transferred.
+	# Hence the update_set is different to the transferred_rwos set.
+	# The update set is not an rwo_set but rather a set of
+	# tls_dislplay_change_records.
+	_local update_set << _self.pre_process_rwo_set(transferred_rwos)
+
+	# set up a progress counter that reports to the progress receiver
+	_local pc << progress_counter.new_on_time(1,update_set.size)
+	pc.reporter << _proc (pc)
+			       _import progress_receiver
+			       progress_receiver.changed(:progress,(100*pc.count/max(pc.total,1)).rounded)
+		       _endproc
+
+	_local log_filename << _self.open_log_file()
+	# protect the following to ensure we also properly close the
+	# log file
+	_local start_time << date_time.now()
+	_local ok? << _false 
+	_protect
+		_local design << swg_dsn_admin_engine.active_scheme
+		_self.log("Start processing request ", _self.request_name,
+			  " in design ", design.name)
+		# here is the main loop that runs over all objects to be updated
+		_for display_change_record _over update_set.fast_elements()
+		_loop
+			_catch @go_on_updating_map_displays
+				_handling error _with error_handler
+				_handling warning _with warning_handler
+				
+				_self.log("processing ", display_change_record.rwo)
+				_self.process_display_change_record(display_change_record)
+			_endcatch
+			pc.next()
+		_endloop
+		ok? << _true 
+	_protection
+		_self.log_statistics_summary()
+		_if _not ok?
+		_then
+			_self.log("WARNING - Request ", _self.request_name, " processing aborted unexpectedly")
+		_else
+			_local end_time << date_time.now()
+			_self.log("Request ", _self.request_name, " processed successfully, duration ",
+				  end_time - start_time)
+		_endif
+		_self.close_log_file()
+	_endprotect
+
+	# return the log filename
+	>> log_filename
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.request_name
+	## Returns a request name string for logging 
+	## 
+	>> _if .request _isnt _unset 
+	   _then
+		   >> write_string(.request.request_id,
+				   " (SAM: ", .request.sam_id, ")")
+	   _else
+		   >> "unknown"
+	   _endif
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.open_log_file()
+	## opens a log file and sets the slot .log_stream
+	## Return the log filename
+
+	_local str << internal_text_output_stream.new()
+	date_time.now().format_to(str, "#Y#m#d-#H#M#S")
+	date_time_string << str.string
+
+	_local prefix << "tls-map-display-update"
+	_local request_id << _self.request.request_id
+	# clean up problem characters which could be in the request_id
+	#request_id << request_id.replace_chars(%\,%-)
+	#request_id << request_id.replace_chars(%/,%-)
+	#request_id << request_id.replace_chars(%.,%-)
+	#request_id << request_id.replace_chars(space_char,%-)
+	_local suffix << "log"
+
+	# create a filename and find a suitable directory
+	_local filename << write_string(prefix, %-, request_id, %-,
+					date_time_string, %., suffix)
+	_local dirname << system.temp_directory_name
+	_local file_path << system.pathname_from_components(filename,dirname)
+
+	# check whehter the file can be created an open it
+	.log_stream << _if system.file_creatable?(file_path)
+		       _then
+			       >> external_text_output_stream.new(file_path)
+		       _else
+			       # if we cannot open the file then use stdout instead and set
+			       # the filepath to unset 
+			       write("Cannot create log file ", file_path, " using stdout instead")
+			       file_path << _unset 
+			       >> !output!
+		       _endif
+	>> file_path
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.close_log_file()
+	## closed an existing log file and sets the slot .log_stream to
+	## unset.
+	
+	_if .log_stream _isnt _unset _andif
+	    .log_stream _isnt !output! _andif # do never close stdout
+	    .log_stream.responds_to?(:close|()|)
+	_then
+		.log_stream.close()
+		.log_stream << _unset 
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.log(_gather p_messages)
+	## Logs a message in a single line and prefexies it with the
+	## current time.
+
+	# just in case make sure we have something to write to
+	output << _if .log_stream _isnt _unset 
+		  _then
+			  >> .log_stream
+		  _else
+			  >> !output!
+		  _endif
+
+	# prefix the message with a timestamp
+	output.write(date_time.now(), " - ")
+	output.write(_scatter p_messages)
+	output.write(newline_char)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.log_traceback(_optional p_condition)
+	## Logs a traceback of the current stack in the log file. This
+	## can be used in an error handler.
+	
+	# just in case make sure we have something to write to
+	_local output << _if .log_stream _isnt _unset 
+			 _then
+				 >> .log_stream
+			 _else
+				 >> !output!
+			 _endif
+	_if p_condition _isnt _unset 
+	_then
+		output.write("ERROR - ")
+		p_condition.report_contents_on(output)
+		output.write(newline_char)
+	_endif
+	!traceback!(output)
+	output.write(newline_char)
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.log_statistics_summary()
+	## Prints out some stats about the number of object that were
+	## processed 
+
+	_self.log(51*%-)
+	_self.log("Processing Summary")
+	_local keys << sorted_collection.new_from_iter(_self.statistics, :|keys()|)
+	_local stats << _self.statistics
+	_for key _over keys.fast_elements()
+	_loop
+		_local count << stats[key]
+		_self.log(key.write_string.space_pad(40,_false,_true), " ",
+			  count.as_fixed_string(10,0))
+	_endloop
+	_self.log(51*%-)
+_endmethod
+$
+
+
+
+# ---------------------------------------------------------------------------------------------
+#
+# the following methods are for deployment purposes only. They
+# create appropriate default values for service areas in ERF
+# mode. This is required to blank out default values in cable
+# annotations likewise in DA, CAC or CC. They can be called on
+# the class itself, rather than having to initialise this class
+# with a request. In case you want to get a new instance you
+# can also instanciate it without a request like this:
+# tdce << tls_at_display_change_engine.new(_unset)
+# tdce.create_erf_defaults()
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.create_erf_defaults()
+	## see comment on
+	## tls_at_display_change_engine.int!create_erf_defaults()
+	##
+	## This method is a wrapper for int!create_erf_defaults() run
+	## in a proper transaction.
+
+	_local design << swg_dsn_admin_engine.active_scheme
+	_if design _is _unset 
+	_then
+		condition.raise(:warning, :string,
+				"No active design, choose a design first")
+		_return 
+	_endif
+	_local design_name << design.name
+	
+	_local pni_view << mit_manager.main_pni_dataset
+	_local ok? << _false
+	_protect
+		# create the default records for ERF mode 
+		_self.int!create_erf_defaults()
+		ok? << _true 
+	_protection
+		# depending on the outcome either commit or rollback
+		_if ok?
+		_then
+			pni_view.commit()
+			condition.raise(:information, :string,
+					write_string("Creation of ERF defaults run successfully. ",
+						     "Updates saved in design '", design_name, "'"))
+		_else
+			pni_view.rollback()
+			condition.raise(:warning, :string,
+					write_string("Creation of ERF defaults failed. Design'",
+						     design, "' rolled back"))
+		_endif
+	_endprotect
+_endmethod
+$
+
+
+
+_pragma(classify_level=basic, topic={TLS,NBN,ASSET_TRANSFER})
+_method tls_at_display_change_engine.int!create_erf_defaults()
+	## Routine to create tls_default records for the ERF (=NBN)
+	## mode. This is to be called during the deployment of the FTTN
+	## Asset Transfer changes. 
+	## Since ERF now has to display copper cables, the default
+	## values are required for cable and pair annotations.
+	## In general this method will loop over the service_area table
+	## and look for existing default values. If there are no
+	## default values for the ERF mode in a given serbvice area,
+	## then this will look for default values in CAC, CC and DA
+	## mode in that order. If it can find default values for one of
+	## the above modes then it will copy the same values as a
+	## default to the ERF mode.
+	## Note that the method always checks for an existing default
+	## record in ERF mode. If such a default value exists nothing
+	## will happen. Thus this method can be run multiple times on
+	## the same set of service areas.
+
+	_local pni_view << mit_manager.main_pni_dataset
+	_local defaults_table << pni_view.collections[:tls_default]
+	_local pred << predicate.eq(:tls_service_area_type, "Distribution Area") _or
+		       predicate.eq(:tls_service_area_type, "Exchange")
+	_local service_areas << pni_view.collections[:service_area].select(pred)
+	_local total << service_areas.size
+	_local inc << max(total _div 100,1)
+	_local pc << progress_counter.new_on_count(inc, total)
+
+	_local transaction_count << 0
+	_for service_area _over service_areas.fast_elements()
+	_loop @next_service_area
+		# check for NBN defaults
+		_local all_defaults << service_area.tls_defaults
+		_local erf_defaults << all_defaults.select(predicate.eq(:tls_mode, "NBN"))
+
+		_if (erf_default << erf_defaults.an_element()) _isnt _unset 
+		_then
+			# skip this as we already have ERF defaults
+			_continue @next_service_area
+		_endif
+
+		# now find candidates to copy to ERF mode
+		_local candidate_defaults << rope.new() 
+		_if erf_defaults.size = 0
+		_then
+			# loop over the modes in te correct order and try to find candidates.
+			_for mode_label _over {"CAC","DA", "CC"}.fast_elements()
+			_loop @next_mode
+				_local mode_pred << predicate.eq(:tls_mode, mode_label)
+				_local mode_defaults << all_defaults.select(mode_pred)
+				_if mode_defaults.size > 0
+				_then
+					candidate_defaults << {}.new_from(mode_defaults)
+					# we found something now leave here
+					_leave @next_mode
+				_endif
+			_endloop
+		_endif
+
+		_for candidate_default _over candidate_defaults.fast_elements()
+		_loop
+			#DEBUG write(service_area, "   ", service_area.tls_service_area_type, "   ",
+			#DEBUG       candidate_default.id, "  ", candidate_default.tls_mode)
+
+			# copy the canditate default into an NBN default
+			_local tr << record_transaction.new_insert(
+					     defaults_table,
+					     property_list.new_with(
+						     :tls_scale,              candidate_default.tls_scale,
+						     :tls_feed_designation,   candidate_default.tls_feed_designation,
+						     :tls_conductor_diameter, candidate_default.tls_conductor_diameter,
+						     :tls_sheath_type,        candidate_default.tls_sheath_type,
+						     :tls_rf_cable_type,      candidate_default.tls_rf_cable_type,
+						     :tls_mode,               "NBN",
+						     :service_area_id,        candidate_default.service_area_id
+					       )
+							)
+			# run the transaction
+			tr.run()
+
+			# count the inserted records
+			transaction_count +<< 1
+		_endloop
+
+		# increment the counter
+		pc.next()
+
+	_endloop
+	# do a last counter report
+	pc.report()
+
+	# message that the process has finished
+	write(transaction_count, " TLS Default Records inserted.")
+	
+_endmethod
+$

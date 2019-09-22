@@ -1,0 +1,150 @@
+%abc-2.0
+%
+% Ave_Maria_Arcadelt.abc       -*- abc -*-
+%
+% Written for abcm2ps and abc2midi:
+% http://abcplus.sourceforge.net
+% Tested with abcm2ps-8.12.3 and abcMIDI-2016.07.20
+%
+% Edited by Guido Gonzato <guido dot gonzato at gmail dot com>
+% September 15, 2016
+%
+% To typeset this file:
+%       abcm2ps -O= -c Ave_Maria_Arcadelt.abc
+% To make a MIDI file:
+%       abc2midi Ave_Maria_Arcadelt.abc
+
+%%format choral
+%%pagescale 0.78
+
+X: 1
+T: Ave Maria
+T: Mottetto a quattro voci miste
+C: Jacob Arcadelt (1514? - 1557)
+L: 1/4
+M: C
+Q: 1/4=110 ", Andante moderato"
+%%score [S|A|T|B]
+%%MIDI program 1 53 % voice ooh
+%%MIDI program 2 53
+%%MIDI program 3 53
+%%MIDI program 4 53
+V: S clef=treble   name="Soprano" sname="S"
+V: A clef=treble   name="Alto"    sname="A"
+V: T clef=treble-8 name="Tenor"   sname="T"
+V: B clef=bass     name="Bass"    sname="B"
+U: h=!breath!
+K: FMaj
+% 
+%
+% Measures 1 - 3
+%
+[V: S] z !p!AGA|(FG) hA2|Ac!mf!c2|
+w: A-ve Ma-ri -a, gra-ti-a
+[V: A] z !p!FEC|(DE) hF2|FF!mf!F2|
+w: A-ve Ma-ri -a, gra-ti-a
+[V: T] z !p!ccA|(Ac) hc2|cA!mf!A2|
+w: A-ve Ma-ri -a, gra-ti-a
+[V: B] z !p!F,C,F,|(D,C,) hF,2|F,F,!mf!F,2|
+w: A-ve Ma-ri -a, gra-ti-a
+%
+% 4 - 6
+%
+[V: S] (BA) !p!G2 |z AGA|(FG) A2|
+w: ple -na, Do-mi-nus te -cum,
+[V: A] F2 !p!E2   |z FEC|(DE) F2 |
+w: ple-na, Do-mi-nus te -cum,
+[V: T] (dc) !p!c2 |z ccA|(Ac) c2 |
+w: ple -na, Do-mi-nus te -cum,
+[V: B] (B,,F,) !p!C,2 |z F,C,F,|(D,C,) F,2 |
+w: ple -na, Do-mi-nus te -cum,
+%
+% 7 - 9
+%
+[V: S] (GA) (B/A/) (G/F/)|G2 F2|!mf!Fc c2|
+w: a -ve_ Ma -ri-a. Be-ne-di-
+[V: A] (EF) FD           |E2 F2|!mf!FF F2|
+w: a -ve Ma- ri- a. Be- ne-di-
+[V: T] c2 dA             |c2 A2|!mf!AA A2|
+w: a-ve Ma-ri-a. Be-ne-di-
+[V: B] (C,F,) B,,D,      |C,2 F,,2|!mf!F,F, F,2|
+w: a -ve Ma-ri-a. Be-ne-di-
+%
+% 10 - 12
+%
+[V: S] (de) f2 |!mf!Leccd|hef (f/e/) (d/c/)|
+w: cta -tu, be-ne-di-cta tu, in mu -li -
+[V: A] (FA) A2 |!mf!LAEEG|hGAGE            |
+w: cta -tu, be-ne-di-cta tu, in mu-li-
+[V: T] (G^c) d2|!mf!L=ccc=B|hcccc          |
+w: cta -tu, be-ne-di-cta tu, in mu-li-
+[V: B] (D,A,,) D,2 |!mf!LA,A,A,G,|hC,F,C,A,|
+w: cta -tu, be-ne-di-cta tu, in mu-li-
+%
+% 13 - 15
+%
+[V: S] d>d Hc!p!F|cc (de) |hf2 !mf!ec |
+w: e-ri-bus et be-ne-di -ctus fruc-tus
+[V: A] G>G HE!p!F|FF (FA) |hA2 !mf!AE |
+w: e-ri- bus et be-ne-di -ctus fruc-tus
+[V: T] =BB Hc!p!A|AA (A^c)|hd2 !mf!=cc|
+w: e-ri-bus et be-ne-di -ctus fruc-tus
+[V: B] G,G,, HC,!p!F, |F,F, (D,A,,) |hD,2 !mf!A,A,|
+w: e-ri-bus et be-ne-di -ctus fruc-tus
+%
+% 16 - 19
+%
+[V: S] (cd) e(f-|f/e/) d/c/ d2|c2 z2|z !f!ffe|
+w: ven -tri tu-i___ Je-sus. San-cta Ma-
+[V: A] (EG) G(A |G)E G2       |E2 z2|z !f!AAA|
+w: ven -tri tu-i_ Je-sus. San-cta Ma-
+[V: T] (c=B) cc |c2 (c=B)     |c2 z2|z !f!ccc|
+w: ven -tri tu-i_ Je-sus. San-cta Ma-
+[V: B] (A,G,) C,F,|(C,A,) G,2 |C,2 z2|z !f!F,F,A,|
+w: ven -tri tu-i_ Je-sus. San-cta Ma-
+%
+% 20 - 23
+%
+[V: S] d2 h^c2|!p!=c2 d2|d2 c (B/A/)|B2 A2|
+w: ri-a o-ra, o-ra pro_ no-bis.
+[V: A] F2 hE2 |!p!E2 F2 |F2 FF      |F2 F2|
+w: ri-a o-ra, o-ra pro no-bis.
+[V: T] A2 hA2 |!p!G2 B2 |B2 Ac      |d2 c2|
+w: ri-a o-ra, o-ra pro no-bis.
+[V: B] D,2 hA,,2 |!p!C,2 B,,2 |B,,2 F,F,|B,,2 F,2|
+w: ri-a o-ra, o-ra pro no-bis.
+%
+% 24 - 26
+%
+[V: S] z !mf!Acd|c2 hB2|A2 GA|
+w: San-cta Ma-ri-a, o-ra o-
+[V: A] z !mf!FFF|F2 hD2|F2 CC|
+w: San-cta Ma-ri-a, o-ra o-
+[V: T] z !mf!cAB|A2 hG2|A2 cF|
+w: San-cta Ma-ri-a, o-ra o-
+[V: B] z !mf!F,F,B,,|F,2 hG,2|D,2 E,F,|
+w: San-cta Ma-ri-a, o-ra o-
+%
+% 27 - 29
+%
+[V: S] (B/A/) (G/F/) G2|!fermata!F2 (FA)|cdcB|
+w: ra_ pro -no-bis. San -cta Ma-ri-a,
+[V: A] DA, C2          |!fermata!C2 (CF)|FFFD|
+w: ra pro no-bis. San -cta Ma-ri-a,
+[V: T] FF (FE)         |!fermata!F2 (AF)|GBAG|
+w: ra pro no -bis. San -cta Ma-ri-a,
+[V: B] B,,D, C,2       |!fermata!F,,2 (F,D,)|C,B,,F,G,|
+w: ra pro no-bis. San -cta Ma-ri-a,
+%
+% 30 - 33
+%
+[V: S] "^pi\`u lento"A2 GA|(B/A/) (G/F/) G2|!fermata!F2 "^largo"!pp!F2|F4 |]
+w: o-ra, o-ra_ pro_ no-bis. A-men.
+[V: A] F2 CC|DA, C2          |!fermata!C2           !pp!D2|C4 |]
+w: o-ra, o-ra pro no-bis. A-men.
+[V: T] A2 cF|FF (FE)         |!fermata!F2           !pp!B2|A4 |]
+w: o-ra, o-ra pro no -bis. A-men.
+[V: B] D,2 E,F,|B,,D, C,2    |!fermata!F,,2         !pp!B,,2|F,,4 |]
+w: o-ra, o-ra pro no-bis. A-men.
+%
+% End of file Ave_Maria_Arcadelt.abc

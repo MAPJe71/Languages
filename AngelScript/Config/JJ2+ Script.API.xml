@@ -1,0 +1,2730 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+    <AutoComplete language="JJ2+ Script">
+        <Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" />
+        <KeyWord name="#endif" />
+        <KeyWord name="#if" />
+        <KeyWord name="#include" />
+        <KeyWord name="#pragma" />
+        <KeyWord name="#pragma name" />
+        <KeyWord name="#pragma offer" />
+        <KeyWord name="#pragma require" />
+        <KeyWord name="ANIM::AMMO" />
+        <KeyWord name="ANIM::BAT" />
+        <KeyWord name="ANIM::BEEBOY" />
+        <KeyWord name="ANIM::BEES" />
+        <KeyWord name="ANIM::BIGBOX" />
+        <KeyWord name="ANIM::BIGROCK" />
+        <KeyWord name="ANIM::BIGTREE" />
+        <KeyWord name="ANIM::BILSBOSS" />
+        <KeyWord name="ANIM::BIRD" />
+        <KeyWord name="ANIM::BIRD3D" />
+        <KeyWord name="ANIM::BOLLPLAT" />
+        <KeyWord name="ANIM::BONUS" />
+        <KeyWord name="ANIM::BOSS" />
+        <KeyWord name="ANIM::BRIDGE" />
+        <KeyWord name="ANIM::BUBBA" />
+        <KeyWord name="ANIM::BUMBEE" />
+        <KeyWord name="ANIM::BUTTERFLY" />
+        <KeyWord name="ANIM::CARROTPOLE" />
+        <KeyWord name="ANIM::CAT" />
+        <KeyWord name="ANIM::CAT2" />
+        <KeyWord name="ANIM::CATERPIL" />
+        <KeyWord name="ANIM::CHUCK" />
+        <KeyWord name="ANIM::COMMON" />
+        <KeyWord name="ANIM::CONTINUE" />
+        <KeyWord name="ANIM::CUSTOM" />
+        <KeyWord name="ANIM::DEMON" />
+        <KeyWord name="ANIM::DESTSCEN" />
+        <KeyWord name="ANIM::DEVAN" />
+        <KeyWord name="ANIM::DEVILDEVAN" />
+        <KeyWord name="ANIM::DIAMPOLE" />
+        <KeyWord name="ANIM::DOG" />
+        <KeyWord name="ANIM::DOOR" />
+        <KeyWord name="ANIM::DRAGFLY" />
+        <KeyWord name="ANIM::DRAGON" />
+        <KeyWord name="ANIM::EVA" />
+        <KeyWord name="ANIM::FACES" />
+        <KeyWord name="ANIM::FATCHK" />
+        <KeyWord name="ANIM::FENCER" />
+        <KeyWord name="ANIM::FISH" />
+        <KeyWord name="ANIM::FLAG" />
+        <KeyWord name="ANIM::FLARE" />
+        <KeyWord name="ANIM::FONT" />
+        <KeyWord name="ANIM::FROG" />
+        <KeyWord name="ANIM::FRUITPLAT" />
+        <KeyWord name="ANIM::GEMRING" />
+        <KeyWord name="ANIM::GLOVE" />
+        <KeyWord name="ANIM::GRASSPLAT" />
+        <KeyWord name="ANIM::HATTER" />
+        <KeyWord name="ANIM::HELMUT" />
+        <KeyWord name="ANIM::JAZZ" />
+        <KeyWord name="ANIM::JAZZ3D" />
+        <KeyWord name="ANIM::JUNGLEPOLE" />
+        <KeyWord name="ANIM::LABRAT" />
+        <KeyWord name="ANIM::LIZARD" />
+        <KeyWord name="ANIM::LORI" />
+        <KeyWord name="ANIM::LORI2" />
+        <KeyWord name="ANIM::MENU" />
+        <KeyWord name="ANIM::MENUFONT" />
+        <KeyWord name="ANIM::MONKEY" />
+        <KeyWord name="ANIM::MOTH" />
+        <KeyWord name="ANIM::PICKUPS" />
+        <KeyWord name="ANIM::PINBALL" />
+        <KeyWord name="ANIM::PINKPLAT" />
+        <KeyWord name="ANIM::PLUS_AMMO" />
+        <KeyWord name="ANIM::PLUS_BETA" />
+        <KeyWord name="ANIM::PLUS_COMMON" />
+        <KeyWord name="ANIM::PLUS_CONTINUE" />
+        <KeyWord name="ANIM::PLUS_FONT" />
+        <KeyWord name="ANIM::PLUS_REPLACEMENTS" />
+        <KeyWord name="ANIM::PLUS_RETICLES" />
+        <KeyWord name="ANIM::PLUS_SCENERY" />
+        <KeyWord name="ANIM::PLUS_WARP" />
+        <KeyWord name="ANIM::PSYCHPOLE" />
+        <KeyWord name="ANIM::QUEEN" />
+        <KeyWord name="ANIM::RAPIER" />
+        <KeyWord name="ANIM::RAVEN" />
+        <KeyWord name="ANIM::ROBOT" />
+        <KeyWord name="ANIM::ROCK" />
+        <KeyWord name="ANIM::ROCKTURT" />
+        <KeyWord name="ANIM::SKELETON" />
+        <KeyWord name="ANIM::SMALTREE" />
+        <KeyWord name="ANIM::SNOW" />
+        <KeyWord name="ANIM::SONCSHIP" />
+        <KeyWord name="ANIM::SONICPLAT" />
+        <KeyWord name="ANIM::SPARK" />
+        <KeyWord name="ANIM::SPAZ" />
+        <KeyWord name="ANIM::SPAZ2" />
+        <KeyWord name="ANIM::SPAZ3D" />
+        <KeyWord name="ANIM::SPIKEBOLL" />
+        <KeyWord name="ANIM::SPIKEBOLL3D" />
+        <KeyWord name="ANIM::SPIKEPLAT" />
+        <KeyWord name="ANIM::SPRING" />
+        <KeyWord name="ANIM::STEAM" />
+        <KeyWord name="ANIM::SUCKER" />
+        <KeyWord name="ANIM::Set" />
+        <KeyWord name="ANIM::TUBETURT" />
+        <KeyWord name="ANIM::TUFBOSS" />
+        <KeyWord name="ANIM::TUFTUR" />
+        <KeyWord name="ANIM::TURTLE" />
+        <KeyWord name="ANIM::TWEEDLE" />
+        <KeyWord name="ANIM::UTERUS" />
+        <KeyWord name="ANIM::VINE" />
+        <KeyWord name="ANIM::WARP10" />
+        <KeyWord name="ANIM::WARP100" />
+        <KeyWord name="ANIM::WARP20" />
+        <KeyWord name="ANIM::WARP50" />
+        <KeyWord name="ANIM::WITCH" />
+        <KeyWord name="ANIM::XBILSY" />
+        <KeyWord name="ANIM::XLIZARD" />
+        <KeyWord name="ANIM::XTURTLE" />
+        <KeyWord name="ANIM::ZDOG" />
+        <KeyWord name="ANIM::ZSPARK" />
+        <KeyWord name="AREA::ACCBELTLEFT" />
+        <KeyWord name="AREA::ACCBELTRIGHT" />
+        <KeyWord name="AREA::ACTIVATEBOSS" />
+        <KeyWord name="AREA::AREAID" />
+        <KeyWord name="AREA::Area" />
+        <KeyWord name="AREA::BELTLEFT" />
+        <KeyWord name="AREA::BELTRIGHT" />
+        <KeyWord name="AREA::DIMLIGHT" />
+        <KeyWord name="AREA::ECHO" />
+        <KeyWord name="AREA::EOL" />
+        <KeyWord name="AREA::FLOATUP" />
+        <KeyWord name="AREA::FLYOFF" />
+        <KeyWord name="AREA::HOOK" />
+        <KeyWord name="AREA::HPOLE" />
+        <KeyWord name="AREA::HURT" />
+        <KeyWord name="AREA::JAZZLEVELSTART" />
+        <KeyWord name="AREA::JAZZSTART" />
+        <KeyWord name="AREA::LIMITXSCROLL" />
+        <KeyWord name="AREA::LORILEVELSTART" />
+        <KeyWord name="AREA::LORISTART" />
+        <KeyWord name="AREA::MORPHFROG" />
+        <KeyWord name="AREA::MPLEVELSTART" />
+        <KeyWord name="AREA::MPSTART" />
+        <KeyWord name="AREA::NOFIREZONE" />
+        <KeyWord name="AREA::ONEWAY" />
+        <KeyWord name="AREA::PATH" />
+        <KeyWord name="AREA::RESETLIGHT" />
+        <KeyWord name="AREA::REVERTMORPH" />
+        <KeyWord name="AREA::RICOCHET" />
+        <KeyWord name="AREA::SETLIGHT" />
+        <KeyWord name="AREA::SLIDE" />
+        <KeyWord name="AREA::SPAZLEVELSTART" />
+        <KeyWord name="AREA::SPAZSTART" />
+        <KeyWord name="AREA::STOPENEMY" />
+        <KeyWord name="AREA::SUCKERTUBE" />
+        <KeyWord name="AREA::TEXT" />
+        <KeyWord name="AREA::TRIGGERROCK" />
+        <KeyWord name="AREA::TRIGGERZONE" />
+        <KeyWord name="AREA::VINE" />
+        <KeyWord name="AREA::VPOLE" />
+        <KeyWord name="AREA::WARP" />
+        <KeyWord name="AREA::WARPEOL" />
+        <KeyWord name="AREA::WARPSECRET" />
+        <KeyWord name="AREA::WARPTARGET" />
+        <KeyWord name="AREA::WATERBLOCK" />
+        <KeyWord name="AREA::WATERLEVEL" />
+        <KeyWord name="AREA::WINDLEFT" />
+        <KeyWord name="AREA::WINDRIGHT" />
+        <KeyWord name="BEHAVIOR::AIRBOARD" />
+        <KeyWord name="BEHAVIOR::AIRBOARDFALL" />
+        <KeyWord name="BEHAVIOR::AIRBOARDGENERATOR" />
+        <KeyWord name="BEHAVIOR::AMBIENTSOUND" />
+        <KeyWord name="BEHAVIOR::AMMO15" />
+        <KeyWord name="BEHAVIOR::BAT" />
+        <KeyWord name="BEHAVIOR::BEE" />
+        <KeyWord name="BEHAVIOR::BEEBOY" />
+        <KeyWord name="BEHAVIOR::BEES" />
+        <KeyWord name="BEHAVIOR::BIGOBJECT" />
+        <KeyWord name="BEHAVIOR::BILSY" />
+        <KeyWord name="BEHAVIOR::BILSYBULLET" />
+        <KeyWord name="BEHAVIOR::BIRD" />
+        <KeyWord name="BEHAVIOR::BIRDCAGE" />
+        <KeyWord name="BEHAVIOR::BIRDFEATHER" />
+        <KeyWord name="BEHAVIOR::BOLLYBOTTOM" />
+        <KeyWord name="BEHAVIOR::BOLLYBULLET" />
+        <KeyWord name="BEHAVIOR::BOLLYTOP" />
+        <KeyWord name="BEHAVIOR::BOMB" />
+        <KeyWord name="BEHAVIOR::BONE" />
+        <KeyWord name="BEHAVIOR::BONUSPOST" />
+        <KeyWord name="BEHAVIOR::BOUNCEONCE" />
+        <KeyWord name="BEHAVIOR::BOUNCERBULLET" />
+        <KeyWord name="BEHAVIOR::BOUNCERBULLETPU" />
+        <KeyWord name="BEHAVIOR::BRIDGE" />
+        <KeyWord name="BEHAVIOR::BUBBA" />
+        <KeyWord name="BEHAVIOR::BUBBLE" />
+        <KeyWord name="BEHAVIOR::BUBBLER" />
+        <KeyWord name="BEHAVIOR::BUBBLESHIELDBULLET" />
+        <KeyWord name="BEHAVIOR::BULLET" />
+        <KeyWord name="BEHAVIOR::BUMBEE" />
+        <KeyWord name="BEHAVIOR::BUMP" />
+        <KeyWord name="BEHAVIOR::BURNING" />
+        <KeyWord name="BEHAVIOR::BUTTERFLY" />
+        <KeyWord name="BEHAVIOR::Behavior" />
+        <KeyWord name="BEHAVIOR::CARROTUSPOLE" />
+        <KeyWord name="BEHAVIOR::CATERPILLAR" />
+        <KeyWord name="BEHAVIOR::CHECKPOINT" />
+        <KeyWord name="BEHAVIOR::CHESHIRE1" />
+        <KeyWord name="BEHAVIOR::CHESHIRE2" />
+        <KeyWord name="BEHAVIOR::COPTER" />
+        <KeyWord name="BEHAVIOR::CORPSE" />
+        <KeyWord name="BEHAVIOR::CRAB" />
+        <KeyWord name="BEHAVIOR::CRATE" />
+        <KeyWord name="BEHAVIOR::DEFAULT" />
+        <KeyWord name="BEHAVIOR::DEMON" />
+        <KeyWord name="BEHAVIOR::DESTRUCTSCENERY" />
+        <KeyWord name="BEHAVIOR::DEVANROBOT" />
+        <KeyWord name="BEHAVIOR::DEVILDEVAN" />
+        <KeyWord name="BEHAVIOR::DIAMONDSAREFOREVER" />
+        <KeyWord name="BEHAVIOR::DIAMONDUSPOLE" />
+        <KeyWord name="BEHAVIOR::DOGGYDOGG" />
+        <KeyWord name="BEHAVIOR::DRAGON" />
+        <KeyWord name="BEHAVIOR::DRAGONFLY" />
+        <KeyWord name="BEHAVIOR::ELECTROBULLET" />
+        <KeyWord name="BEHAVIOR::EOLPOST" />
+        <KeyWord name="BEHAVIOR::EVA" />
+        <KeyWord name="BEHAVIOR::EXPLOSION" />
+        <KeyWord name="BEHAVIOR::EXPLOSION2" />
+        <KeyWord name="BEHAVIOR::FATCHICK" />
+        <KeyWord name="BEHAVIOR::FENCER" />
+        <KeyWord name="BEHAVIOR::FISH" />
+        <KeyWord name="BEHAVIOR::FLAG" />
+        <KeyWord name="BEHAVIOR::FLICKERGEM" />
+        <KeyWord name="BEHAVIOR::FLICKERLIGHT" />
+        <KeyWord name="BEHAVIOR::FLOATLIZARD" />
+        <KeyWord name="BEHAVIOR::FLOATSUCKER" />
+        <KeyWord name="BEHAVIOR::GEMRING" />
+        <KeyWord name="BEHAVIOR::GEMSTOMP" />
+        <KeyWord name="BEHAVIOR::GENERATOR" />
+        <KeyWord name="BEHAVIOR::HATTER" />
+        <KeyWord name="BEHAVIOR::HELMUT" />
+        <KeyWord name="BEHAVIOR::ICEBULLETPU" />
+        <KeyWord name="BEHAVIOR::INACTIVE" />
+        <KeyWord name="BEHAVIOR::JUNGLEPOLE" />
+        <KeyWord name="BEHAVIOR::LABRAT" />
+        <KeyWord name="BEHAVIOR::LASER" />
+        <KeyWord name="BEHAVIOR::MONITOR" />
+        <KeyWord name="BEHAVIOR::MONKEY" />
+        <KeyWord name="BEHAVIOR::MONKEYBULLET" />
+        <KeyWord name="BEHAVIOR::MOTH" />
+        <KeyWord name="BEHAVIOR::NORMTURTLE" />
+        <KeyWord name="BEHAVIOR::PADDLE" />
+        <KeyWord name="BEHAVIOR::PEPPERBULLET" />
+        <KeyWord name="BEHAVIOR::PICKUP" />
+        <KeyWord name="BEHAVIOR::PLATFORM" />
+        <KeyWord name="BEHAVIOR::PSYCHPOLE" />
+        <KeyWord name="BEHAVIOR::PULSELIGHT" />
+        <KeyWord name="BEHAVIOR::PULZELIGHT" />
+        <KeyWord name="BEHAVIOR::QUEEN" />
+        <KeyWord name="BEHAVIOR::RAPIER" />
+        <KeyWord name="BEHAVIOR::RAVEN" />
+        <KeyWord name="BEHAVIOR::RFBULLET" />
+        <KeyWord name="BEHAVIOR::ROBOT" />
+        <KeyWord name="BEHAVIOR::ROBOTSHARD" />
+        <KeyWord name="BEHAVIOR::ROCKETTURTLE" />
+        <KeyWord name="BEHAVIOR::ROCKETTURTLEPLUS" />
+        <KeyWord name="BEHAVIOR::ROTATINGROCK" />
+        <KeyWord name="BEHAVIOR::SAVEPOST" />
+        <KeyWord name="BEHAVIOR::SEEKERBULLET" />
+        <KeyWord name="BEHAVIOR::SHARD" />
+        <KeyWord name="BEHAVIOR::SKELETON" />
+        <KeyWord name="BEHAVIOR::SMALLTREE" />
+        <KeyWord name="BEHAVIOR::SMOKERING" />
+        <KeyWord name="BEHAVIOR::SNOW" />
+        <KeyWord name="BEHAVIOR::SPARK" />
+        <KeyWord name="BEHAVIOR::SPIKEBOLL3D" />
+        <KeyWord name="BEHAVIOR::SPRING" />
+        <KeyWord name="BEHAVIOR::SPRINGCORD" />
+        <KeyWord name="BEHAVIOR::STANDMONKEY" />
+        <KeyWord name="BEHAVIOR::STEADYLIGHT" />
+        <KeyWord name="BEHAVIOR::STEAM" />
+        <KeyWord name="BEHAVIOR::SUCKER" />
+        <KeyWord name="BEHAVIOR::SUPERGEM" />
+        <KeyWord name="BEHAVIOR::SWINGINGVINE" />
+        <KeyWord name="BEHAVIOR::TNT" />
+        <KeyWord name="BEHAVIOR::TOASTERBULLET" />
+        <KeyWord name="BEHAVIOR::TRIGGERSCENERY" />
+        <KeyWord name="BEHAVIOR::TUBETURTLE" />
+        <KeyWord name="BEHAVIOR::TUFBOSS" />
+        <KeyWord name="BEHAVIOR::TUFBOSSBULLET" />
+        <KeyWord name="BEHAVIOR::TURTLESHELL" />
+        <KeyWord name="BEHAVIOR::TWEEDLEBOSS" />
+        <KeyWord name="BEHAVIOR::UTERUS" />
+        <KeyWord name="BEHAVIOR::UTERUSSPIKEBALL" />
+        <KeyWord name="BEHAVIOR::WALKINGENEMY" />
+        <KeyWord name="BEHAVIOR::WARP" />
+        <KeyWord name="BEHAVIOR::WATERSHIELDBULLET" />
+        <KeyWord name="BEHAVIOR::WITCH" />
+        <KeyWord name="BEHAVIOR::WITCHBULLET" />
+        <KeyWord name="CHAR::BIRD" />
+        <KeyWord name="CHAR::BIRD2" />
+        <KeyWord name="CHAR::Char" />
+        <KeyWord name="CHAR::FROG" />
+        <KeyWord name="CHAR::JAZZ" />
+        <KeyWord name="CHAR::LORI" />
+        <KeyWord name="CHAR::SPAZ" />
+        <KeyWord name="CREATOR::LEVEL" />
+        <KeyWord name="CREATOR::OBJECT" />
+        <KeyWord name="CREATOR::PLAYER" />
+        <KeyWord name="CREATOR::Type" />
+        <KeyWord name="DIRECTION::CURRENT" />
+        <KeyWord name="DIRECTION::Dir" />
+        <KeyWord name="DIRECTION::LEFT" />
+        <KeyWord name="DIRECTION::RIGHT" />
+        <KeyWord name="DIRECTION::UP" />
+        <KeyWord name="FLIGHT::AIRBOARD" />
+        <KeyWord name="FLIGHT::FLYCARROT" />
+        <KeyWord name="FLIGHT::Mode" />
+        <KeyWord name="FLIGHT::NONE" />
+        <KeyWord name="GAME::BATTLE" />
+        <KeyWord name="GAME::COOP" />
+        <KeyWord name="GAME::CTF" />
+        <KeyWord name="GAME::Connection" />
+        <KeyWord name="GAME::Custom" />
+        <KeyWord name="GAME::DCTF" />
+        <KeyWord name="GAME::DOM" />
+        <KeyWord name="GAME::FR" />
+        <KeyWord name="GAME::HEAD" />
+        <KeyWord name="GAME::JB" />
+        <KeyWord name="GAME::LAN" />
+        <KeyWord name="GAME::LOCAL" />
+        <KeyWord name="GAME::LRS" />
+        <KeyWord name="GAME::Mode" />
+        <KeyWord name="GAME::NOCUSTOM" />
+        <KeyWord name="GAME::ONLINE" />
+        <KeyWord name="GAME::OVERTIME" />
+        <KeyWord name="GAME::PAUSED" />
+        <KeyWord name="GAME::PEST" />
+        <KeyWord name="GAME::PREGAME" />
+        <KeyWord name="GAME::RACE" />
+        <KeyWord name="GAME::RT" />
+        <KeyWord name="GAME::SP" />
+        <KeyWord name="GAME::STARTED" />
+        <KeyWord name="GAME::STOPPED" />
+        <KeyWord name="GAME::State" />
+        <KeyWord name="GAME::TB" />
+        <KeyWord name="GAME::TLRS" />
+        <KeyWord name="GAME::TREASURE" />
+        <KeyWord name="GAME::XLRS" />
+        <KeyWord name="GEM::BLUE" />
+        <KeyWord name="GEM::Color" />
+        <KeyWord name="GEM::GREEN" />
+        <KeyWord name="GEM::PURPLE" />
+        <KeyWord name="GEM::RED" />
+        <KeyWord name="HANDLING::Bullet" />
+        <KeyWord name="HANDLING::DELAYEDPICKUP" />
+        <KeyWord name="HANDLING::DESTROYBULLET" />
+        <KeyWord name="HANDLING::DETECTBULLET" />
+        <KeyWord name="HANDLING::DYING" />
+        <KeyWord name="HANDLING::ENEMY" />
+        <KeyWord name="HANDLING::ENEMYBULLET" />
+        <KeyWord name="HANDLING::EXPLOSION" />
+        <KeyWord name="HANDLING::HURT" />
+        <KeyWord name="HANDLING::HURTBYBULLET" />
+        <KeyWord name="HANDLING::IGNOREBULLET" />
+        <KeyWord name="HANDLING::PARTICLE" />
+        <KeyWord name="HANDLING::PICKUP" />
+        <KeyWord name="HANDLING::PLAYERBULLET" />
+        <KeyWord name="HANDLING::Player" />
+        <KeyWord name="HANDLING::SELFCOLLISION" />
+        <KeyWord name="HANDLING::SPECIAL" />
+        <KeyWord name="HANDLING::SPECIALDONE" />
+        <KeyWord name="LIGHT::BASIC" />
+        <KeyWord name="LIGHT::BRIGHT" />
+        <KeyWord name="LIGHT::COMPLETE" />
+        <KeyWord name="LIGHT::Enforce" />
+        <KeyWord name="LIGHT::FLICKER" />
+        <KeyWord name="LIGHT::LASER" />
+        <KeyWord name="LIGHT::LASERBEAM" />
+        <KeyWord name="LIGHT::NONE" />
+        <KeyWord name="LIGHT::NORMAL" />
+        <KeyWord name="LIGHT::OPTIONAL" />
+        <KeyWord name="LIGHT::PLAYER" />
+        <KeyWord name="LIGHT::POINT" />
+        <KeyWord name="LIGHT::POINT2" />
+        <KeyWord name="LIGHT::RING" />
+        <KeyWord name="LIGHT::RING2" />
+        <KeyWord name="LIGHT::Type" />
+        <KeyWord name="OBJECT::AIRBOARD" />
+        <KeyWord name="OBJECT::AIRBOARDGENERATOR" />
+        <KeyWord name="OBJECT::AMBIENTSOUND" />
+        <KeyWord name="OBJECT::APPLE" />
+        <KeyWord name="OBJECT::BANANA" />
+        <KeyWord name="OBJECT::BAT" />
+        <KeyWord name="OBJECT::BEE" />
+        <KeyWord name="OBJECT::BEEBOY" />
+        <KeyWord name="OBJECT::BEES" />
+        <KeyWord name="OBJECT::BIGBOX" />
+        <KeyWord name="OBJECT::BIGROCK" />
+        <KeyWord name="OBJECT::BILSY" />
+        <KeyWord name="OBJECT::BIRD" />
+        <KeyWord name="OBJECT::BIRDCAGE" />
+        <KeyWord name="OBJECT::BIRDMORPH" />
+        <KeyWord name="OBJECT::BLASTERBULLET" />
+        <KeyWord name="OBJECT::BLASTERBULLETPU" />
+        <KeyWord name="OBJECT::BLASTERPOWERUP" />
+        <KeyWord name="OBJECT::BLUEGEM" />
+        <KeyWord name="OBJECT::BLUESPRING" />
+        <KeyWord name="OBJECT::BOLLPLATFORM" />
+        <KeyWord name="OBJECT::BOLLY" />
+        <KeyWord name="OBJECT::BOMB" />
+        <KeyWord name="OBJECT::BOMBCRATE" />
+        <KeyWord name="OBJECT::BONUSPOST" />
+        <KeyWord name="OBJECT::BOUNCEONCE" />
+        <KeyWord name="OBJECT::BOUNCERAMMO3" />
+        <KeyWord name="OBJECT::BOUNCERAMMO15" />
+        <KeyWord name="OBJECT::BOUNCERBULLET" />
+        <KeyWord name="OBJECT::BOUNCERBULLETPU" />
+        <KeyWord name="OBJECT::BOUNCERPOWERUP" />
+        <KeyWord name="OBJECT::BRIDGE" />
+        <KeyWord name="OBJECT::BUBBA" />
+        <KeyWord name="OBJECT::BUBBLE" />
+        <KeyWord name="OBJECT::BUBBLER" />
+        <KeyWord name="OBJECT::BUBBLESHIELD" />
+        <KeyWord name="OBJECT::BUBBLESHIELDBULLET" />
+        <KeyWord name="OBJECT::BULLET" />
+        <KeyWord name="OBJECT::BUMBEE" />
+        <KeyWord name="OBJECT::BURGER" />
+        <KeyWord name="OBJECT::BUTTERFLY" />
+        <KeyWord name="OBJECT::CAKE" />
+        <KeyWord name="OBJECT::CANDY" />
+        <KeyWord name="OBJECT::CARROT" />
+        <KeyWord name="OBJECT::CARROTBARREL" />
+        <KeyWord name="OBJECT::CARROTBUMP" />
+        <KeyWord name="OBJECT::CARROTCRATE" />
+        <KeyWord name="OBJECT::CARROTUSPOLE" />
+        <KeyWord name="OBJECT::CAT" />
+        <KeyWord name="OBJECT::CATERPILLAR" />
+        <KeyWord name="OBJECT::CHECKPOINT" />
+        <KeyWord name="OBJECT::CHEESE" />
+        <KeyWord name="OBJECT::CHERRY" />
+        <KeyWord name="OBJECT::CHESHIRE1" />
+        <KeyWord name="OBJECT::CHESHIRE2" />
+        <KeyWord name="OBJECT::CHICKENLEG" />
+        <KeyWord name="OBJECT::CHIPS" />
+        <KeyWord name="OBJECT::CHOCBAR" />
+        <KeyWord name="OBJECT::CHOCOLATEBAR" />
+        <KeyWord name="OBJECT::COKE" />
+        <KeyWord name="OBJECT::COLLAPSESCENERY" />
+        <KeyWord name="OBJECT::COPTER" />
+        <KeyWord name="OBJECT::CRAB" />
+        <KeyWord name="OBJECT::CTFBASE" />
+        <KeyWord name="OBJECT::CUCUMB" />
+        <KeyWord name="OBJECT::CUCUMBER" />
+        <KeyWord name="OBJECT::CUPCAKE" />
+        <KeyWord name="OBJECT::DEMON" />
+        <KeyWord name="OBJECT::DESTRUCTSCENERY" />
+        <KeyWord name="OBJECT::DESTRUCTSCENERYBOMB" />
+        <KeyWord name="OBJECT::DEVANROBOT" />
+        <KeyWord name="OBJECT::DEVILDEVAN" />
+        <KeyWord name="OBJECT::DIAMONDUSPOLE" />
+        <KeyWord name="OBJECT::DOGGYDOGG" />
+        <KeyWord name="OBJECT::DONUT" />
+        <KeyWord name="OBJECT::DRAGON" />
+        <KeyWord name="OBJECT::DRAGONFLY" />
+        <KeyWord name="OBJECT::EGGPLANT" />
+        <KeyWord name="OBJECT::ELECTROBULLET" />
+        <KeyWord name="OBJECT::ELECTROBULLETPU" />
+        <KeyWord name="OBJECT::EOLPOST" />
+        <KeyWord name="OBJECT::EVA" />
+        <KeyWord name="OBJECT::EXPLOSION" />
+        <KeyWord name="OBJECT::EXTRALIFE" />
+        <KeyWord name="OBJECT::EXTRALIVE" />
+        <KeyWord name="OBJECT::EXTRATIME" />
+        <KeyWord name="OBJECT::FASTFEET" />
+        <KeyWord name="OBJECT::FASTFIRE" />
+        <KeyWord name="OBJECT::FATCHICK" />
+        <KeyWord name="OBJECT::FENCER" />
+        <KeyWord name="OBJECT::FIREBALLBULLET" />
+        <KeyWord name="OBJECT::FIREBALLBULLETPU" />
+        <KeyWord name="OBJECT::FIRESHIELD" />
+        <KeyWord name="OBJECT::FIRESHIELDBULLET" />
+        <KeyWord name="OBJECT::FISH" />
+        <KeyWord name="OBJECT::FIVEHUNDREDBUMP" />
+        <KeyWord name="OBJECT::FLICKERGEM" />
+        <KeyWord name="OBJECT::FLICKERLIGHT" />
+        <KeyWord name="OBJECT::FLOATLIZARD" />
+        <KeyWord name="OBJECT::FLOATSUCKER" />
+        <KeyWord name="OBJECT::FLYCARROT" />
+        <KeyWord name="OBJECT::FREEZEENEMIES" />
+        <KeyWord name="OBJECT::FREEZER" />
+        <KeyWord name="OBJECT::FRIES" />
+        <KeyWord name="OBJECT::FROZENSPRING" />
+        <KeyWord name="OBJECT::FRUITPLATFORM" />
+        <KeyWord name="OBJECT::FULLENERGY" />
+        <KeyWord name="OBJECT::GEMBARREL" />
+        <KeyWord name="OBJECT::GEMCRATE" />
+        <KeyWord name="OBJECT::GEMRING" />
+        <KeyWord name="OBJECT::GEMSTOMP" />
+        <KeyWord name="OBJECT::GENERATOR" />
+        <KeyWord name="OBJECT::GOLDCOIN" />
+        <KeyWord name="OBJECT::GRAPES" />
+        <KeyWord name="OBJECT::GRASSPLATFORM" />
+        <KeyWord name="OBJECT::GREENGEM" />
+        <KeyWord name="OBJECT::GREENSPRING" />
+        <KeyWord name="OBJECT::GUN8AMMO3" />
+        <KeyWord name="OBJECT::GUN8POWERUP" />
+        <KeyWord name="OBJECT::GUN9AMMO3" />
+        <KeyWord name="OBJECT::GUN9POWERUP" />
+        <KeyWord name="OBJECT::GUNBARREL" />
+        <KeyWord name="OBJECT::GUNCRATE" />
+        <KeyWord name="OBJECT::HAM" />
+        <KeyWord name="OBJECT::HATTER" />
+        <KeyWord name="OBJECT::HELMUT" />
+        <KeyWord name="OBJECT::HORBLUESPRING" />
+        <KeyWord name="OBJECT::HORGREENSPRING" />
+        <KeyWord name="OBJECT::HORREDSPRING" />
+        <KeyWord name="OBJECT::ICEAMMO3" />
+        <KeyWord name="OBJECT::ICEAMMO15" />
+        <KeyWord name="OBJECT::ICEBULLET" />
+        <KeyWord name="OBJECT::ICEBULLETPU" />
+        <KeyWord name="OBJECT::ICECREAM" />
+        <KeyWord name="OBJECT::ICEPOWERUP" />
+        <KeyWord name="OBJECT::INVINCIBILITY" />
+        <KeyWord name="OBJECT::JUNGLEPOLE" />
+        <KeyWord name="OBJECT::LABRAT" />
+        <KeyWord name="OBJECT::LASER" />
+        <KeyWord name="OBJECT::LEFTPADDLE" />
+        <KeyWord name="OBJECT::LEMON" />
+        <KeyWord name="OBJECT::LETTUCE" />
+        <KeyWord name="OBJECT::LIGHTNINGSHIELD" />
+        <KeyWord name="OBJECT::LIGHTNINGSHIELDBULLET" />
+        <KeyWord name="OBJECT::LIME" />
+        <KeyWord name="OBJECT::LIZARD" />
+        <KeyWord name="OBJECT::MILK" />
+        <KeyWord name="OBJECT::MONKEY" />
+        <KeyWord name="OBJECT::MORPH" />
+        <KeyWord name="OBJECT::MOTH" />
+        <KeyWord name="OBJECT::NORMTURTLE" />
+        <KeyWord name="OBJECT::ONEUP" />
+        <KeyWord name="OBJECT::ONEUPBARREL" />
+        <KeyWord name="OBJECT::ONEUPCRATE" />
+        <KeyWord name="OBJECT::ORANGE" />
+        <KeyWord name="OBJECT::Object" />
+        <KeyWord name="OBJECT::PACMANGHOST" />
+        <KeyWord name="OBJECT::PEACH" />
+        <KeyWord name="OBJECT::PEAR" />
+        <KeyWord name="OBJECT::PEPSI" />
+        <KeyWord name="OBJECT::PIE" />
+        <KeyWord name="OBJECT::PINKPLATFORM" />
+        <KeyWord name="OBJECT::PIZZA" />
+        <KeyWord name="OBJECT::PLASMASHIELD" />
+        <KeyWord name="OBJECT::PLASMASHIELDBULLET" />
+        <KeyWord name="OBJECT::PRETZEL" />
+        <KeyWord name="OBJECT::PSYCHPOLE" />
+        <KeyWord name="OBJECT::PULSELIGHT" />
+        <KeyWord name="OBJECT::PULZELIGHT" />
+        <KeyWord name="OBJECT::PURPLEGEM" />
+        <KeyWord name="OBJECT::QUEEN" />
+        <KeyWord name="OBJECT::RAPIER" />
+        <KeyWord name="OBJECT::RAVEN" />
+        <KeyWord name="OBJECT::RECTBLUEGEM" />
+        <KeyWord name="OBJECT::RECTGREENGEM" />
+        <KeyWord name="OBJECT::RECTREDGEM" />
+        <KeyWord name="OBJECT::REDGEM" />
+        <KeyWord name="OBJECT::REDSPRING" />
+        <KeyWord name="OBJECT::RFAMMO3" />
+        <KeyWord name="OBJECT::RFAMMO15" />
+        <KeyWord name="OBJECT::RFBULLET" />
+        <KeyWord name="OBJECT::RFBULLETPU" />
+        <KeyWord name="OBJECT::RFPOWERUP" />
+        <KeyWord name="OBJECT::RIGHTPADDLE" />
+        <KeyWord name="OBJECT::ROBOT" />
+        <KeyWord name="OBJECT::ROCKETTURTLE" />
+        <KeyWord name="OBJECT::ROTATINGROCK" />
+        <KeyWord name="OBJECT::SANDWICH" />
+        <KeyWord name="OBJECT::SAVEPOST" />
+        <KeyWord name="OBJECT::SEEKERAMMO3" />
+        <KeyWord name="OBJECT::SEEKERAMMO15" />
+        <KeyWord name="OBJECT::SEEKERBULLET" />
+        <KeyWord name="OBJECT::SEEKERBULLETPU" />
+        <KeyWord name="OBJECT::SEEKERPOWERUP" />
+        <KeyWord name="OBJECT::SHARD" />
+        <KeyWord name="OBJECT::SILVERCOIN" />
+        <KeyWord name="OBJECT::SKELETON" />
+        <KeyWord name="OBJECT::SMALLTREE" />
+        <KeyWord name="OBJECT::SMOKERING" />
+        <KeyWord name="OBJECT::SNOW" />
+        <KeyWord name="OBJECT::SODAPOP" />
+        <KeyWord name="OBJECT::SOFTDRINK" />
+        <KeyWord name="OBJECT::SONICPLATFORM" />
+        <KeyWord name="OBJECT::SPARK" />
+        <KeyWord name="OBJECT::SPIKEBOLL" />
+        <KeyWord name="OBJECT::SPIKEBOLL3D" />
+        <KeyWord name="OBJECT::SPIKEPLATFORM" />
+        <KeyWord name="OBJECT::SPRINGCORD" />
+        <KeyWord name="OBJECT::SPRINGCRATE" />
+        <KeyWord name="OBJECT::STANDMONKEY" />
+        <KeyWord name="OBJECT::STEADYLIGHT" />
+        <KeyWord name="OBJECT::STEAM" />
+        <KeyWord name="OBJECT::STOMPSCENERY" />
+        <KeyWord name="OBJECT::STOPWATCH" />
+        <KeyWord name="OBJECT::STRAWBERRY" />
+        <KeyWord name="OBJECT::SUCKER" />
+        <KeyWord name="OBJECT::SUPERGEM" />
+        <KeyWord name="OBJECT::SWINGINGVINE" />
+        <KeyWord name="OBJECT::TACO" />
+        <KeyWord name="OBJECT::THING" />
+        <KeyWord name="OBJECT::TNT" />
+        <KeyWord name="OBJECT::TNTAMMO3" />
+        <KeyWord name="OBJECT::TNTDESTRUCTSCENERY" />
+        <KeyWord name="OBJECT::TNTPOWERUP" />
+        <KeyWord name="OBJECT::TOASTERAMMO3" />
+        <KeyWord name="OBJECT::TOASTERAMMO15" />
+        <KeyWord name="OBJECT::TOASTERBULLET" />
+        <KeyWord name="OBJECT::TOASTERBULLETPU" />
+        <KeyWord name="OBJECT::TOASTERPOWERUP" />
+        <KeyWord name="OBJECT::TRIGGERCRATE" />
+        <KeyWord name="OBJECT::TRIGGERSCENERY" />
+        <KeyWord name="OBJECT::TUBETURTLE" />
+        <KeyWord name="OBJECT::TUFBOSS" />
+        <KeyWord name="OBJECT::TUFTURT" />
+        <KeyWord name="OBJECT::TURTLESHELL" />
+        <KeyWord name="OBJECT::TWEEDLEBOSS" />
+        <KeyWord name="OBJECT::UTERUS" />
+        <KeyWord name="OBJECT::UTERUSSPIKEBALL" />
+        <KeyWord name="OBJECT::WARP" />
+        <KeyWord name="OBJECT::WATERMELON" />
+        <KeyWord name="OBJECT::WATERSHIELD" />
+        <KeyWord name="OBJECT::WATERSHIELDBULLET" />
+        <KeyWord name="OBJECT::WEENIE" />
+        <KeyWord name="OBJECT::WITCH" />
+        <KeyWord name="OBJECT::XMASBILSY" />
+        <KeyWord name="OBJECT::XMASFLOATLIZARD" />
+        <KeyWord name="OBJECT::XMASLIZARD" />
+        <KeyWord name="OBJECT::XMASNORMTURTLE" />
+        <KeyWord name="PARTICLE::FIRE" />
+        <KeyWord name="PARTICLE::FLOWER" />
+        <KeyWord name="PARTICLE::ICETRAIL" />
+        <KeyWord name="PARTICLE::INACTIVE" />
+        <KeyWord name="PARTICLE::LEAF" />
+        <KeyWord name="PARTICLE::PIXEL" />
+        <KeyWord name="PARTICLE::RAIN" />
+        <KeyWord name="PARTICLE::SMOKE" />
+        <KeyWord name="PARTICLE::SNOW" />
+        <KeyWord name="PARTICLE::SPARK" />
+        <KeyWord name="PARTICLE::STAR" />
+        <KeyWord name="PARTICLE::STRING" />
+        <KeyWord name="PARTICLE::TILE" />
+        <KeyWord name="PARTICLE::Type" />
+        <KeyWord name="RABBIT::AIRBOARD" />
+        <KeyWord name="RABBIT::AIRBOARDTURN" />
+        <KeyWord name="RABBIT::Anim" />
+        <KeyWord name="RABBIT::BUTTSTOMPLAND" />
+        <KeyWord name="RABBIT::CORPSE" />
+        <KeyWord name="RABBIT::DIE" />
+        <KeyWord name="RABBIT::DIVE" />
+        <KeyWord name="RABBIT::DIVEFIREQUIT" />
+        <KeyWord name="RABBIT::DIVEFIRERIGHT" />
+        <KeyWord name="RABBIT::DIVEUP" />
+        <KeyWord name="RABBIT::EARBRACHIATE" />
+        <KeyWord name="RABBIT::ENDOFLEVEL" />
+        <KeyWord name="RABBIT::FALL" />
+        <KeyWord name="RABBIT::FALLBUTTSTOMP" />
+        <KeyWord name="RABBIT::FALLLAND" />
+        <KeyWord name="RABBIT::FIRE" />
+        <KeyWord name="RABBIT::FIREUP" />
+        <KeyWord name="RABBIT::FIREUPQUIT" />
+        <KeyWord name="RABBIT::FROG" />
+        <KeyWord name="RABBIT::HANGFIREQUIT" />
+        <KeyWord name="RABBIT::HANGFIREREST" />
+        <KeyWord name="RABBIT::HANGFIREUP" />
+        <KeyWord name="RABBIT::HANGIDLE1" />
+        <KeyWord name="RABBIT::HANGIDLE2" />
+        <KeyWord name="RABBIT::HANGINGFIREQUIT" />
+        <KeyWord name="RABBIT::HANGINGFIRERIGHT" />
+        <KeyWord name="RABBIT::HELICOPTER" />
+        <KeyWord name="RABBIT::HELICOPTERFIREQUIT" />
+        <KeyWord name="RABBIT::HELICOPTERFIRERIGHT" />
+        <KeyWord name="RABBIT::HPOLE" />
+        <KeyWord name="RABBIT::HURT" />
+        <KeyWord name="RABBIT::IDLE1" />
+        <KeyWord name="RABBIT::IDLE2" />
+        <KeyWord name="RABBIT::IDLE3" />
+        <KeyWord name="RABBIT::IDLE4" />
+        <KeyWord name="RABBIT::IDLE5" />
+        <KeyWord name="RABBIT::JUMPFIREQUIT" />
+        <KeyWord name="RABBIT::JUMPFIRERIGHT" />
+        <KeyWord name="RABBIT::JUMPING1" />
+        <KeyWord name="RABBIT::JUMPING2" />
+        <KeyWord name="RABBIT::JUMPING3" />
+        <KeyWord name="RABBIT::LEDGEWIGGLE" />
+        <KeyWord name="RABBIT::LIFT" />
+        <KeyWord name="RABBIT::LIFTJUMP" />
+        <KeyWord name="RABBIT::LIFTLAND" />
+        <KeyWord name="RABBIT::LOOKUP" />
+        <KeyWord name="RABBIT::LOOPY" />
+        <KeyWord name="RABBIT::PUSH" />
+        <KeyWord name="RABBIT::QUIT" />
+        <KeyWord name="RABBIT::REV1" />
+        <KeyWord name="RABBIT::REV2" />
+        <KeyWord name="RABBIT::REV3" />
+        <KeyWord name="RABBIT::RIGHTFALL" />
+        <KeyWord name="RABBIT::RIGHTJUMP" />
+        <KeyWord name="RABBIT::ROLLING" />
+        <KeyWord name="RABBIT::RUN1" />
+        <KeyWord name="RABBIT::RUN2" />
+        <KeyWord name="RABBIT::RUN3" />
+        <KeyWord name="RABBIT::SKID1" />
+        <KeyWord name="RABBIT::SKID2" />
+        <KeyWord name="RABBIT::SKID3" />
+        <KeyWord name="RABBIT::SPRING" />
+        <KeyWord name="RABBIT::STAND" />
+        <KeyWord name="RABBIT::STATIONARYJUMP" />
+        <KeyWord name="RABBIT::STATIONARYJUMPEND" />
+        <KeyWord name="RABBIT::STATIONARYJUMPSTART" />
+        <KeyWord name="RABBIT::STONED" />
+        <KeyWord name="RABBIT::SWIMDOWN" />
+        <KeyWord name="RABBIT::SWIMRIGHT" />
+        <KeyWord name="RABBIT::SWIMTURN1" />
+        <KeyWord name="RABBIT::SWIMTURN2" />
+        <KeyWord name="RABBIT::SWIMUP" />
+        <KeyWord name="RABBIT::SWINGINGVINE" />
+        <KeyWord name="RABBIT::TELEPORT" />
+        <KeyWord name="RABBIT::TELEPORTFALL" />
+        <KeyWord name="RABBIT::TELEPORTFALLING" />
+        <KeyWord name="RABBIT::TELEPORTFALLTELEPORT" />
+        <KeyWord name="RABBIT::TELEPORTSTAND" />
+        <KeyWord name="RABBIT::VPOLE" />
+        <KeyWord name="SHIELD::BUBBLE" />
+        <KeyWord name="SHIELD::FIRE" />
+        <KeyWord name="SHIELD::LASER" />
+        <KeyWord name="SHIELD::LIGHTNING" />
+        <KeyWord name="SHIELD::NONE" />
+        <KeyWord name="SHIELD::PLASMA" />
+        <KeyWord name="SHIELD::Shield" />
+        <KeyWord name="SHIELD::WATER" />
+        <KeyWord name="SOUND::AMMO_BLUB1" />
+        <KeyWord name="SOUND::AMMO_BLUB2" />
+        <KeyWord name="SOUND::AMMO_BMP1" />
+        <KeyWord name="SOUND::AMMO_BMP2" />
+        <KeyWord name="SOUND::AMMO_BMP3" />
+        <KeyWord name="SOUND::AMMO_BMP4" />
+        <KeyWord name="SOUND::AMMO_BMP5" />
+        <KeyWord name="SOUND::AMMO_BMP6" />
+        <KeyWord name="SOUND::AMMO_BOEM1" />
+        <KeyWord name="SOUND::AMMO_BUL1" />
+        <KeyWord name="SOUND::AMMO_BULFL1" />
+        <KeyWord name="SOUND::AMMO_BULFL2" />
+        <KeyWord name="SOUND::AMMO_BULFL3" />
+        <KeyWord name="SOUND::AMMO_FIREGUN1A" />
+        <KeyWord name="SOUND::AMMO_FIREGUN2A" />
+        <KeyWord name="SOUND::AMMO_FUMP" />
+        <KeyWord name="SOUND::AMMO_GUN1" />
+        <KeyWord name="SOUND::AMMO_GUN2" />
+        <KeyWord name="SOUND::AMMO_GUN3PLOP" />
+        <KeyWord name="SOUND::AMMO_GUNFLP" />
+        <KeyWord name="SOUND::AMMO_GUNFLP1" />
+        <KeyWord name="SOUND::AMMO_GUNFLP2" />
+        <KeyWord name="SOUND::AMMO_GUNFLP3" />
+        <KeyWord name="SOUND::AMMO_GUNFLP4" />
+        <KeyWord name="SOUND::AMMO_GUNFLPL" />
+        <KeyWord name="SOUND::AMMO_GUNJAZZ" />
+        <KeyWord name="SOUND::AMMO_GUNVELOCITY" />
+        <KeyWord name="SOUND::AMMO_ICEGUN" />
+        <KeyWord name="SOUND::AMMO_ICEGUN2" />
+        <KeyWord name="SOUND::AMMO_ICEGUNPU" />
+        <KeyWord name="SOUND::AMMO_ICEPU1" />
+        <KeyWord name="SOUND::AMMO_ICEPU2" />
+        <KeyWord name="SOUND::AMMO_ICEPU3" />
+        <KeyWord name="SOUND::AMMO_ICEPU4" />
+        <KeyWord name="SOUND::AMMO_LASER" />
+        <KeyWord name="SOUND::AMMO_LASER2" />
+        <KeyWord name="SOUND::AMMO_LASER3" />
+        <KeyWord name="SOUND::AMMO_LAZRAYS" />
+        <KeyWord name="SOUND::AMMO_MISSILE" />
+        <KeyWord name="SOUND::AMMO_SPZBL1" />
+        <KeyWord name="SOUND::AMMO_SPZBL2" />
+        <KeyWord name="SOUND::AMMO_SPZBL3" />
+        <KeyWord name="SOUND::BAT_BATFLY1" />
+        <KeyWord name="SOUND::BILSBOSS_BILLAPPEAR" />
+        <KeyWord name="SOUND::BILSBOSS_FINGERSNAP" />
+        <KeyWord name="SOUND::BILSBOSS_FIRE" />
+        <KeyWord name="SOUND::BILSBOSS_FIRESTART" />
+        <KeyWord name="SOUND::BILSBOSS_SCARY3" />
+        <KeyWord name="SOUND::BILSBOSS_THUNDER" />
+        <KeyWord name="SOUND::BILSBOSS_ZIP" />
+        <KeyWord name="SOUND::BONUS_BONUS1" />
+        <KeyWord name="SOUND::BONUS_BONUSBLUB" />
+        <KeyWord name="SOUND::BUBBA_BUBBABOUNCE1" />
+        <KeyWord name="SOUND::BUBBA_BUBBABOUNCE2" />
+        <KeyWord name="SOUND::BUBBA_BUBBAEXPLO" />
+        <KeyWord name="SOUND::BUBBA_FROG2" />
+        <KeyWord name="SOUND::BUBBA_FROG3" />
+        <KeyWord name="SOUND::BUBBA_FROG4" />
+        <KeyWord name="SOUND::BUBBA_FROG5" />
+        <KeyWord name="SOUND::BUBBA_SNEEZE2" />
+        <KeyWord name="SOUND::BUBBA_TORNADOATTACK2" />
+        <KeyWord name="SOUND::BUMBEE_BEELOOP" />
+        <KeyWord name="SOUND::CATERPIL_RIDOE" />
+        <KeyWord name="SOUND::COMMON_AIRBOARD" />
+        <KeyWord name="SOUND::COMMON_AIRBTURN" />
+        <KeyWord name="SOUND::COMMON_AIRBTURN2" />
+        <KeyWord name="SOUND::COMMON_BASE1" />
+        <KeyWord name="SOUND::COMMON_BELL_FIRE" />
+        <KeyWord name="SOUND::COMMON_BELL_FIRE2" />
+        <KeyWord name="SOUND::COMMON_BENZIN1" />
+        <KeyWord name="SOUND::COMMON_BIRDFLY" />
+        <KeyWord name="SOUND::COMMON_BIRDFLY2" />
+        <KeyWord name="SOUND::COMMON_BLOKPLOP" />
+        <KeyWord name="SOUND::COMMON_BLUB1" />
+        <KeyWord name="SOUND::COMMON_BUBBLGN1" />
+        <KeyWord name="SOUND::COMMON_BURN" />
+        <KeyWord name="SOUND::COMMON_BURNIN" />
+        <KeyWord name="SOUND::COMMON_CANSPS" />
+        <KeyWord name="SOUND::COMMON_CLOCK" />
+        <KeyWord name="SOUND::COMMON_COIN" />
+        <KeyWord name="SOUND::COMMON_COLLAPS" />
+        <KeyWord name="SOUND::COMMON_CUP" />
+        <KeyWord name="SOUND::COMMON_DAMPED1" />
+        <KeyWord name="SOUND::COMMON_DOWN" />
+        <KeyWord name="SOUND::COMMON_DOWNFL2" />
+        <KeyWord name="SOUND::COMMON_DRINKSPAZZ1" />
+        <KeyWord name="SOUND::COMMON_DRINKSPAZZ2" />
+        <KeyWord name="SOUND::COMMON_DRINKSPAZZ3" />
+        <KeyWord name="SOUND::COMMON_DRINKSPAZZ4" />
+        <KeyWord name="SOUND::COMMON_EAT1" />
+        <KeyWord name="SOUND::COMMON_EAT2" />
+        <KeyWord name="SOUND::COMMON_EAT3" />
+        <KeyWord name="SOUND::COMMON_EAT4" />
+        <KeyWord name="SOUND::COMMON_ELECTRIC1" />
+        <KeyWord name="SOUND::COMMON_ELECTRIC2" />
+        <KeyWord name="SOUND::COMMON_ELECTRICHIT" />
+        <KeyWord name="SOUND::COMMON_EXPL_TNT" />
+        <KeyWord name="SOUND::COMMON_EXPSM1" />
+        <KeyWord name="SOUND::COMMON_FLAMER" />
+        <KeyWord name="SOUND::COMMON_FLAP" />
+        <KeyWord name="SOUND::COMMON_FOEW1" />
+        <KeyWord name="SOUND::COMMON_FOEW2" />
+        <KeyWord name="SOUND::COMMON_FOEW3" />
+        <KeyWord name="SOUND::COMMON_FOEW4" />
+        <KeyWord name="SOUND::COMMON_FOEW5" />
+        <KeyWord name="SOUND::COMMON_GEMSMSh2" />
+        <KeyWord name="SOUND::COMMON_GLASS2" />
+        <KeyWord name="SOUND::COMMON_GUNSM1" />
+        <KeyWord name="SOUND::COMMON_HARP1" />
+        <KeyWord name="SOUND::COMMON_HEAD" />
+        <KeyWord name="SOUND::COMMON_HELI1" />
+        <KeyWord name="SOUND::COMMON_HIBELL" />
+        <KeyWord name="SOUND::COMMON_HOLYFLUT" />
+        <KeyWord name="SOUND::COMMON_HORN1" />
+        <KeyWord name="SOUND::COMMON_ICECRUSH" />
+        <KeyWord name="SOUND::COMMON_IMPACT1" />
+        <KeyWord name="SOUND::COMMON_IMPACT2" />
+        <KeyWord name="SOUND::COMMON_IMPACT3" />
+        <KeyWord name="SOUND::COMMON_IMPACT4" />
+        <KeyWord name="SOUND::COMMON_IMPACT5" />
+        <KeyWord name="SOUND::COMMON_IMPACT6" />
+        <KeyWord name="SOUND::COMMON_IMPACT7" />
+        <KeyWord name="SOUND::COMMON_IMPACT8" />
+        <KeyWord name="SOUND::COMMON_IMPACT9" />
+        <KeyWord name="SOUND::COMMON_ITEMTRE" />
+        <KeyWord name="SOUND::COMMON_JUMP" />
+        <KeyWord name="SOUND::COMMON_JUMP2" />
+        <KeyWord name="SOUND::COMMON_LAND" />
+        <KeyWord name="SOUND::COMMON_LAND1" />
+        <KeyWord name="SOUND::COMMON_LAND2" />
+        <KeyWord name="SOUND::COMMON_LANDCAN1" />
+        <KeyWord name="SOUND::COMMON_LANDCAN2" />
+        <KeyWord name="SOUND::COMMON_LANDPOP" />
+        <KeyWord name="SOUND::COMMON_LOADJAZZ" />
+        <KeyWord name="SOUND::COMMON_LOADSPAZ" />
+        <KeyWord name="SOUND::COMMON_METALHIT" />
+        <KeyWord name="SOUND::COMMON_MONITOR" />
+        <KeyWord name="SOUND::COMMON_NOCOIN" />
+        <KeyWord name="SOUND::COMMON_PICKUP1" />
+        <KeyWord name="SOUND::COMMON_PICKUPW1" />
+        <KeyWord name="SOUND::COMMON_PISTOL1" />
+        <KeyWord name="SOUND::COMMON_PLOOP1" />
+        <KeyWord name="SOUND::COMMON_PLOP1" />
+        <KeyWord name="SOUND::COMMON_PLOP2" />
+        <KeyWord name="SOUND::COMMON_PLOP3" />
+        <KeyWord name="SOUND::COMMON_PLOP4" />
+        <KeyWord name="SOUND::COMMON_PLOPKORK" />
+        <KeyWord name="SOUND::COMMON_PREEXPL1" />
+        <KeyWord name="SOUND::COMMON_PREHELI" />
+        <KeyWord name="SOUND::COMMON_REVUP" />
+        <KeyWord name="SOUND::COMMON_RINGGUN" />
+        <KeyWord name="SOUND::COMMON_RINGGUN2" />
+        <KeyWord name="SOUND::COMMON_SHIELD1" />
+        <KeyWord name="SOUND::COMMON_SHIELD4" />
+        <KeyWord name="SOUND::COMMON_SHIELD_ELEC" />
+        <KeyWord name="SOUND::COMMON_SHLDOF3" />
+        <KeyWord name="SOUND::COMMON_SLIP" />
+        <KeyWord name="SOUND::COMMON_SMASH" />
+        <KeyWord name="SOUND::COMMON_SPLAT1" />
+        <KeyWord name="SOUND::COMMON_SPLAT2" />
+        <KeyWord name="SOUND::COMMON_SPLAT3" />
+        <KeyWord name="SOUND::COMMON_SPLAT4" />
+        <KeyWord name="SOUND::COMMON_SPLUT" />
+        <KeyWord name="SOUND::COMMON_SPRING1" />
+        <KeyWord name="SOUND::COMMON_STEAM" />
+        <KeyWord name="SOUND::COMMON_STEP" />
+        <KeyWord name="SOUND::COMMON_STRETCH" />
+        <KeyWord name="SOUND::COMMON_SWISh2" />
+        <KeyWord name="SOUND::COMMON_SWISh3" />
+        <KeyWord name="SOUND::COMMON_SWISH3" />
+        <KeyWord name="SOUND::COMMON_SWISH4" />
+        <KeyWord name="SOUND::COMMON_SWISH5" />
+        <KeyWord name="SOUND::COMMON_SWISH6" />
+        <KeyWord name="SOUND::COMMON_SWISH7" />
+        <KeyWord name="SOUND::COMMON_SWISH8" />
+        <KeyWord name="SOUND::COMMON_TELPORT1" />
+        <KeyWord name="SOUND::COMMON_TELPORT2" />
+        <KeyWord name="SOUND::COMMON_UP" />
+        <KeyWord name="SOUND::COMMON_WATER" />
+        <KeyWord name="SOUND::COMMON_WOOD1" />
+        <KeyWord name="SOUND::DEMON_RUN" />
+        <KeyWord name="SOUND::DEVILDEVAN_DRAGONFIRE" />
+        <KeyWord name="SOUND::DEVILDEVAN_FLAP" />
+        <KeyWord name="SOUND::DEVILDEVAN_FROG4" />
+        <KeyWord name="SOUND::DEVILDEVAN_JUMPUP" />
+        <KeyWord name="SOUND::DEVILDEVAN_LAUGH" />
+        <KeyWord name="SOUND::DEVILDEVAN_PHASER2" />
+        <KeyWord name="SOUND::DEVILDEVAN_STRECh3" />
+        <KeyWord name="SOUND::DEVILDEVAN_STRECHTAIL" />
+        <KeyWord name="SOUND::DEVILDEVAN_STRETCh2" />
+        <KeyWord name="SOUND::DEVILDEVAN_STRETCH3" />
+        <KeyWord name="SOUND::DEVILDEVAN_VANISh2" />
+        <KeyWord name="SOUND::DEVILDEVAN_WHISTLEDESCENDING2" />
+        <KeyWord name="SOUND::DEVILDEVAN_WINGSOUT" />
+        <KeyWord name="SOUND::DOG_AGRESSIV" />
+        <KeyWord name="SOUND::DOG_SNIF1" />
+        <KeyWord name="SOUND::DOG_WAF1" />
+        <KeyWord name="SOUND::DOG_WAF2" />
+        <KeyWord name="SOUND::DOG_WAF3" />
+        <KeyWord name="SOUND::DRAGFLY_BEELOOP" />
+        <KeyWord name="SOUND::ENDING_OHTHANK" />
+        <KeyWord name="SOUND::ENDTUNEJAZZ_TUNE" />
+        <KeyWord name="SOUND::ENDTUNELORI_CAKE" />
+        <KeyWord name="SOUND::ENDTUNESPAZ_TUNE" />
+        <KeyWord name="SOUND::EPICLOGO_EPIC1" />
+        <KeyWord name="SOUND::EPICLOGO_EPIC2" />
+        <KeyWord name="SOUND::EVA_KISS1" />
+        <KeyWord name="SOUND::EVA_KISS2" />
+        <KeyWord name="SOUND::EVA_KISS3" />
+        <KeyWord name="SOUND::EVA_KISS4" />
+        <KeyWord name="SOUND::FAN_FAN" />
+        <KeyWord name="SOUND::FATCHK_HIT1" />
+        <KeyWord name="SOUND::FATCHK_HIT2" />
+        <KeyWord name="SOUND::FATCHK_HIT3" />
+        <KeyWord name="SOUND::FENCER_FENCE1" />
+        <KeyWord name="SOUND::FROG_FROG" />
+        <KeyWord name="SOUND::FROG_FROG1" />
+        <KeyWord name="SOUND::FROG_FROG2" />
+        <KeyWord name="SOUND::FROG_FROG3" />
+        <KeyWord name="SOUND::FROG_FROG4" />
+        <KeyWord name="SOUND::FROG_FROG5" />
+        <KeyWord name="SOUND::FROG_JAZZ2FROG" />
+        <KeyWord name="SOUND::FROG_TONG" />
+        <KeyWord name="SOUND::GLOVE_HIT" />
+        <KeyWord name="SOUND::HATTER_CUP" />
+        <KeyWord name="SOUND::HATTER_HAT" />
+        <KeyWord name="SOUND::HATTER_PTOEI" />
+        <KeyWord name="SOUND::HATTER_SPLIN" />
+        <KeyWord name="SOUND::HATTER_SPLOUT" />
+        <KeyWord name="SOUND::INTRO_BLOW" />
+        <KeyWord name="SOUND::INTRO_BOEM1" />
+        <KeyWord name="SOUND::INTRO_BOEM2" />
+        <KeyWord name="SOUND::INTRO_BRAKE" />
+        <KeyWord name="SOUND::INTRO_END" />
+        <KeyWord name="SOUND::INTRO_GRAB" />
+        <KeyWord name="SOUND::INTRO_GREN1" />
+        <KeyWord name="SOUND::INTRO_GREN2" />
+        <KeyWord name="SOUND::INTRO_GREN3" />
+        <KeyWord name="SOUND::INTRO_GUNM0" />
+        <KeyWord name="SOUND::INTRO_GUNM1" />
+        <KeyWord name="SOUND::INTRO_GUNM2" />
+        <KeyWord name="SOUND::INTRO_HELI" />
+        <KeyWord name="SOUND::INTRO_HITSPAZ" />
+        <KeyWord name="SOUND::INTRO_HITTURT" />
+        <KeyWord name="SOUND::INTRO_IFEEL" />
+        <KeyWord name="SOUND::INTRO_INHALE" />
+        <KeyWord name="SOUND::INTRO_INSECT" />
+        <KeyWord name="SOUND::INTRO_KATROL" />
+        <KeyWord name="SOUND::INTRO_LAND" />
+        <KeyWord name="SOUND::INTRO_MONSTER" />
+        <KeyWord name="SOUND::INTRO_MONSTER2" />
+        <KeyWord name="SOUND::INTRO_ROCK" />
+        <KeyWord name="SOUND::INTRO_ROPE1" />
+        <KeyWord name="SOUND::INTRO_ROPE2" />
+        <KeyWord name="SOUND::INTRO_RUN" />
+        <KeyWord name="SOUND::INTRO_SHOT1" />
+        <KeyWord name="SOUND::INTRO_SHOTGRN" />
+        <KeyWord name="SOUND::INTRO_SKI" />
+        <KeyWord name="SOUND::INTRO_STRING" />
+        <KeyWord name="SOUND::INTRO_SWISh2" />
+        <KeyWord name="SOUND::INTRO_SWISh3" />
+        <KeyWord name="SOUND::INTRO_SWISH3" />
+        <KeyWord name="SOUND::INTRO_SWISH4" />
+        <KeyWord name="SOUND::INTRO_UHTURT" />
+        <KeyWord name="SOUND::INTRO_UP1" />
+        <KeyWord name="SOUND::INTRO_UP2" />
+        <KeyWord name="SOUND::INTRO_WIND_01" />
+        <KeyWord name="SOUND::JAZZSOUNDS_BALANCE" />
+        <KeyWord name="SOUND::JAZZSOUNDS_HEY1" />
+        <KeyWord name="SOUND::JAZZSOUNDS_HEY2" />
+        <KeyWord name="SOUND::JAZZSOUNDS_HEY3" />
+        <KeyWord name="SOUND::JAZZSOUNDS_HEY4" />
+        <KeyWord name="SOUND::JAZZSOUNDS_IDLE" />
+        <KeyWord name="SOUND::JAZZSOUNDS_JAZZV1" />
+        <KeyWord name="SOUND::JAZZSOUNDS_JAZZV2" />
+        <KeyWord name="SOUND::JAZZSOUNDS_JAZZV3" />
+        <KeyWord name="SOUND::JAZZSOUNDS_JAZZV4" />
+        <KeyWord name="SOUND::JAZZSOUNDS_JUMMY" />
+        <KeyWord name="SOUND::JAZZSOUNDS_PFOE" />
+        <KeyWord name="SOUND::LABRAT_BITE" />
+        <KeyWord name="SOUND::LABRAT_EYE2" />
+        <KeyWord name="SOUND::LABRAT_EYE3" />
+        <KeyWord name="SOUND::LABRAT_MOUSE1" />
+        <KeyWord name="SOUND::LABRAT_MOUSE2" />
+        <KeyWord name="SOUND::LABRAT_MOUSE3" />
+        <KeyWord name="SOUND::LIZARD_LIZ1" />
+        <KeyWord name="SOUND::LIZARD_LIZ2" />
+        <KeyWord name="SOUND::LIZARD_LIZ4" />
+        <KeyWord name="SOUND::LIZARD_LIZ6" />
+        <KeyWord name="SOUND::LORISOUNDS_DIE1" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT0" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT1" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT2" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT3" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT4" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT5" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT6" />
+        <KeyWord name="SOUND::LORISOUNDS_HURT7" />
+        <KeyWord name="SOUND::LORISOUNDS_LORI1" />
+        <KeyWord name="SOUND::LORISOUNDS_LORI2" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIBOOM" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIFALL" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIJUMP" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIJUMP2" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIJUMP3" />
+        <KeyWord name="SOUND::LORISOUNDS_LORIJUMP4" />
+        <KeyWord name="SOUND::LORISOUNDS_TOUCH" />
+        <KeyWord name="SOUND::LORISOUNDS_WEHOO" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT0" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT1" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT2" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT3" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT4" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT5" />
+        <KeyWord name="SOUND::MENUSOUNDS_SELECT6" />
+        <KeyWord name="SOUND::MENUSOUNDS_TYPE" />
+        <KeyWord name="SOUND::MENUSOUNDS_TYPEENTER" />
+        <KeyWord name="SOUND::MONKEY_SPLUT" />
+        <KeyWord name="SOUND::MONKEY_THROW" />
+        <KeyWord name="SOUND::MOTH_FLAPMOTH" />
+        <KeyWord name="SOUND::ORANGE_BOEML" />
+        <KeyWord name="SOUND::ORANGE_BOEMR" />
+        <KeyWord name="SOUND::ORANGE_BUBBELSL" />
+        <KeyWord name="SOUND::ORANGE_BUBBELSR" />
+        <KeyWord name="SOUND::ORANGE_GLAS1L" />
+        <KeyWord name="SOUND::ORANGE_GLAS1R" />
+        <KeyWord name="SOUND::ORANGE_GLAS2L" />
+        <KeyWord name="SOUND::ORANGE_GLAS2R" />
+        <KeyWord name="SOUND::ORANGE_MERGE" />
+        <KeyWord name="SOUND::ORANGE_SWEEP0L" />
+        <KeyWord name="SOUND::ORANGE_SWEEP0R" />
+        <KeyWord name="SOUND::ORANGE_SWEEP1L" />
+        <KeyWord name="SOUND::ORANGE_SWEEP1R" />
+        <KeyWord name="SOUND::ORANGE_SWEEP2L" />
+        <KeyWord name="SOUND::ORANGE_SWEEP2R" />
+        <KeyWord name="SOUND::P2_CRUNCH" />
+        <KeyWord name="SOUND::P2_FART" />
+        <KeyWord name="SOUND::P2_FOEW1" />
+        <KeyWord name="SOUND::P2_FOEW4" />
+        <KeyWord name="SOUND::P2_FOEW5" />
+        <KeyWord name="SOUND::P2_FROG1" />
+        <KeyWord name="SOUND::P2_FROG2" />
+        <KeyWord name="SOUND::P2_FROG3" />
+        <KeyWord name="SOUND::P2_FROG4" />
+        <KeyWord name="SOUND::P2_FROG5" />
+        <KeyWord name="SOUND::P2_KISS4" />
+        <KeyWord name="SOUND::P2_OPEN" />
+        <KeyWord name="SOUND::P2_PINCh2" />
+        <KeyWord name="SOUND::P2_PINCh3" />
+        <KeyWord name="SOUND::P2_PLOPSEQ1" />
+        <KeyWord name="SOUND::P2_PLOPSEQ2" />
+        <KeyWord name="SOUND::P2_PLOPSEQ3" />
+        <KeyWord name="SOUND::P2_PLOPSEQ4" />
+        <KeyWord name="SOUND::P2_POEP" />
+        <KeyWord name="SOUND::P2_PTOEI" />
+        <KeyWord name="SOUND::P2_SPLOUT" />
+        <KeyWord name="SOUND::P2_SPLUT" />
+        <KeyWord name="SOUND::P2_THROW" />
+        <KeyWord name="SOUND::P2_TONG" />
+        <KeyWord name="SOUND::PICKUPS_BOING_CHECK" />
+        <KeyWord name="SOUND::PICKUPS_HELI2" />
+        <KeyWord name="SOUND::PICKUPS_STRETCh2A" />
+        <KeyWord name="SOUND::PINBALL_BELL" />
+        <KeyWord name="SOUND::PINBALL_FLIP1" />
+        <KeyWord name="SOUND::PINBALL_FLIP2" />
+        <KeyWord name="SOUND::PINBALL_FLIP3" />
+        <KeyWord name="SOUND::PINBALL_FLIP4" />
+        <KeyWord name="SOUND::QUEEN_LADYUP" />
+        <KeyWord name="SOUND::QUEEN_SCREAM" />
+        <KeyWord name="SOUND::RAPIER_GOSTDIE" />
+        <KeyWord name="SOUND::RAPIER_GOSTLOOP" />
+        <KeyWord name="SOUND::RAPIER_GOSTOOOH" />
+        <KeyWord name="SOUND::RAPIER_GOSTRIP" />
+        <KeyWord name="SOUND::RAPIER_HITCHAR" />
+        <KeyWord name="SOUND::ROBOT_BIG1" />
+        <KeyWord name="SOUND::ROBOT_BIG2" />
+        <KeyWord name="SOUND::ROBOT_CAN1" />
+        <KeyWord name="SOUND::ROBOT_CAN2" />
+        <KeyWord name="SOUND::ROBOT_HYDRO" />
+        <KeyWord name="SOUND::ROBOT_HYDRO2" />
+        <KeyWord name="SOUND::ROBOT_HYDROFIL" />
+        <KeyWord name="SOUND::ROBOT_HYDROPUF" />
+        <KeyWord name="SOUND::ROBOT_IDLE1" />
+        <KeyWord name="SOUND::ROBOT_IDLE2" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN1" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN10" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN2" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN3" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN4" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN5" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN6" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN7" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN8" />
+        <KeyWord name="SOUND::ROBOT_JMPCAN9" />
+        <KeyWord name="SOUND::ROBOT_METAL1" />
+        <KeyWord name="SOUND::ROBOT_METAL2" />
+        <KeyWord name="SOUND::ROBOT_METAL3" />
+        <KeyWord name="SOUND::ROBOT_METAL4" />
+        <KeyWord name="SOUND::ROBOT_METAL5" />
+        <KeyWord name="SOUND::ROBOT_OPEN" />
+        <KeyWord name="SOUND::ROBOT_OUT" />
+        <KeyWord name="SOUND::ROBOT_POEP" />
+        <KeyWord name="SOUND::ROBOT_POLE" />
+        <KeyWord name="SOUND::ROBOT_SHOOT" />
+        <KeyWord name="SOUND::ROBOT_STEP1" />
+        <KeyWord name="SOUND::ROBOT_STEP2" />
+        <KeyWord name="SOUND::ROBOT_STEP3" />
+        <KeyWord name="SOUND::ROCK_ROCK1" />
+        <KeyWord name="SOUND::RUSH_RUSH" />
+        <KeyWord name="SOUND::SCIENCE_PLOPKAOS" />
+        <KeyWord name="SOUND::SKELETON_BONE1" />
+        <KeyWord name="SOUND::SKELETON_BONE2" />
+        <KeyWord name="SOUND::SKELETON_BONE3" />
+        <KeyWord name="SOUND::SKELETON_BONE5" />
+        <KeyWord name="SOUND::SKELETON_BONE6" />
+        <KeyWord name="SOUND::SKELETON_BONE7" />
+        <KeyWord name="SOUND::SMALTREE_FALL" />
+        <KeyWord name="SOUND::SMALTREE_GROUND" />
+        <KeyWord name="SOUND::SMALTREE_HEAD" />
+        <KeyWord name="SOUND::SONCSHIP_METAL1" />
+        <KeyWord name="SOUND::SONCSHIP_MISSILE2" />
+        <KeyWord name="SOUND::SONCSHIP_SCRAPE" />
+        <KeyWord name="SOUND::SONCSHIP_SHIPLOOP" />
+        <KeyWord name="SOUND::SONCSHIP_TARGETLOCK" />
+        <KeyWord name="SOUND::SPAZSOUNDS_AUTSCh2" />
+        <KeyWord name="SOUND::SPAZSOUNDS_AUTSCh3" />
+        <KeyWord name="SOUND::SPAZSOUNDS_BIRDSIT" />
+        <KeyWord name="SOUND::SPAZSOUNDS_BURP" />
+        <KeyWord name="SOUND::SPAZSOUNDS_CHIRP" />
+        <KeyWord name="SOUND::SPAZSOUNDS_EATBIRD" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HAHAHA" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HAHAHA2" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HAPPY" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HIHI" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HOHOHO1" />
+        <KeyWord name="SOUND::SPAZSOUNDS_HOOO" />
+        <KeyWord name="SOUND::SPAZSOUNDS_KARATE7" />
+        <KeyWord name="SOUND::SPAZSOUNDS_KARATE8" />
+        <KeyWord name="SOUND::SPAZSOUNDS_OHOH" />
+        <KeyWord name="SOUND::SPAZSOUNDS_OOOH" />
+        <KeyWord name="SOUND::SPAZSOUNDS_WOOHOO" />
+        <KeyWord name="SOUND::SPAZSOUNDS_YAHOO" />
+        <KeyWord name="SOUND::SPAZSOUNDS_YAHOO2" />
+        <KeyWord name="SOUND::SPRING_BOING_DOWN" />
+        <KeyWord name="SOUND::SPRING_SPRING1" />
+        <KeyWord name="SOUND::STEAM_STEAM" />
+        <KeyWord name="SOUND::STONED_STONED" />
+        <KeyWord name="SOUND::SUCKER_FART" />
+        <KeyWord name="SOUND::SUCKER_PINCh2" />
+        <KeyWord name="SOUND::SUCKER_PINCh3" />
+        <KeyWord name="SOUND::SUCKER_PINCH3" />
+        <KeyWord name="SOUND::SUCKER_PLOPSEQ1" />
+        <KeyWord name="SOUND::SUCKER_PLOPSEQ2" />
+        <KeyWord name="SOUND::SUCKER_PLOPSEQ3" />
+        <KeyWord name="SOUND::SUCKER_PLOPSEQ4" />
+        <KeyWord name="SOUND::SUCKER_UP" />
+        <KeyWord name="SOUND::Sample" />
+        <KeyWord name="SOUND::TUFBOSS_CATCH" />
+        <KeyWord name="SOUND::TUFBOSS_RELEASE" />
+        <KeyWord name="SOUND::TUFBOSS_SWING" />
+        <KeyWord name="SOUND::TURTLE_BITE3" />
+        <KeyWord name="SOUND::TURTLE_HIDE" />
+        <KeyWord name="SOUND::TURTLE_HITSHELL" />
+        <KeyWord name="SOUND::TURTLE_IDLE1" />
+        <KeyWord name="SOUND::TURTLE_IDLE2" />
+        <KeyWord name="SOUND::TURTLE_NECK" />
+        <KeyWord name="SOUND::TURTLE_SPK1TURT" />
+        <KeyWord name="SOUND::TURTLE_SPK2TURT" />
+        <KeyWord name="SOUND::TURTLE_SPK3TURT" />
+        <KeyWord name="SOUND::TURTLE_SPK4TURT" />
+        <KeyWord name="SOUND::TURTLE_TURN" />
+        <KeyWord name="SOUND::UTERUS_CRABCLOSE" />
+        <KeyWord name="SOUND::UTERUS_CRABOPEN2" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS1" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS2" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS3" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS4" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS5" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS6" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS7" />
+        <KeyWord name="SOUND::UTERUS_SCISSORS8" />
+        <KeyWord name="SOUND::UTERUS_SCREAM1" />
+        <KeyWord name="SOUND::UTERUS_STEP1" />
+        <KeyWord name="SOUND::UTERUS_STEP2" />
+        <KeyWord name="SOUND::WIND_WIND2A" />
+        <KeyWord name="SOUND::WITCH_LAUGH" />
+        <KeyWord name="SOUND::WITCH_MAGIC" />
+        <KeyWord name="SOUND::XBILSY_BILLAPPEAR" />
+        <KeyWord name="SOUND::XBILSY_FINGERSNAP" />
+        <KeyWord name="SOUND::XBILSY_FIRE" />
+        <KeyWord name="SOUND::XBILSY_FIRESTART" />
+        <KeyWord name="SOUND::XBILSY_SCARY3" />
+        <KeyWord name="SOUND::XBILSY_THUNDER" />
+        <KeyWord name="SOUND::XBILSY_ZIP" />
+        <KeyWord name="SOUND::XLIZARD_LIZ1" />
+        <KeyWord name="SOUND::XLIZARD_LIZ2" />
+        <KeyWord name="SOUND::XLIZARD_LIZ4" />
+        <KeyWord name="SOUND::XLIZARD_LIZ6" />
+        <KeyWord name="SOUND::XTURTLE_BITE3" />
+        <KeyWord name="SOUND::XTURTLE_HIDE" />
+        <KeyWord name="SOUND::XTURTLE_HITSHELL" />
+        <KeyWord name="SOUND::XTURTLE_IDLE1" />
+        <KeyWord name="SOUND::XTURTLE_IDLE2" />
+        <KeyWord name="SOUND::XTURTLE_NECK" />
+        <KeyWord name="SOUND::XTURTLE_SPK1TURT" />
+        <KeyWord name="SOUND::XTURTLE_SPK2TURT" />
+        <KeyWord name="SOUND::XTURTLE_SPK3TURT" />
+        <KeyWord name="SOUND::XTURTLE_SPK4TURT" />
+        <KeyWord name="SOUND::XTURTLE_TURN" />
+        <KeyWord name="SOUND::ZDOG_AGRESSIV" />
+        <KeyWord name="SOUND::ZDOG_SNIF1" />
+        <KeyWord name="SOUND::ZDOG_WAF1" />
+        <KeyWord name="SOUND::ZDOG_WAF2" />
+        <KeyWord name="SOUND::ZDOG_WAF3" />
+        <KeyWord name="SPRITE::ALPHAMAP" />
+        <KeyWord name="SPRITE::BLEND_BURN" />
+        <KeyWord name="SPRITE::BLEND_COLOR" />
+        <KeyWord name="SPRITE::BLEND_DARKEN" />
+        <KeyWord name="SPRITE::BLEND_DIFFERENCE" />
+        <KeyWord name="SPRITE::BLEND_DISSOLVE" />
+        <KeyWord name="SPRITE::BLEND_DODGE" />
+        <KeyWord name="SPRITE::BLEND_EXCLUSION" />
+        <KeyWord name="SPRITE::BLEND_HARDLIGHT" />
+        <KeyWord name="SPRITE::BLEND_HUE" />
+        <KeyWord name="SPRITE::BLEND_LIGHTEN" />
+        <KeyWord name="SPRITE::BLEND_LUMINANCE" />
+        <KeyWord name="SPRITE::BLEND_MULTIPLY" />
+        <KeyWord name="SPRITE::BLEND_NORMAL" />
+        <KeyWord name="SPRITE::BLEND_OVERLAY" />
+        <KeyWord name="SPRITE::BLEND_SATURATION" />
+        <KeyWord name="SPRITE::BLEND_SCREEN" />
+        <KeyWord name="SPRITE::BLEND_SOFTLIGHT" />
+        <KeyWord name="SPRITE::BRIGHTNESS" />
+        <KeyWord name="SPRITE::FROZEN" />
+        <KeyWord name="SPRITE::GEM" />
+        <KeyWord name="SPRITE::INVISIBLE" />
+        <KeyWord name="SPRITE::MENUPLAYER" />
+        <KeyWord name="SPRITE::Mode" />
+        <KeyWord name="SPRITE::NEONGLOW" />
+        <KeyWord name="SPRITE::NORMAL" />
+        <KeyWord name="SPRITE::PALSHIFT" />
+        <KeyWord name="SPRITE::PLAYER" />
+        <KeyWord name="SPRITE::SHADOW" />
+        <KeyWord name="SPRITE::SINGLECOLOR" />
+        <KeyWord name="SPRITE::SINGLEHUE" />
+        <KeyWord name="SPRITE::TINTED" />
+        <KeyWord name="SPRITE::TRANSLUCENT" />
+        <KeyWord name="SPRITE::TRANSLUCENTCOLOR" />
+        <KeyWord name="SPRITE::TRANSLUCENTPALSHIFT" />
+        <KeyWord name="SPRITE::TRANSLUCENTPLAYER" />
+        <KeyWord name="SPRITE::TRANSLUCENTSINGLEHUE" />
+        <KeyWord name="STATE::ACTION" />
+        <KeyWord name="STATE::ATTACK" />
+        <KeyWord name="STATE::BOUNCE" />
+        <KeyWord name="STATE::CIRCLE" />
+        <KeyWord name="STATE::DEACTIVATE" />
+        <KeyWord name="STATE::DELAYEDSTART" />
+        <KeyWord name="STATE::DONE" />
+        <KeyWord name="STATE::DUCK" />
+        <KeyWord name="STATE::EXPLODE" />
+        <KeyWord name="STATE::EXTRA" />
+        <KeyWord name="STATE::FADEIN" />
+        <KeyWord name="STATE::FADEOUT" />
+        <KeyWord name="STATE::FALL" />
+        <KeyWord name="STATE::FIRE" />
+        <KeyWord name="STATE::FLOAT" />
+        <KeyWord name="STATE::FLOATFALL" />
+        <KeyWord name="STATE::FLY" />
+        <KeyWord name="STATE::FREEZE" />
+        <KeyWord name="STATE::HIDE" />
+        <KeyWord name="STATE::HIT" />
+        <KeyWord name="STATE::IDLE" />
+        <KeyWord name="STATE::JUMP" />
+        <KeyWord name="STATE::KILL" />
+        <KeyWord name="STATE::LAND" />
+        <KeyWord name="STATE::PUSH" />
+        <KeyWord name="STATE::ROCKETFLY" />
+        <KeyWord name="STATE::ROTATE" />
+        <KeyWord name="STATE::SLEEP" />
+        <KeyWord name="STATE::SPRING" />
+        <KeyWord name="STATE::START" />
+        <KeyWord name="STATE::STILL" />
+        <KeyWord name="STATE::STOP" />
+        <KeyWord name="STATE::State" />
+        <KeyWord name="STATE::TURN" />
+        <KeyWord name="STATE::WAIT" />
+        <KeyWord name="STATE::WAKE" />
+        <KeyWord name="STATE::WALK" />
+        <KeyWord name="STRING::BOUNCE" />
+        <KeyWord name="STRING::DARK" />
+        <KeyWord name="STRING::LARGE" />
+        <KeyWord name="STRING::MEDIUM" />
+        <KeyWord name="STRING::Mode" />
+        <KeyWord name="STRING::NORMAL" />
+        <KeyWord name="STRING::PALSHIFT" />
+        <KeyWord name="STRING::RIGHTALIGN" />
+        <KeyWord name="STRING::SMALL" />
+        <KeyWord name="STRING::SPIN" />
+        <KeyWord name="STRING::Size" />
+        <KeyWord name="TEXTURE::BLADE" />
+        <KeyWord name="TEXTURE::CORRUPTEDSANCTUARY" />
+        <KeyWord name="TEXTURE::DESOLATION" />
+        <KeyWord name="TEXTURE::DIAMONDUSBETA" />
+        <KeyWord name="TEXTURE::ICTUBELECTRIC" />
+        <KeyWord name="TEXTURE::LAYER8" />
+        <KeyWord name="TEXTURE::MEDIVO" />
+        <KeyWord name="TEXTURE::MENU" />
+        <KeyWord name="TEXTURE::MEZ02" />
+        <KeyWord name="TEXTURE::MUCKAMOKNIGHT" />
+        <KeyWord name="TEXTURE::NORMAL" />
+        <KeyWord name="TEXTURE::PSYCH" />
+        <KeyWord name="TEXTURE::RANEFORUSV" />
+        <KeyWord name="TEXTURE::Style" />
+        <KeyWord name="TEXTURE::TILEMENU" />
+        <KeyWord name="TEXTURE::TUNNEL" />
+        <KeyWord name="TEXTURE::Texture" />
+        <KeyWord name="TEXTURE::WARPHORIZON" />
+        <KeyWord name="TEXTURE::WINDSTORMFORTRESS" />
+        <KeyWord name="TEXTURE::WISETYNESS" />
+        <KeyWord name="TEXTURE::WTF" />
+        <KeyWord name="TEXTURE::XARGON" />
+        <KeyWord name="TILE::ANIMATED" />
+        <KeyWord name="TILE::BOTTOMLEFT" />
+        <KeyWord name="TILE::BOTTOMRIGHT" />
+        <KeyWord name="TILE::Flags" />
+        <KeyWord name="TILE::HFLIPPED" />
+        <KeyWord name="TILE::Quadrant" />
+        <KeyWord name="TILE::RAWRANGE" />
+        <KeyWord name="TILE::TOPLEFT" />
+        <KeyWord name="TILE::TOPRIGHT" />
+        <KeyWord name="TILE::VFLIPPED" />
+        <KeyWord name="TIMER::PAUSED" />
+        <KeyWord name="TIMER::STARTED" />
+        <KeyWord name="TIMER::STOPPED" />
+        <KeyWord name="TIMER::State" />
+        <KeyWord name="WATERLIGHT::GLOBAL" />
+        <KeyWord name="WATERLIGHT::LAGUNICUS" />
+        <KeyWord name="WATERLIGHT::NONE" />
+        <KeyWord name="WATERLIGHT::wl" />
+        <KeyWord name="WEAPON::BLASTER" />
+        <KeyWord name="WEAPON::BOUNCER" />
+        <KeyWord name="WEAPON::CAPPED" />
+        <KeyWord name="WEAPON::CURRENT" />
+        <KeyWord name="WEAPON::GUN8" />
+        <KeyWord name="WEAPON::GUN9" />
+        <KeyWord name="WEAPON::ICE" />
+        <KeyWord name="WEAPON::MISSILE" />
+        <KeyWord name="WEAPON::NORMAL" />
+        <KeyWord name="WEAPON::POPCORN" />
+        <KeyWord name="WEAPON::RF" />
+        <KeyWord name="WEAPON::SEEKER" />
+        <KeyWord name="WEAPON::Style" />
+        <KeyWord name="WEAPON::TNT" />
+        <KeyWord name="WEAPON::TOASTER" />
+        <KeyWord name="WEAPON::Weapon" />
+        <KeyWord name="[RFBULLET]" />
+        <KeyWord name="[solid]" />
+        <KeyWord name="abs" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="abstract" />
+        <KeyWord name="acos" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="and" />
+        <KeyWord name="array" />
+        <KeyWord name="asin" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="atan" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="atan2" func="yes">
+            <Overload retVal="float">
+                <Param name="float y" />
+                <Param name="float x" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="auto" />
+        <KeyWord name="break" />
+        <KeyWord name="bool" />
+        <KeyWord name="case" />
+        <KeyWord name="cast" />
+        <KeyWord name="ceil" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="class" />
+        <KeyWord name="closeTo" func="yes">
+            <Overload retVal="bool">
+                <Param name="float a" />
+                <Param name="float b" />
+                <Param name="float epsilon = 0.00001f" />
+            </Overload>
+            <Overload retVal="bool">
+                <Param name="double a" />
+                <Param name="double b" />
+                <Param name="double epsilon = 0.0000000001" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="const" />
+        <KeyWord name="continue" />
+        <KeyWord name="cos" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="cosh" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="default" />
+        <KeyWord name="dictionary" />
+        <KeyWord name="do" />
+        <KeyWord name="double" />
+        <KeyWord name="else" />
+        <KeyWord name="enum" />
+        <KeyWord name="false" />
+        <KeyWord name="final" />
+        <KeyWord name="float" />
+        <KeyWord name="floor" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="for" />
+        <KeyWord name="formatFloat" func="yes">
+            <Overload retVal="string">
+                <Param name="double val" />
+                <Param name="const string &in options = ''" />
+                <Param name="uint width = 0" />
+                <Param name="uint precision = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="formatInt" func="yes">
+            <Overload retVal="string">
+                <Param name="int64 val" />
+                <Param name="const string &in options = ''" />
+                <Param name="uint width = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="formatUInt" func="yes">
+            <Overload retVal="string">
+                <Param name="uint64 val" />
+                <Param name="const string &in options = ''" />
+                <Param name="uint width = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="fpFromIEEE" func="yes">
+            <Overload retVal="float">
+                <Param name="uint raw" />
+            </Overload>
+            <Overload retVal="double">
+                <Param name="uint64 raw" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="fpToIEEE" func="yes">
+            <Overload retVal="uint">
+                <Param name="float fp" />
+            </Overload>
+            <Overload retVal="uint64">
+                <Param name="double fp" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="fraction" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="from" />
+        <KeyWord name="funcdef" />
+        <KeyWord name="function" />
+        <KeyWord name="get" />
+        <KeyWord name="if" />
+        <KeyWord name="import" />
+        <KeyWord name="in" />
+        <KeyWord name="inout" />
+        <KeyWord name="int" />
+        <KeyWord name="int8" />
+        <KeyWord name="int16" />
+        <KeyWord name="int32" />
+        <KeyWord name="int64" />
+        <KeyWord name="interface" />
+        <KeyWord name="is" />
+        <KeyWord name="jjANIMATION" />
+        <KeyWord name="jjANIMFRAME" />
+        <KeyWord name="jjANIMSET" />
+        <KeyWord name="jjActiveGameTicks" />
+        <KeyWord name="jjAddObject" func="yes">
+            <Overload retVal="int">
+                <Param name="uint8 eventID" />
+                <Param name="
+                float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint16 creatorID = 0" />
+                <Param name="
+                CREATOR::Type creatorType = CREATOR::OBJECT" />
+                <Param name="
+                jjBEHAVIOR behavior = BEHAVIOR::DEFAULT" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjAddParticle" func="yes">
+            <Overload retVal="jjPARTICLE@">
+                <Param name="PARTICLE::Type type" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjAddParticlePixelExplosion" func="yes">
+            <Overload retVal="bool">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                int curFrame" />
+                <Param name="
+                int direction" />
+                <Param name="
+                int mode" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjAddParticleTileExplosion" func="yes">
+            <Overload retVal="bool">
+                <Param name="uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+                <Param name="
+                uint16 tile" />
+                <Param name="
+                bool collapseSceneryStyle" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjAlert" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+                <Param name="
+                bool sendToAll = false" />
+                <Param name="
+                STRING::Size size = STRING::SMALL" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjAllowsFireball" />
+        <KeyWord name="jjAllowsMouseAim" />
+        <KeyWord name="jjAllowsReady" />
+        <KeyWord name="jjAnimFrames" />
+        <KeyWord name="jjAnimSets" />
+        <KeyWord name="jjAnimations" />
+        <KeyWord name="jjAutoWeaponChange" />
+        <KeyWord name="jjBEHAVIOR" />
+        <KeyWord name="jjBackupPalette" />
+        <KeyWord name="jjBottomFeeder" />
+        <KeyWord name="jjCANVAS" />
+        <KeyWord name="jjCHARACTER" />
+        <KeyWord name="jjCONTROLPOINT" />
+        <KeyWord name="jjCharacters" />
+        <KeyWord name="jjChat" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+                <Param name="
+                bool teamchat = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjConsole" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+                <Param name="
+                bool sendToAll = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjControlPoints" />
+        <KeyWord name="jjCos" func="yes">
+            <Overload retVal="float">
+                <Param name="uint in" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDeactivatingBecauseOfDeath" />
+        <KeyWord name="jjDebug" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+                <Param name="
+                bool timestamp = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDelayGeneratedCrateOrigins" />
+        <KeyWord name="jjDeleteObject" func="yes">
+            <Overload retVal="void">
+                <Param name="int objectID" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDifficulty" />
+        <KeyWord name="jjDoZombiesAlreadyExist" />
+        <KeyWord name="jjDrawPixel" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                SPRITE::Mode mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawRectangle" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                int width" />
+                <Param name="
+                int height" />
+                <Param name="
+                SPRITE::Mode mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawResizedSprite" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint8 setID" />
+                <Param name="
+                uint8 animation" />
+                <Param name="
+                uint8 frame" />
+                <Param name="
+                float xScale" />
+                <Param name="
+                float yScale" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawResizedSpriteFromCurFrame" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint sprite" />
+                <Param name="
+                float xScale" />
+                <Param name="
+                float yScale" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawRotatedSprite" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint8 setID" />
+                <Param name="
+                uint8 animation" />
+                <Param name="
+                uint8 frame" />
+                <Param name="
+                int angle" />
+                <Param name="
+                float xScale = 1" />
+                <Param name="
+                float yScale = 1" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawRotatedSpriteFromCurFrame" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint sprite" />
+                <Param name="
+                int angle" />
+                <Param name="
+                float xScale = 1" />
+                <Param name="
+                float yScale = 1" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawSprite" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint8 setID" />
+                <Param name="
+                uint8 animation" />
+                <Param name="
+                uint8 frame" />
+                <Param name="
+                int direction = 0" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawSpriteFromCurFrame" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint sprite" />
+                <Param name="
+                int direction = 0" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawString" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                const string &in text" />
+                <Param name="
+                uint8 STRING::SIZE size = STRING::SMALL" />
+                <Param name="
+                STRING::Mode mode = STRING::NORMAL" />
+                <Param name="
+                uint8 param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                const string &in text" />
+                <Param name="
+                uint8 STRING::SIZE size" />
+                <Param name="
+                const jjTEXTAPPEARANCE &in appearance" />
+                <Param name="
+                uint8 param1 = 0" />
+                <Param name="
+                SPRITE::Mode spriteMode = SPRITE::PALSHIFT" />
+                <Param name="
+                uint8 param2 = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawSwingingVineSpriteFromCurFrame" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint sprite" />
+                <Param name="
+                int length" />
+                <Param name="
+                int curvature" />
+                <Param name="
+                SPRITE::MODE mode = SPRITE::NORMAL" />
+                <Param name="
+                int param = 0" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjDrawTile" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                uint16 tile" />
+                <Param name="
+                TILE::Quadrant tileQuadrant = TILE::ALLQUADRANTS" />
+                <Param name="
+                uint8 layerZ = 4" />
+                <Param name="
+                uint8 layerXY = 4" />
+                <Param name="
+                int8 playerID = -1" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjEcho" />
+        <KeyWord name="jjEnabledASFunctions" />
+        <KeyWord name="jjEnabledTeams" />
+        <KeyWord name="jjEnableEachASFunction" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjEnforceLighting" />
+        <KeyWord name="jjEventAtLastMaskedPixel" />
+        <KeyWord name="jjEventGet" func="yes">
+            <Overload retVal="int">
+                <Param name="uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjEventSet" func="yes">
+            <Overload retVal="void">
+                <Param name="uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+                <Param name="
+                uint8 newEventID" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjFPS" />
+        <KeyWord name="jjFriendlyFire" />
+        <KeyWord name="jjGameConnection" />
+        <KeyWord name="jjGameCustom" />
+        <KeyWord name="jjGameMode" />
+        <KeyWord name="jjGameState" />
+        <KeyWord name="jjGameTicks" />
+        <KeyWord name="jjGenerateSettableTileArea" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 layer" />
+                <Param name="
+                int xTile" />
+                <Param name="
+                int yTile" />
+                <Param name="
+                int width" />
+                <Param name="
+                int height" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjGetModOrder" func="yes">
+            <Overload retVal="int" />
+        </KeyWord>
+        <KeyWord name="jjGetModRow" func="yes">
+            <Overload retVal="int" />
+        </KeyWord>
+        <KeyWord name="jjGetModSpeed" func="yes">
+            <Overload retVal="int" />
+        </KeyWord>
+        <KeyWord name="jjGetModTempo" func="yes">
+            <Overload retVal="int" />
+        </KeyWord>
+        <KeyWord name="jjGetStringWidth" func="yes">
+            <Overload retVal="int">
+                <Param name="const string &in text" />
+                <Param name="
+                STRING::Size size" />
+                <Param name="
+                const jjTEXTAPPEARANCE &in style" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjIsAdmin" />
+        <KeyWord name="jjIsServer" />
+        <KeyWord name="jjIsSnowing" />
+        <KeyWord name="jjIsSnowingOutdoorsOnly" />
+        <KeyWord name="jjIsTSF" />
+        <KeyWord name="jjIsValidCheat" func="yes">
+            <Overload retVal="bool">
+                <Param name="const string &in text" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjKey" />
+        <KeyWord name="jjKillObject" func="yes">
+            <Overload retVal="void">
+                <Param name="int objectID" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjLayerHasTiles" />
+        <KeyWord name="jjLayerHeight" />
+        <KeyWord name="jjLayerLimitVisibleRegion" />
+        <KeyWord name="jjLayerTileHeight" />
+        <KeyWord name="jjLayerTileWidth" />
+        <KeyWord name="jjLayerWidth" />
+        <KeyWord name="jjLayerWidthReal" />
+        <KeyWord name="jjLayerWidthRounded" />
+        <KeyWord name="jjLayerXAutoSpeed" />
+        <KeyWord name="jjLayerXOffset" />
+        <KeyWord name="jjLayerXSpeed" />
+        <KeyWord name="jjLayerYAutoSpeed" />
+        <KeyWord name="jjLayerYOffset" />
+        <KeyWord name="jjLayerYSpeed" />
+        <KeyWord name="jjLocalPlayerCount" />
+        <KeyWord name="jjLocalPlayers" />
+        <KeyWord name="jjLowDetail" />
+        <KeyWord name="jjMASKMAP" />
+        <KeyWord name="jjMaskedHLine" func="yes">
+            <Overload retVal="bool">
+                <Param name="int xPixel" />
+                <Param name="
+                int lineLength" />
+                <Param name="
+                int yPixel" />
+                <Param name="
+                uint8 layer = 4" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjMaskedPixel" func="yes">
+            <Overload retVal="bool">
+                <Param name="int xPixel" />
+                <Param name="
+                int yPixel" />
+                <Param name="
+                uint8 layer = 4" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjMaskedTopVLine" func="yes">
+            <Overload retVal="int">
+                <Param name="int xPixel" />
+                <Param name="
+                int yPixel" />
+                <Param name="
+                int lineLength" />
+                <Param name="
+                uint8 layer = 4" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjMaskedVLine" func="yes">
+            <Overload retVal="bool">
+                <Param name="int xPixel" />
+                <Param name="
+                int yPixel" />
+                <Param name="
+                int lineLength" />
+                <Param name="
+                uint8 layer = 4" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjMaxHealth" />
+        <KeyWord name="jjMaxScore" />
+        <KeyWord name="jjMouseAim" />
+        <KeyWord name="jjMouseX" />
+        <KeyWord name="jjMouseY" />
+        <KeyWord name="jjMusicActive" />
+        <KeyWord name="jjMusicLoad" func="yes">
+            <Overload retVal="bool">
+                <Param name="string &in filename" />
+                <Param name="
+                bool forceReload = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjMusicPause" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjMusicPlay" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjMusicResume" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjMusicStop" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjMusicVolume" />
+        <KeyWord name="jjNoBlink" />
+        <KeyWord name="jjNoMovement" />
+        <KeyWord name="jjNxt" func="yes">
+            <Overload retVal="void">
+                <Param name='const string &in filename = ""' />
+                <Param name="
+                bool warp = false" />
+                <Param name="
+                bool fast = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjOBJ" />
+        <KeyWord name="jjObjectCount" />
+        <KeyWord name="jjObjectMax" />
+        <KeyWord name="jjObjectPresets" />
+        <KeyWord name="jjObjects" />
+        <KeyWord name="jjPAL" />
+        <KeyWord name="jjPALCOLOR" />
+        <KeyWord name="jjPARTICLE" />
+        <KeyWord name="jjPIXELMAP" />
+        <KeyWord name="jjPLAYER" />
+        <KeyWord name="jjPalette" />
+        <KeyWord name="jjParameterGet" func="yes">
+            <Overload retVal="int">
+                <Param name="uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+                <Param name="
+                int8 offset" />
+                <Param name="
+                int8 length" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjParameterSet" func="yes">
+            <Overload retVal="void">
+                <Param name="uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+                <Param name="
+                int8 offset" />
+                <Param name="
+                int8 length" />
+                <Param name="
+                int newValue" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjParticles" />
+        <KeyWord name="jjPlayers" />
+        <KeyWord name="jjPrint" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+                <Param name="
+								bool timestamp = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjRandom" func="yes">
+            <Overload retVal="uint" />
+        </KeyWord>
+        <KeyWord name="jjRegexIsValid" func="yes">
+            <Overload retVal="bool">
+                <Param name="const string &in expression" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjRegexMatch" func="yes">
+            <Overload retVal="bool">
+                <Param name="const string &in text" />
+                <Param name="
+								const string &in expression" />
+                <Param name="
+								bool ignoreCase = false" />
+            </Overload>
+            <Overload retVal="bool">
+                <Param name="const string &in text" />
+                <Param name="
+								const string &in expression" />
+                <Param name="
+								array<string> &out results" />
+                <Param name="
+								bool ignoreCase = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjRegexReplace" func="yes">
+            <Overload retVal="string">
+                <Param name="const string &in text" />
+                <Param name="
+								const string &in expression" />
+                <Param name="
+								const string &in replacement" />
+                <Param name="
+								bool ignoreCase = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjRegexSearch" func="yes">
+            <Overload retVal="bool">
+                <Param name="const string &in text" />
+                <Param name="
+								const string &in expression" />
+                <Param name="
+								bool ignoreCase = false" />
+            </Overload>
+            <Overload retVal="bool">
+                <Param name="const string &in text" />
+                <Param name="
+								const string &in expression" />
+                <Param name="
+								array<string> &out results" />
+                <Param name="
+								bool ignoreCase = false" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjRenderFrame" />
+        <KeyWord name="jjResetWaterGradient" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="jjResolutionHeight" />
+        <KeyWord name="jjResolutionMaxHeight" />
+        <KeyWord name="jjResolutionMaxWidth" />
+        <KeyWord name="jjResolutionWidth" />
+        <KeyWord name="jjSample" func="yes">
+            <Overload retVal="void">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                SOUND::Sample sample" />
+                <Param name="
+                int volume = 63" />
+                <Param name="
+                int frequency = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSampleIsLoaded" func="yes">
+            <Overload retVal="bool">
+                <Param name="SOUND::Sample sample" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSampleLoad" func="yes">
+            <Overload retVal="bool">
+                <Param name="SOUND::Sample sample" />
+                <Param name="
+                string &in filename" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSampleLooped" func="yes">
+            <Overload retVal="int">
+                <Param name="float xPixel" />
+                <Param name="
+                float yPixel" />
+                <Param name="
+                SOUND::Sample sample" />
+                <Param name="
+                int channel" />
+                <Param name="
+                int volume = 63" />
+                <Param name="
+                int frequency = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSamplePriority" func="yes">
+            <Overload retVal="void">
+                <Param name="SOUND::Sample sample" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjScriptModuleID" />
+        <KeyWord name="jjSendPacket" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjSTREAM &in packet" />
+                <Param name="
+                int toClientID = 0" />
+                <Param name="
+                uint toScriptModuleID = jjScriptModuleID" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetDarknessColor" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPALCOLOR color = jjPALCOLOR(0, 0, 0)" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetFadeColors" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 paletteColorID = 207" />
+            </Overload>
+            <Overload retVal="void">
+                <Param name="uint8 red" />
+                <Param name="
+                uint8 green" />
+                <Param name="
+                uint8 blue" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetLayerXSpeed" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 layerID" />
+                <Param name="
+                float newspeed" />
+                <Param name="
+                bool newSpeedIsAnAutoSpeed" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetLayerYSpeed" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 layerID" />
+                <Param name="
+                float newspeed" />
+                <Param name="
+                bool newSpeedIsAnAutoSpeed" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetModPosition" func="yes">
+            <Overload retVal="void">
+                <Param name="int order" />
+                <Param name="
+                int row" />
+                <Param name="
+                bool reset" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetModSpeed" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 speed" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetModTempo" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 tempo" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetWaterGradient" func="yes">
+            <Overload retVal="void" />
+            <Overload retVal="void">
+                <Param name="uint8 red1" />
+                <Param name="
+                uint8 green1" />
+                <Param name="
+                uint8 blue1" />
+                <Param name="
+                uint8 red2" />
+                <Param name="
+                uint8 green2" />
+                <Param name="
+                uint8 blue2" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSetWaterLevel" func="yes">
+            <Overload retVal="void">
+                <Param name="float yPixel" />
+                <Param name="
+                bool instant" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSin" func="yes">
+            <Overload retVal="float">
+                <Param name="uint in" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSlideModChannelVolume" func="yes">
+            <Overload retVal="void">
+                <Param name="int channel" />
+                <Param name="
+								float volume" />
+                <Param name="
+								int milliseconds" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjSnowingIntensity" />
+        <KeyWord name="jjSnowingType" />
+        <KeyWord name="jjSoundEnabled" />
+        <KeyWord name="jjSoundFXActive" />
+        <KeyWord name="jjSoundFXVolume" />
+        <KeyWord name="jjSpy" func="yes">
+            <Overload retVal="void">
+                <Param name="const string &in text" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjStartHealth" />
+        <KeyWord name="jjStrongPowerups" />
+        <KeyWord name="jjSubscreenHeight" />
+        <KeyWord name="jjSubscreenWidth" />
+        <KeyWord name="jjSwitchTrigger" func="yes">
+            <Overload retVal="bool">
+                <Param name="uint8 id" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjTEXTAPPEARANCE" />
+        <KeyWord name="jjTeamScore" />
+        <KeyWord name="jjTexturedBGFadePositionX" />
+        <KeyWord name="jjTexturedBGFadePositionY" />
+        <KeyWord name="jjTexturedBGStars" />
+        <KeyWord name="jjTexturedBGStyle" />
+        <KeyWord name="jjTexturedBGTexture" />
+        <KeyWord name="jjTexturedBGUsed" />
+        <KeyWord name="jjTileGet" func="yes">
+            <Overload retVal="uint16">
+                <Param name="uint8 layer" />
+                <Param name="
+                uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjTileSet" func="yes">
+            <Overload retVal="uint16">
+                <Param name="uint8 layer" />
+                <Param name="
+                uint16 xTile" />
+                <Param name="
+                uint16 yTile" />
+                <Param name="
+                uint16 newTile" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjTileType" />
+        <KeyWord name="jjTriggerRock" func="yes">
+            <Overload retVal="void">
+                <Param name="uint8 id" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="jjTokenOwner" />
+        <KeyWord name="jjTriggers" />
+        <KeyWord name="jjUseLayer8Speeds" />
+        <KeyWord name="jjVOIDFUNC" />
+        <KeyWord name="jjVOIDFUNCOBJ" />
+        <KeyWord name="jjVOIDFUNCPLAYER" />
+        <KeyWord name="jjVerticalSplitscreen" />
+        <KeyWord name="jjWEAPON" />
+        <KeyWord name="jjWarpsTransmuteCoins" />
+        <KeyWord name="jjWaterChangeSpeed" />
+        <KeyWord name="jjWaterLayer" />
+        <KeyWord name="jjWaterLevel" />
+        <KeyWord name="jjWaterLighting" />
+        <KeyWord name="jjWaterTarget" />
+        <KeyWord name="jjWeapons" />
+        <KeyWord name="join" func="yes">
+            <Overload retVal="string">
+                <Param name="const array<string> &in arr" />
+                <Param name="const string &in delimiter" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="log" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="log10" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="mixin" />
+        <KeyWord name="namespace" />
+        <KeyWord name="not" />
+        <KeyWord name="null" />
+        <KeyWord name="onChat" func="yes">
+            <Overload retVal="void">
+                <Param name="int clientID" />
+                <Param name="string &in stringReceived" />
+                <Param name="CHAT::Type chatType" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onCheat" func="yes">
+            <Overload retVal="bool">
+                <Param name="string &in cheat" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawAmmo" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawHealth" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawLayer#" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawLives" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawPlayerTimer" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onDrawScore" func="yes">
+            <Overload retVal="bool">
+                <Param name="jjPLAYER@ player" />
+                <Param name="jjCANVAS@ canvas" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onFunction#" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ player" />
+            </Overload>
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ player" />
+                <Param name="bool paramName" />
+            </Overload>
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ player" />
+                <Param name="uint8 paramName" />
+            </Overload>
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ player" />
+                <Param name="int8 paramName" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onGameStart" func="yes">
+            <Overload retVal="void" />
+            <Overload retVal="void">
+                <Param name="bool firstTime" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onGameStop" func="yes">
+            <Overload retVal="void" />
+            <Overload retVal="void">
+                <Param name="bool firstTime" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onLevelBegin" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="onLevelLoad" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="onLevelReload" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="onLocalChat" func="yes">
+            <Overload retVal="bool" >
+                <Param name="string &in stringReceived" />
+                <Param name="CHAT::Type chatType" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onMain" func="yes">
+            <Overload retVal="void" />
+        </KeyWord>
+        <KeyWord name="onObjectHit" func="yes">
+            <Overload retVal="void">
+                <Param name="jjOBJ@ obj" />
+                <Param name="jjOBJ@ bullet" />
+                <Param name="jjPLAYER@ player" />
+                <Param name="int force" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onPlayer" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ play" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onPlayerInput" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ play" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onPlayerTimerEnd" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ play" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onReceive" func="yes">
+            <Overload retVal="void">
+                <Param name="jjSTREAM &in packet" />
+                <Param name="int fromClientID" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="onRoast" func="yes">
+            <Overload retVal="void">
+                <Param name="jjPLAYER@ victim" />
+                <Param name="jjPLAYER@ killer" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="opAdd" />
+        <KeyWord name="opAddAssign" />
+        <KeyWord name="opAnd" />
+        <KeyWord name="opAndAssign" />
+        <KeyWord name="opAssign" />
+        <KeyWord name="opCall" />
+        <KeyWord name="opCast" />
+        <KeyWord name="opCmp" />
+        <KeyWord name="opCom" />
+        <KeyWord name="opConv" />
+        <KeyWord name="opDiv" />
+        <KeyWord name="opDivAssign" />
+        <KeyWord name="opEquals" />
+        <KeyWord name="opImplCast" />
+        <KeyWord name="opImplConv" />
+        <KeyWord name="opIndex" />
+        <KeyWord name="opMod" />
+        <KeyWord name="opModAssign" />
+        <KeyWord name="opMul" />
+        <KeyWord name="opMulAssign" />
+        <KeyWord name="opNeg" />
+        <KeyWord name="opOr" />
+        <KeyWord name="opOrAssign" />
+        <KeyWord name="opPostDec" />
+        <KeyWord name="opPostInc" />
+        <KeyWord name="opPow" />
+        <KeyWord name="opPowAssign" />
+        <KeyWord name="opPreDec" />
+        <KeyWord name="opPreInc" />
+        <KeyWord name="opShl" />
+        <KeyWord name="opShlAssign" />
+        <KeyWord name="opShr" />
+        <KeyWord name="opShrAssign" />
+        <KeyWord name="opSub" />
+        <KeyWord name="opSubAssign" />
+        <KeyWord name="opUShr" />
+        <KeyWord name="opUShrAssign" />
+        <KeyWord name="opXor" />
+        <KeyWord name="opXorAssign" />
+        <KeyWord name="or" />
+        <KeyWord name="out" />
+        <KeyWord name="override" />
+        <KeyWord name="parseFloat" func="yes">
+            <Overload retVal="double">
+                <Param name="const string &in" />
+                <Param name="uint &out byteCount = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="parseInt" func="yes">
+            <Overload retVal="int64">
+                <Param name="const string &in" />
+                <Param name="uint base = 10" />
+                <Param name="uint &out byteCount = 0" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="pow" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+                <Param name="float exp" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="private" />
+        <KeyWord name="protected" />
+        <KeyWord name="return" />
+        <KeyWord name="set" />
+        <KeyWord name="shared" />
+        <KeyWord name="sin" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="sinh" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="sqrt" func="yes">
+            <Overload retVal="float">
+                <Param name="float val" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="string" />
+        <KeyWord name="super" />
+        <KeyWord name="switch" />
+        <KeyWord name="tan" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="tanh" func="yes">
+            <Overload retVal="float">
+                <Param name="float rad" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="this" />
+        <KeyWord name="true" />
+        <KeyWord name="typedef" />
+        <KeyWord name="uint" />
+        <KeyWord name="uint8" />
+        <KeyWord name="uint16" />
+        <KeyWord name="uint32" />
+        <KeyWord name="uint64" />
+        <KeyWord name="void" />
+        <KeyWord name="while" />
+        <KeyWord name="xor" />
+    </AutoComplete>
+    <UserLang name="JJ2+ Script" ext="j2as asc mut" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="no" allowFoldOfComments="yes" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="yes" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00// 01 02 03/* 04*/</Keywords>
+            <Keywords name="Numbers, prefix1">0d 0o 0b</Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1">f .f</Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">- ! % ( ) * / , : ; ? @ [ ] | ~ + &lt; = &gt; &amp; ^</Keywords>
+            <Keywords name="Operators2">and is not or xor</Keywords>
+            <Keywords name="Folders in code1, open">{</Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close">}</Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open">/*</Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close">*/</Keywords>
+            <Keywords name="Keywords1">abstract bool const double final float get in inout int int8 int16 int32 int64 mixin out override private protected set shared uint uint8 uint16 uint32 uint64 void</Keywords>
+            <Keywords name="Keywords2">break case cast continue default do else for from function if import namespace return switch while</Keywords>
+            <Keywords name="Keywords3">class enum funcdef interface typedef</Keywords>
+            <Keywords name="Keywords4">false null super this true</Keywords>
+            <Keywords name="Keywords5">0x</Keywords>
+            <Keywords name="Keywords6">#endif #if #include #pragma</Keywords>
+            <Keywords name="Keywords7">array dictionary string jjANIMATION jjANIMFRAME jjANIMSET jjBEHAVIOR jjCANVAS jjCHARACTER jjCONTROLPOINT jjMASKMAP jjOBJ jjPAL jjPALCOLOR jjPARTICLE jjPIXELMAP jjPLAYER jjSTREAM jjTEXTAPPEARANCE jjWEAPON</Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00&quot;&quot;&quot; 01 02&quot;&quot;&quot; 03&apos; 04\ 05&apos; 06&quot; 07\ 08&quot; 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="00A0F0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="FF8040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="004000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="101090" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

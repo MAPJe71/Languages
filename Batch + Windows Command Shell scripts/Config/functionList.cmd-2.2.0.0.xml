@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="12" id="batch_label" />
+    </associationMap>
+    <parsers>
+      <!-- Version: 2.2.0.0                                    [batch_label] -->
+      <parser 
+          id="batch_label" 
+          displayName="Batch / Command Shell Script" 
+          commentExpr="(?:(?::{2}[^\r\n]*)|(?:(?i:REM)(?:[\t ][^\r\n]+)?))(?:\r?\n|$)" >
+        <function
+            mainExpr="[\t ]*:[\w.]+\b[^\r\n]*(?=\r?\n|$)"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="[\t ]*:[\w.]+\b" />
+            <nameExpr expr="[^\t :]*" />
+          </functionName>
+        </function>
+      </parser>
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

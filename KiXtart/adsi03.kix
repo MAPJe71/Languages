@@ -1,0 +1,20 @@
+;
+;  Sample script demonstrating retrieval of rootDSE properties of LDAP server.
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+
+$root = GetObject("LDAP://RootDSE")
+
+$root.GetInfo
+
+? "ADSPath: " + $root.ADSPath
+? "GUID   : " + $root.GUID
+? "Name   : " + $root.Name
+? "Parent : " + $root.Parent
+? "DNC    : " + $root.defaultNamingContext

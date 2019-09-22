@@ -1,0 +1,17 @@
+A = 1
+
+CALL MySub2(A); * Call a local subroutine
+PRINT “A is now: “:A
+
+STOP
+
+*Define the local subroutine
+SUBROUTINE MySub1(B)
+    B += 1
+RETURN
+
+*Define another local subroutine
+SUBROUTINE MySub2(B)
+    B += 1
+    CALL MySub1(B)
+RETURN

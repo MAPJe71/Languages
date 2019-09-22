@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association userDefinedLangName="Papyrus" id="papyrus_function" />
+		</associationMap>
+		<parsers>
+			<!-- http://www.creationkit.com/index.php?title=Notepad%2B%2B_Setup -->
+			<parser
+				id         ="papyrus_function"
+				displayName="Papyrus"
+				commentExpr="(?m-s:;.*?$)"
+			>
+				<function
+					mainExpr="^[\t\x20]*([\w\[\]]+[\t\x20]+)?(function|event)[\t\x20]+\w+[\t\x20]*\(.*?\)"
+				>
+					<functionName>
+						<nameExpr expr="\w+[\t\x20]*\(.*?\)" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

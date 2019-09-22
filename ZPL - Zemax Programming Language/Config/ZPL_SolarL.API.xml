@@ -1,0 +1,1100 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<!-- language doesnt really mean anything, its more of a comment -->
+	<AutoComplete language="Zemax ZPL">
+		<!--
+		Environment specifies how the language should be interpreted. ignoreCase makes autocomplete
+		ignore any casing, start and stopFunc specify what chars a function starts and stops with.
+		param specifies parameter separator and terminal can be used to specify a character that stops
+		any function. Using the same character for different functions results in undefined behaviour.
+		
+		05/11/2009
+		The basic word character are : A-Z a-z 0-9 and '_' 
+		If your function name contains other characters,
+		add your characters in "additionalWordChar" attribute (without separator)
+		in order to make calltip hint work
+		-->
+		<Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," terminal="" additionalWordChar=""/>
+		<!--
+		The following items should be alphabetically ordered.
+		func="yes" means the keyword should be treated as a fuction, and thus can be used in the parameter
+		calltip system. If this is the case, the retVal attribute specifies the return value/type. Any
+		following Param tag specifies a parameter, they must be in order. The name attributes specifies
+		the parameter name.
+		-->
+<KeyWord name="ABSO" func="yes">
+	<Overload retVal="{numeric}" descr="The absolute value of the expression." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="ACOS" func="yes">
+	<Overload retVal="{numeric}" descr="Arc cosine in radians." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APMN" func="yes">
+	<Overload retVal="{numeric}" descr="The minimum aperture radius value. Check manual for other apertures." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APMX" func="yes">
+	<Overload retVal="{numeric}" descr="The maximum aperture radius value. Check manual for other apertures." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APOI" func="yes">
+	<Overload retVal="{numeric}" descr="Ray intensity apodization factor." >
+		<Param name="px:Normalized pupil coordinates" />
+		<Param name="py" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APTP" func="yes">
+	<Overload retVal="{numeric}" descr="An integer code describing the aperture type on the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APXD" func="yes">
+	<Overload retVal="{numeric}" descr="The aperture x-decenter value." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="APYD" func="yes">
+	<Overload retVal="{numeric}" descr="The aperture y-decenter value." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="ASIN" func="yes">
+	<Overload retVal="{numeric}" descr="Arc sine in radians." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="ASPR" func="yes">
+	<Overload retVal="{numeric}" descr="Aspect ratio of the current graphics device." >
+	</Overload>
+</KeyWord>
+<KeyWord name="ATAN" func="yes">
+	<Overload retVal="{numeric}" descr="Arc tangent in radians." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="ATYP" func="yes">
+	<Overload retVal="{numeric}" descr="System aperture type code: 0 for EPD, 1 for F/#, 2 for NA, and 3 for float by stop size." >
+	</Overload>
+</KeyWord>
+<KeyWord name="AVAL" func="yes">
+	<Overload retVal="{numeric}" descr="System aperture value." >
+	</Overload>
+</KeyWord>
+<KeyWord name="BEEP" />
+<KeyWord name="BUFFER" func="yes">
+	<Overload retVal="{string}" descr="Returns the current string in the lens buffer." >
+	</Overload>
+</KeyWord>
+<KeyWord name="CALD" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a numeric value from the CALLMACRO buffer at the specified index. See Calling a Macro from within a Macro " >
+		<Param name="i:index" />
+	</Overload>
+</KeyWord>
+<KeyWord name="CALLMACRO" />
+<KeyWord name="CALLSETDBL" />
+<KeyWord name="CALLSETSTR" />
+<KeyWord name="CALLSTR" func="yes">
+	<Overload retVal="{string}" descr="Returns the string from the CALLMACRO string buffer at index i." >
+		<Param name="i" />
+	</Overload>
+</KeyWord>
+<KeyWord name="CLOSE" />
+<KeyWord name="CLOSEWINDOW" />
+<KeyWord name="COAT" func="yes">
+	<Overload retVal="{string}" descr="Returns the coating name for the ith surface." >
+		<Param name="i" />
+	</Overload>
+</KeyWord>
+<KeyWord name="COATINGPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for coating files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="COLOR" />
+<KeyWord name="COMMAND" />
+<KeyWord name="COMMENT" func="yes">
+	<Overload retVal="{string}" descr="Returns the comment string for the ith surface." >
+		<Param name="i" />
+	</Overload>
+</KeyWord>
+<KeyWord name="CONF" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the current configuration number, which is between 1 and the number of configurations, inclusive." >
+	</Overload>
+</KeyWord>
+<KeyWord name="CONI" func="yes">
+	<Overload retVal="{numeric}" descr="Conic constant of the surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="CONVERTFILEFORMAT" />
+<KeyWord name="COPYFILE" />
+<KeyWord name="COSI" func="yes">
+	<Overload retVal="{numeric}" descr="Cosine of the expression." >
+		<Param name="x:Numeric (rad)" />
+	</Overload>
+</KeyWord>
+<KeyWord name="CURV" func="yes">
+	<Overload retVal="{numeric}" descr="Curvature of the surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="DATAPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for data files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="DATE" func="yes">
+	<Overload retVal="{string}" descr="Returns the current date and time string. " >
+	</Overload>
+</KeyWord>
+<KeyWord name="DECLARE" />
+<KeyWord name="DEFAULTMERIT" />
+<KeyWord name="DELETE" />
+<KeyWord name="DELETECONFIG" />
+<KeyWord name="DELETEFILE" />
+<KeyWord name="DELETEMCO" />
+<KeyWord name="DELETEMFO" />
+<KeyWord name="DELETEOBJECT" />
+<KeyWord name="DELETETOL" />
+<KeyWord name="EDGE" func="yes">
+	<Overload retVal="{numeric}" descr="Edge thickness at the semi-diameter of that surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="EDVA" />
+<KeyWord name="END" />
+<KeyWord name="EOFF" func="yes">
+	<Overload retVal="{numeric}" descr="End of file flag. Returns 1 if the end of file has been reached, otherwise returns 0. Only valid after execute READ." >
+	</Overload>
+</KeyWord>
+<KeyWord name="ETIM" func="yes">
+	<Overload retVal="{numeric}" descr="The elapsed time in seconds since last TIMER." >
+	</Overload>
+</KeyWord>
+<KeyWord name="EXPE" func="yes">
+	<Overload retVal="{numeric}" descr="e to the power of the expression." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="EXPORTBMP" />
+<KeyWord name="EXPORTCAD" />
+<KeyWord name="EXPORTJPG" />
+<KeyWord name="EXPORTWMF" />
+<KeyWord name="EXPT" func="yes">
+	<Overload retVal="{numeric}" descr="10 to the power of the expression." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="EXTENSIONPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for Zemax extensions." >
+	</Overload>
+</KeyWord>
+<KeyWord name="FICL" func="yes">
+	<Overload retVal="{numeric}" descr="The fiber coupling efficiency. See Using the FICL() function." >
+		<Param name="vec#" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FILENAME" func="yes">
+	<Overload retVal="{string}" descr="Returns the current lens file name, without the path." >
+	</Overload>
+</KeyWord>
+<KeyWord name="FILEPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the current lens file name, with the complete path." >
+	</Overload>
+</KeyWord>
+<KeyWord name="FINDFILE" />
+<KeyWord name="FLDX" func="yes">
+	<Overload retVal="{numeric}" descr="X-angle or height of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FLDY" func="yes">
+	<Overload retVal="{numeric}" descr="Y-angle or height of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FOR" />
+<KeyWord name="FORMAT" />
+<KeyWord name="FTYP" func="yes">
+	<Overload retVal="{numeric}" descr="Returns field type 0 if angles in degrees, 1 if object height, 2 if paraxial image height, and 3 if real image height. " >
+	</Overload>
+</KeyWord>
+<KeyWord name="FVAN" func="yes">
+	<Overload retVal="{numeric}" descr="Vignetting angle of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FVCX" func="yes">
+	<Overload retVal="{numeric}" descr="Vignetting compression X of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FVCY" func="yes">
+	<Overload retVal="{numeric}" descr="Vignetting compression Y of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FVDX" func="yes">
+	<Overload retVal="{numeric}" descr="Vignetting decenter X of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FVDY" func="yes">
+	<Overload retVal="{numeric}" descr="Vignetting decenter Y of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="FWGT" func="yes">
+	<Overload retVal="{numeric}" descr="Field weighting of specified field." >
+		<Param name="x:field #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GABB" func="yes">
+	<Overload retVal="{numeric}" descr="The glass catalog Abbe number of the glass for the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GAUS" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a random value with a Gaussian distribution, zero mean, and the specified standard deviation." >
+		<Param name="x:Standard deviation" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GCRS" />
+<KeyWord name="GDATE" />
+<KeyWord name="GETEXTRADATA" />
+<KeyWord name="GETGLASSDATA" />
+<KeyWord name="GETLSF" />
+<KeyWord name="GETMTF" />
+<KeyWord name="GETPSF" />
+<KeyWord name="GETSTRING" func="yes">
+	<Overload retVal="{string}" descr="Returns the nth sub-string for the string A$ using spaces for delimiters." >
+		<Param name="A$" />
+		<Param name="n" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GETSTRINGC" func="yes">
+	<Overload retVal="{string}" descr="Returns the nth sub-string for the string A$ using commas for delimiters. " >
+		<Param name="A$" />
+		<Param name="n" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GETSYSTEMDATA" />
+<KeyWord name="GETT" func="yes">
+	<Overload retVal="{numeric}" descr="Extracts a numerical value from any open text window. allows computations using any value Zemax can display in a window." >
+		<Param name="window" />
+		<Param name="line" />
+		<Param name="column" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GETTEXTFILE" />
+<KeyWord name="GETVARDATA" />
+<KeyWord name="GETZERNIKE" />
+<KeyWord name="GIND" func="yes">
+	<Overload retVal="{numeric}" descr="The glass catalog d-light index of the glass for the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLAS" />
+<KeyWord name="GLASS" func="yes">
+	<Overload retVal="{string}" descr="Returns the glass name of surface number i." >
+		<Param name="i" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLASSCATALOG" func="yes">
+	<Overload retVal="{string}" descr="Returns the name of the ith loaded glass catalog for the current lens. " >
+		<Param name="i" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLASSPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for glass catalog files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="GLASSTEMPLATE" />
+<KeyWord name="GLCA" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex x vector of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCB" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex y vector of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCC" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex z vector of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCM" func="yes">
+	<Overload retVal="{numeric}" descr="See Global Coordinate Reference Surface." >
+		<Param name="surf:surface number" />
+		<Param name="item:integer between 1 and 12." />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCX" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex x-coordinate of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCY" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex y-coordinate of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLCZ" func="yes">
+	<Overload retVal="{numeric}" descr="Global vertex z-coordinate of the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GLENSNAME" />
+<KeyWord name="GLOBALTOLOCAL" />
+<KeyWord name="GNUM" func="yes">
+	<Overload retVal="{numeric}" descr="If A$ is the name of a valid glass, returns glass# in the glass catalog, otherwise returns 0. Returns -1 if MIRROR." >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GOSUB" />
+<KeyWord name="GOTO" />
+<KeyWord name="GPAR" func="yes">
+	<Overload retVal="{numeric}" descr="The glass catalog partial dispersion coefficient of the glass for the specified surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GRAPHICS" />
+<KeyWord name="GRIN" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the index of refraction at the specified x, y, z position on surface s at wavelength number w. " >
+		<Param name="s:Surface #" />
+		<Param name="w:wavelength #" />
+		<Param name="x:x" />
+		<Param name="y:y" />
+		<Param name="z:and z coordinates" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GTEM" func="yes">
+	<Overload retVal="{numeric}" descr="Returns data from the Glass Substitution Template. return zero for false (unchecked), non-zero value for true (checked)." >
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="GTEXT" />
+<KeyWord name="GTEXTCENT" />
+<KeyWord name="GTITLE" />
+<KeyWord name="HAMMER" />
+<KeyWord name="IF-THEN-ELSE-ENDIF" />
+<KeyWord name="IMA" />
+<KeyWord name="IMAE" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the geometric image analysis efficiency. See the discussion Geometric Image Analysis." >
+		<Param name="seed:The seed value" />
+	</Overload>
+</KeyWord>
+<KeyWord name="IMAGECOMBINE" />
+<KeyWord name="IMAGEEXTRACT" />
+<KeyWord name="IMASHOW" />
+<KeyWord name="IMASUM" />
+<KeyWord name="IMPORTEXTRADATA" />
+<KeyWord name="INDX" func="yes">
+	<Overload retVal="{numeric}" descr="Index of refraction at the primary wavelength. See ISMS." >
+		<Param name="surface:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="INPUT" />
+<KeyWord name="INSERT" />
+<KeyWord name="INSERTCONFIG" />
+<KeyWord name="INSERTMCO" />
+<KeyWord name="INSERTMFO" />
+<KeyWord name="INSERTOBJECT" />
+<KeyWord name="INSERTTOL" />
+<KeyWord name="INTE" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the largest integer not greater than the argument." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="ISMS" func="yes">
+	<Overload retVal="{numeric}" descr="If the surface is an odd mirror, or follows an odd mirror but is not a mirror, the return 1, otherwise the return 0." >
+		<Param name="surface:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="LABEL" />
+<KeyWord name="LEFTSTRING" func="yes">
+	<Overload retVal="{string}" descr="Returns the left most n characters in the string A$. " >
+		<Param name="A$" />
+		<Param name="n" />
+	</Overload>
+</KeyWord>
+<KeyWord name="LENSNAME" func="yes">
+	<Overload retVal="{string}" descr="Returns the lens title defined in the System Explorer." >
+	</Overload>
+</KeyWord>
+<KeyWord name="LINE" />
+<KeyWord name="LOADARCHIVE" />
+<KeyWord name="LOADCATALOG" />
+<KeyWord name="LOADDETECTOR" />
+<KeyWord name="LOADLENS" />
+<KeyWord name="LOADMERIT" />
+<KeyWord name="LOADTOLERANCE" />
+<KeyWord name="LOCALTOGLOBAL" />
+<KeyWord name="LOCKWINDOW" />
+<KeyWord name="LOGE" func="yes">
+	<Overload retVal="{numeric}" descr="Log base e of the expression." >
+		<Param name="x:Positive Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="LOGT" func="yes">
+	<Overload retVal="{numeric}" descr="Log base ten of the expression." >
+		<Param name="x:Positive Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="LOST" func="yes">
+	<Overload retVal="{numeric}" descr="The lost energy following the most recent NSTR trace." >
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="MACROPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for macro files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="MAGN" func="yes">
+	<Overload retVal="{numeric}" descr="Computes the square root of x squared plus y squared." >
+		<Param name="x:x and y are any real numbers" />
+		<Param name="y" />
+	</Overload>
+</KeyWord>
+<KeyWord name="MAKEFACETLIST" />
+<KeyWord name="MAKEFOLDER" />
+<KeyWord name="MAXF" func="yes">
+	<Overload retVal="{numeric}" descr="The maximum radial field angle in degrees, or radial object or image height in lens units." >
+	</Overload>
+</KeyWord>
+<KeyWord name="MAXG" func="yes">
+	<Overload retVal="{numeric}" descr="The number of glasses currently loaded." >
+	</Overload>
+</KeyWord>
+<KeyWord name="MCON" func="yes">
+	<Overload retVal="{numeric}" descr="Extracts data from any row and conf. of the Multi-Configuration Editor. Similar to MCOP with extended capabilities." >
+		<Param name="row" />
+		<Param name="config" />
+		<Param name="data" />
+	</Overload>
+</KeyWord>
+<KeyWord name="MCOP" func="yes">
+	<Overload retVal="{numeric}" descr="Extracts data from any row and configuration of the Multi-Configuration Editor. A conf. # of 0 is the current." >
+		<Param name="row" />
+		<Param name="config" />
+	</Overload>
+</KeyWord>
+<KeyWord name="MFCN" func="yes">
+	<Overload retVal="{numeric}" descr="updates the lens, validates and updates the merit function, then returns the current merit function value." >
+	</Overload>
+</KeyWord>
+<KeyWord name="MODIFYSETTINGS" />
+<KeyWord name="NCON" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the number of configurations." >
+	</Overload>
+</KeyWord>
+<KeyWord name="NEXT" />
+<KeyWord name="NFLD" func="yes">
+	<Overload retVal="{numeric}" descr="The number of defined fields." >
+	</Overload>
+</KeyWord>
+<KeyWord name="NOBJ" func="yes">
+	<Overload retVal="{numeric}" descr="The number of defined objects in the non- sequential surface." >
+		<Param name="surface:non-sequential surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NOTE" func="yes">
+	<Overload retVal="{string}" descr="Returns the notes information defined in the System Explorer. " >
+		<Param name="line#" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NPAR" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a value from the parameter columns of the non-sequential components editor. See SETNSCPARAMETER." >
+		<Param name="surf:surface number" />
+		<Param name="object:object number" />
+		<Param name="param:parameter number" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NPOS" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a value from the position columns of the non-sequential components editor. See SETNSCPOSITION." >
+		<Param name="surf:surface number" />
+		<Param name="object:object number" />
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NPRO" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a numeric or string value from the property pages of objects defined in the non- sequential components editor. " >
+		<Param name="surf:surface number" />
+		<Param name="object:object number" />
+		<Param name="code" />
+		<Param name="face" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NSDC" func="yes">
+	<Overload retVal="{numeric}" descr="Returns coherent intensity data from a pixel on a dectector. Check manual." >
+		<Param name="surf:surface number of non-sequential group." />
+		<Param name="object" />
+		<Param name="pixel" />
+		<Param name="data" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NSDD" func="yes">
+	<Overload retVal="{numeric}" descr="Check manual." >
+		<Param name="surf:surface number of non-sequential group." />
+		<Param name="object" />
+		<Param name="pixel" />
+		<Param name="data" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NSDE" func="yes">
+	<Overload retVal="{numeric}" descr="Check manual." >
+		<Param name="surf:surface number of non-sequential group." />
+		<Param name="object" />
+		<Param name="pixel" />
+		<Param name="angle" />
+		<Param name="data" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NSDP" func="yes">
+	<Overload retVal="{numeric}" descr="Check manual." >
+		<Param name="surf:surface number of non-sequential group." />
+		<Param name="object" />
+		<Param name="pixel" />
+		<Param name="data" />
+	</Overload>
+</KeyWord>
+<KeyWord name="NSLT" />
+<KeyWord name="NSTR" />
+<KeyWord name="NSUR" func="yes">
+	<Overload retVal="{numeric}" descr="The number of defined surfaces." >
+	</Overload>
+</KeyWord>
+<KeyWord name="NUMFIELD" />
+<KeyWord name="NUMWAVE" />
+<KeyWord name="NWAV" func="yes">
+	<Overload retVal="{numeric}" descr="The number of defined wavelengths." >
+	</Overload>
+</KeyWord>
+<KeyWord name="OBJC" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the first non- sequential object# where the comment matches the string A$. " >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OBJECTPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for NSC object files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="OCOD" func="yes">
+	<Overload retVal="{numeric}" descr="The optimization operand code number used by the OPEV function." >
+		<Param name="A$:Name of a Zemax optimization operand." />
+	</Overload>
+</KeyWord>
+<KeyWord name="ONUM" func="yes">
+	<Overload retVal="{numeric}" descr="If the string A$ is the name of a valid optimization operand, then returns the id number of the operand." >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OPDC" func="yes">
+	<Overload retVal="{numeric}" descr="The optical path difference. Valid only after a RAYTRACE call. " >
+	</Overload>
+</KeyWord>
+<KeyWord name="OPEN" />
+<KeyWord name="OPENANALYSISWINDOW" />
+<KeyWord name="OPER" func="yes">
+	<Overload retVal="{numeric}" descr="Extracts data from any row and column of the Merit Function Editor. " >
+		<Param name="row:operand number" />
+		<Param name="col:data type" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OPEV" func="yes">
+	<Overload retVal="{numeric}" descr="Computes the same value as any optimization operand would, without the need to add the operand to the merit function. " >
+		<Param name="code" />
+		<Param name="int1" />
+		<Param name="int2" />
+		<Param name="data1" />
+		<Param name="data2" />
+		<Param name="data3" />
+		<Param name="data4" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OPEW" func="yes">
+	<Overload retVal="{numeric}" descr="Similar to OPEV, the key difference being that OPEW supports two additional arguments. " >
+		<Param name="code" />
+		<Param name="int1" />
+		<Param name="int2" />
+		<Param name="data1" />
+		<Param name="data2" />
+		<Param name="data3" />
+		<Param name="data4" />
+		<Param name="data5" />
+		<Param name="data6" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OPTH" func="yes">
+	<Overload retVal="{numeric}" descr="The optical path length along the ray to the specified surface. Valid only after a RAYTRACE call. " >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="OPTIMIZE" />
+<KeyWord name="OPTRETURN" />
+<KeyWord name="OUTPUT" />
+<KeyWord name="PARAXIAL" />
+<KeyWord name="PARM" func="yes">
+	<Overload retVal="{numeric}" descr="Parameter n of surface s." >
+		<Param name="n:parameter # and surface #" />
+		<Param name="s" />
+	</Overload>
+</KeyWord>
+<KeyWord name="PATHNAME" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name only for the current lens file." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PAUSE" />
+<KeyWord name="PIXEL" />
+<KeyWord name="PIXX" func="yes">
+	<Overload retVal="{numeric}" descr="The number of X-direction pixels in the graphic." >
+		<Param name="A$:full path to a graphic file." />
+	</Overload>
+</KeyWord>
+<KeyWord name="PIXY" func="yes">
+	<Overload retVal="{numeric}" descr="The number of Y-direction pixels in the graphic." >
+		<Param name="A$:full path to a graphic file." />
+	</Overload>
+</KeyWord>
+<KeyWord name="PLOT" />
+<KeyWord name="PLOT2D" />
+<KeyWord name="PMOD" func="yes">
+	<Overload retVal="{numeric}" descr="0 if paraxial mode is off, else 1." >
+	</Overload>
+</KeyWord>
+<KeyWord name="POLDEFINE" />
+<KeyWord name="POLTRACE" />
+<KeyWord name="POP" />
+<KeyWord name="POWR" func="yes">
+	<Overload retVal="{numeric}" descr="Computes the absolute value of x to the power of y." >
+		<Param name="x" />
+		<Param name="y" />
+	</Overload>
+</KeyWord>
+<KeyWord name="PRINT" />
+<KeyWord name="PRINTFILE" />
+<KeyWord name="PRINTWINDOW" />
+<KeyWord name="PROGRAMPATH" func="yes">
+	<Overload retVal="{string}" descr="Returns the path name for program files." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PVHX" func="yes">
+	<Overload retVal="{numeric}" descr="Data1 parameter from the ZPLM optimization operand." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PVHY" func="yes">
+	<Overload retVal="{numeric}" descr="Data2 parameter from the ZPLM optimization operand." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PVPX" func="yes">
+	<Overload retVal="{numeric}" descr="Data3 parameter from the ZPLM optimization operand." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PVPY" func="yes">
+	<Overload retVal="{numeric}" descr="Data4 parameter from the ZPLM optimization operand." >
+	</Overload>
+</KeyWord>
+<KeyWord name="PWAV" func="yes">
+	<Overload retVal="{numeric}" descr="The primary wavelength number." >
+	</Overload>
+</KeyWord>
+<KeyWord name="QUICKFOCUS" />
+<KeyWord name="QUOTE" func="yes">
+	<Overload retVal="{string}" descr="Returns the double quote character." >
+	</Overload>
+</KeyWord>
+<KeyWord name="RADI" func="yes">
+	<Overload retVal="{numeric}" descr="Radius of curvature of surface. If the surface has an infinite radius, RADI returns 0.0. " >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGL" func="yes">
+	<Overload retVal="{numeric}" descr="The global X-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGM" func="yes">
+	<Overload retVal="{numeric}" descr="The global Y-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGN" func="yes">
+	<Overload retVal="{numeric}" descr="The global Z-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGX" func="yes">
+	<Overload retVal="{numeric}" descr="The global x coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGY" func="yes">
+	<Overload retVal="{numeric}" descr="The global y coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAGZ" func="yes">
+	<Overload retVal="{numeric}" descr="The global z coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAND" func="yes">
+	<Overload retVal="{numeric}" descr="Random floating point number uniformly distributed between 0~x. Call RANDOMIZE before this function to change seed. " >
+		<Param name="x:Positive Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RANDOMIZE" />
+<KeyWord name="RANX" func="yes">
+	<Overload retVal="{numeric}" descr="The X-direction cosine of the surface normal. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RANY" func="yes">
+	<Overload retVal="{numeric}" descr="The Y-direction cosine of the surface normal. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RANZ" func="yes">
+	<Overload retVal="{numeric}" descr="The Z-direction cosine of the surface normal. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYE" func="yes">
+	<Overload retVal="{numeric}" descr="The ray-trace error flag, 0 if no error. Valid only after a RAYTRACE or RAYTRACEX." >
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYGENERATOR" />
+<KeyWord name="RAYL" func="yes">
+	<Overload retVal="{numeric}" descr="The X-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYM" func="yes">
+	<Overload retVal="{numeric}" descr="The Y-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYN" func="yes">
+	<Overload retVal="{numeric}" descr="The Z-direction cosine of the ray following the surface. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYO" func="yes">
+	<Overload retVal="{numeric}" descr="The ray optical path length from the previous to the specified surface. Valid only after a RAYTRACE or RAYTRACEX. " >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYT" func="yes">
+	<Overload retVal="{numeric}" descr="The ray path length from the previous surface to the specified surface. Valid only after a RAYTRACE or RAYTRACEX. " >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYTRACE" />
+<KeyWord name="RAYTRACEX" />
+<KeyWord name="RAYV" func="yes">
+	<Overload retVal="{numeric}" descr="0 if ray was not vignetted, else vignetted surface number. Valid only after a RAYTRACE or RAYTRACEX call." >
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYX" func="yes">
+	<Overload retVal="{numeric}" descr="The X-coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYY" func="yes">
+	<Overload retVal="{numeric}" descr="The Y-coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RAYZ" func="yes">
+	<Overload retVal="{numeric}" descr="The Z-coordinate of the ray intercept. Valid only after a RAYTRACE or RAYTRACEX call." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="READ" />
+<KeyWord name="READNEXT" />
+<KeyWord name="READSKIP" />
+<KeyWord name="READSTRING" />
+<KeyWord name="RELEASE" />
+<KeyWord name="RELI" func="yes">
+	<Overload retVal="{numeric}" descr="RI for the specified field position." >
+		<Param name="f:Relative illumination" />
+	</Overload>
+</KeyWord>
+<KeyWord name="RELOADOBJECTS" />
+<KeyWord name="REM" />
+<KeyWord name="REMOVEVARIABLES" />
+<KeyWord name="RENAMEFILE" />
+<KeyWord name="RETURN" />
+<KeyWord name="REWIND" />
+<KeyWord name="RIGHTSTRING" func="yes">
+	<Overload retVal="{string}" descr="Returns the right most n characters in the string A$." >
+		<Param name="A$" />
+		<Param name="n" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SAGG" func="yes">
+	<Overload retVal="{numeric}" descr="Computes the sag in lens units at the specified point on the surface." >
+		<Param name="x:" />
+		<Param name="y:" />
+		<Param name="z:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SAVEARCHIVE" />
+<KeyWord name="SAVEDETECTOR" />
+<KeyWord name="SAVELENS" />
+<KeyWord name="SAVEMERIT" />
+<KeyWord name="SAVETOLERANCE" />
+<KeyWord name="SAVEWINDOW" />
+<KeyWord name="SCATTER" />
+<KeyWord name="SCOM" func="yes">
+	<Overload retVal="{numeric}" descr="If the strings are equal, returns 0. If A$ is less than B$ returns a value less than 0; otherwise greater than 0." >
+		<Param name="A$:Any two string variable names" />
+		<Param name="B$" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SDIA" func="yes">
+	<Overload retVal="{numeric}" descr="Semi-diameter of surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SETAIM" />
+<KeyWord name="SETAIMDATA" />
+<KeyWord name="SETAPODIZATION" />
+<KeyWord name="SETCONFIG" />
+<KeyWord name="SETDETECTOR" />
+<KeyWord name="SETMCOPERAND" />
+<KeyWord name="SETNSCPARAMETER" />
+<KeyWord name="SETNSCPOSITION" />
+<KeyWord name="SETNSCPROPERTY" />
+<KeyWord name="SETOPERAND" />
+<KeyWord name="SETSTDD" />
+<KeyWord name="SETSURFACEPROPERTY" />
+<KeyWord name="SETSYSTEMPROPERTY" />
+<KeyWord name="SETTEXTSIZE" />
+<KeyWord name="SETTITLE" />
+<KeyWord name="SETTOL" />
+<KeyWord name="SETUNITS" />
+<KeyWord name="SETVAR" />
+<KeyWord name="SETVECSIZE" />
+<KeyWord name="SETVIG" />
+<KeyWord name="SHOWBITMAP" />
+<KeyWord name="SHOWFILE" />
+<KeyWord name="SIGN" func="yes">
+	<Overload retVal="{numeric}" descr="Returns -1 if the argument is less than zero, 0 if the argument is zero, and +1 if the argument is positive." >
+		<Param name="x:Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SINE" func="yes">
+	<Overload retVal="{numeric}" descr="Sine of the expression." >
+		<Param name="x:Numeric (rad)" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SLEN" func="yes">
+	<Overload retVal="{numeric}" descr="The number of characters in the string variable" >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SOLM" func="yes">
+	<Overload retVal="{numeric}" descr="The return value is data about the solve type and data for the specified multi configuration operand and configuration." >
+		<Param name="operand" />
+		<Param name="config" />
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SOLV" func="yes">
+	<Overload retVal="{numeric}" descr="The return value is data about the solve type for the specified surface and data. " >
+		<Param name="surf" />
+		<Param name="code" />
+		<Param name="param" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SOLVEBEFORESTOP" />
+<KeyWord name="SOLVERETURN" />
+<KeyWord name="SOLVETYPE" />
+<KeyWord name="SOSO" func="yes">
+	<Overload retVal="{numeric}" descr="This function returns the surface number and/or object number of the macro currently being executed as a solve." >
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SPRO" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a numeric or string value from the property pages or editors of surfaces defined in the lens data editor." >
+		<Param name="surf" />
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SPRX" func="yes">
+	<Overload retVal="{numeric}" descr="This function is similar to SPRO. The key difference is that SPRX supports one additional argument." >
+		<Param name="surf" />
+		<Param name="code" />
+		<Param name="value2" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SQRT" func="yes">
+	<Overload retVal="{numeric}" descr="Square root of the expression." >
+		<Param name="x:Positive Numeric" />
+	</Overload>
+</KeyWord>
+<KeyWord name="STOPSURF" />
+<KeyWord name="STR" func="yes">
+	<Overload retVal="{string}" descr="Returns a string formatted using the format defined by the FORMAT keyword." >
+		<Param name="expression" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SUB" />
+<KeyWord name="SURC" func="yes">
+	<Overload retVal="{numeric}" descr="Surface with comment. Returns the first surface# if the comment matches the string A$. Returns -1 if not." >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SURFTYPE" />
+<KeyWord name="SURP" />
+<KeyWord name="SVAL" func="yes">
+	<Overload retVal="{numeric}" descr="String value. Returns a floating point value of the string A$." >
+		<Param name="A$:Any string variable name" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SYPR" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a numeric or string value for the corresponding system data." >
+		<Param name="code" />
+	</Overload>
+</KeyWord>
+<KeyWord name="SYSP" />
+<KeyWord name="TAB" func="yes">
+	<Overload retVal="{string}" descr="Returns the tab character (\t)." >
+	</Overload>
+</KeyWord>
+<KeyWord name="TANG" func="yes">
+	<Overload retVal="{numeric}" descr="Tangent of the expression." >
+		<Param name="x:Numeric (rad)" />
+	</Overload>
+</KeyWord>
+<KeyWord name="TELECENTRIC" />
+<KeyWord name="TEMPFILENAME" func="yes">
+	<Overload retVal="{string}" descr="Returns the name of a temporary file, with complete path, suitable for temporary storage of text or binary data. " >
+	</Overload>
+</KeyWord>
+<KeyWord name="TESTPLATEFIT" />
+<KeyWord name="THIC" func="yes">
+	<Overload retVal="{numeric}" descr="Thickness of the surface." >
+		<Param name="x:surface #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="TIMER" />
+<KeyWord name="TMAS" func="yes">
+	<Overload retVal="{numeric}" descr="The total mass in grams of the lens from surface 1 to the image surface." >
+	</Overload>
+</KeyWord>
+<KeyWord name="TOLCOMMENT" func="yes">
+	<Overload retVal="{string}" descr="Returns the comment for the specified tolerance operand." >
+		<Param name="operand" />
+	</Overload>
+</KeyWord>
+<KeyWord name="TOLERANCE" />
+<KeyWord name="TOLOPERAND" func="yes">
+	<Overload retVal="{string}" descr="Returns the operand name for the specified tolerance operand." >
+		<Param name="operand" />
+	</Overload>
+</KeyWord>
+<KeyWord name="TOLV" func="yes">
+	<Overload retVal="{numeric}" descr="Returns a numeric or string value from the Tolerance Data Editor." >
+		<Param name="op" />
+		<Param name="col" />
+	</Overload>
+</KeyWord>
+<KeyWord name="UNIT" func="yes">
+	<Overload retVal="{numeric}" descr="Returns 0, 1, 2, or 3, if the current unit type is millimeters, centimeters, inches, or meters, respectively." >
+	</Overload>
+</KeyWord>
+<KeyWord name="UNITS" func="yes">
+	<Overload retVal="{string}" descr="Returns either MM, CM, IN, or M, depending upon the current lens units." >
+	</Overload>
+</KeyWord>
+<KeyWord name="UNLOCKWINDOW" />
+<KeyWord name="UPDATE" />
+<KeyWord name="VEC1" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the value of the array variable at the specified subscript." >
+		<Param name="x:Positive subscript value" />
+	</Overload>
+</KeyWord>
+<KeyWord name="VEC2" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the value of the array variable at the specified subscript." >
+		<Param name="x:Positive subscript value" />
+	</Overload>
+</KeyWord>
+<KeyWord name="VEC3" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the value of the array variable at the specified subscript." >
+		<Param name="x:Positive subscript value" />
+	</Overload>
+</KeyWord>
+<KeyWord name="VEC4" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the value of the array variable at the specified subscript." >
+		<Param name="x:Positive subscript value" />
+	</Overload>
+</KeyWord>
+<KeyWord name="VERS" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the version of the Zemax program. The version is of the form yymmdd. " >
+	</Overload>
+</KeyWord>
+<KeyWord name="WAVL" func="yes">
+	<Overload retVal="{numeric}" descr="Wavelength in micrometers." >
+		<Param name="x:wavelength #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="WINL" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the number of the analysis window most recent ly opened by the keyword OPENANALYSISWINDOW." >
+	</Overload>
+</KeyWord>
+<KeyWord name="WINN" func="yes">
+	<Overload retVal="{numeric}" descr="Returns the number of open analysis windows." >
+	</Overload>
+</KeyWord>
+<KeyWord name="WWGT" func="yes">
+	<Overload retVal="{numeric}" descr="Wavelength weighting." >
+		<Param name="x:wavelength #" />
+	</Overload>
+</KeyWord>
+<KeyWord name="XDIFFIA" />
+<KeyWord name="XMAX" func="yes">
+	<Overload retVal="{numeric}" descr="The maximum x-coordinate in the graphics window." >
+	</Overload>
+</KeyWord>
+<KeyWord name="XMIN" func="yes">
+	<Overload retVal="{numeric}" descr="The minimum x-coordinate in the graphics window." >
+	</Overload>
+</KeyWord>
+<KeyWord name="YMAX" func="yes">
+	<Overload retVal="{numeric}" descr="The maximum y-coordinate in the graphics window." >
+	</Overload>
+</KeyWord>
+<KeyWord name="YMIN" func="yes">
+	<Overload retVal="{numeric}" descr="The minimum y-coordinate in the graphics window." >
+	</Overload>
+</KeyWord>
+<KeyWord name="ZBF2MAT" />
+<KeyWord name="ZBFCLR" />
+<KeyWord name="ZBFMULT" />
+<KeyWord name="ZBFPROPERTIES" />
+<KeyWord name="ZBFREAD" />
+<KeyWord name="ZBFRESAMPLE" />
+<KeyWord name="ZBFSHOW" />
+<KeyWord name="ZBFSUM" />
+<KeyWord name="ZBFTILT" />
+<KeyWord name="ZBFWRITE" />
+<KeyWord name="ZRD2MAT" />
+<KeyWord name="ZRDAPPEND" />
+<KeyWord name="ZRDFILTER" />
+<KeyWord name="ZRDPLAYBACK" />
+<KeyWord name="ZRDSAVERAYS" />
+<KeyWord name="ZRDSUM" />
+
+
+		<!--
+		End of KeyWords
+		-->	
+	</AutoComplete>
+</NotepadPlus>

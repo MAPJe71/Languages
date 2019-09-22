@@ -1,0 +1,29 @@
+/* 
+* https://github.com/notepad-plus-plus/notepad-plus-plus/issues/2485 
+*/
+@-webkit-keyframes show-logo 
+{
+    100% 
+    {
+        opacity: 1;
+    }
+    75% 
+    {
+        opacity: 0.8;
+    }
+    0% 
+    {
+        opacity: 0;
+    }
+}
+@keyframes show-logo {
+    0% {
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+    }
+}

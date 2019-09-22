@@ -1,0 +1,198 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Pause Form Macro snipette (replacement for the "Pause msg=" command
+# MacAuthor = Hynr (Heiner Lieth)
+# MacFileName = PauseForm.gsk
+# MacUrl =
+#*******************************************
+# This is a fancy Pause command. It has both a prompt and a memo box with scrollbars.
+# the Memobox is hidden if there is no text in it. Four buttons are presented 
+# Yes, No, Continue, and Stop Macro.
+
+# Instructions for calling the PauseForm subroutine in a macro
+# Embedding: in macro text: cut-paste anywhere into macro text or insert INCLUDE...
+#            location: within initialization code to force the following 
+
+# If embedding in a macro that should not hang if unattended, then be sure to reprogram
+# the delay for exit (default is one day, 86400 seconds) using a command
+# like this (for a 10 second delay):  $PauseForm = EditForm($PauseForm,"PauseForm","Delay","10")
+
+# Initial values of regular variables Somewhere early in your code you may need to
+# initialize all the variables that this macro uses:
+
+  $PauseForm_Response = "YES,YES,YES,YES" #going into the subroutine this signals which buttons show        
+  $PauseForm_YesNo    = true              #initial status is either true or false,
+# Initial values of form variables:
+  $PauseForm_Prompt= "Click YES or CONTINUE "  # replace with something that fits the buttons
+  $PauseForm_Memo=""
+  gosub name=PauseForm
+
+
+Cancel
+########################################### PAUSE FORM #############################
+# The PauseForm subroutine variables: 
+#  $PauseForm_YesNo is boolean: true: Yes and Continue all other buttons: False
+#  $PauseForm_Response = Uppercase button text space removed (YES, NO, CONTINUE,...)
+#  $PauseForm_Prompt = text acting as prompt; if blank then the default is used
+#  $PauseForm_Memo = text acting as prompt; if blank then the default is used
+
+#  also, as usual: $FormExit = name of the control (button) that caused the form to exit
+
+Beginsub Name=PauseForm
+# entering the subroutine, $PauseForm_Response signals how the buttons are set
+# on exit it holds the status on which of button was clicked "Yes" for Yes or continue button, "No" else
+  if RegExCount(",",$PauseForm_Response)<3 
+    # User has not set the buttons up a particular way, so use the default (all showing)
+    $PauseForm_Response = "YES,YES,YES,YES"     # signals button visibility on form
+  endif
+  $PauseForm = EditForm($PauseForm,"PauseFormYesButton","Visible",extract($PauseForm_Response,",",1))
+  $PauseForm = EditForm($PauseForm,"PauseFormNoButton","Visible",extract($PauseForm_Response,",",2))
+  $PauseForm = EditForm($PauseForm,"PauseFormContinueButton","Visible",extract($PauseForm_Response,",",3))
+  $PauseForm = EditForm($PauseForm,"PauseFormStopMacroButton","Visible",extract($PauseForm_Response,",",4))
+  if $PauseForm_Prompt =""
+    # none was provided so use the default
+    $PauseForm_Prompt = "Click one of these buttons to indicate how you would like to proceed"
+  endif
+  $PauseForm = EditForm($PauseForm,"PauseFormPromptText","Caption",$PauseForm_Prompt)
+
+  # Now that configuration is complete, get the Response variable ready for use
+  $PauseForm_Response=""        # this is the response variable; display form until something is in this variable
+  While $PauseForm_Response="" 
+   If $PauseForm_Memo=""
+     # make the form smaller to hide the memo box if there is nothing in the memo box text
+     $PauseForm = EditForm($PauseForm,"PauseForm","Height","100")
+   ELSE
+     $PauseForm = EditForm($PauseForm,"PauseForm","Height","363")
+     Gosub Name=PauseFormMemoMassage # make text flow if first character is #
+   Endif
+# Display the pause form until one of the bottons is clicked
+  $FormExit = form($PauseForm,"")
+    BeginCase
+    Case $FormExit = "PauseFormYesButton"
+	$PauseForm_YesNo = true
+	$PauseForm_Response = "YES"
+	Break
+    Case $FormExit = "PauseFormNoButton"
+	$PauseForm_YesNo = false
+	$PauseForm_Response = "NO"
+	Break
+    Case $FormExit = "DelayExit"
+# Un-comment the next line to force a delayed exit message requiring a user button click
+#	MsgOk msg="PauseForm exit via Delay"
+	Break
+    Case $FormExit = "SystemExit"
+	$PauseForm_YesNo = false
+	Return
+	break           # note this cancels the pause, not the macro
+
+    Case $FormExit = "PauseFormStopMacroButton"
+      # user want to stop the macro completely
+	$PauseForm_YesNo = false
+	$PauseForm_Response = "STOPMACRO"
+	Return
+    Case $FormExit = "PauseFormContinueButton"
+      # user want to simply move on without stopping the macro
+	$PauseForm_YesNo = true          # note that default here is to let Continue act same as Yes
+	$PauseForm_Response = "CONTINUE" # macro programmer can decide if action needs to be different
+	if $_CtrlKey 
+	    # If user clicks CONTINUE while holding down the control key then this code will run
+	    # this example just loads the code for the form 
+	    $PauseForm_Memo="<Data> VarName=$"+"PauseForm $_NewLine" +$PauseForm + $_NewLine + "<enddata>"
+	    Clip data=$PauseForm_Memo
+	else
+	    Break
+	endif
+    EndCase
+  EndWhile
+  $PauseForm_Prompt = ""
+  $PauseForm = EditForm($PauseForm,"PauseForm_Memo","Scrollbars","Both")
+endsub
+
+Beginsub Name=PauseFormMemoMassage
+# use this call to display text that needs to be wrapped (without horizontal scrollbars
+# this also modifies the text depending on the first character in the memo
+# if that is a # symbol, then all "# " will be removed 
+  IF substr($PauseForm_Memo,1,1)="#"
+    $PauseForm_Memo=substr($PauseForm_Memo,2,100000)
+    #This is useful if the text doubles as macro code comment wraped in a <data> structure
+    # note on a line by iteself, # itself gets stripped; follwed by space converts to linefeed
+    $PauseForm_Memo=Replace($_NewLine+"# "+$_NewLine,"@LF@",$PauseForm_Memo)
+    $PauseForm_Memo=Replace($_NewLine+"# "," ",$PauseForm_Memo)
+    $PauseForm_Memo=Replace("@LF@",$_NewLine+$_NewLine,$PauseForm_Memo)
+    $PauseForm = EditForm($PauseForm,"PauseForm_Memo","Scrollbars","Vertical")
+  ENDIF
+endsub
+
+<Data> VarName=$PauseForm
+#********************************************************************
+# Form generated by GSAK form designer on Sun 27-Dec-2009 09:22:59
+#********************************************************************
+
+Name = PauseForm
+  Type = Form
+  Caption = seconds of PAUSE for this GSAK macro (DeLtile.gsk by Hynr)
+  Delay = 86400
+  Height = 363
+  Width = 584
+
+Name = PauseFormPromptText
+  Type = Label
+  Font = Arial
+  Height = 19
+  Left = 8
+  Size = 12
+  Style = bold
+  Top = 8
+  Width = 519
+  Caption = [PauseFormPromptText]
+
+Name = PauseForm_Memo
+  Type = Memo
+  Font = Courier New
+  Height = 250
+  Left = 8
+  Scrollbars = Both
+  Size = 10
+  Top = 72
+  Width = 561
+  Wrap = Yes
+  Taborder = 10
+
+Name = PauseFormYesButton
+  Type = Button
+  Height = 33
+  Left = 8
+  Top = 32
+  Width = 121
+  Taborder = 11
+  Caption = YES
+
+Name = PauseFormNoButton
+  Type = Button
+  Height = 33
+  Left = 136
+  Top = 32
+  Width = 113
+  Taborder = 12
+  Caption = NO
+
+Name = PauseFormStopMacroButton
+  Type = Button
+  Height = 33
+  Left = 440
+  Top = 32
+  Width = 129
+  Taborder = 5
+  Caption = Stop Macro
+
+Name = PauseFormContinueButton
+  Type = Button
+  Height = 33
+  Left = 256
+  Top = 32
+  Width = 177
+  Taborder = 4
+  Caption = Continue
+
+<enddata>
+########################################### END OF PAUSE FORM ######################

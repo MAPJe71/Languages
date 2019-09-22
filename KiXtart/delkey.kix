@@ -1,0 +1,22 @@
+;
+;  DELKEY.SCR
+;
+;  KiXtart test script.
+;
+;  USAGE : KIX32 DELKEY $Key="<any key you like to delete>"
+;
+;  24-Aug-1995
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+
+
+if existkey( $Key ) <> 0
+   ? "Key doesn't exist: " + $Key
+else
+   if Deltree( $Key ) <> 0
+      ? "Deleted: " + $Key
+   endif
+endif

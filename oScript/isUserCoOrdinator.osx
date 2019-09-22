@@ -1,0 +1,21 @@
+
+function Boolean isUserCoOrdinator(Integer nodeID)
+    Object      prgCtx = .prgSession() // get program context
+    CAPICONNECT connect = prgCtx.fDBConnect.fConnection // get DB Connection
+    Dynamic     ProjectNode = DAPI.GetNodeById(connect, DAPI.BY_DATAID, nodeID) // get the Node
+    Boolean     isCoOrd = False // Boolean indicating if the user has delete perms on the node
+ 
+    // if there was not an error creating the Node
+    if (!IsError(ProjectNode))
+        // does the user had Delete Permissions on this Node
+        isCoOrd = $LLIAPI.NodeUtil.CheckPermissions(ProjectNode, { $PDelete } )
+    end
+ 
+    return isCoOrd
+end
+
+if (.isUserCoOrdinator(1234))
+    echo("User is Co-Ordinator")
+else
+    echo("User is NOT Co-Ordinator")
+end

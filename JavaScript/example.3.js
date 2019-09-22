@@ -1,0 +1,6 @@
+
+function getName() {
+}
+
+function getName () {
+}

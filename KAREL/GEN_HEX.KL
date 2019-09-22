@@ -1,0 +1,161 @@
+-------------------------------------------------------------------------------
+----  GEN_HEX.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about GEN_HEX.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Action:
+----    Clauses:
+----            WITH                        Sec 3-B; 4-B
+----    Conditions:
+----    Data types:
+----            ARRAY OF REAL               Sec 3-B
+----            ARRAY OF XYZWPR             Sec 2
+----            INTEGER                     Sec 2; 3-A,B
+----            JOINTPOS6                   Sec 2
+----            REAL                        Sec 3-A
+----    Directives:
+----            %COMMENT                    Sec 1
+----    Built-in Functions & Procedures:
+----            CHECK_EPOS                  Sec 4-B
+----            CNV_REL_JPOS                Sec 3-B
+----            COS                         Sec 3-A
+----            CURPOS                      Sec 4-A
+----            SIN                         Sec 3-A
+----    Statements:
+----            CONNECT TIMER               Sec 4-A
+----            FOR ... ENDFOR              Sec 3-A,B; 4-B
+----            MOVE TO                     Sec 3-B; 4-B
+----            ROUTINE                     Sec 3-A,B
+----            WRITE                       Sec 4-A,B
+----    Reserve Word:
+----            BEGIN                       Sec 3-A,B; 4
+----            CONST                       Sec 2
+----            CR                          Sec 4-A
+----            END                         Sec 3-A,B; 4-B
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM gen_hex
+    %COMMENT = 'HEXAGON'
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declaration
+-------------------------------------------------------------------------------
+CONST
+    L_HEX_SIDE  = 300       -- Length of one side of the hexagon
+    NUM_AXES    = 6         -- Number of robot axes
+VAR
+    p_cntr      : JOINTPOS6 -- Center of the hexagon
+    p_xyzwpr    : ARRAY[NUM_AXES] OF XYZWPR
+                            -- Six vertices of the hexagon
+    clock,
+    t_start,
+    t_end,
+    t_total     : INTEGER
+    status,
+    p_indx      : INTEGER
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  R_CALC_HEX Declaration
+----                Calculates the hexagon points based on distance
+----                between point 1 and 4 of the hexagon.
+-------------------------------------------------------------------------------
+ROUTINE r_calc_hex
+VAR
+    p1_to_pcntr : REAL    -- Distance from the center of the hex to point 1
+    vertice     : INTEGER -- the index used specify each vertice of hexagon
+BEGIN
+    p1_to_pcntr = (L_HEX_SIDE / 2) + (L_HEX_SIDE * COS(60))
+    p_xyzwpr[1] = p_cntr -- p_cntr was calculated in r_hex_center
+    p_xyzwpr[1].y = p_xyzwpr[1].y - p1_to_pcntr -- set the first vertice of hex
+    FOR vertice = 2 TO NUM_AXES DO      -- start at 2 since 1 is already set
+        p_xyzwpr[vertice] = p_xyzwpr[1] -- Intialize all vertices
+    ENDFOR
+    -- Calculating individual components for each vertice of the hexagon
+    p_xyzwpr[2].x = p_xyzwpr[1].x + (L_HEX_SIDE * SIN(60))
+    p_xyzwpr[2].y = p_xyzwpr[1].y + (L_HEX_SIDE * COS(60))
+    p_xyzwpr[3].x = p_xyzwpr[1].x + (L_HEX_SIDE * SIN(60))
+    p_xyzwpr[3].y = p_xyzwpr[1].y + (L_HEX_SIDE + (L_HEX_SIDE * COS(60)))
+    p_xyzwpr[4].y = p_xyzwpr[1].y + (L_HEX_SIDE + (2 * (L_HEX_SIDE * COS(60)))
+    p_xyzwpr[5].x = p_xyzwpr[1].x - (L_HEX_SIDE * SIN(60))
+    p_xyzwpr[5].y = p_xyzwpr[3].y
+    p_xyzwpr[6].x = p_xyzwpr[1].x - (L_HEX_SIDE * SIN(60))
+    p_xyzwpr[6].y = p_xyzwpr[2].y
+END r_calc_hex
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  R_CALC_HEX Declaration
+----                Positions the face plate perpendicular
+----                to the xy world coordinate plane.
+-------------------------------------------------------------------------------
+ROUTINE r_hex_center
+VAR
+    status, indx   : INTEGER
+    p_cntr_arry    : ARRAY[NUM_AXES] OF REAL
+BEGIN
+    -- Initalize the center position array to zero
+    FOR indx = 1 TO NUM_AXES DO
+        p_cntr_arry[indx] = 0
+    ENDFOR
+    -- Set JOINT 3 and 5 to -45 and 45 degrees
+    p_cntr_arry[3] = -45
+    p_cntr_arry[5] =  45 -- Convert the REAL array to a joint position,
+p_cntr
+    CNV_REL_JPOS(p_cntr_arry,p_cntr,status)
+    $motype  = JOINT
+    WITH $GROUP[1].$SPEED = 1000
+    MOVE TO p_cntr
+END r_hex_center
+
+-------------------------------------------------------------------------------
+----  Section 4:  MainProgram
+-------------------------------------------------------------------------------
+BEGIN  --- GEN_HEX
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Connect timer, set uframe, call routines
+-------------------------------------------------------------------------------
+    clock = 0 -- Initialize clock value to zero
+    CONNECT TIMER TO clock                   -- Connect the timer
+    WRITE ('Movingto the center of the HEXAGON',CR) -- update user of process
+    r_hex_center                     -- position the face plate of robot.
+    $UFRAME = CURPOS(0,0)             -- Set uframe to CURPOS of the robot.
+    WRITE ('Calculating the sides of HEXAGON',CR)  -- update user
+    r_calc_hex                        -- Calculate the hexagon points
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Move on sides of hexagon
+-------------------------------------------------------------------------------
+    WRITE ('Moving along the sides of the Hexagon',CR) -- Update user
+    $MOTYPE   = JOINT -- Set the system variable $GROUP[1].$MOTYPE
+    $SPEED    = 2000  -- Set the system variable $GROUP[1].$SPEED
+    $TERMTYPE = FINE  -- Set the system variable $GROUP[1].$TERMTYPE
+    t_start   = cloc  -- Record the time before motion begins
+    FOR p_indx = 1 TO 6 DO
+        -- Verify that theposition is reachable
+        CHECK_EPOS ((p_xyzwpr[p_indx]), $UFRAME, $UTOOL, status)
+        IF (status <> 0) THEN
+            WRITE ('unable tomove to p_xyzwpr[', p_indx,']',CR);
+        ELSE
+            MOVE TO p_xyzwpr[1] -- Move to first vertice of hexagon
+        ENDIF
+    ENDFOR
+    MOVE TO p_xyzwpr[1]         -- Move back to first vertice of hexagon
+    WITH $GROUP[1].$MOTYPE = LINEAR MOVE TO p_cntr -- Move TCP in a straight
+                                                   -- line to the center position
+    t_end = clock -- Record ending time
+    WRITE('Total motion time = ',t_end-t_start,CR) -- Display the total time for
+                                                   -- motion.
+    -- NOTE that the total was computed in the WRITE statement.
+
+END GEN_HEX

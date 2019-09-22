@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="MRL" ext="mrl">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="yes" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;&apos;0&quot;&apos;0</Keywords>
+            <Keywords name="Folder+">refine filter regulate new abstract correlate execute threshold propagate timer delete collector</Keywords>
+            <Keywords name="Folder-">END</Keywords>
+            <Keywords name="Operators">&apos; - ! &quot; ( ) * , : ; [ ] { | } + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 2 0#</Keywords>
+            <Keywords name="Words1">action if then else where updates duplicate using unless when triggers timer_info index OPEN CLOSED ACK ASSIGNED BLACKOUT CRITICAL MAJOR MINOR WARNING OK HARMLESS INFO UNKNOWN</Keywords>
+            <Keywords name="Words2">NOT AND OR = == != EQUALS &gt; &lt; GREATER_THAN GREATER_OR_EQUALS SMALLER_OR_EQUALS BETWEEN WITHIN CONTAINS CONTAINED_IN CONTAINS_ONE_OF HAS_PREFIX HAS_SUFFIX MATCHES OUTSIDE SUBCLASS_OF SUPERCLASS_OF IP_MATCHES IP_MATCHED_BY</Keywords>
+            <Keywords name="Words3">CONFIRM_EXTERNAL GET_EXTERNAL INTTOSTRING INT_TO_HEX REALTOSTRING POINTERTOSTRING STRING CONCAT STRINGTOPOINTER TRUNC INT ROUND INCR DECR STRLEN TOLOWERCASE TOUPPERCASE UPPER STRPART STRNPART STREXTRACT SUBSTRING STRIP STRTOLIST STRMATCH MATCH_REGEX SPRINTF MAPSLOTS TIME_STAMP_TO_STR TIME_EXTRACT TIME_STAMP TIME_STAMP_TO_CIM STR_TO_TIME_STAMP LISTLEN LISTGETELT LISTMEMBER LISTDELETE LISTAPPEND LISTDISJOINT LISTINTERSECT LISTUNION LISTSUBTRACT LISTREMDUP LISTWALK ADD_TO_LIST REM_FROM_LIST FIND_MATCH FIND_MATCH_ENTRY APPLY_MATCH_ENTRY GET_LIST_SLOTVALUES SET_LIST_SLOTVALUES CLASS_PATH RESET_DEFAULT NTADD NTCNT NTGET NTSET OPADD OPCNT OPGET OPGET_TIME OPGET_AUTHOR OPGET_ACTION OPGET_ARGS OPSET RELATE UNRELATE CELLINFO CELLCONTROL KBVERSION GET_ENV SEND_TO SEND_TO_EXT GENERATE_EVENT NEW_DATA REMOVE_DATA DROP_NEW UNSET_CAUSE SET_TIMER SET_TIMER_AT LOWER</Keywords>
+            <Keywords name="Words4">$</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF0000" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" fontSize="10" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="FF0000" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" fontSize="10" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="FF8040" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF0000" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="804040" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="Verdana" fontStyle="0" fontSize="8" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="808080" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="808080" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

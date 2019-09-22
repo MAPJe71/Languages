@@ -1,0 +1,360 @@
+-------------------------------------------------------------------------------
+----  CPY_TP.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about CPY_TP.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----            FROM                        Sec 3-F
+----    Conditions:
+----    Data Types:
+----            ARRAY OF REAL               Sec 2
+----            ARRAY OF STRING             Sec 2
+----            BOOLEAN                     Sec 2
+----            INTEGER                     Sec 2; 3-B,C,D,E
+----            JOINTPOS                    Sec 2
+----            REAL                        Sec 2
+----            STRING                      Sec 2
+----            XYZWPR                      Sec 2
+----    Directives:
+----            ENVIRONMENT Sec 1
+----    Built-in Functions & Procedures:
+----            AVL_POS_NUM                 Sec 3-E
+----            CHR                         Sec 3-B, 4
+----            CLOSE_TPE                   Sec 3-E
+----            CNV_REL_JPOS                Sec 3-E
+----            CNV_JPOS_REL                Sec 3-E
+----            COPY_TPE                    Sec 3-E
+----            GET_JPOS_TPE                Sec 3-E
+----            GET_POS_TYP                 Sec 3-E
+----            GET_POS_TPE                 Sec 3-E
+----            OPEN_TPE                    Sec 3-E
+----            PROG_LIST                   Sec 3-B
+----            SELECT_TPE                  Sec 3-E
+----            SET_JPOS_TPE                Sec 3-E
+----            SET_POS_TPE                 Sec 3-E
+----    Statements:
+----            FOR...ENDFOR                Sec 3-B,D,E
+----            IF ...THEN...ELSE...ENDIF   Sec 3-A,B,C,E
+----            READ                        Sec 3-B,C,D
+----            REPEAT...UNTIL              Sec 3-B,C,D
+----            RETURN                      Sec 3-E
+----            ROUTINE                     Sec 3-A,B,C,D,E,F
+----            SELECT...ENDSELECT          Sec 3-E
+----            WRITE                       Sec 3-B,C,D,E,4
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B,C,D,E; 4
+----            CONST                       Sec 2
+----            CR                          Sec 3-B,C,D,E
+----            END                         Sec 3-A,B,C,D,E; 4
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM CPY_TP
+    %ENVIRONMENT TPE   -- necessary for all xxx_TPE built-ins
+    %ENVIRONMENT BYNAM -- necessary for PROG_LIST built-in
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declaration
+-------------------------------------------------------------------------------
+CONST
+    ER_WARN = 0 -- warning constant for use in POST_ERR
+    SUCCESS = 0 -- success constant
+    JNT_POS = 9 -- constant for GET_POS_TYP
+    XYZ_POS = 2 -- constant for GET_POS_TYP
+    MAX_AXS = 9 -- Maximum number of axes JOINTPOS has
+VAR
+    from_prog : STRING[13] -- TP program name to be copied FROM
+    to_prog   : STRING[13] -- TP program name to be copied TO
+    over_sw   : BOOLEAN    -- Decides whether to overwrite an existing
+                           -- program when performing COPY_TPE
+    status    : INTEGER    -- Holds error status from the builtin calls
+    off_xyz   : XYZWPR     -- Offset amount for the XYZWPR positions
+    jp_off    : ARRAY [9] of REAL -- Offset amount for the JOINT positions
+    new_xyz   : XYZWPR     -- XYZWPR which has offset applied
+    org_xyz   : XYZWPR     -- Original XYZWPR from to_prog
+    new_jpos  : JOINTPOS   -- JOINTPOS which as the offset applied
+    org_jpos  : JOINTPOS   -- Original JOINTPOS from to_prog
+    open_id   : INTEGER    -- Identifier for the opened to_prog
+    jp_org    : ARRAY [9] of REAL -- REAL representation of org_jpos
+    jp_new    : ARRAY [9] of REAL -- REAL representation of jp_new
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  CHK_STAT Declaration
+----                Tests whether the status was successful or not.
+----                If the status was not successful the status is posted
+-------------------------------------------------------------------------------
+ROUTINE chk_stat (rec_stat: integer)
+BEGIN
+    IF (rec_stat <> SUCCESS) THEN -- if rec_stat is not SUCCESS
+                                  -- then post the error
+        POST_ERR (rec_stat, '', 0, ER_WARN) -- Post the error to the system.
+    ENDIF
+END chk_stat
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  GetFromPrg Declaration
+----                Generate a list of loaded TPE programs.
+----                Lets the user select one of these programs
+----                to be the program to be copied, ie FROM_prog
+-------------------------------------------------------------------------------
+ROUTINE GetFromPrg
+VAR
+    tp_type   : INTEGER -- Types of program to list
+    n_skip    : INTEGER -- Index into the list of programs
+    format    : INTEGER -- What type of format to store programs in
+    n_progs   : INTEGER -- Number of programs returned in prg_name
+    prg_name  : ARRAY [8] of STRING[20] --Program names returned from PROG_LIST
+    status    : INTEGER -- Status of PROG_LIST call
+    f_index   : INTEGER -- Fast index for generating the program listing.
+    arr_size  : INTEGER -- Array size of prg_name
+    prg_select: INTEGER -- Users selection for which program to copy
+    indx      : INTEGER -- FOR loop counter which displays prg_name
+BEGIN
+    f_index    = 0 -- Initialize the f_index
+    n_skip     = 0 -- Initialize the n_skip
+    tp_type    = 2 -- find any TPE program
+    format     = 1 -- return just the program name in prg_name
+    n_progs    = 0 -- Initialize the n_progs
+    arr_size   = 8 -- Set equal to the declared array size of prg_name
+    prg_select = 0 -- Initialize the program selector
+    REPEAT
+        WRITE (chr(128),chr(137)) -- Clear the TP USER screen
+
+        -- Get a listing of all TP program which begin with "TEST"
+        PROG_LIST('TEST*',tp_type,n_skip,format,prg_name,n_progs,status,f_index)
+        chk_stat (status) -- Check status from PROG_LIST
+        FOR indx = 1 to n_progs DO
+            WRITE (indx,':',prg_name[indx], CR) -- Write the list of programs out
+        ENDFOR
+
+        IF (n_skip > 0) OR ( n_prog >0) THEN
+            WRITE ('select program to be copied:',CR)
+            WRITE ('PRESS -1 to get next page of programs:')
+            REPEAT
+                READ (prg_select) -- get program selection
+            UNTIL ((prg_select >= -1) AND (prg_select <= n_progs)
+                                      AND (prg_select <> 0))
+        ELSE
+            WRITE ('no TP programs to COPY', CR)
+            WRITE ('Aborting program, since need',CR)
+            WRITE ('at least one TP program to copy.',CR)
+            ABORT
+        ENDIF
+
+        -- Check if listing is complete and user has not made a selection.
+        IF ((prg_select = -1) AND (n_progs < arr_size)) THEN
+            f_index = 0 --reset f_index to re-generate list.
+            n_progs = arr_size --set so the REPEAT/UNTIL will continue
+        ENDIF
+
+        -- Check if user user has made a selection
+        IF (prg_select <> -1) then
+            from_prog = prg_name[prg_select]-- Set from_prog to name selected
+            n_progs = 0 -- Set n_prog to stop looping.
+        ENDIF
+    UNTIL (n_progs < arr_size)
+END GetFromPrg
+
+-------------------------------------------------------------------------------
+----  Section 3-C:  GetOvrSw Declaration
+----                Ask user whether to overwrite the copied
+----                program, TO_prog, if it exists.
+-------------------------------------------------------------------------------
+ROUTINE GetOvrSw
+VAR
+    yesno : INTEGER
+BEGIN
+    WRITE (CR, 'If Program already exists do you want',CR)
+    WRITE ('to overwrite the file Yes:1, No:0 ? ')
+    REPEAT
+        READ (yesno)
+    UNTIL ((yesno = 0) OR( yesno = 1))
+
+    IF yesno = 1 then --Set over_sw so program is overwriten if it exists
+        over_sw = TRUE
+    ELSE --Set over_sw so program is NOT overwriten if it exists
+        over_sw = FALSE
+    ENDIF
+END GetOvrSw
+
+-------------------------------------------------------------------------------
+----  Section 3-D:  GetOffset Declaration
+----                Have the user input the offset for both
+----                XYZWPR and JOINTPOS positions.
+-------------------------------------------------------------------------------
+ROUTINE GetOffset
+VAR
+    yesno : INTEGER
+    index : INTEGER
+BEGIN
+    --Get the XYZWPR offset, off_xyz
+    REPEAT
+        WRITE ( 'Enter offset for XYZWPR positions',CR)
+        WRITE (' X = ')
+        READ (off_xyz.x)
+        WRITE (' Y = ')
+        READ (off_xyz.y)
+        WRITE (' Z = ')
+        READ (off_xyz.z)
+        WRITE (' W = ')
+        READ (off_xyz.w)
+        WRITE (' P = ')
+        READ (off_xyz.p)
+        WRITE (' R = ')
+        READ (off_xyz.r)
+        --Display the offset values the user input
+        WRITE (' Offset XYZWPR position is',CR, off_xyz,CR)
+        WRITE ('Is this offset correct? Yes:1, No:0 ? ')
+        READ (yesno)
+    UNTIL (yesno = 1) -- enter offset amounts until the user
+                      -- is satisfied.
+
+    --Get the JOINTPOS offset, jp_off
+    REPEAT
+        WRITE ( 'Enter offset for JOINT positions',CR)
+        FOR indx = 1 TO 6 DO -- loop for number of robot axes
+            WRITE (' J',indx,' = ')
+            READ (jp_off[indx])
+        ENDFOR
+        WRITE ('JOINT position offset is', CR)
+        FOR indx = 1 TO 6 DO
+            write ( jp_off[indx],CR) -- Display the values the user input
+        ENDFOR
+        WRITE ('Is this offset correct? Yes:1, No:0 ? ')
+        READ (yesno)
+    UNTIL (yesno = 1) -- Enter offset amounts until the user
+END GetOffset -- is satisfied
+
+-------------------------------------------------------------------------------
+----  Section 3-E:  ModifyPrg Declaration
+----                Apply the offsets to each position within the TP program
+-------------------------------------------------------------------------------
+ROUTINE ModifyPrg
+VAR
+    pos_typ : INTEGER --The type of position returned from GET_POS_TYP
+    num_axs : INTEGER -- The number of axes if position is a JOINTPOS type
+    indx_pos: INTEGER -- FOR loop counter, that increments through TP position
+    group_no: INTEGER -- The group number of the current position setting.
+    num_pos : INTEGER -- The next available position number within TP program
+    indx_axs: INTEGER -- FOR loop counter, increments through REAL array
+BEGIN
+    SELECT_TPE ('', status) -- Make sure the to_prog is currently not selected
+    to_prog = 'MDFY_TP' -- Set the to_prog to desired name.
+
+    ------ Copy the from_prog to to_prog -----
+    COPY_TPE (from_prog, to_prog, over_sw, status)
+    chk_stat(status) -- check status of COPY_TPE
+
+    -- If the user specified not to overwrite the TPE program and
+    -- the status returned is 7015, "program already exist",
+    -- then quit the program. This will mean not altering the already
+    -- existing to_prog.
+    IF ((over_sw = FALSE) AND (status = 7015)) THEN
+        WRITE ('ABORTING:: PROGAM ALREADY EXISTS!',CR)
+        RETURN
+    ENDIF
+
+    --- Open the to_prog with the Read/Write access
+    OPEN_TPE (to_prog, TPE_RWACC, TPE_RDREJ, open_id, status)
+    chk_stat(status) -- check status of OPEN_TPE
+    group_no = 1
+
+    --- apply offset to each position within to_prog
+    --- The current number of position that the TPE program has is num_pos -1
+    FOR indx_pos = 1 to num_pos-1 DO
+
+        -- Get the DATA TYPE of each position within the to_prog
+        -- If it is a JOINTPOS also get the number of axes.
+        GET_POS_TYP (open_id, indx_pos, group_no, pos_typ, num_axs, status)
+        chk_stat (status)
+        WRITE('get_pos_typ status', status,cr)
+
+        -- Decide if the position, indx_pos, is a JOINTPOS or a XYZWPR
+        SELECT pos_typ OF
+            CASE (JNT_POS): -- The position is a JOINTPOS
+
+                FOR indx_axs = 1 TO MAX_AXS DO -- initialize with default values
+                    jp_org[indx_axs] = 0.0 -- This avoids problems with the
+                    jp_new[indx_axs] = 0.0 -- CNV_REL_JPOS
+                ENDFOR
+
+                -- get the JOINTPOS P[indx_pos] from to_prog -----
+                org_jpos = GET_JPOS_TPE (open_id, indx_pos, status)
+                chk_stat( status)
+
+                -- Convert the JOINTPOS to a REAL array, in order to perform offset
+                CNV_JPOS_REL (org_jpos, jp_org, status)
+                chk_stat (status)
+
+                -- Apply the offset to the REAL array
+                FOR indx_axs = 1 to num_axs DO
+                    jp_new[indx_axs] = jp_org[indx_axs] + jp_off[indx_axs]
+                ENDFOR
+
+                -- Converted back to a JOINTPOS.
+                -- The input array, jp_new, must not have any uninitialized values
+                -- or the error 12311 - "Data uninitialized" will be posted.
+                -- This is why we previously set all the values to zero.
+                CNV_REL_JPOS (jp_new, new_jpos, status)
+                chk_stat(status)
+
+                -- Set the new offset position, new_jpos, into the indx_pos
+                SET_JPOS_TPE (open_id, indx_pos, new_jpos, status)
+                chk_stat(status)
+                write ('indx_pos', indx_pos, 'new_jpos',cr, new_jpos,cr)
+
+            CASE (XYZ_POS): -- The position is a XYZWPR
+
+                -- Get the XYZWPR position P[indx_pos] from to_prog
+                org_xyz = GET_POS_TPE (open_id , indx_pos, status)
+                chk_stat( status) -- Check status from GET_POS_TPE
+
+                -- Apply offset to the XYZWPR
+                new_xyz.x = org_xyz.x + off_xyz.x
+                new_xyz.y = org_xyz.y + off_xyz.y
+                new_xyz.z = org_xyz.z + off_xyz.z
+                new_xyz.w = org_xyz.w + off_xyz.w
+                new_xyz.p = org_xyz.p + off_xyz.p
+                new_xyz.r = org_xyz.r + off_xyz.r
+
+                --Set the new offset position, new_xyz, into the indx_pos
+                SET_POS_TPE (open_id, indx_pos, new_xyz, status)
+                chk_stat (status) -- Check status from SET_POS_TPE
+        ENDSELECT
+    ENDFOR
+    ---Close TP program before quitting program
+    CLOSE_TPE (open_id, status)
+    chk_stat (status) --Check status from CLOSE_TPE
+END ModifyPrg
+
+-------------------------------------------------------------------------------
+----  Section 3-F:  TP_CLS Declaration
+----                Clears the TP USER Menu screen and forces it to
+----                become visible. The actual code resides in ROUT_EX.KL
+-------------------------------------------------------------------------------
+ROUTINE TP_CLS FROM rout_ex
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- CPY_TP
+
+    tp_cls      -- Clear the TP USER Menu screen
+    GetFromPrg  -- Get the TPE program to copy FROM
+    GetOvrSw    -- Get the TPE program name to copy TO
+    GetOffset   -- Get the offset for modifying
+                -- the teach pendant program
+    ModifyPrg   -- Modify the copied program by the offset
+
+END CPY_TP

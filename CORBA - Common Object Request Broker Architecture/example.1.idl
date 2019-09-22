@@ -1,0 +1,21 @@
+module test {
+
+interface EntityRoot {
+
+};
+
+/* comment 1 */
+
+interface Entity : EntityRoot {
+
+    void setName (
+        in string value // this comment results in empty tree 
+    ) raises(ServerError);
+
+    void changePosition (
+        in long value
+    ) raises(ServerError);
+    
+};
+
+};

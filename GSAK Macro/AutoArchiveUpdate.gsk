@@ -1,0 +1,216 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Automaticly Update Old Caches and allow for deletion
+# MacAuthor = bromley
+# MacFileName = AutoArchiveUpdate.gsk
+#*******************************************
+
+
+
+#*******************************************************
+#   Variable declarations for
+#   AutoArchiveUpdate.gsk
+#
+#   Generated 06/21/2008 11:15:16 AM on GSAKVariables.gsk Rev V0.20 B15
+#
+#*******************************************************
+
+
+Option Explicit=Yes
+
+Declare Var=$Choice Type=Numeric
+Declare Var=$datafile Type=String
+Declare Var=$DataFolder Type=String
+Declare Var=$DBChosen Type=Numeric
+Declare Var=$DBName Type=String
+Declare Var=$DBNum Type=Numeric
+Declare Var=$DBs Type=String
+Declare Var=$DirFile Type=String
+Declare Var=$DirTxt Type=String
+Declare Var=$FormExit Type=String
+Declare Var=$macroPath Type=String
+Declare Var=$MsgForm Type=String
+Declare Var=$MsgTxt Type=String
+Declare Var=$NotFoundDB Type=String
+Declare Var=$Option1 Type=String
+Declare Var=$Option2 Type=String
+Declare Var=$Option3 Type=String
+Declare Var=$Option4 Type=String
+Declare Var=$Option5 Type=String
+Declare Var=$Result Type=Numeric
+Declare Var=$SavedFile Type=String
+Declare Var=$UChoices Type=String
+Declare Var=$UpdateFrequency Type=String
+
+
+
+#Review for Archived Caches after loading a fresh pocket query
+  DEBUG Status=Off
+
+# Check that GSAK version is new enought to run this macro
+  VERCHECK Version=7.1.0.0 (please update GSAK to the latest version to run this macro - see http://gsak.net)
+  $macroPath=Sysinfo("MacroPath")
+  $datafile=$macroPath + "\AutoArchiveUpdate.dat"
+
+# Go to subroutine to determine Database where unfound caches are kept ($NotFoundDB)
+  GOSUB Name=Saved_Data
+
+#Change to the Database where unfound caches are kept
+  DATABASE Name=$NotFoundDB
+
+#Clear all userflags
+  USERFLAG type=clear range=all
+
+#Filter for Caches that were not updated since the last Pocket Query
+  MFILTER IF=$d_LastGPXDate<($_Today-VAL($UpdateFrequency)) .AND. $d_OwnerId <> NumToStr($p_ownerid)
+  IF $_FilterCount>0
+      MACRO File=$macroPath\refreshAllGPX.gsk
+      ELSE 
+        $MsgTxt = "No old caches found."
+        $MsgForm = Replace("@msg@",$MsgTxt,$MsgForm,TRUE)
+        $FormExit = form($MsgForm,"")
+  ENDIF 
+
+
+
+
+  MFILTER IF=$d_Archived
+  IF $_FilterCount=0
+      CANCELFILTER 
+  ENDIF 
+
+
+
+
+#########################################################
+# Subroutine to determine if folder and file locations were previously saved and, if not, prompt the user and save the data.
+#########################################################
+  BEGINSUB Name=Saved_Data
+
+# Set the file path
+
+      IF isEmpty($datafile)
+          MSGOK msg="$datafile variable not specified"
+          CANCEL 
+      ENDIF 
+
+
+
+# Does the file exist?
+      IF (FileExists($datafile))
+
+# Yes? Read config values and assign to variables
+          FILEREAD File=$datafile
+              $NotFoundDB=EXTRACT($line, ";", 1)
+              $UpdateFrequency=EXTRACT($line, ";", 2)
+          ENDREAD 
+
+          ELSE 
+
+# Get the Database where the User's Unfound Caches are Stored
+          $NotFoundDB=""
+          $UpdateFrequency="7"
+          GOSUB Name=SelectDB
+          $NotFoundDB=$DBName
+# Determine the Frequency of the User's PQ (in days) ($UpdateFrequency)
+          INPUT Msg="Enter the frequency of your Pocket Queries, in days (e.g. weekly=7):" Default="7" VarName=$UpdateFrequency
+
+# Save those user choices into $datafile, separated by ";"
+          $UChoices=$NotFoundDB + ";" + $UpdateFrequency + ";"
+          $SavedFile=PUTFILE($datafile, $UChoices)
+          IF Left($SavedFile, 7) = "*Error*"
+              CANCEL Msg="Unable to write to $datafile!"
+          ENDIF 
+      ENDIF 
+  ENDSUB 
+
+################################################################
+#Subroutine to allow user to select from a list of avaialable GSAK databases
+################################################################
+  BEGINSUB Name=SelectDB
+# Gather all DB names and save to $DBs variable delimited by ";"
+      $DataFolder=$_Install+"\Data"
+      $DirFile=$_Install+ "\Temp\DirTmp.txt"
+      RUNPGM pgm="Cmd.exe" parms=/C dir /ad /b "$DataFolder" >"$DirFile"
+      $DirTxt = GetFile($DirFile)
+      $DBs = Replace($_Newline,";",$DirTxt,True)
+
+#Count the number of existing Databases, store as $DBNum
+      $DBNum=RegExCount(";", $DBs)
+
+      $Choice=0
+      $Result=5
+
+#Iterate through available databases 4 at a time, allowing user to select from those shown
+      WHILE $Result=5
+          GOSUB name=Choose
+      ENDWHILE 
+
+#Select the database per the user's choice
+      $DBChosen=$Choice - (4-$Result)
+      $DBName=Extract($DBs, ";", $DBChosen)
+
+      BEGINSUB name=Choose
+          $Choice=$Choice+ 1
+
+#Cancel Macro if all database choices are exhausted
+          IF $Choice>$DBnum
+              CANCEL  Msg="No more databases to choose - macro cancelled"
+          ENDIF 
+
+#Assign options to the Choose command based on iteration through avaialable databases
+          $Option1=Extract($DBs, ";", $Choice)
+          $Choice=$Choice+1
+          $Option2=Extract($DBs, ";", $Choice)
+          $Choice=$Choice + 1
+          $Option3=Extract($DBs, ";", $Choice)
+          $Choice=$Choice + 1
+          $Option4=Extract($DBs, ";", $Choice)
+
+#Assign option 5 in choose command based on availability of more choices
+          IF $Choice<$DBnum
+              $Option5="Show more database choices..."
+              ELSE 
+              $Option5="No More Databases to Choose - Cancel Macro"
+          ENDIF 
+
+#Allow user to choose among the four options shown
+          CHOOSE Msg="Select the desired GSAK Database" opt1="$Option1" opt2="$Option2" opt3="$Option3" opt4="$Option4" opt5="$Option5"
+      ENDSUB 
+  ENDSUB 
+
+<Data> VarName=$MsgForm
+#********************************************************************
+# Form generated by GSAK form designer on Tue 26-Apr-2011 16:32:06
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Message
+  Delay = 15
+  Height = 98
+  Width = 327
+
+Name = MsgTxtf
+  Type = Label
+  Font = Arial
+  Height = 22
+  Left = 4
+  Size = 14
+  Style = bold
+  Top = 4
+  Width = 303
+  Caption = @msg@
+
+Name = Button1
+  Type = Button
+  Enter = Yes
+  Height = 24
+  Left = 120
+  Top = 33
+  Width = 75
+  Taborder = 8
+  Caption = OK
+
+<enddata>
+

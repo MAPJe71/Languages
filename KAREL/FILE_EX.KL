@@ -1,0 +1,168 @@
+-------------------------------------------------------------------------------
+----  FILE_EX.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about FILE_EX.kl
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Action:
+----    Clauses:
+----            FROM                        Sec 3
+----    Conditions:
+----    Data types:
+----            BOOLEAN                     Sec 2
+----            INTEGER                     Sec 2
+----            STRING                      Sec 2
+----    Directives:
+----            COMMENT                     Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            CNV_TIME_STR                Sec 4-A
+----            COPY_FILE                   Sec 4-B
+----            DISMOUNT_DEV                Sec 4-B
+----            FORMAT_DEV                  Sec 4-B
+----            GET_TIME                    Sec 4-A
+----            MOUNT_DEV                   Sec 4-B
+----            PURGE_DEV                   Sec 4-B
+----            SUB_STR                     Sec 4-A
+----    Statements:
+----            IF...THEN...ELSE...ENDIF    Sec 4-B
+----            REPEAT...UNTIL              Sec 4-A
+----            ROUTINE                     Sec 3
+----            SELECT...ENDSELECT          Sec 4-B
+----            WRITE                       Sec 4-A,B
+----    Reserve Words:
+----            BEGIN                       Sec 4
+----            CONST                       Sec 2
+----            CR                          Sec 4-A,B
+----            END                         Sec 4-B
+----            PROGRAM                     Sec 4
+----            VAR                         Sec 2
+----    Devices Used:
+----            FLPY                        Sec 4-B
+----            MF3                         Sec 4-B
+----            RD                          Sec 4-B
+----            FR                          Sec 4-B
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM FILE_EX
+    %nolockgroup
+    %comment = 'COPY FILES'
+
+-------------------------------------------------------------------------------
+----  Section 2:  Variable Declaration
+-------------------------------------------------------------------------------
+CONST
+    SUCCESS   = 0     -- Success status from builtins
+    FINISHED  = TRUE  -- Finished Copy
+    TRY_AGAIN = FALSE -- Try to copy again
+    RD_FULL   = 85020 -- RAM disk full
+    NOT_MOUNT = 85005 -- Device not mounted
+    FR_FULL   = 85001 -- FROM disk is full
+    MNT_RD    = 85004 -- RAM disk must be mounted
+    -- Refer to FANUC Robotics SYSTEM R-J3iB Controller KAREL
+    -- Setup and Operations Manual for an Error Code listing
+VAR
+    time_int : INTEGER
+    time_str : STRING[30]
+    status   : INTEGER
+    cpy_stat : BOOLEAN
+    to_dev   : STRING[5]
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+ROUTINE tp_cls FROM ROUT_EX
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main program
+-------------------------------------------------------------------------------
+BEGIN -- FILE_EX
+    tp_cls -- from rout_ex.kl
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Get Time and FORMAT ramdisk with date as volume name
+-------------------------------------------------------------------------------
+    GET_TIME(time_int) -- Get the system time
+    CNV_TIME_STR(time_int, time_str) -- Convert the INTEGER time
+    -- to readable format
+    WRITE ('Today is ', SUB_STR(time_str, 2,8),CR) -- Display the date part
+    WRITE ('Time is ', SUB_STR(time_str, 11,5),CR) -- Display the time part
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Mount RAMDISK and start copying from FLPY to MF3:
+-------------------------------------------------------------------------------
+    to_dev = 'MF3:'
+    REPEAT -- Until all files have been copied
+        cpy_stat = FINISHED
+        WRITE('COPYing......',cr)
+        -- Copy the files from FLPY: to to_dev and overwrite the file if it
+        -- already exists.
+        COPY_FILE('FLPY:*.kl', to_dev, TRUE, FALSE, status)
+        SELECT (status) OF
+            CASE (RD_FULL): -- RAM disk is full
+                -- Dismount and re-size the RAM-DISK
+                WRITE ('DISMOUNTing RD: ....',cr)
+                DISMOUNT_DEV('RD:', status)
+                -- Verify DISMOUNT was successful or that
+                -- the device was not already mounted
+                IF (status = SUCCESS) OR (status = NOT_MOUNT) THEN
+                    -- Increase the size of RD:
+                    WRITE('Increasing RD: size...',cr)
+                    $FILE_MAXSEC = ROUND($FILE_MAXSEC * 1.2)
+                    -- Increase the RAM disk size
+                    -- Format the RAM-DISK
+                    WRITE('FORMATTING RD:......',cr)
+                    FORMAT_DEV('RD:','' ,FALSE, status) -- Format the RAM disk
+                    IF (status <> SUCCESS) THEN
+                        WRITE ('FORMAT of RD: failed, status:', status,CR)
+                        WRITE ('Copy incomplete',cr)
+                    ELSE
+                        cpy_stat = TRY_AGAIN
+                    ENDIF
+                    WRITE('MOUNTing RD:......',cr)
+                    MOUNT_DEV ('RD:', status)
+                    IF (status <> SUCCESS) THEN
+                        WRITE ('MOUNTing of RD: failed, status:', status,CR)
+                        WRITE ('Copy incomplete',cr)
+                    ELSE
+                        cpy_stat = TRY_AGAIN
+                    ENDIF
+                ELSE
+                    WRITE ('DISMOUNT of RD: failed, status:', status,cr)
+                    WRITE ('Copy incomplete',cr)
+                ENDIF
+
+            CASE (FR_FULL): -- FROM disk is full
+                WRITE ('FROM disk is full',CR, 'PURGING FROM.....', CR)
+                PURGE_DEV ('FR:', status) -- Purge the FROM
+                IF (status <> SUCCESS) THEN
+                    WRITE ('PURGE of FROM failed, status:', status, CR)
+                    WRITE ('Copy incomplete', CR)
+                ELSE
+                    cpy_stat = TRY_AGAIN
+                ENDIF
+
+            CASE (NOT_MOUNT, MNT_RD): -- Device is not mounted
+                WRITE ('MOUNTing ',to_dev,'.....',CR)
+                MOUNT_DEV(to_dev, status)
+                IF (status <> SUCCESS) THEN
+                    WRITE ('MOUNTing of ',to_dev,': failed, status:', status, CR)
+                    WRITE ('Copy incomplete', CR)
+                ELSE
+                    cpy_stat = TRY_AGAIN
+                ENDIF
+
+            CASE (SUCCESS):
+                WRITE ('Copy completed successfully!',CR)
+
+            ELSE:
+                WRITE ('Copy failed, status:', status,CR)
+        ENDSELECT
+    UNTIL (cpy_stat = FINISHED)
+
+END FILE_EX
+

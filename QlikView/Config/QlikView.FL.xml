@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="qlikview" userDefinedLangName="QlikView" />
+			<association id="qlikview" ext=".qvs" />
+		</associationMap>
+		<parsers>
+			<!--
+			|   https://github.com/MattFryer/QlikView-Notepad-plus-plus
+			\-->
+			<parser
+				id         ="qlikview"
+				displayName="QlikView"
+				commentExpr="(?s-m:/\*.*?\*/)|(?m-s://.*?$)"
+			>
+				<function
+					mainExpr="(sub\s+[\w.\-[\]\$()]+\s*\([^()]*\)|store\s+[\w.\-[\]\$()]+\s+into\s+[\w.\-[\]\$()\/:]+\s*(?:\(qvd\)|\(txt\))*;|[\w.\-[\]\$()]+:\s+(?:mapping|noconcatenate)*\s+load\s+|(?:left\s|right\s|inner\s|outer\s)*(?:join|keep|concatenate)+\s*\([\w.\-[\]\$()]+\)\s+load\s+|(?:bundle\s+)*info\s+load\s+[\w.\-[\]\$()]+,|(?:un)*qualify\s+[\w.\-[\]\$(),\s*&quot;]+;)"
+				>
+					<functionName>
+						<nameExpr expr="(sub\s+[\w.\-[\]\$()]+|store\s+[\w.\-[\]\$()]+\s+|[\w.\-[\]\$()]+:\s+(?:mapping|noconcatenate)*load|(?:left\s|right\s|inner\s|outer\s)*(?:join|keep|concatenate)+\s*\([\w.\-[\]\$()]+\)|(?:bundle\s+)*info\s+load\s+[\w.\-[\]\$()]+)|(?:un)*qualify\s+[\w.\-[\]\$(),\s*&quot;]+" />
+					</functionName>
+					<className>
+						<nameExpr expr="into\s+[\w.\-[\]\$()\/:]+\s*(?:\(qvd\)|\(txt\))*" />
+					</className>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

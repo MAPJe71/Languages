@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=       "sanet_section"       userDefinedLangName="SANET"             />
+			<association id=       "sanet_section"       ext=".san"                              />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ SANET ] -->
+
+			<!--
+			|   https://notepad-plus-plus.org/community/topic/14808/can-t-seem-to-get-functionlist-xml-to-recognize-my-udl
+			\-->
+			<parser
+				displayName="[UDL] SANET - SA Network Configuration Section"
+				id         ="sanet_section"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?im)                                               # case-insensitive, ^ and $ match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							SECTION
+							\K                                                  # discard text matched so far
+							[^\r\n]+                                            # whatever,
+							$                                                   # ...up till end-of-line
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

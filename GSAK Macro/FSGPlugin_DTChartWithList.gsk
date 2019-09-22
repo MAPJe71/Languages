@@ -1,0 +1,1615 @@
+#*******************************************
+# MacDescription = FSG Plugin - generates a Diff/Terr-Chart with ability to show a list of caches
+# MacFileName = FSGPlugin_DTChartWithList.gsk
+# MacAuthor = Kappler
+# MacVersion=1.21
+# MacUrl=http://gsak.net/board/index.php?showtopic=18006&view=findpost&p=123883
+#*******************************************
+# Changes:
+#  V1.00 2011-01-27  First public version 
+#  V1.01 2011-01-27  pre-initialize $FindsWithDuplicates to make the macro usable with the "Test"-button
+#  V1.02 2011-05-11  small changes (<td> to <th>) to work with the new Layout at GC.com
+#                    add "Click on Chart" below the chart
+#  V1.1  2011-05-13  added support for additional languages
+#  V1.11 2011-05-17  small change in the variables for additional languages (hardcore-extreme-difficult no longer needed)
+#                    bug fixed with macro-parameters after calling language-file
+#  V1.12 2011-07-27  fixed problem with double declaration after BadgeGen-Update (intermediate version)
+#  V1.2  2011-10-11  added parameter SubPagesURL for linking to external complete cachelist
+#                    small layout-change in cachelist
+#                    added support for smooth and rounded style
+#  V1.21 2011-10-22  Rounded style only available with actual Beta of FSG - workaround to get rid of error... 
+#
+
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_DTChartWithList[?AdditionalParameters]</plugin>"
+ENDIF
+
+$MyMacroParms = $_MacroParms
+
+GOSUB name=DeclareVariables
+GOSUB Name=InitLanguage
+
+# initialisiere Parameter-Variablen
+$UseSubPages = 0
+$SubPagesURL = "empty"
+$ChartType = "1234"
+$ListItems = 3
+
+# Parameter einlesen
+if $MyMacroParms <> ""
+	$count = RegExCount("&",$MyMacroParms)
+	$i = 1
+	while $i <= $count+1
+		$Text1 = extract($MyMacroParms,"&",$i)
+		$Text2 = upper($Text1)
+		
+		if (AT("LISTITEMS", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$ListItems = Val($Text2)
+			else
+				RETURN msg="$LangPlugIn03 $_CrLf $Text1"
+			endif
+		endif
+		if (AT("CHARTTYPE", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$ChartType = AllTrim($Text2)
+			else
+				RETURN msg="$LangPlugIn01 $_CrLf $Text1"
+			endif
+		endif
+		if (AT("SUBPAGESURL", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$UseSubPages = 1
+				$SubPagesURL = AllTrim($Text2)
+			else
+				RETURN msg="$LangPlugIn02 $_CrLf $Text1"
+			endif
+		endif
+		$i = $i+1
+	endwhile
+endif
+
+# MsgOK msg="ChartType: '$ChartType' $_CrLf ListItems: $ListItems $_CrLf SubPagesURL: '$SubPagesURL' $_CrLf UseSubPages:$UseSubPages"
+
+# remove Style #4 from ChartType
+$ChartType = Replace("4","",$ChartType)
+
+if Right($SubPagesURL, 1) = "/"
+	$SubPagesURL = Left($SubPagesURL, Len($SubPagesURL)-1)
+endif
+
+
+# Initialise Variables
+$out = ""
+
+# initialize variable, if necessary, to provide function of notes-testing
+if ($FindsWithDuplicates = 0)
+	$_sql = "Select * from AllFinds ORDER BY lDate, lLogid"
+	$work = Sqlite("sql",$_sql)
+	$FindsWithDuplicates = $_SqlRows
+endif
+
+GOSUB Name=InitStyles
+
+# create DiffTerr-Charts
+GOSUB Name=DiffTerrChartHead
+
+$NumCharts = Len($ChartType)
+$ChartIndex = 1
+WHILE $ChartIndex <= $NumCharts
+	$DisplayDiv = "none"
+	IF $ChartIndex = 1
+     	$DisplayDiv = "block"
+	ENDIF
+
+	$ActualChart = val(Substr($ChartType, $ChartIndex, 1))
+
+	IF $ChartIndex = $NumCharts
+		$NextChart = val(Substr($ChartType, 1, 1))
+	ELSE
+		$NextChart = val(Substr($ChartType, $ChartIndex+1, 1))
+	ENDIF
+	
+	IF ($NextChart = 3) or ($NextChart = 4)
+		$DisplayExtremHardcoreDiv = "block"
+		$DisplayNoExtremHardcoreDiv = "none"
+	ELSE
+		$DisplayExtremHardcoreDiv = "none"
+		$DisplayNoExtremHardcoreDiv = "block"
+	ENDIF
+	
+	BeginCase
+		Case $ActualChart = 1 # heatmap-shaded Original-chart
+			$out = $out + "<div id='DTM1' style='display:$DisplayDiv'>" + $_CrLf
+			$ChartTyp = 1
+			GOSUB Name=DiffTerrChart2
+		Case $ActualChart = 2 # standard Original-chart
+			$out = $out + "<div id='DTM2' style='display:$DisplayDiv'>" + $_CrLf
+			$ChartTyp = 2
+			GOSUB Name=DiffTerrChart2
+		Case $ActualChart = 3 # standard chart with Extrem/Hardcore-differentiation
+			$out = $out + "<div id='DTM3' style='display:$DisplayDiv'>" + $_CrLf
+			$ChartTyp = 3
+			GOSUB Name=DiffTerrChart2
+		Case $ActualChart = 4 # combination ou heatmap-shading and Extrem/Hardcore-differentiation
+			$out = $out + "<div id='DTM4' style='display:$DisplayDiv'>" + $_CrLf
+			GOSUB Name=DiffTerrChart1
+	EndCase
+	$out = $out + "</div>" + $_CrLf
+	$ChartIndex = $ChartIndex + 1
+ENDWHILE
+
+GOSUB Name=DiffTerrChartExtremHardcoreLinks
+
+GOSUB Name=DiffTerrDivs
+
+$p_FSGData = $out
+
+
+
+BEGINSUB Name=InitStyles
+	# default: Style-colors for grey style
+	$stColor2c2Leicht = "#BEBEBE"
+	$stColor2c2Schwer = "#A8A8A8"
+	$stColor2c2Extrem = "#929292"
+	$stColor2c2Hardcore = "#7B7B7B"
+
+	IF $StyleSet = "Grey"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#BEBEBE"
+		$stColor2c2Schwer = "#A8A8A8"
+		$stColor2c2Extrem = "#929292"
+		$stColor2c2Hardcore = "#7B7B7B"
+	ENDIF
+	IF $StyleSet = "Red"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#D9B6B6"
+		$stColor2c2Schwer = "#BFA1A1"
+		$stColor2c2Extrem = "#A68B8B"
+		$stColor2c2Hardcore = "#8C7676"
+	ENDIF
+	IF $StyleSet = "Green"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B6D9B6"
+		$stColor2c2Schwer = "#A1BFA1"
+		$stColor2c2Extrem = "#8BA68B"
+		$stColor2c2Hardcore = "#768C76"
+
+	ENDIF
+	IF $StyleSet = "Blue"
+		# Style-colors for grey style
+		$stColor2c2Leicht = "#B8B8D9"
+		$stColor2c2Schwer = "#A3A3BF"
+		$stColor2c2Extrem = "#8D8DA6"
+		$stColor2c2Hardcore = "#77778C"
+	ENDIF
+	IF $StyleSet = "Smooth"
+		# Style-colors for smooth style
+		$stColor2c2Leicht = "#E3DDC2"
+		$stColor2c2Schwer = "#C4BFA7"
+		$stColor2c2Extrem = "#A8A48F"
+		$stColor2c2Hardcore = "#918E7C"
+	ENDIF
+	
+	$stColorDiffTerrLeicht = "#005BB7"
+	$stColorDiffTerrSchwer = "#014B94"
+	$stColorDiffTerrExtrem = "#013970"
+	$stColorDiffTerrHardcore = "#01274D"
+	$stColorDiffTerrHi = "#B00000"
+	$st2c2Schwer  = "background: " + $stColor2c2Schwer + ";"
+	$st2c2Extrem  = "background: " + $stColor2c2Extrem + ";"
+	$st2c2Hardcore  = "background: " + $stColor2c2Hardcore + ";"
+	$stDiffTerrSchwer  = "background: " + $stColorDiffTerrSchwer + "; color: #FFFFFF"
+	$stDiffTerrExtrem  = "background: " + $stColorDiffTerrExtrem + "; color: #FFFFFF"
+	$stDiffTerrHardcore  = "background: " + $stColorDiffTerrHardcore + "; color: #FFFFFF"
+	$stDiffTerrhi  = "background: #B00000; color: #FFFFFF"
+	$stDiffTerr    = "background: #005BB7; color: #FFFFFF"
+
+	IF VarExists("StyleRounded") # only with newer versions of FSG
+		IF $StyleRounded
+			$st2c2Schwer  = $st2c2Schwer + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Extrem  = $st2c2Extrem + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+			$st2c2Hardcore  = $st2c2Hardcore + "padding:2px; border-bottom: 1px solid #d8cd9d;"
+		ENDIF
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=InitLanguage
+	$Internal=FALSE
+
+	Declare Var=$LangPlugIn01 Type=String
+	Declare Var=$LangPlugIn02 Type=String
+	Declare Var=$LangPlugIn03 Type=String
+	Declare Var=$LangPlugIn11 Type=String
+	Declare Var=$LangPlugIn21 Type=String
+	Declare Var=$LangPlugIn22 Type=String
+	Declare Var=$LangPlugIn31 Type=String
+	Declare Var=$LangPlugIn32 Type=String
+	Declare Var=$LangPlugIn41 Type=String
+	Declare Var=$LangPlugIn42 Type=String
+	Declare Var=$LangPlugIn43 Type=String
+	Declare Var=$LangPlugIn51 Type=String
+	Declare Var=$LangPlugIn52 Type=String
+	Declare Var=$LangPlugIn53 Type=String
+	Declare Var=$LangPlugIn61 Type=String
+	Declare Var=$LangPlugIn62 Type=String
+	Declare Var=$LangPlugIn63 Type=String
+	Declare Var=$LangPlugIn71 Type=String
+	Declare Var=$LangPlugIn72 Type=String
+	Declare Var=$LangPlugIn73 Type=String
+	Declare Var=$LangPlugIn81 Type=String
+
+	IF $Language = "English"
+		$LangPlugIn01 = "Error at ChartType-Parameter:"	
+		$LangPlugIn02 = "Error at SubPagesURL-Parameter:"	
+		$LangPlugIn03 = "Error at ListItems-Parameter:"	
+		$LangPlugIn11 = "View"	
+		$LangPlugIn21 = "with"	
+		$LangPlugIn22 = "by"	
+		$LangPlugIn31 = "Container"	
+		$LangPlugIn32 = "Region"	
+		$LangPlugIn41 = "finds were rated with Diff <b>or</b> Terr of 3 or greater"
+		$LangPlugIn42 = "finds were rated with a Diff*Terr-product of 12 or greater"
+		$LangPlugIn43 = "finds were rated with Diff <b>and</b> Terr of 4 or greater"
+		$LangPlugIn51 = "difficult caches"
+		$LangPlugIn52 = "extreme caches"
+		$LangPlugIn53 = "'hardcore'-caches"
+		$LangPlugIn61 = "Click in one cell"
+		$LangPlugIn62 = "for a list of found caches"
+		$LangPlugIn63 = "of this Diff/Terr-combination"
+		$LangPlugIn71 = "Click on 'View' (upper right corner)"
+		$LangPlugIn72 = "to change the style"
+		$LangPlugIn73 = "of the chart"
+		$LangPlugIn81 = "To the complete list"
+		$Internal=TRUE
+	ENDIF
+	IF $Language = "Deutsch"
+		$LangPlugIn01 = "Fehler beim ChartType-Parameter:"	
+		$LangPlugIn02 = "Fehler beim SubPagesURL-Parameter:"	
+		$LangPlugIn03 = "Fehler beim ListItems-Parameter:"	
+		$LangPlugIn11 = "Ansicht"	
+		$LangPlugIn21 = "mit"	
+		$LangPlugIn22 = "durch"	
+		$LangPlugIn31 = "Behälter"	
+		$LangPlugIn32 = "Gegend"	
+		$LangPlugIn41 = "Funde haben eine Schwierigkeit <b>oder</b> ein Gelände von 3 oder größer"
+		$LangPlugIn42 = "Funde haben ein Schwierigkeit*Gelände-Produkt von 12 oder größer"
+		$LangPlugIn43 = "Funde haben eine Schwierigkeit <b>und</b> ein Gelände von 4 oder größer"
+		$LangPlugIn51 = "schwere Caches"
+		$LangPlugIn52 = "extreme Caches"
+		$LangPlugIn53 = "'Hardcore'-Caches"
+		$LangPlugIn61 = "Klick in eine Zelle"
+		$LangPlugIn62 = "für eine Liste aller gefundenen Caches"
+		$LangPlugIn63 = "dieser D/T-Kombination"
+		$LangPlugIn71 = "Klick auf 'Ansicht' (obere rechte Ecke)"
+		$LangPlugIn72 = "um zwischen verschiedenen Styles"
+		$LangPlugIn73 = "zu wechseln"
+		$LangPlugIn81 = "Zur vollständigen Liste"
+		$Internal=TRUE
+	ENDIF
+	IF $Language = "Francais"
+		$LangPlugIn01 = "Erreur sur paramètre ChartType:"	
+		$LangPlugIn02 = "Erreur sur paramètre SubPagesURL:"	
+		$LangPlugIn03 = "Erreur sur paramètre ListItems:"	
+		$LangPlugIn11 = "Vue"	
+		$LangPlugIn21 = "avec"	
+		$LangPlugIn22 = "par"	
+		$LangPlugIn31 = "Format"	
+		$LangPlugIn32 = "Région"	
+		$LangPlugIn41 = "des trouvailles ont été évaluées avec Diff <b>ou</b> Terr de 3 ou plus grand"
+		$LangPlugIn42 = "des trouvailles ont été évaluées avec un produit Diff*Terr de 12 ou plus grand"
+		$LangPlugIn43 = "des trouvailles ont été évaluées avec Diff <b>et</b> Terr de 4 ou plus grand"
+		$LangPlugIn51 = "trouvailles difficiles"
+		$LangPlugIn52 = "trouvailles extrèmes"
+		$LangPlugIn53 = "trouvailles 'hardcore'"
+		$LangPlugIn61 = "Clique dans une celle"
+		$LangPlugIn62 = "pour une liste des trouvailles"
+		$LangPlugIn63 = "de cette Diff/Terr-combinasion"
+		$LangPlugIn71 = "Clique sur 'Vue' (en haut à droit)"
+		$LangPlugIn72 = "pour changer le style"
+		$LangPlugIn73 = "de cet diagramme"
+		$LangPlugIn81 = "A la liste complète"
+		$Internal=TRUE
+	ENDIF
+
+	IF NOT($internal)
+		# Default: English
+		$LangPlugIn01 = "Error at ChartType-Parameter:"	
+		$LangPlugIn02 = "Error at SubPagesURL-Parameter:"	
+		$LangPlugIn03 = "Error at ListItems-Parameter:"	
+		$LangPlugIn11 = "View"	
+		$LangPlugIn21 = "with"	
+		$LangPlugIn22 = "by"	
+		$LangPlugIn31 = "Container"	
+		$LangPlugIn32 = "Region"	
+		$LangPlugIn41 = "finds were rated with Diff <b>or</b> Terr of 3 or greater"
+		$LangPlugIn42 = "finds were rated with a Diff*Terr-product of 12 or greater"
+		$LangPlugIn43 = "finds were rated with Diff <b>and</b> Terr of 4 or greater"
+		$LangPlugIn51 = "difficult caches"
+		$LangPlugIn52 = "extreme caches"
+		$LangPlugIn53 = "'hardcore'-caches"
+		$LangPlugIn61 = "Click in one cell"
+		$LangPlugIn62 = "for a list of found caches"
+		$LangPlugIn63 = "of this Diff/Terr-combination"
+		$LangPlugIn71 = "Click on 'View' (upper right corner)"
+		$LangPlugIn72 = "to change the style"
+		$LangPlugIn73 = "of the chart"
+		$LangPlugIn81 = "To the complete list"
+
+		# Get directory listing for language files
+		$FileMask = $datafilepath + "\FSGPlugin_DTChartWithList_Lang*.dat"
+		$DirList= Dir($FileMask,"F")
+		$FileMask = $datafilepath + "\FindStatGenData\FSGPlugin_DTChartWithList_Lang*.dat"
+		$DirList= $DirList + Dir($FileMask,"F")
+
+		# Parse Dir listing
+		IF NOT($DirList = "")
+			$LineFeed= Chr(13) + chr(10)
+			$DirList= Replace($LineFeed, ";" ,$DirList,false)
+			#$DirList = Left($DirList, Len($DirList)-1)
+			$OK = FALSE
+			$LangCount = 1
+			$FileName = Extract($DirList,";",$LangCount)
+			WHILE (NOT($FileName = "") and NOT($OK))
+				$LangFile = $datafilepath + "\$FileName"
+				IF (FileExists($LangFile))
+					FILEREAD File=$LangFile
+					#Language name is in first line after the # then trim whitespace
+					$LangName = Extract($line,"#",2)
+					$LangName = RegExReplace("^\s+|\s+$", $LangName, "")
+					IF ($LangName = $Language)
+						$OK = TRUE
+					ENDIF
+					STOPREAD
+					ENDREAD
+				ELSE
+					$LangFile = $datafilepath + "\FindStatGenData\$FileName"
+					IF (FileExists($LangFile))
+						FILEREAD File=$LangFile
+						#Language name is in first line after the # then trim whitespace
+						$LangName = Extract($line,"#",2)
+						$LangName = RegExReplace("^\s+|\s+$", $LangName, "")
+						IF ($LangName = $Language)
+							$OK = TRUE
+						ENDIF
+						STOPREAD
+						ENDREAD
+					ENDIF
+				ENDIF
+				$LangCount = $LangCount + 1
+				$FileName = Extract($DirList,";",$LangCount)
+			ENDWHILE
+		ENDIF
+
+		
+		
+		IF ($OK)
+			# $LanguageFile = SysInfo("MacroPath") + "\" + $FileName
+			MACRO File=$LangFile
+		ENDIF
+	ENDIF
+ENDSUB
+
+BEGINSUB name=DiffTerrDivs
+	$DivID = 0
+	# Schleifen über alle DiffTerr-Kombinationen
+	$difficulty = 1
+	WHILE $difficulty <= 5
+		$terrain  = 1
+		WHILE $terrain <= 5
+			$status = "DiffTerrDivs: Diff/Terr = " + NumToStr($difficulty) + "/" + NumToStr($terrain)
+			SHOWSTATUS msg="$status"
+			GOSUB name=DiffTerrDiv
+			$terrain = $terrain+0.5
+		ENDWHILE
+		$difficulty = $difficulty+0.5
+	ENDWHILE
+
+	$difficulty = 1
+	$terrain = 0
+	WHILE $difficulty <= 5
+		$status = "DiffTerrDivs: Diff/Terr = " + NumToStr($difficulty) + "/ *"
+		SHOWSTATUS msg="$status"
+		GOSUB name=DiffTerrDiv
+		$difficulty = $difficulty+0.5
+	ENDWHILE
+
+	$difficulty = 0
+	$terrain  = 1
+	WHILE $terrain <= 5
+		$status = "DiffTerrDivs: Diff/Terr = " + "* /" + NumToStr($terrain)
+		SHOWSTATUS msg="$status"
+		GOSUB name=DiffTerrDiv
+		$terrain = $terrain+0.5
+	ENDWHILE
+
+	$difficulty = 0
+	$terrain  = 0
+	$status = "DiffTerrDivs: Diff/Terr = " + "* / *"
+	SHOWSTATUS msg="$status"
+	GOSUB name=DiffTerrDiv
+
+	$difficulty = -4
+	$terrain  = -4
+	$status = "DiffTerrDivs: Hardcore"
+	SHOWSTATUS msg="$status"
+	GOSUB name=DiffTerrDiv
+
+	$difficulty = -3
+	$terrain  = -3
+	$status = "DiffTerrDivs: Schwere"
+	SHOWSTATUS msg="$status"
+	GOSUB name=DiffTerrDiv
+
+	$difficulty = -3
+	$terrain  = -4
+	$status = "DiffTerrDivs: Extreme"
+	SHOWSTATUS msg="$status"
+	GOSUB name=DiffTerrDiv
+ENDSUB
+
+BEGINSUB name=DeclareVariables
+	Option Explicit=Yes
+
+	Declare Var=$stColor2c2Leicht Type=String
+	Declare Var=$stColor2c2Schwer Type=String
+	Declare Var=$stColor2c2Extrem Type=String
+	Declare Var=$stColor2c2Hardcore Type=String
+	Declare Var=$st2c2Schwer Type=String
+	Declare Var=$st2c2Extrem Type=String
+	Declare Var=$st2c2Hardcore Type=String
+	Declare Var=$stColorDiffTerrLeicht Type=String
+	Declare Var=$stColorDiffTerrSchwer Type=String
+	Declare Var=$stColorDiffTerrExtrem Type=String
+	Declare Var=$stColorDiffTerrHardcore Type=String
+	Declare Var=$stColorDiffTerrhi Type=String
+	Declare Var=$stDiffTerrSchwer Type=String
+	Declare Var=$stDiffTerrExtrem Type=String
+	Declare Var=$stDiffTerrHardcore Type=String
+
+	Declare Var=$UseSubPages Type=Numeric
+	Declare Var=$SubPagesURL Type=String
+	Declare Var=$ChartType Type=String
+	Declare Var=$ListItems Type=Numeric
+	Declare Var=$DivID Type=Numeric
+	Declare Var=$difficultyString Type=String
+	Declare Var=$terrainString Type=String
+	Declare Var=$countString Type=String
+	Declare Var=$StarsSource Type=Numeric
+	Declare Var=$StarsImage Type=String
+	Declare Var=$TypeName Type=String
+	Declare Var=$ChartTyp Type=Numeric
+	Declare Var=$HTMLName Type=String
+	Declare Var=$dtcharttype Type=String
+	Declare Var=$size Type=String
+	Declare Var=$SizeImage Type=String
+	Declare Var=$found Type=Numeric
+	Declare Var=$NumCharts Type=Numeric
+	Declare Var=$ChartIndex Type=Numeric
+	Declare Var=$ActualChart Type=Numeric
+	Declare Var=$NextChart Type=Numeric
+	Declare Var=$DisplayDiv Type=String
+	Declare Var=$DisplayExtremHardcoreDiv Type=String
+	Declare Var=$DisplayNoExtremHardcoreDiv Type=String
+
+	Declare Var=$RahmenSeite Type=Numeric
+	Declare Var=$ZellbreiteGesamt Type=Numeric
+	Declare Var=$RahmenObenUnten Type=Numeric
+	Declare Var=$RahmenFarbe Type=String
+	
+	Declare Var=$MyMacroParms Type=String
+ENDSUB
+
+
+BEGINSUB name=DiffTerrDiv # einzelnen DIV erzeugen
+	$DivID = $DivID + 1
+	$Out = $Out + "<div id='DT" + NumToStr($DivID) + "' style='display:none'>" + $_CrLf
+	$difficultyString = Replace(",",".",NumToStr($difficulty),TRUE)
+	$terrainString = Replace(",",".",NumToStr($terrain),TRUE)
+	if $difficulty = 0 and $terrain = 0 # all caches
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	if $difficulty = -4 and $terrain = -4 # hardcore-caches
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Difficulty >= 4 and Terrain >= 4 ORDER BY FoundByMeDate desc, lLogID desc"
+	endif
+	if $difficulty = -3 and $terrain = -3 # difficult caches
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Difficulty >= 3 or Terrain >= 3 ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	if $difficulty = -3 and $terrain = -4 # extreme caches
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Difficulty*Terrain >= 12 ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	if $difficulty > 0 and $terrain > 0 # single combination
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Difficulty = $difficultyString and Terrain = $terrainString ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	if $terrain = 0 and $difficulty > 0 # difficulty-sum
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Difficulty = $difficultyString ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	if $difficulty = 0 and $terrain > 0 # terrain-sum
+		$sql = "Select Name, Code, URL, Difficulty, Terrain, FoundByMeDate, Archived, CacheID, CacheType, Container, Country, State, FTF, OwnerName, OwnerID, PlacedDate, lLogID from AllFinds where Terrain = $terrainString ORDER BY  FoundByMeDate desc, lLogID desc"
+	endif
+	$work = Sqlite("sql",$sql)
+	$list = list("LL","replace",$work)
+	$text1 = list("LL","count","")
+	$NumItems = val($text1)
+	IF $NumItems > 0
+		$i = 1
+		$Out = $Out + "<br /><br />" + $_CrLf
+		$out = $Out + "<div style='width:" + NumToStr($maxtablewidth) + "px; $stSectHead'>" + $_CrLf
+		if $terrain = -4 and $difficulty = -4 # hardcore-caches
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 $LangPlugIn53:</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+		endif
+		if $terrain = -3 and $difficulty = -3 # difficult caches 
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 $LangPlugIn51:</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+		endif
+		if $terrain = -4 and $difficulty = -3 # extreme caches
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 $LangPlugIn53:</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+		endif
+		if $terrain = 0 and $difficulty = 0 # all caches
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang76:</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+		endif
+		if $terrain > 0 and $difficulty > 0 # single combination
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 Caches $LangPlugIn21 $Lang28a " + NumToStr($difficulty) + " $Lang108 $Lang28b " + NumToStr($terrain) + ":</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+			$StarsSource = $difficulty
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage +  "'/>"+$_CrLf
+			$Out = $Out + "    &nbsp;&nbsp;"+$_CrLf
+			$StarsSource = $terrain
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage + "' />"+$_CrLf
+		endif
+		if $difficulty = 0 and $terrain > 0 # terrain-sum
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 Caches $LangPlugIn21 $Lang28b " + NumToStr($terrain) + ":</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+			$StarsSource = $difficulty
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage + "' />"+$_CrLf
+			$Out = $Out + "    &nbsp;&nbsp;"+$_CrLf
+			$StarsSource = $terrain
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage + "' />"+$_CrLf
+		endif
+		if $terrain = 0 and $difficulty > 0 # difficulty-sum
+			$Out = $Out + "    <table width='100%' border='0'>"+$_CrLf
+			$Out = $Out + "      <tr>"+$_CrLf
+			$Out = $Out + "        <td width='50'>&nbsp;</td>"+$_CrLf
+			$Out = $Out + "        <td align='center'>$user $Lang01 " + NumToStr($NumItems) + " $Lang02 Caches $LangPlugIn21 $Lang28a " + NumToStr($difficulty) + ":</td>"+$_CrLf
+			$Out = $Out + "        <td width='30'></td>"+$_CrLf
+			$Out = $Out + "        <td width='20' align='center'  style='background: #B00000; cursor:pointer;'><font color='#FFFFFF' onmousedown=" + $_Quote + "document.getElementById('DT" + NumToStr($DivID) + "').style.display = 'none';" + $_Quote + ">X</font></td>"+$_CrLf
+			$Out = $Out + "      </tr>"+$_CrLf
+			$Out = $Out + "    </table>"+$_CrLf
+			$StarsSource = $difficulty
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage + "' />"+$_CrLf
+			$Out = $Out + "    &nbsp;&nbsp;"+$_CrLf
+			$StarsSource = $terrain
+			GOSUB name=GetStarsImage
+			$Out = $Out + "    <img src='" + $StarsImage + "' />"+$_CrLf
+		endif
+
+		$Out = $Out + "</div><br />" + $_CrLf
+		$Out = $Out + "<table width='" + NumToStr($maxtablewidth) + "' style='text-align: left;'>" + $_CrLf
+		$Out = $Out + "  <tr>" + $_CrLf
+		$Out = $Out + "    <td style='$stTab2cHead'><b>$LangForm36</b></td>" + $_CrLf
+		$Out = $Out + "    <td style='$stTab2cHead'><b>$Lang95</b></td>" + $_CrLf
+		if ($difficulty = 0 and $terrain = 0) or ($difficulty = -4 and $terrain = -4) or ($difficulty = -3 and $terrain = -3) or ($difficulty = -3 and $terrain = -4)
+			# show difficulty- and terrain-stars in list
+			$Out = $Out + "    <td style='$stTab2cHead'><b>$Lang28a</b></td>" + $_CrLf
+			$Out = $Out + "    <td style='$stTab2cHead'><b>$Lang28b</b></td>" + $_CrLf
+		endif
+		if $difficulty = 0 and $terrain > 0
+			# show only terrain-stars in list
+			$Out = $Out + "    <td style='$stTab2cHead'><b>$Lang28a</b></td>" + $_CrLf
+		endif
+		if $terrain = 0 and $difficulty > 0
+			# show only difficulty--stars in list
+			$Out = $Out + "    <td style='$stTab2cHead'><b>$Lang28b</b></td>" + $_CrLf
+		endif
+		$Out = $Out + "    <td style='$stTab2cHead'><b>$LangForm64</b></td>" + $_CrLf
+		$Out = $Out + "    <td style='$stTab2cHead'><b>$LangPlugIn31</b></td>" + $_CrLf
+		$Out = $Out + "    <td style='$stTab2cHead'><b>$LangPlugIn32</b></td>" + $_CrLf
+		$Out = $Out + "  </tr>" + $_CrLf
+		#       1    2    3     4        5         6            7        8        9         10        11     12   13   14       15       16        17         18
+		#     "Name;Code;URL;Difficulty;Terrain;FoundByMeDate;Archived;CacheID;CacheType;Container;Country;State;FTF;PlacedBy;OwnerID;PlacedDate;LogID" + $_CrLf
+		IF $NumItems > $ListItems # nur die letzten 3 anzeigen
+			$Count = $ListItems
+		ELSE
+			$count = $NumItems
+		ENDIF
+		
+		$i = 1
+		WHILE $i <= $count
+  			$Data = NumToStr($i)
+			$GetMilestone = list("LL","item","$i")
+
+			$Out = $Out + "  <tr>" + $_CrLf
+			if Extract($GetMilestone,";", 13) = "1" # FTF?
+				if ($UseSubPages=1)
+					$result =  " <br /><img src='" + $SubPagesURL + "/FTF.gif' alt='First Find $LangPlugIn22 " + $user + "!' align='middle' />"
+				else
+					$result =  " <br /><font color='#FF0000'><b>FTF</b></font>"
+				endif
+			else
+				$result =  ""
+			endif
+ 			$Out = $Out + "    <td style='$st2c2 vertical-align: top;'><a href='http://www.geocaching.com/seek/log.aspx?LID=" + Extract($GetMilestone,";", 17) + "' target='_blank'>" + DateFormat(SqlToDate(Extract($GetMilestone,";",6))) + "</a>" + $result + "</td>" + $_CrLf # Funddatum
+			$HTMLName = "    <td style='$st2c2'>" + Extract($GetMilestone,";", 1) + "<br />" + "<a href='http://www.geocaching.com/seek/cache_details.aspx?wp=" + Extract($GetMilestone,";",2) + "&log=y' target='_blank'>" + Extract($GetMilestone,";", 2) +  "</a></td>" + $_CrLf # Name
+			$Out = $Out + $HTMLName
+			if ($difficulty = 0 and $terrain = 0) or ($difficulty = -4 and $terrain = -4) or ($difficulty = -3 and $terrain = -4) or ($difficulty = -3 and $terrain = -3)
+				# show difficulty- and terrain-stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",4))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Schwierigkeit = " + Extract($GetMilestone,";", 4) + "' /></div></td>" + $_CrLf # Typ
+				$StarsSource = Val(Extract($GetMilestone,";",5))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Gelände = " + Extract($GetMilestone,";", 5) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			if $difficulty = 0 and $terrain > 0
+				# show only terrain-stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",4))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Schwierigkeit = " + Extract($GetMilestone,";", 4) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			if $terrain = 0 and $difficulty > 0
+				# show only difficulty--stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",5))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Gelände = " + Extract($GetMilestone,";", 5) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			$dtcharttype = Extract($GetMilestone,";", 9)
+			$Size = Extract($GetMilestone,";", 10)
+			GOSUB name=GetTypeName
+			GOSUB name=GetTypeImage
+			$SizeImage = "http://www.geocaching.com/images/icons/container/" + $Size + ".gif"
+			if ($Size = "Not chosen")
+				$SizeImage = "http://www.geocaching.com/images/icons/container/not_chosen.gif"
+			endif
+			$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $TypeImage    + "' alt='" + $TypeName + "'/></div></td>" + $_CrLf # Typ
+			$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $SizeImage + "' alt='" + $Size     + "'/></div></td>" + $_CrLf # Größe
+			$result = Extract($GetMilestone,";",12) # State
+			if $result <> "Nil"
+				$result = "<br />(" + $result + ")"
+			else
+				$result = ""
+			endif
+			$Out = $Out + "    <td style='$st2c2'>" + Extract($GetMilestone,";",11) + $result + "</td>" + $_CrLf # Gegend
+			$Out = $Out + "  </tr>" + $_CrLf
+
+  			$i = $i + 1
+		ENDWHILE
+		IF $NumItems > ($ListItems+1) # Leerzeile mit ...
+			$Out = $Out + "  <tr style='$st2c2'>" + $_CrLf
+			$Out = $Out + "    <td>...</td>" + $_CrLf
+			$Out = $Out + "  </tr>" + $_CrLf
+		ENDIF
+		IF $NumItems > $ListItems # erstes Auftreten anzeigen
+  			$i = $NumItems
+			$Data = NumToStr($i)
+			$GetMilestone = list("LL","item","$i")
+
+			$Out = $Out + "  <tr>" + $_CrLf
+			if Extract($GetMilestone,";", 13) = "1" # FTF?
+				if ($UseSubPages=1)
+					$result =  " <br /><img src='" + $SubPagesURL + "FTF.gif' alt='First Find $LangPlugIn22 " + $user + "!' align='middle' />"
+				else
+					$result =  " <br /><font color='#FF0000'><b>FTF</b></font>"
+				endif
+			else
+				$result =  ""
+			endif
+ 			$Out = $Out + "    <td style='$st2c2 vertical-align: top;'><a href='http://www.geocaching.com/seek/log.aspx?LID=" + Extract($GetMilestone,";", 17) + "' target='_blank'>" + DateFormat(SqlToDate(Extract($GetMilestone,";",6))) + "</a>" + $result + "</td>" + $_CrLf # Funddatum
+			$HTMLName = "    <td style='$st2c2;'>" + Extract($GetMilestone,";", 1) + "<br />" + "<a href='http://www.geocaching.com/seek/cache_details.aspx?wp=" + Extract($GetMilestone,";",2) + "&log=y' target='_blank'>" + Extract($GetMilestone,";", 2) +  "</a></td>" + $_CrLf # Name
+			if Extract($GetMilestone,";", 7) = "T" # Archived?
+				$HTMLName = "    <td style='$st2c2'><s><font color='#FF0000'>" + Extract($GetMilestone,";", 1) + "</font></s><br />" + "<a href='http://coord.info/" + Extract($GetMilestone,";",2) + "&log=y' target='_blank'>" + Extract($GetMilestone,";", 2) +  "</a></td>" + $_CrLf # Name
+			endif
+			$Out = $Out + $HTMLName
+			if ($difficulty = 0 and $terrain = 0) or ($difficulty = -4 and $terrain = -4) or ($difficulty = -3 and $terrain = -4) or ($difficulty = -3 and $terrain = -3)
+				# show difficulty- and terrain-stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",4))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Schwierigkeit = " + Extract($GetMilestone,";", 4) + "' /></div></td>" + $_CrLf # Typ
+				$StarsSource = Val(Extract($GetMilestone,";",5))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Gelände = " + Extract($GetMilestone,";", 5) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			if $difficulty = 0 and $terrain > 0
+				# show only terrain-stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",4))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Schwierigkeit = " + Extract($GetMilestone,";", 4) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			if $terrain = 0 and $difficulty > 0
+				# show only difficulty--stars in list
+				$StarsSource = Val(Extract($GetMilestone,";",5))
+				GOSUB name=GetStarsImage
+				$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $StarsImage + "' alt='Gelände = " + Extract($GetMilestone,";", 5) + "' /></div></td>" + $_CrLf # Typ
+			endif
+			$dtcharttype = Extract($GetMilestone,";", 9)
+			$Size = Extract($GetMilestone,";", 10)
+			GOSUB name=GetTypeName
+			GOSUB name=GetTypeImage
+			$SizeImage = "http://www.geocaching.com/images/icons/container/" + $Size + ".gif"
+			if ($Size = "Not chosen")
+				$SizeImage = "http://www.geocaching.com/images/icons/container/not_chosen.gif"
+			endif
+			$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $TypeImage + "' alt='" + $TypeName + "'/></div></td>" + $_CrLf # Typ
+			$Out = $Out + "    <td style='$st2c1'>" + "<div align='center'><img src='" + $SizeImage + "' alt='" + $Size     + "'/></div></td>" + $_CrLf # Größe
+			$result = Extract($GetMilestone,";",12) # State
+			if $result <> "Nil"
+				$result = "<br />(" + $result + ")"
+			else
+				$result = ""
+			endif
+			$Out = $Out + "    <td style='$st2c2'>" + Extract($GetMilestone,";",11) + $result + "</td>" + $_CrLf # Gegend
+			$Out = $Out + "  </tr>" + $_CrLf
+
+		ENDIF
+		$Out = $Out + "</table>" + $_CrLf
+		
+		IF $UseSubPages = 1 # Link auf die Gesamtübersicht einfügen
+			$Out = $Out + "<br />" + $_CrLf
+			$Out = $Out + "<font size='+1' align='center'><a href='" + $SubPagesURL + "/D" + NumToStr($difficulty*10) + "T" + NumToStr($terrain*10) + ".htm' target='_blank'>$LangPlugIn81</a></font>" + $_CrLf
+		ENDIF
+	ENDIF
+
+	$Out = $Out + "</div>" + $_CrLf
+ENDSUB # DiffTerrDiv
+
+BEGINSUB name=GetDivID
+	$DivID = ((($difficulty*2)-2)*9)+(($terrain*2)-2)+1
+ENDSUB
+
+BEGINSUB name=GetTypeName
+	$types = "A,B,C,E,G,L,M,R,T,U,V,W,Z,X,I"
+	$names = "Project Ape,Letterbox Hybrid,CITO,Event,BenchMark,Locationless,Multi,Earth,Traditional,Mystery,Virtual,Webcam,Mega Event,GPS Adventures Exhibit,Wherigo"
+		
+	$num = RegExCount(",",$Types )
+	$index = 0
+	$found = 0
+	WHILE $index <= $num and $found = 0
+		$index = $index + 1
+		if Extract($Types, "," , $Index) = $dtcharttype
+			$found = 1
+			$typename = Extract($names, "," , $Index)
+		endif
+	ENDWHILE
+ENDSUB # GetTypeName
+
+BEGINSUB Name=GetTypeImage
+	#Enters with $dtcharttype containing code
+	#Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIY123"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+	$tmpN = At($dtcharttype,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "http://gsak.net/stats/wm16.gif/>"
+		CASE $thistype = "L"
+			$TypeImage = "'http://gsak.net/stats/1216.gif/>"
+		OTHERWISE
+			$TypeImage = "http://www.geocaching.com/images/wpttypes/" + $thistype + ".gif"
+	ENDCASE
+ENDSUB #GetTypeImage
+
+BEGINSUB Name=GetStarsImage
+	#Enters with $StarsSource containing rating for stars
+	#Exits with $StarsImage containing image of Stars
+	$StarsImage = "http://www.geocaching.com/images/stars/stars"
+	if ($StarsSource = 0.0)
+		$StarsImage = $StarsImage + "0.gif"
+	endif
+	if ($StarsSource = 1.0)
+		$StarsImage = $StarsImage + "1.gif"
+	endif
+	if ($StarsSource = 2.0)
+		$StarsImage = $StarsImage + "2.gif"
+	endif
+	if ($StarsSource = 3.0)
+		$StarsImage = $StarsImage + "3.gif"
+	endif
+	if ($StarsSource = 4.0)
+		$StarsImage = $StarsImage + "4.gif"
+	endif
+	if ($StarsSource = 5.0)
+		$StarsImage = $StarsImage + "5.gif"
+	endif
+	if ($StarsSource = 1.5)
+		$StarsImage = $StarsImage + "1_5.gif"
+	endif
+	if ($StarsSource = 2.5)
+		$StarsImage = $StarsImage + "2_5.gif"
+	endif
+	if ($StarsSource = 3.5)
+		$StarsImage = $StarsImage + "3_5.gif"
+	endif
+	if ($StarsSource = 4.5)
+		$StarsImage = $StarsImage + "4_5.gif"
+	endif
+ENDSUB #GetStarsImage
+
+BEGINSUB Name=DiffTerrChartHead
+	# Initialise Variables
+	$terrain  = 1
+	$difficulty = 1
+	$diffterr     = ""
+	$maxdiffterr  = 0
+	$diffterr = "1,1.5,2,2.5,3,3.5,4,4.5,5,;"
+	$count = 0
+	
+	$_sql = "Select count(Code) as c from Allfinds group by difficulty order by c desc limit 1"
+	$maxdif = Val(Sqlite("sql",$_sql))
+	
+	$_sql = "Select count(Code) as c from Allfinds group by terrain order by c desc limit 1"
+	$maxterr = Val(Sqlite("sql",$_sql))
+
+	WHILE $difficulty <=5
+		WHILE $terrain <=5
+			SHOWSTATUS msg="$LangStatus18 $difficulty/$terrain" Width=350
+			$_sql = "Select count(Code) from AllFinds WHERE Difficulty=$difficulty and Terrain=$terrain"
+			$num = Val(Sqlite("sql",$_sql))
+			$diffterr = $diffterr + "$num,"
+			IF $num >0
+				$count = $count + 1
+			ENDIF
+			IF $num>$maxdiffterr
+				$maxdiffterr = $num
+			ENDIF
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		$diffterr = $diffterr + ";"
+		$difficulty = $difficulty + 0.5
+		$terrain  = 1
+	ENDWHILE
+
+	$colspan = 1
+	$text=$Lang28
+
+	# from subroutine sectionhead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+#	$out = $out + "<br /><br />" + $_CrLf
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $_CrLf
+	# This is a full width section
+	# If the last section was a half width close the previous table off
+	IF $lastcolspan = 2
+		# Finish two column output
+		$out = $out + "<!-- Close2Col -->" + $_CrLf
+		$out = $out + "</td></tr></table>" + $_CrLf
+	ENDIF
+	$lastcolspan = 1
+	$column = 1
+	$width = $maxtablewidth
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+#	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $_CrLf
+#	$out = $out + "<a name='$Srun'></a>"
+#	$out = $out + "    $text" + $_CrLf + "</div><br />" + $_CrLf
+ENDSUB #DiffTerrChartHead
+
+BEGINSUB Name=DiffTerrChartExtremHardcoreLinks
+	# Count caches where difficulty/terrain is greater or equal to 3 as 'Hard' caches
+	$_sql = "Select count(Code) from AllFinds WHERE Terrain >=3 OR Difficulty >=3"
+	$num = Val(Sqlite("sql",$_sql))
+	$tmpN = Int(1000*$num/$FindsWithDuplicates)/10
+
+	IF ($NumCharts > 1)
+		$out = $out + "<table width='$maxtablewidth'>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "   <th width='$maxtablewidth/2' align='center'><font color='#FF0000'><b>$LangPlugIn61</b></font></th>" + $_CrLf
+		$out = $out + "    <th width='$maxtablewidth/2' align='center'><font color='#FF0000'>$LangPlugIn71</font></th>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn62</td>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn72</td>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn63</td>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn73</td>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "</table>" + $_CrLf
+		$out = $out + "<br/>" + $_CrLf
+	ELSE
+		$out = $out + "<table width='$maxtablewidth'>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "   <th align='center'><font color='#FF0000'><b>$LangPlugIn61</b></font></th>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn62</td>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "  <tr>" + $_CrLf
+		$out = $out + "    <td align='center'>$LangPlugIn63</td>" + $_CrLf
+		$out = $out + "  </tr>" + $_CrLf
+		$out = $out + "</table>" + $_CrLf
+		$out = $out + "<br/>" + $_CrLf
+	ENDIF
+	
+	$out = $out + "<i><b>$count</b>" + " $LangT5 " + $Lang104 + " <b>81</b> " + $Lang104a + "</i>" + $_CrLf
+	$out = $out + "<br/><br/>" + $_CrLf
+
+	IF (val(Substr($ChartType, 1, 1)) = 3) or (val(Substr($ChartType, 1, 1)) = 4)
+		$out = $out + "<div id='DTnoHC' style='display:none'>" + $_CrLf
+	ELSE
+		$out = $out + "<div id='DTnoHC' style='display:block'>" + $_CrLf
+	ENDIF
+	$out = $out + "<table width='$maxtablewidth'>" + $_CrLf
+	$out = $out + "<tr>" + $_CrLf
+	$out = $out + "<td style='text-align: right' width='600px'>"
+	$out = $out + "<i><b>$num</b> ($tmpN" + "%) $LangPlugIn41</i></td>" + $_CrLf
+	$DivID = 102
+	if ($num > 0)
+		$out = $out + "<td style='cursor:pointer; text-align: left' width='150px' onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + "><i><font color="+$stColorDiffTerrSchwer+">($LangPlugIn51)</font></i></td>" + $_CrLf
+	else
+		$out = $out + "<td style='text-align: left' width='150px'><i><font color="+$stColorDiffTerrSchwer+">($LangPlugIn51)</font></i></td>" + $_CrLf
+	endif
+	$out = $out + "</tr></table>" + $_CrLf
+	$out = $out + "</div>" + $_CrLf
+
+	IF (val(Substr($ChartType, 1, 1)) = 3) or (val(Substr($ChartType, 1, 1)) = 4)
+		$out = $out + "<div id='DTHC' style='display:block'>" + $_CrLf
+	ELSE
+		$out = $out + "<div id='DTHC' style='display:none'>" + $_CrLf
+	ENDIF
+	$out = $out + "<table width='$maxtablewidth'>" + $_CrLf
+	$out = $out + "<tr>" + $_CrLf
+	$out = $out + "<td style='text-align: right' width='600px'>"
+	$out = $out + "<i><b>$num</b> ($tmpN" + "%) $LangPlugIn41</i></td>" + $_CrLf
+	$DivID = 102
+	if ($num > 0)
+		$out = $out + "<td style='cursor:pointer; text-align: left' width='150px' onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + "><i><font color="+$stColorDiffTerrSchwer+">($LangPlugIn51)</font></i></td>" + $_CrLf
+	else
+		$out = $out + "<td style='text-align: left' width='150px'><i><font color="+$stColorDiffTerrSchwer+">($LangPlugIn51)</font></i></td>" + $_CrLf
+	endif
+	$out = $out + "</tr>" + $_CrLf
+
+	$_sql = "Select count(Code) from AllFinds WHERE Terrain * Difficulty>=12"
+	$num = Val(Sqlite("sql",$_sql))
+	$tmpN = Int(1000*$num/$FindsWithDuplicates)/10
+	$out = $out + "<tr>" + $_CrLf
+	$out = $out + "<td style='text-align: right' width='600px'>"
+	$out = $out + "<i><b>$num</b> ($tmpN" + "%) " + "$LangPlugIn42</i></td>" + $_CrLf
+	$DivID = 103
+	if ($num > 0)
+		$out = $out + "<td style='cursor:pointer; text-align: left' width='150px' onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + "><i><font color="+$stColorDiffTerrExtrem+">($LangPlugIn52)</font></i></td>" + $_CrLf
+	else
+		$out = $out + "<td style='text-align: left' width='150px' ><i><font color="+$stColorDiffTerrExtrem+">($LangPlugIn52)</font></i></td>" + $_CrLf
+	endif
+	$out = $out + "</tr>" + $_CrLf
+
+	$_sql = "Select count(Code) from AllFinds WHERE Terrain >=4 AND Difficulty >=4"
+	$num = Val(Sqlite("sql",$_sql))
+	$tmpN = Int(1000*$num/$FindsWithDuplicates)/10
+	$out = $out + "<tr>" + $_CrLf
+	$out = $out + "<td style='text-align: right' width='600px'>"
+	$out = $out + "<i><b>$num</b> ($tmpN" + "%) $LangPlugIn43</i></td>" + $_CrLf
+	$DivID = 101
+	if ($num > 0)
+		$out = $out + "<td style='cursor:pointer; text-align: left' width='150px' onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + "><i><font color="+$stColorDiffTerrHardcore+">($LangPlugIn53)</font></i></td>" + $_CrLf
+	else
+		$out = $out + "<td style='text-align: left' width='150px' ><i><font color="+$stColorDiffTerrHardcore+">($LangPlugIn53)</font></i></td>" + $_CrLf
+	endif
+	$out = $out + "</tr>" + $_CrLf
+	
+	$out = $out + "</table>" + $_CrLf
+	$out = $out + "</div>" + $_CrLf
+ENDSUB #DiffTerrChartExtremHardcoreLinks
+
+BEGINSUB Name=OutputFrameLine
+	$RahmenFarbe = $stColor2c2Leicht
+	IF ($difficulty >= 3) OR ($terrain >= 3)
+		$RahmenFarbe = $stColor2c2Schwer
+	ENDIF
+	IF (($difficulty * $terrain) >= 12)
+		$RahmenFarbe = $stColor2c2Extrem
+	ENDIF
+	IF ($difficulty >= 4) AND ($terrain >= 4)
+		$RahmenFarbe = $stColor2c2Hardcore
+	ENDIF
+
+	IF $num > 0
+		$RahmenFarbe = $stColorDiffTerrLeicht
+		IF ($difficulty >= 3) OR ($terrain >= 3)
+			$RahmenFarbe = $stColorDiffTerrSchwer
+		ENDIF
+		IF (($difficulty * $terrain) >= 12)
+			$RahmenFarbe = $stColorDiffTerrExtrem
+		ENDIF
+		IF ($difficulty >= 4) AND ($terrain >= 4)
+			$RahmenFarbe = $stColorDiffTerrHardcore
+		ENDIF
+	ENDIF
+
+	$out = $out + "    <td></td>" # Leerzelle vor ZahlZelle
+	$out = $out + "<td style='background:" + $RahmenFarbe + ";'></td>" # Rahmenzelle vor ZahlZelle
+	$out = $out + "<td style='background:" + $RahmenFarbe + ";'></td>" # Rahmenzelle über ZahlZelle
+	$out = $out + "<td style='background:" + $RahmenFarbe + ";'></td>" + $_CrLf # Rahmenzelle nach ZahlZelle
+
+ENDSUB
+
+BEGINSUB Name=DiffTerrChart1 # mit ExtremHardcore-Schattierung im Rahmen und innen Heatshading
+	$out = $out + "<table width='$maxtablewidth' cellspacing='0' style='text-align: left;'> <!-- Kappler: cellspacing zugefügt -->" + $_CrLf
+	$RahmenSeite = 12
+	$RahmenObenUnten = 8
+	$cellwidth = Int($maxtablewidth/12.5) - (2*$RahmenSeite)
+	$ZellbreiteGesamt = Int($maxtablewidth/12.5)
+	$headerwidth = $maxtablewidth - (9 * $cellwidth) - (18*$RahmenSeite) - (2*$ZellbreiteGesamt) - (11*1)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$terrain  = 1
+	$difficulty = 1
+
+	# Title row
+
+	$out = $out + "<tr><th style='$stTab2cHead'></th><th width='1'></th><th style='$stTab2cHead' colspan='36' align='center'><b>$Lang28b</b></th><th style='$stTab2cHead' width='$RahmenSeite'></th><th width='1'></th>"
+	if ($NumCharts = 1)
+		$out = $out + "<th width='$ZellbreiteGesamt'></th>" + $_CrLf
+	else
+		$out = $out + "<th align='right' width='$ZellbreiteGesamt'><font color='$stColor2c2Hardcore' style='cursor:pointer' onmousedown=" + $_Quote + "document.getElementById('DTM$ActualChart').style.display = 'none';document.getElementById('DTM$NextChart').style.display = 'block';document.getElementById('DTHC').style.display = '$DisplayExtremHardcoreDiv';document.getElementById('DTnoHC').style.display = '$DisplayNoExtremHardcoreDiv';" + $_Quote + ">$LangPlugIn11</font></th></tr>" + $_CrLf
+	endif
+	$out = $out + "<tr><th height='1'></th><td></td><td colspan='36'></td></tr> <!-- Kappler: Zeile 2: Leerzeile -->" + $_CrLf
+	$out = $out + "<tr><th style='$stTab2cHead' rowspan='37' width='$headerwidth' align='center'><b>$Lang28a</b></th> <!-- Kappler: Schwierigkeit (hohe Zelle) -->" + $_CrLf
+	$out = $out + "<td></td>" + $_CrLf
+
+	$out = $out + "<td style='$st2c1'></td>"
+	# Get one data line
+	$data = Extract($diffterr, ";" , $indexd)
+	WHILE $indext < 9
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$out = $out + "<th width='1'></th>" # Leerzelle vor Geländewert
+		$out = $out + "<th style='$st2c1' width='$RahmenSeite'></th>" # Rahmen-Leerzell vor Geländewert
+		$out = $out + "<th style='$st2c1' width='$cellwidth' align='center'><b>$text</b></th>" + $_CrLf #
+		$out = $out + "<th style='$st2c1' width='$RahmenSeite'></th>" # Rahmen-Leerzell nach Geländewert
+	ENDWHILE
+	# Row Total
+	$out = $out + "<td></td>" + $_CrLf
+	$out = $out + "</tr>" + $_CrLf
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 10
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($diffterr, ";" , $indexd)
+		$tindexd = replace(",",".",numtoStr($difficulty),true)
+ 		$out = $out + "<tr><th height='1' colspan='40'></th></tr>" + $_CrLf # Leerzeile
+
+		$tmpN = 0
+		$out = $out + "<tr><th height='$RahmenObenUnten'></th><th style='$st2c1' width='$ZellbreiteGesamt'></th>" + $_CrLf
+		WHILE $indext < 9 # Rahmenzeile oberhalb
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputFrameLine
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		$out = $out + "    <td></td><th style='$st2c1' width='$ZellbreiteGesamt' align='center'></th>" + $_CrLf + "</tr>" + $_CrLf
+
+		$indext = 0
+		$terrain = 1
+
+		$out = $out + "<tr><td></td><th style='$st2c1' width='$ZellbreiteGesamt'><b> $tindexd</b></th> <!-- Kappler: Schwierigkeits-Bewertungen Kopfspalte -->" + $_CrLf
+		$tmpN = 0
+		WHILE $indext < 9
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputChartLineKappler1
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		IF $num >= $maxdif
+			$Bold = "<b>"
+			$boldoff = "</b>"
+			$cellstyle = $st2c1 + " color: red;"
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $st2c1
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ENDIF
+		$out = $out + "    <td></td>" + $_CrLf # Leerzelle vor Schwierigkeits-Totals
+		$out = $out + "    <th style='$cellstyle' width='$ZellbreiteGesamt' align='center'"
+		$DivID = $indexd + 80 # Beginn D-Totals bei 81
+		if ($num > 0)
+			$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote
+		endif
+		$out = $out + ">$bold<i>$text</i>$boldoff</th>" + $_CrLf
+
+		$indext = 0
+		$out = $out + "</tr>" + $_CrLf
+		$terrain  = 1
+		$out = $out + "<tr><th height='$RahmenObenUnten'></th><th style='$st2c1' width='$ZellbreiteGesamt'></th>" + $_CrLf #
+		WHILE $indext < 9 # Rahmenzeile oberhalb
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputFrameLine
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		$out = $out + "    <td></td><th style='$st2c1' width='$ZellbreiteGesamt' align='center'></th>" + $_CrLf + "</tr>" + $_CrLf
+
+		$indext = 0
+		$terrain = 1
+		$difficulty = $difficulty + 0.5
+	ENDWHILE #
+	$out = $out + "<tr><th height='1' colspan='42'></th></tr>" + $_CrLf
+
+	$out = $out + "<tr><td></td><td></td>" + $_CrLf
+	$out = $out + "<td></td>" + $_CrLf
+	$rating  = 1
+
+	# Column Totals
+	$DivID = 91 # Beginn Terrain-Totals bei 91
+	WHILE $rating <=5
+		# Deal with use of "," as separator
+		#$trating = replace(",",".",numtoStr($rating),true)
+		$_sql = "Select count(Code) from AllFinds WHERE Terrain=$rating"
+		$num = Val(Sqlite("sql",$_sql))
+		$text = NumToStr($num)
+		IF $num >= $maxterr
+			$Bold = "<b>"
+			$boldoff = "</b>"
+			$cellstyle = $st2c1 + " color: red;"
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $st2c1
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ENDIF
+		$out = $out + "<td></td>" # Leerzelle vor ZahlZelle
+		$out = $out + "<td style='$st2c1'></td>" # Rahmen-Leerzelle vor ZahlZelle
+		$out = $out + "<th style='$cellstyle' width='$cellwidth' align='center'"
+		if ($num > 0)
+			$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote
+		endif
+		$out = $out + ">$bold<i>$text</i>$boldoff</th>" + $_CrLf
+		$out = $out + "<td style='$st2c1'></td>" # Rahmen-Leerzelle nach ZahlZelle
+		$rating=$rating + 0.5 #
+		$DivID = $DivID + 1
+	ENDWHILE #
+	$bold = ""
+	$boldoff = ""
+	$Bold = "<b>"
+	$boldoff = "</b>"
+	$cellstyle = $st2c1
+	$_sql = "Select count(Code) from AllFinds"
+  	$num = Val(Sqlite("sql",$_sql))
+  	$text = NumToStr($num)
+	$out = $out + "<td></td>" + $_CrLf
+	IF $num > 0
+		$cellstyle = $cellstyle + " cursor:pointer"
+	ENDIF
+	$out = $out + "<th style='$cellstyle' width='$ZellbreiteGesamt' align='center'"
+	$DivID = 100
+	$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + ">"
+	$out = $out + "$bold<i>$text</i>$boldoff</th>" + $_CrLf
+	
+	$out = $out + "</tr></table>" + $_CrLf + "<br />"
+ENDSUB #DiffTerrChart1
+
+BEGINSUB Name=DiffTerrChart2 # nur Standardmatrix
+	$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf
+	$cellwidth = Int($maxtablewidth/12.5)
+	$headerwidth = $maxtablewidth - (11 * $cellwidth)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$terrain  = 1
+	$difficulty = 1
+
+	# Title row
+
+	$out = $out + "<tr><td style='$stTab2cHead'></td><td style='$stTab2cHead' colspan='10' align='center'><b>$Lang28b</b></td>"
+	if ($NumCharts = 1)
+		$out = $out + "<td></td>" + $_CrLf
+	else
+		$out = $out + "<td align='right'><font color='$stColor2c2Hardcore' style='cursor:pointer' onmousedown=" + $_Quote + "document.getElementById('DTM$ActualChart').style.display = 'none';document.getElementById('DTM$NextChart').style.display = 'block';document.getElementById('DTHC').style.display = '$DisplayExtremHardcoreDiv';document.getElementById('DTnoHC').style.display = '$DisplayNoExtremHardcoreDiv';" + $_Quote + ">$LangPlugIn11</font></td></tr>" + $_CrLf
+	endif
+	$out = $out + "<tr><th style='$stTab2cHead' rowspan='10' width='$headerwidth' align='center'><b>$Lang28a</b></th>" + $_CrLf
+
+	$out = $out + "<td style='$st2c1'></td>"
+	# Get one data line
+	$data = Extract($diffterr, ";" , $indexd)
+	WHILE $indext < 9
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$out = $out + "<th style='$st2c1' width='$cellwidth' align='center'><b>$text</b></th>" + $_CrLf
+	ENDWHILE
+	# Row Total
+	$out = $out + "<th width='$cellwidth'></th>" + $_CrLf
+	$out = $out + "</tr>" + $_CrLf
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 10
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($diffterr, ";" , $indexd)
+		$tindexd = replace(",",".",numtoStr($difficulty),true)
+		$out = $out + "<tr>" + $_CrLf 
+		$out = $out + "    <td style='$st2c1'><b> $tindexd</b></td>" + $_CrLf
+		$tmpN = 0
+		WHILE $indext < 9
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			$num = Val($text)
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputChartLineKappler2
+			$terrain = $terrain + 0.5
+		ENDWHILE
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		IF $num >= $maxdif
+			$Bold = "<b>"
+			$boldoff = "</b>"
+			$cellstyle = $stTab2cHead + " color: red;"
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ENDIF
+		$out = $out + "    <td style='$cellstyle' align='center'"
+		$DivID = $indexd + 80 # Beginn D-Totals bei 81
+		if ($num > 0)
+			$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote
+		endif
+		$out = $out + ">$bold<i>$text</i>$boldoff</td>" + $_CrLf
+
+		$indext = 0
+		$out = $out + "</tr>" + $_CrLf #
+
+		$indext = 0
+		$terrain = 1
+		$difficulty = $difficulty + 0.5 #
+	ENDWHILE #
+
+	$out = $out + "<tr><td></td><td></td>" + $_CrLf
+	$rating  = 1
+	# Column Totals
+
+	$DivID = 91 # Beginn Terrain-Totals bei 91
+
+	WHILE $rating <=5
+		$_sql = "Select count(Code) from AllFinds WHERE Terrain=$rating"
+		$num = Val(Sqlite("sql",$_sql))
+		$text = NumToStr($num)
+		IF $num >= $maxterr
+			$Bold = "<b>"
+			$boldoff = "</b>"
+			$cellstyle = $stTab2cHead + " color: red;"
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+			IF ($num > 0)
+				$cellstyle = $cellstyle + " cursor:pointer"
+			ENDIF
+		ENDIF
+		$out = $out + "<td style='$cellstyle' align='center'"
+		if ($num > 0)
+			$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote
+		endif
+		$out = $out + ">$bold<i>$text</i>$boldoff</td>" + $_CrLf
+		$rating=$rating + 0.5 #
+		$DivID = $DivID + 1
+	ENDWHILE
+	$bold = ""
+	$boldoff = ""
+	$Bold = "<b>"
+	$boldoff = "</b>"
+	$cellstyle = $stTab2cHead
+	$_sql = "Select count(Code) from AllFinds"
+  	$num = Val(Sqlite("sql",$_sql))
+  	$text = NumToStr($num)
+	IF $num > 0
+		$cellstyle = $cellstyle + " cursor:pointer"
+	ENDIF
+	$out = $out + "<td style='$cellstyle' align='center'"
+	$DivID = 100
+	$out = $out + " onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote + ">"
+	$out = $out + "<i>$text</i></td>" + $_CrLf
+	
+	$out = $out + "</tr></table>" + $_CrLf + "<br />"
+ENDSUB #DiffTerrChart2
+
+BEGINSUB Name=OutputChartLineKappler1
+	$bold = ""
+	$boldoff = ""
+	$cellstyle = $st2c2
+	$RahmenFarbe = $stColor2c2Leicht
+	IF ($difficulty >= 3) OR ($terrain >= 3)
+		$cellstyle = $st2c2Schwer
+		$RahmenFarbe = $stColor2c2Schwer
+	ENDIF
+	IF (($difficulty * $terrain) >= 12)
+		$cellstyle = $st2c2Extrem
+		$RahmenFarbe = $stColor2c2Extrem
+	ENDIF
+	IF ($difficulty >= 4) AND ($terrain >= 4)
+		$cellstyle = $st2c2Hardcore
+		$RahmenFarbe = $stColor2c2Hardcore
+	ENDIF
+	
+	$begRed = 20
+	$redChange = 180
+	$begGreen = 50
+	$greenChange = 150
+	$begBlue = 0
+	$blueChange = 0
+
+	IF $num > 0
+		IF $num = $maxdiffterr
+			$cellstyle = $stDiffTerrhi
+			$bold = "<b>"
+			$boldoff = "</b>"
+		ELSE
+			IF $maxdiffterr > 0
+				# Use log scale to enhance color differences
+				$x = Log($maxdiffterr,$num)
+				$y = 1-($num/$maxdiffterr)
+				# Scale so one color is always at full intensity
+				IF $x >= $y
+					$y = $y/$x
+					$x = 1
+				ELSE
+					$x = $x/$y
+					$y = 1
+				ENDIF
+			ENDIF
+			$cellstyle = $stDiffTerr
+			$red=$begRed+($redChange*$x)
+			$dec=$red
+			GOSUB Name=dectohex
+			$redhex=$hex
+			$green=$begGreen+($greenChange*$y)
+			$dec=$green
+			GOSUB Name=dectohex
+			$greenhex=$hex
+			$blue=$begBlue+($blueChange*$x)
+			$dec=$blue
+			GOSUB Name=dectohex
+			$bluehex=$hex
+			$cellstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+					
+		ENDIF
+		$RahmenFarbe = $stColorDiffTerrLeicht
+		IF ($difficulty >= 3) OR ($terrain >= 3)
+			$RahmenFarbe = $stColorDiffTerrSchwer
+		ENDIF
+		IF (($difficulty * $terrain) >= 12)
+			$RahmenFarbe = $stColorDiffTerrExtrem
+		ENDIF
+		IF ($difficulty >= 4) AND ($terrain >= 4)
+			$RahmenFarbe = $stColorDiffTerrHardcore
+		ENDIF
+	ELSE
+		$text = " "
+	ENDIF
+	$out = $out + "    <td></td>" # Leerzelle vor ZahlZelle
+	$out = $out + "<td style='background:" + $RahmenFarbe + ";'></td>" # Rahmenzelle vor ZahlZelle
+	IF $num > 0
+		$out = $out + "<th style='$cellstyle; cursor:pointer' width='$cellwidth' align='center' "  
+		GOSUB name=GetDivID
+		$out = $out + "onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote  + ">"
+		$out = $out + $bold + $text + $boldoff
+		$out = $out + "</th>"
+	ELSE
+		$out = $out + "<td style='$cellstyle' align='center'>"  
+		$out = $out + $bold + $text + $boldoff
+		$out = $out + "</td>"
+	ENDIF
+	$out = $out + "<td style='background:" + $RahmenFarbe + ";'></td>" + $_CrLf # Rahmenzelle nach ZahlZelle
+ENDSUB
+
+BEGINSUB Name=OutputChartLineKappler2
+	GOSUB Name=GetCellStyle
+	IF $num > 0
+		$out = $out + "    <td style='$cellstyle; cursor:pointer' align='center' "  
+		GOSUB name=GetDivID
+		$out = $out + "onmousedown=" + $_Quote + "for(var i = 1; i <= 103; i++){document.getElementById('DT' + i).style.display = 'none';}document.getElementById('DT" + numtostr($DivID) + "').style.display = 'block';" + $_Quote  + ">"
+		$out = $out + $bold + $text + $boldoff
+		$out = $out + "</td>" + $_CrLf
+	ELSE
+		$out = $out + "    <td style='$cellstyle' align='center'>"  
+		$out = $out + $bold + " " + $boldoff
+		$out = $out + "</td>" + $_CrLf
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=GetCellStyle
+	IF $ChartTyp = 1 # Heatmap-Shading (ohne Schwierigkeits-Unterscheidung)
+		$bold = ""
+		$boldoff = ""
+		$cellstyle = $st2c2
+		$begRed = 20
+		$redChange = 180
+		$begGreen = 50
+		$greenChange = 150
+		$begBlue = 0
+		$blueChange = 0
+
+		IF $num > 0
+			IF $num = $maxdiffterr
+				$cellstyle = $stDiffTerrhi
+				$bold = "<b>"
+				$boldoff = "</b>"
+			ELSE
+				IF $maxdiffterr > 0
+					# Use log scale to enhance color differences
+					$x = Log($maxdiffterr,$num)
+					$y = 1-($num/$maxdiffterr)
+					# Scale so one color is always at full intensity
+					IF $x >= $y
+						$y = $y/$x
+						$x = 1
+					ELSE
+						$x = $x/$y
+						$y = 1
+					ENDIF
+				ENDIF
+				$red=$begRed+($redChange*$x)
+				$dec=$red
+				GOSUB Name=dectohex
+				$redhex=$hex
+				$green=$begGreen+($greenChange*$y)
+				$dec=$green
+				GOSUB Name=dectohex
+				$greenhex=$hex
+				$blue=$begBlue+($blueChange*$x)
+				$dec=$blue
+				GOSUB Name=dectohex
+				$bluehex=$hex
+				$cellstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+			ENDIF
+		ENDIF
+	ENDIF
+
+
+	IF $ChartTyp = 2 # Originalfarben (ohne Schwierigkeits-Unterscheidung)
+		$bold = ""
+		$boldoff = ""
+		$cellstyle = $st2c2
+
+		IF $num > 0
+			IF $num = $maxdiffterr
+				$cellstyle = $stDiffTerrhi
+				$bold = "<b>"
+				$boldoff = "</b>"
+			ELSE
+				$cellstyle = $stDiffTerr
+			ENDIF
+		ENDIF
+	ENDIF
+
+	IF $ChartTyp = 3 # mit Schwierigkeits-Unterscheidung
+		$bold = ""
+		$boldoff = ""
+		$cellstyle = $st2c2
+		IF ($difficulty >= 3) OR ($terrain >= 3)
+			$cellstyle = $st2c2Schwer
+		ENDIF
+		IF (($difficulty * $terrain) >= 12)
+			$cellstyle = $st2c2Extrem
+		ENDIF
+		IF ($difficulty >= 4) AND ($terrain >= 4)
+			$cellstyle = $st2c2Hardcore
+		ENDIF
+
+		IF $num > 0
+			IF $num = $maxdiffterr
+				$cellstyle = $stDiffTerrhi
+				$bold = "<b>"
+				$boldoff = "</b>"
+			ELSE
+				$cellstyle = $stDiffTerr
+				IF ($difficulty >= 3) OR ($terrain >= 3)
+					$cellstyle = $stDiffTerrSchwer
+				ENDIF
+				IF (($difficulty * $terrain) >= 12)
+					$cellstyle = $stDiffTerrExtrem
+				ENDIF
+				IF ($difficulty >= 4) AND ($terrain >= 4)
+					$cellstyle = $stDiffTerrHardcore
+				ENDIF
+			ENDIF
+		ENDIF
+	ENDIF
+ENDSUB
+
+BEGINSUB name=dectohex
+	# Takes input from 0-255 as a decimal number in $dec
+	# and returns it as a two character hex string in $hex
+
+	$hexlookup="0123456789ABCDEF"
+	$c_d = Int($dec)
+	$c_q = Int($c_d/16)
+	$c_r = $c_d - ($c_q*16)
+	$hex = SubStr($hexlookup,$c_q+1,1) + SubStr($hexlookup,$c_r+1,1)
+ENDSUB
+
+

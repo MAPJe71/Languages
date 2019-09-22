@@ -1,0 +1,392 @@
+/* file cylinder.mac 
+Edwin L Woollett, 2008,2010
+    woollett@charter.net
+    http://www.csulb.edu/~woollett
+    See tutorial notes:
+     Maxima by Example, Ch. 6: Differential Calculus for
+     a discussion of this method.
+    
+    this file sets up and uses
+    cylindrical coordinates: (rho, phi, z) --> (rh, p, z).
+    
+  batch("cylinder.mac")  sets up environment and calculates
+    the laplacian(f),  divergence(bvec), and the
+     (rho, phi, z) components of grad(f) and curl(bvec)           
+
+ 
+*/
+" ------------  cylinder.mac   ----------------------------"$
+"  cylindrical coordinates (rho, phi, z ) = (rh, p, z)  "$
+   
+" replacement rules x,y,z to rh, p, z  "$
+
+c3rule : [x = rh*cos(p), y = rh*sin(p)  ]$
+c3sub(expr) := (subst(c3rule,expr),trigsimp(%%) )$
+
+rhxy : sqrt(x^2 + y^2)$
+
+assume(rh > 0)$
+
+" partial derivatives of rho and phi wrt x and y "$
+
+drhdx : (diff(rhxy,x),c3sub(%%) );
+drhdy : (diff(rhxy,y),c3sub(%%) );
+
+dpdx : (diff( atan(y/x) ,x),c3sub(%%) );
+dpdy : (diff( atan(y/x) ,y),c3sub(%%) );
+
+" tell Maxima rh=rh(x,y) and p = p(x,y) "$
+
+( gradef(rh,x,drhdx),gradef(rh,y,drhdy) )$
+( gradef(p,x,dpdx),gradef(p,y,dpdy) )$
+
+   depends ([rh,p],[x,y])$
+
+ "------------------------------------------------"$
+ "  Laplacian of a scalar function f              "$
+ "------------------------------------------------"$
+
+" tell Maxima to treat scalar function f as an "$
+"    explicit function of (rh,p,z) "$
+
+depends(f,[rh,p,z]);
+
+
+"  calculate the Laplacian of the scalar function f(rh,p,z) "$
+"  using the cartesian definition "$
+
+( diff(f,x,2) + diff(f,y,2) + diff(f,z,2),trigsimp(%%),
+          multthru(%%) );
+                 
+grind(%)$
+
+"--------------------------------------------"$
+"            Unit Vectors                    "$
+"--------------------------------------------"$ 
+
+"  cross product rule when using lists for vectors "$
+
+lcross(u,v) := ( 
+         ( u[2]*v[3] - u[3]*v[2] )*xu +
+          ( u[3]*v[1] - u[1]*v[3]  )*yu +
+          ( u[1]*v[2] - u[2]*v[1] )*zu
+          
+          )$
+          
+" cross product of parallel vectors is zero "$
+              
+lcross([a,b,c],[n*a,n*b,n*c]);
+          
+          
+" a function we can use with map "$
+          
+apcr(ll) := apply('lcross, ll)$
+
+
+" 3d cartesian unit vectors using lists "$
+
+( xu : [1,0,0], yu : [0,1,0], zu : [0,0,1] )$   
+
+
+" orthonormality checks on cartesian unit vectors "$
+
+[ xu.xu, yu.yu, zu.zu, xu.yu, xu.zu, yu.zu ];
+
+
+" low tech check of cross products of cartesian unit vectors"$
+
+  lcross(xu,yu) - zu;
+
+  lcross(yu,zu) - xu;
+
+  lcross(zu,xu) - yu;
+  
+  [lcross(xu,xu),lcross(yu,yu),lcross(zu,zu)];
+  
+  
+" high tech checks of cross products of cartesian unit vectors"$
+
+  map('apcr,[[xu,yu],[yu,zu],[zu,xu]]) - [zu,xu,yu];
+  
+  map('apcr,[[xu,xu],[yu,yu],[zu,zu]]) ;  
+  
+
+" cylindrical coordinate unit vectors rho-hat, phi-hat  "$
+
+rhu : cos(p)*xu + sin(p)*yu;
+pu : -sin(p)*xu + cos(p)*yu;
+
+" orthonormality checks on unit vectors "$
+
+([ rhu.rhu, pu.pu, zu.zu, rhu.pu, rhu.zu, pu.zu], trigsimp(%%) );
+
+" low tech check of cross products "$
+
+ ( lcross(rhu,pu), trigsimp(%%) ) - zu;
+
+ ( lcross(pu,zu), trigsimp(%%) ) - rhu;
+
+ ( lcross(zu,rhu), trigsimp(%%) ) - pu;
+
+[lcross(rhu,rhu), lcross(pu,pu)];
+
+" high tech checks of cross products "$
+
+  ( map('apcr,[[ rhu,pu], [pu,zu], [zu,rhu] ] ), trigsimp(%%) ) - [zu,rhu,pu];
+  
+   map('apcr, [ [rhu,rhu], [pu,pu] ] ) ;
+
+"--------------------------------------------"$
+"        Gradient of a Scalar Function f     "$
+"--------------------------------------------"$
+
+" cartesian def. of gradient of scalar f "$
+
+fgradient : diff(f,x)*xu + diff(f,y)*yu + diff(f,z)*zu $
+
+" rho, phi, and z components of grad(f) "$
+
+fgradient_rh : (rhu . fgradient, trigsimp(%%) );
+fgradient_p : ( pu . fgradient, trigsimp(%%) );
+fgradient_z : ( zu . fgradient, trigsimp(%%) );
+
+
+
+"-----------------------------------------------"$
+"      Divergence of a Vector bvec              "$
+"-----------------------------------------------"$
+
+bvec : bx*xu + by*yu + bz*zu;
+
+" two equations which relate cylindrical components"$
+"   of bvec to the cartesian components "$
+
+eq1 : brh = rhu.bvec;
+eq2 : bp = pu.bvec;
+
+" invert these equations "$
+
+sol : (linsolve([eq1,eq2],[bx,by ]), trigsimp(%%) );
+
+[bx,by] : map('rhs,sol)$
+
+" tell Maxima to treat cylindrical components as "$
+"   explicit functions of (rh,p,z) "$
+
+depends([brh,bp,bz],[rh,p,z]);
+
+" calculate the divergence of bvec "$
+
+bdivergence : ( diff(bx, x) + diff(by, y) + diff(bz, z),trigsimp(%%),
+                         multthru(%%) );
+                         
+"--------------------------------------------------------"$
+ "   Cylindrical Components of Curl(bvec)             "$
+ "--------------------------------------------------------"$
+
+" cartesian definition of curl(vec)   "$
+
+bcurl : (diff(bz,y) - diff(by,z) )*xu + (diff(bx,z) - diff(bz,x) )*yu +
+                 (diff(by,x) - diff(bx,y) )*zu$
+                 
+" find cylindrical components of curl(bvec) "$
+
+bcurl_rh : (rhu.bcurl,trigsimp(%%),multthru(%%) );
+bcurl_p : (pu.bcurl,trigsimp(%%),multthru(%%) );
+bcurl_z : (zu.bcurl,trigsimp(%%),multthru(%%) );
+
+" -------------------------------------------------------"$
+
+
+
+/*
+Maxima 5.21.1 http://maxima.sourceforge.net
+using Lisp GNU Common Lisp (GCL) GCL 2.6.8 (a.k.a. GCL)
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+The function bug_report() provides bug reporting information.
+                                  2010-10-13
+
+(%i1) batch("cylinder.mac")$
+read and interpret file: #pc:/work5/cylinder.mac
+(%i2)      ------------  cylinder.mac   ----------------------------
+(%i3)         cylindrical coordinates (rho, phi, z ) = (rh, p, z)  
+(%i4)                replacement rules x,y,z to rh, p, z  
+(%i5)               c3rule : [x = rh cos(p), y = rh sin(p)]
+(%i6)         c3sub(expr) := (subst(c3rule, expr), trigsimp(%%))
+                                          2    2
+(%i7)                        rhxy : sqrt(y  + x )
+(%i8)                           assume(rh > 0)
+(%i9)           partial derivatives of rho and phi wrt x and y 
+(%i10)                drhdx : (diff(rhxy, x), c3sub(%%))
+(%o10)                              cos(p)
+(%i11)                drhdy : (diff(rhxy, y), c3sub(%%))
+(%o11)                              sin(p)
+                                       y
+(%i12)               dpdx : (diff(atan(-), x), c3sub(%%))
+                                       x
+                                     sin(p)
+(%o12)                             - ------
+                                       rh
+                                       y
+(%i13)               dpdy : (diff(atan(-), y), c3sub(%%))
+                                       x
+                                    cos(p)
+(%o13)                              ------
+                                      rh
+(%i14)               tell Maxima rh=rh(x,y) and p = p(x,y) 
+(%i15)           (gradef(rh, x, drhdx), gradef(rh, y, drhdy))
+(%i16)             (gradef(p, x, dpdx), gradef(p, y, dpdy))
+(%i17)                     depends([rh, p], [x, y])
+(%i18)         ------------------------------------------------
+(%i19)           Laplacian of a scalar function f              
+(%i20)         ------------------------------------------------
+(%i21)           tell Maxima to treat scalar function f as an 
+(%i22)                    explicit function of (rh,p,z) 
+(%i23)                      depends(f, [rh, p, z])
+(%o23)                           [f(rh, p, z)]
+(%i24)      calculate the Laplacian of the scalar function f(rh,p,z) 
+(%i25)                   using the cartesian definition 
+(%i26) (diff(f, z, 2) + diff(f, y, 2) + diff(f, x, 2), trigsimp(%%), 
+                                                                  multthru(%%))
+                                   2
+                                  d f
+                            df    ---
+                            ---     2    2     2
+                            drh   dp    d f   d f
+(%o26)                      --- + --- + --- + ----
+                            rh      2     2      2
+                                  rh    dz    drh
+(%i27)                             grind(%)
+'diff(f,rh,1)/rh+'diff(f,p,2)/rh^2+'diff(f,z,2)+'diff(f,rh,2)$
+(%i28)           --------------------------------------------
+(%i29)                       Unit Vectors                    
+(%i30)           --------------------------------------------
+(%i31)          cross product rule when using lists for vectors 
+(%i32) lcross(u, v) := (u  v  - u  v ) zu + (u  v  - u  v ) yu
+                         1  2    2  1         3  1    1  3
+                                                           + (u  v  - u  v ) xu
+                                                               2  3    3  2
+(%i33)             cross product of parallel vectors is zero 
+(%i34)                lcross([a, b, c], [n a, n b, n c])
+(%o34)                                 0
+(%i35)                  a function we can use with map 
+(%i36)                  apcr(ll) := apply('lcross, ll)
+(%i37)               3d cartesian unit vectors using lists 
+(%i38)         (xu : [1, 0, 0], yu : [0, 1, 0], zu : [0, 0, 1])
+(%i39)          orthonormality checks on cartesian unit vectors 
+(%i40)      [xu . xu, yu . yu, zu . zu, xu . yu, xu . zu, yu . zu]
+(%o40)                        [1, 1, 1, 0, 0, 0]
+(%i41)     low tech check of cross products of cartesian unit vectors
+(%i42)                        lcross(xu, yu) - zu
+(%o42)                             [0, 0, 0]
+(%i43)                        lcross(yu, zu) - xu
+(%o43)                             [0, 0, 0]
+(%i44)                        lcross(zu, xu) - yu
+(%o44)                             [0, 0, 0]
+(%i45)         [lcross(xu, xu), lcross(yu, yu), lcross(zu, zu)]
+(%o45)                 [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+(%i46)    high tech checks of cross products of cartesian unit vectors
+(%i47)     map('apcr, [[xu, yu], [yu, zu], [zu, xu]]) - [zu, xu, yu]
+(%o47)                 [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+(%i48)            map('apcr, [[xu, xu], [yu, yu], [zu, zu]])
+(%o48)                 [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+(%i49)       cylindrical coordinate unit vectors rho-hat, phi-hat  
+(%i50)                    rhu : sin(p) yu + cos(p) xu
+(%o50)                        [cos(p), sin(p), 0]
+(%i51)                    pu : cos(p) yu - sin(p) xu
+(%o51)                       [- sin(p), cos(p), 0]
+(%i52)               orthonormality checks on unit vectors 
+(%i53) ([rhu . rhu, pu . pu, zu . zu, rhu . pu, rhu . zu, pu . zu], 
+                                                                  trigsimp(%%))
+(%o53)                        [1, 1, 1, 0, 0, 0]
+(%i54)                 low tech check of cross products 
+(%i55)               (lcross(rhu, pu), trigsimp(%%)) - zu
+(%o55)                             [0, 0, 0]
+(%i56)               (lcross(pu, zu), trigsimp(%%)) - rhu
+(%o56)                             [0, 0, 0]
+(%i57)               (lcross(zu, rhu), trigsimp(%%)) - pu
+(%o57)                             [0, 0, 0]
+(%i58)                [lcross(rhu, rhu), lcross(pu, pu)]
+(%o58)                      [[0, 0, 0], [0, 0, 0]]
+(%i59)                high tech checks of cross products 
+(%i60) (map('apcr, [[rhu, pu], [pu, zu], [zu, rhu]]), trigsimp(%%))
+                                                                - [zu, rhu, pu]
+(%o60)                 [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+(%i61)                map('apcr, [[rhu, rhu], [pu, pu]])
+(%o61)                      [[0, 0, 0], [0, 0, 0]]
+(%i62)           --------------------------------------------
+(%i63)                   Gradient of a Scalar Function f     
+(%i64)           --------------------------------------------
+(%i65)              cartesian def. of gradient of scalar f 
+(%i66)     fgradient : diff(f, z) zu + diff(f, y) yu + diff(f, x) xu
+(%i67)               rho, phi, and z components of grad(f) 
+(%i68)          fgradient_rh : (rhu . fgradient, trigsimp(%%))
+                                      df
+(%o68)                                ---
+                                      drh
+(%i69)           fgradient_p : (pu . fgradient, trigsimp(%%))
+                                      df
+                                      --
+                                      dp
+(%o69)                                --
+                                      rh
+(%i70)           fgradient_z : (zu . fgradient, trigsimp(%%))
+                                      df
+(%o70)                                --
+                                      dz
+(%i71)          -----------------------------------------------
+(%i72)                Divergence of a Vector bvec              
+(%i73)          -----------------------------------------------
+(%i74)                   bvec : bz zu + by yu + bx xu
+(%o74)                           [bx, by, bz]
+(%i75)         two equations which relate cylindrical components
+(%i76)                 of bvec to the cartesian components 
+(%i77)                      eq1 : brh = rhu . bvec
+(%o77)                    brh = by sin(p) + bx cos(p)
+(%i78)                       eq2 : bp = pu . bvec
+(%o78)                    bp = by cos(p) - bx sin(p)
+(%i79)                      invert these equations 
+(%i80)       sol : (linsolve([eq1, eq2], [bx, by]), trigsimp(%%))
+(%o80)    [bx = brh cos(p) - bp sin(p), by = brh sin(p) + bp cos(p)]
+(%i81)                     [bx, by] : map('rhs, sol)
+(%i82)          tell Maxima to treat cylindrical components as 
+(%i83)                   explicit functions of (rh,p,z) 
+(%i84)                depends([brh, bp, bz], [rh, p, z])
+(%o84)            [brh(rh, p, z), bp(rh, p, z), bz(rh, p, z)]
+(%i85)                 calculate the divergence of bvec 
+(%i86) bdivergence : (diff(bz, z) + diff(by, y) + diff(bx, x), trigsimp(%%), 
+                                                                  multthru(%%))
+                                  dbp
+                                  ---
+                            brh   dp    dbz   dbrh
+(%o86)                      --- + --- + --- + ----
+                            rh    rh    dz    drh
+(%i87)     --------------------------------------------------------
+(%i88)          Cylindrical Components of Curl(bvec)             
+(%i89)     --------------------------------------------------------
+(%i90)                cartesian definition of curl(vec)   
+(%i91) bcurl : (diff(by, x) - diff(bx, y)) zu + (diff(bx, z) - diff(bz, x)) yu
+                                               + (diff(bz, y) - diff(by, z)) xu
+(%i92)             find cylindrical components of curl(bvec) 
+(%i93)       bcurl_rh : (rhu . bcurl, trigsimp(%%), multthru(%%))
+                                   dbz
+                                   ---
+                                   dp    dbp
+(%o93)                             --- - ---
+                                   rh    dz
+(%i94)        bcurl_p : (pu . bcurl, trigsimp(%%), multthru(%%))
+                                  dbrh   dbz
+(%o94)                            ---- - ---
+                                   dz    drh
+(%i95)        bcurl_z : (zu . bcurl, trigsimp(%%), multthru(%%))
+                                 dbrh
+                                 ----
+                                  dp    bp   dbp
+(%o95)                         - ---- + -- + ---
+                                  rh    rh   drh
+(%i96)      -------------------------------------------------------
+*/
+
+                         
+    

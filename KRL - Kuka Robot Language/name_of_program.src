@@ -1,0 +1,20 @@
+
+DEF Newprog ( ) <— this is the definition for the name of the Program that will contain all subs and functions
+
+DEF MainProg() <----- this is the definition for a subroutine called MainProg
+…code…
+END
+
+DEF Sub1() <----- this is the definition for a subroutine called Sub1
+…code…
+END
+
+DEFFCT TypeName func1(num:IN) <----- this is the definition for a function called func1
+…code…
+ENDFCT
+
+GLOBAL DEF Sub2() <----- this is the definition for a subroutine called Sub2
+…code…
+END
+
+END

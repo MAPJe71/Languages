@@ -1,0 +1,86 @@
+; TextPad syntax definitions for Haskell
+
+C=1
+
+[Syntax]
+Namespace1 = 6
+IgnoreCase = No
+InitKeyWordChars = A-Za-z_
+KeyWordChars = A-Za-z0-9_'
+BracketChars = {[()]}
+OperatorChars = -+*/<>=!^$&|:,%~
+PreprocStart = 
+SyntaxStart =
+SyntaxEnd =
+HexPrefix = 
+CommentStart = {-
+CommentEnd = -}
+CommentStartAlt =
+CommentEndAlt =
+SingleComment = --
+SingleCommentCol =
+SingleCommentAlt =
+SingleCommentColAlt =
+SingleCommentEsc =
+StringsSpanLines = No
+StringStart = "
+StringEnd = "
+StringAlt =
+StringEsc = \
+CharStart = '
+CharEnd = '
+CharEsc = \
+
+[Keywords 1]
+where
+in
+do
+if
+then
+else
+case
+of
+module
+import
+export
+instance
+class
+deriving
+primitive
+data
+type
+newtype
+infix
+infixr
+infixl
+
+[Keywords 2]
+Eq
+Ord
+Enum
+Bounded
+Num
+Ix
+Real
+Integral
+RealFrac
+RealFloat
+Floating
+Fractional
+Read
+Show
+Functor
+Monad
+True
+False
+Bool
+Char
+String
+Int
+Integer
+Float
+Double
+IO
+Maybe
+Either
+Ordering

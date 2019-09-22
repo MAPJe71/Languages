@@ -1,0 +1,73 @@
+SCREEN_MAIN
+    Main
+    AnotherRoutine(X As String, Y As Long)
+
+MyRectangleObj
+    ExampleSubroutine( x As Integer )
+    DoubleX( x As Integer ) As Integer
+
+MyEllipseObj
+    SubRoutine1
+    SubRoutine2
+    SubRoutine_3
+    SubRoutine_Four4
+
+MyButtonObj
+    OnMouseUp(x As Long, y As Long, flags As Long)
+
+<>
+    CodeOnAnUnnamedObject
+
+groupOfRectangles1
+    rect01
+        Rectangle
+
+    rect2
+        Rectangle
+
+    rect3
+        Rectangle
+
+    rect4
+        Rectangle
+
+groupOfRectangles2
+    rect01
+        Rectangle
+
+    rect2
+        Rectangle
+
+    rect3
+        Rectangle
+
+    rect4
+        Rectangle
+
+groupOfRectangles3
+    rect01
+        Rectangle
+
+    rect2
+        Rectangle
+
+    rect3
+        Rectangle
+
+    rect4
+        Rectangle
+
+groupOfRectangles4
+    rect01
+        Rectangle
+
+    rect2
+        Rectangle
+
+    rect3
+        Rectangle
+
+    rect4
+        Rectangle
+
+

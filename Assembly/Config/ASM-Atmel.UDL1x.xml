@@ -1,0 +1,174 @@
+<NotepadPlus>
+    <UserLang name="Atmel ASM" ext="asm">
+        <Settings>
+            <Global caseIgnored="yes"/>
+            <TreatAsSymbol comment="no" commentLine="yes"/>
+            <Prefix words1="no" words2="yes" words3="no" words4="no"/>
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">000000</Keywords>
+            <Keywords name="Folder+">;BLOCK
+</Keywords>
+            <Keywords name="Folder-">;ENDBLOCK</Keywords>
+            <Keywords name="Operators"/>
+            <Keywords name="Comment">1/* 2*/ 0;</Keywords>
+            <Keywords name="Words1">.include
+.equ
+.def
+.cseg
+.dseg
+.eseg
+.org
+add
+adc
+adiw
+sub
+subi
+sbc
+sbci
+sbiw
+and
+andi
+or
+ori
+eor
+com
+neg
+sbr
+cbr
+inc
+dec
+tst
+clr
+ser
+mul
+muls
+mulsu
+fmul
+fmuls
+fmulsu
+rjmp
+ijmp
+jmp
+rcall
+icall
+call
+ret
+reti
+cpse
+cp
+cpc
+cpi
+sbrc
+sbrs
+sbic
+sbis
+brbs
+brbc
+breq
+brne
+brcs
+brcc
+brsh
+brlo
+brmi
+brpl
+brge
+brlt
+brhs
+brhc
+brts
+brtc
+brvs
+brvc
+brie
+brid
+sbi
+cbi
+lsl
+lsr
+rol
+ror
+asr
+swap
+bset
+bclr
+bst
+bld
+sec
+clc
+sen
+cln
+sez
+clz
+sei
+cli
+ses
+cls
+sev
+clv
+set
+clt
+seh
+clh
+mov
+movw
+ldi
+ld
+ld
+ld
+ld
+ld
+ld
+ldd
+ld
+ld
+ld
+ldd
+lds
+st
+st
+st
+st
+st
+st
+std
+st
+st
+st
+std
+sts
+lpm
+lpm
+lpm
+spm
+in
+out
+push
+pop
+nop
+sleep
+wdr
+break</Keywords>
+            <Keywords name="Words2">x</Keywords>
+            <Keywords name="Words3"/>
+            <Keywords name="Words4"/>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1"/>
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="1"/>
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="COMMENT" styleID="1" fgColor="00D200" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="00D200" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="1"/>
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0"/>
+        </Styles>
+    </UserLang>
+</NotepadPlus>

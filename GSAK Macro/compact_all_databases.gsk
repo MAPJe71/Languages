@@ -1,0 +1,50 @@
+#*******************************************
+# MacVersion = 2.1
+# MacDescription = compacts all databases
+# MacAuthor = Mortensen
+# MacFileName = compact all databases.gsk
+# MacUrl = http://gsak.net/board/index.php?act=ST&f=15&t=17338#
+#*******************************************
+
+VERCHECK version=8.0.0.133
+SPEEDMODE status=ON
+
+$count = 0
+GOSUB NAME=Loop
+BeginSub Name=Loop
+$count = $count + 1
+$memo1 = SysInfo("databases")
+#GOSUB NAME=TEST
+$datab = Extract($memo1, ";", $count)
+IF DataBaseExists($Datab)
+# DATABASE Name="$Datab" Action=select
+ SHOWSTATUS Msg="Now compacting $datab"
+	# Detach static.db3
+	$_sql = "DETACH gsak_static"
+	$status = Sqlite("sql",$_sql)
+
+	# open default database
+	$database = $_DbPath + "\" + $Datab + "\sqlite.db3"
+	$status = Sqlite("open", $database)
+
+	# shrink the database
+	$_sql = "vacuum"
+	$status = Sqlite("sql",$_sql)
+
+	# ! Never forget closing the database !!!
+	$status = Sqlite("close")
+
+	# (re)attach the static.db3
+	$_sql = "ATTACH '$_ExePath\static.db3' AS gsak_static"
+	$status = Sqlite("sql",$_sql)
+ GOSUB NAME=Loop
+ENDIF
+ENDSUB
+
+MSGOK msg="All databases compacted"
+
+
+BEGINSUB NAME=TEST
+$memo1 = Replace("Archived","Test",$memo1)
+$memo1 = Replace("Denmark","Test",$memo1)
+ENDSUB

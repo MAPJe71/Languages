@@ -1,0 +1,24 @@
+<!--
+      <parser id="r_function" displayName="R Function" commentExpr="(#.*?$)">
+        <function
+            mainExpr="^[ ]*[a-zA-Z0-9._]+[ ]*((<-)|(=))[ ]*function\("
+          displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="^[ ]*[a-zA-Z0-9._]+[ ]*((<-)|(=))"/>
+            <nameExpr expr="[a-zA-Z0-9._]+"/>
+          </functionName>
+        </function>
+      </parser>
+-->
+      <parser 
+          id="r_syntax" displayName="R" 
+          commentExpr="(?'SLC'(?m-s)#.*?$)">
+        <function
+            mainExpr="^[ ]*[\w.]+[ ]*(?:&lt;-|=)[ ]*function\("
+            displayMode="$functionName">
+          <functionName>
+            <nameExpr expr="^[ ]*[\w.]+[ ]*(?:&lt;-|=)" />
+            <nameExpr expr="[\w.]+" />
+          </functionName>
+        </function>
+      </parser>

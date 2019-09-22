@@ -1,0 +1,382 @@
+/* moller2.mac  
+   E.L. Woollett
+   woollett@charter.net
+   April 15, 2011
+   Arbitrary energy case of:
+   e(-,p1,m) e(-,p2,m) --> e(-,p3,m) e(-,p4,m) elastic scatt
+   We use Heaviside-Lorentz electromagnetic units.
+       */
+       
+  /* references 4-30-10  
+    Halzen and Martin, p. 119-121, p.129, dsigdo in terms of s, t, u Mandelstam variables
+    Griffith p 233
+    Renton p 157 - 159, dsigdo in terms of s,t,u
+    Peskin Schroeder p. 157-158, s,t,u
+    Bjorken and Drell RQM p 135 - 138, high energy limit explicit
+    Greiner and Reinhardt 2nd ed 130-137, dsigdo in terms of th/2
+         4th ed 131-139  simple formula in terms of th in he limit
+    BLP, Sec. 81.
+    G/R and BLP use Gaussian electromagnetic units.
+  */
+ 
+ " ======================================================"$
+ "  file moller2.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+"             MOLLER SCATTERING                   "$
+"       ARBITRARY ENERGY, CENTER OF MOMENTUM FRAME "$
+"  e(-,p1,sv1) + e(-,p2,sv2) --> e(-,p3,sv3) + e(-,p4,sv4) "$
+
+
+" ------------------------------------------ "$
+ 
+   " SYMBOLIC TRACES FOR UNPOLARIZED DIFFERENTIAL CROSS SECTION "$
+  " Supply s, t, and u expressions for dot products "$ 
+  " ---------------------------------------------- "$
+  invar (D(p1,p1) = m^2,
+         D(p1,p2) = s/2 - m^2,
+         D(p1,p3) = m^2 - t/2,
+         D(p1,p4) = m^2 - u/2,
+         D(p2,p2) = m^2,
+         D(p2,p3) = m^2 - u/2,
+         D(p2,p4) = m^2 - t/2,
+         D(p3,p3) = m^2,
+         D(p3,p4) = s/2 - m^2,
+         D(p4,p4) = m^2)$
+         
+
+        
+  M1n : Con ( tr (p3+m,mu,p1+m,nu)*tr (p4+m,mu,p2+m,nu), mu,nu);
+  
+  M2n : Con ( tr (p4+m,mu,p1+m,nu)*tr (p3+m,mu,p2+m,nu), mu,nu);
+  
+  " NOTE AUTOMATIC PRETRACE CONTRACTION OF REPEATED "$
+  " LORENTZ INDICES WITHIN A SINGLE TRACE OCCURS USING tr."$
+  
+  M12n :  tr (p3+m,mu,p1+m,nu,p4+m,mu,p2+m,nu);
+  
+  M21n :  tr (p4+m,mu,p1+m,nu,p3+m,mu,p2+m,nu);
+  
+  " expressed as a function of s, t, and u "$
+  
+  MfiSQ : M1n/t^2 + M2n/u^2 - M12n/(t*u) - M21n/(t*u);
+  
+  " REPLACE s, t, and u WITH EXPLICIT FUNCTIONS OF th "$   
+  " ------------------------------------------------- "$
+  
+  assume (E>0, p > 0, th >= 0, th <= %pi )$
+  
+  comp_def ( p1( E,0,0,p),
+             
+             p2( E,0,0,-p),
+             
+             p3 (E,p*sin(th),0,p*cos(th)),
+             
+             p4 (E,-p*sin(th),0,-p*cos(th)))$ 
+             
+  s_th : VP (p1+p2,p1+p2);
+  
+  t_th : factor (VP (p1-p3,p1-p3));
+  
+  u_th : factor (VP (p1-p4,p1-p4));
+  
+ " ------------------------------------------------- "$
+  
+  MfiSQ_th : factor (trigsimp (sub_stu (MfiSQ)));
+  
+  " show this equals BLP's expression in Eq. (81.10)"$
+  
+  MfiSQ_cmp : (16*(E^2+p^2)^2/p^4)*
+               (4/sin(th)^4-3/sin(th)^2+(p^2/(E^2+p^2))^2*(1+4/sin(th)^2))$
+               
+  trigsimp (expand (MfiSQ_th  - MfiSQ_cmp));
+  
+  ratsubst(m^2+p^2,E^2,%);
+  
+  " which confirms equality."$
+  
+  A : alpha^2/(4*s)$
+  
+  A : sub_stu (A);
+  
+  " Averaging over initial spins means we need to divide A by 4"$
+  " to get the unpolarized differential cross section "$
+  
+  dsigdo_unpol_CM : (A/4)*MfiSQ_cmp;
+  
+  (display2d:true,display (dsigdo_unpol_CM),display2d:false)$
+   " which agrees with BLP, p. 323, Eq (81.10). "$
+   
+ 
+   
+  " ========================================================="$
+  " POLARIZED DIRAC SPINOR AMPLITUDES                        "$
+  " ---------------------------------------------------------"$ 
+  
+  E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+  
+  p_Em (expr) := expand (ratsubst(E^2-m^2,p^2,expr))$
+  
+  Ep_m(expr) := expand (ratsubst (m,sqrt(E-p)*sqrt(E+p),expr))$
+                                            
+  Ep_Mm (expr) := (expand (ratsubst (M^2/4 -m^2,p^2,expr)),
+                   expand (ratsubst (M/2,E,%%)))$
+                   
+  " -----------------------------------------------"$
+  " convert t_th and u_th  to th/2 forms "$
+  
+  t_th2 : to_ao2 (t_th,th);
+  
+  u_th2 : to_ao2 (u_th,th);
+  
+/*  
+  
+   " Case 0 --> 0, yes, case RR --> LL  " $
+   
+  (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,-1)),
+       up2 : UU (E,p,%pi,0,1), up4b : sbar( UU (E,p,%pi-th,%pi,-1)) )$
+       
+ " For example, following Halzen/Martin p. 120 ff :"$ 
+ " For given helicity quantum numbers,the amplitude Mfi"$
+ " (pulling out -e^2) has the form Mfi = M1 - M2 "$
+ " where M1 =  Mt/t and M2 =  Mu/u,  "$
+ " where t = (p1-p3)^2 and u = (p1-p4)^2, and "$
+       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu));
+                  
+  Mt : pullfac(Mt,4*sin(th/2)^2);
+  
+  Mt : E_pm (Mt);
+  
+  M1 : Mt/t_th2;
+  
+  
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu));
+                   
+  Mu : pullfac(Mu,4*cos(th/2)^2);
+  
+  Mu : E_pm (Mu);
+  
+  M2 : Mu/u_th2;
+  
+  Mfi_RR_LL : M1 - M2;
+  " end dirac spinor method for RR --> LL  "$
+    
+ */
+
+  
+  /*
+  
+     " Case 0 --> +1, yes, case RR --> RL  " $
+   
+  (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       up2 : UU (E,p,%pi,0,1), up4b : sbar( UU (E,p,%pi-th,%pi,-1)) )$
+       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu));
+                  
+  Mt : Ep_m (Mt);
+  
+  M1 : Mt/t_th2;
+    
+  
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu));
+                   
+  Mu : Ep_m (Mu);
+  
+  M2 : Mu/u_th2;
+  
+  /* display2d:true$ */
+  
+  Mfi : M1 - M2;
+  
+  Mfi : pullfac (Mfi,m*E/p^2);
+  
+  Mfi : fr_ao2 (Mfi,th);
+  
+   
+  */
+  
+  
+  
+  
+  /*       
+                   
+  
+   " Case RR --> RR : 0 -->0, no " $
+   
+   (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       up2 : UU (E,p,%pi,0,1), up4b : sbar( UU (E,p,%pi-th,%pi,1)) )$
+       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu));
+                  
+  Mt : Ep_m (Mt);
+  
+  M1 : Mt/t_th2;
+   
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu));
+                   
+  Mu : Ep_m (Mu);
+  
+  M2 : Mu/u_th2;
+  
+  Mfi : M1 - M2;
+  
+  Mfi : pullfac (Mfi,m*E/p^2);
+  
+  Mfi : fr_ao2 (Mfi,th); 
+   
+  */
+  
+  /*
+  
+   
+   " Case RL --> RL : 1 --> 1, no " $
+   
+   (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,1)),
+       up2 : UU (E,p,%pi,0,-1), up4b : sbar( UU (E,p,%pi-th,%pi,-1)) )$
+       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu));
+                  
+  Mt : Ep_m (Mt);
+  
+  M1 : Mt/t_th2;
+   
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu));
+                   
+  Mu : Ep_m (Mu);
+  
+  M2 : Mu/u_th2;
+  
+  Mfi : M1 - M2;
+  
+  Mfi : pullfac (Mfi,m*E/p^2);
+  
+  Mfi : fr_ao2 (Mfi,th);  
+   
+   */
+/*   
+   
+   " Case RL --> LR : 1 --> -1, yes " $
+   
+   (up1 : UU(E,p,0,0,1), up3b : sbar (UU(E,p,th,0,-1)),
+       up2 : UU (E,p,%pi,0,-1), up4b : sbar( UU (E,p,%pi-th,%pi,1)) )$
+       
+       
+         
+  Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu));
+                  
+  Mt : Ep_m (Mt);
+  
+  M1 : Mt/t_th2;
+   
+  Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu));
+                   
+  Mu : Ep_m (Mu);
+  
+  M2 : Mu/u_th2;
+  
+  Mfi : M1 - M2;
+  
+  Mfi : pullfac (Mfi,m*E/p^2);
+  
+  Mfi : fr_ao2 (Mfi,th);     
+  
+  */
+  
+  " dirac spinor amplitude given global s1,s2,s3,s4 "$
+  
+  dA() := (
+   
+     (up1 : UU(E,p,0,0,s1), up3b : sbar (UU(E,p,th,0,s3)),
+         up2 : UU (E,p,%pi,0,s2), up4b : sbar( UU (E,p,%pi-th,%pi,s4)) ),
+       
+       
+         
+       Mt : ( a13 : up3b.Gam[mu].up1,
+                 a24 : up4b.Gam[mu].up2,
+                  mcon (a13*a24, mu)),
+                  
+       Mt : Ep_m (Mt),
+  
+       M1 : Mt/t_th2,
+   
+       Mu : ( a14 : up4b.Gam[mu].up1,
+                 a23 : up3b.Gam[mu].up2,
+                   mcon (a14*a23, mu)),
+                   
+       Mu : Ep_m (Mu),
+  
+       M2 : Mu/u_th2,
+  
+       Mfi : M1 - M2)$
+  
+  /* end of dA() definition */
+  
+  " Print a table of polarized amplitudes."$
+  " Accumulate sum of squares mssq."$
+  
+  block ([sL,sv1,sv2,sv3,sv4,temp ], sL : [1,-1],
+    mssq : 0,
+    print ("  "),
+    print (" svp1 svp2  svp3  svp4     amplitude     "),
+    print ("  "),            
+    for sv1 in sL do
+      for sv2 in sL do
+        for sv3 in sL do
+          for sv4 in sL do (
+            [s1,s2,s3,s4] : [sv1,sv2,sv3,sv4],
+            temp :  dA(),
+            temp : E_pm (temp),
+            mssq : mssq + Avsq (temp),
+            print ("  "),
+            print (s1,s2,s3,s4," ",temp ) ),
+            
+    mssq : E_pm (mssq),
+            
+    mssq : expand (fr_ao2 (mssq,th)))$   
+    
+        
+    mssq;    
+   
+    " SHOW THIS IS THE SAME AS MfiSQ_th computed above with traces "$        
+        
+    MfiSQ_p : E_pm (MfiSQ_th);
+    
+    trigsimp (mssq - MfiSQ_p);
+    
+   " which shows equality."$
+   " ========================================================="$  
+   
+    
+    

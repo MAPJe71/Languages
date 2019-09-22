@@ -1,0 +1,13 @@
+
+(GmmiTextButtonObject
+    (GmmiObject "btnFootPrintBack" 0
+    (Help "" "" "")
+    (GmmiOptionTable
+        (GmmiScript "{&h0D}{&h0A}"
+            & "Sub OnMouseUp(x As Long, y As Long, flags As Long){&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+            & "{&h09}On Error GoTo err_OnMouseUp{&h0D}{&h0A}"
+            & "{&h0D}{&h0A}"
+        )
+    )
+)

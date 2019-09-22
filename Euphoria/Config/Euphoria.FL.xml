@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="eu_function" userDefinedLangName="Euphoria" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="Euphoria"
+				id         ="eu_function"
+				commentExpr="(?s-m:/\*.*?\*/)|(--.*?$)"
+			>
+				<function
+					mainExpr="^\s*(public|global|export|override)?\s*(function|procedure|routine)\s+(?-i:\b(?!if|while|for)\b)\w+\s*\("
+				>
+					<functionName>
+						<nameExpr expr="\w+\s*\(" />
+						<nameExpr expr="\w+" />
+					</functionName>
+					<className>
+						<nameExpr expr="\w+(?=\s*:)" />
+					</className>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

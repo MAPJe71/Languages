@@ -1,0 +1,492 @@
+ //Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Deutsch (Deutschland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+#ifdef _WIN32
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 7, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\Terminplaner.rc2""  // Nicht mit Microsoft Visual C++ bearbeitete Ressourcen\r\n"
+    "#include ""l.deu\\afxres.rc""          // Standardkomponenten\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\idr_main.ico"
+IDI_REMOVABLE           ICON    DISCARDABLE     "res\\idr_removeable.ico"
+IDI_CDROM               ICON    DISCARDABLE     "res\\idr_cdrom.ico"
+IDI_FIXED               ICON    DISCARDABLE     "res\\idr_fixed.ico"
+IDI_FLOPPY              ICON    DISCARDABLE     "res\\idr_floppy.ico"
+IDI_FOLDERCLOSE         ICON    DISCARDABLE     "res\\idr_folderclose.ico"
+IDI_FOLDEROPEN          ICON    DISCARDABLE     "res\\idr_folderopen.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 208, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Info über Terminplaner"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,152,42,50,14,WS_GROUP
+    CTEXT           "Terminplaner Version 1.3.4",IDC_STATIC,101,9,107,9,
+                    SS_NOPREFIX
+    CTEXT           "Copyright (C)  Jens Lorenz 2004",IDC_STATIC,101,21,107,
+                    8
+    CONTROL         151,IDC_BITMAP,"Static",SS_BITMAP,0,0,101,63
+END
+
+IDD_TERMINPLANER_DIALOG DIALOGEX 0, 0, 350, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Terminplaner"
+MENU IDR_PLANER
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA | 
+                    WS_TABSTOP,7,8,336,147,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Prüfen",IDC_TEST,7,162,50,14
+    DEFPUSHBUTTON   "Beenden",IDCANCEL,293,162,50,14
+    LTEXT           "Static",IDC_STATIC_PATH,0,183,220,10,SS_CENTERIMAGE | 
+                    SS_SUNKEN
+    CTEXT           "Static",IDC_STATIC_DATE,220,183,95,10,SS_CENTERIMAGE | 
+                    SS_SUNKEN
+    CTEXT           "Static",IDC_STATIC_TIME,315,183,35,10,SS_CENTERIMAGE | 
+                    SS_SUNKEN
+    CONTROL         "",IDC_SEPERATOR,"Static",SS_BLACKFRAME,0,0,349,1
+END
+
+IDD_TIMETO_DIALOG DIALOG DISCARDABLE  0, 0, 101, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Terminplaner"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Planer",IDOK,0,62,101,20
+    CONTROL         151,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,0,
+                    101,63
+END
+
+IDD_EDIT_ENTRY_DIALOG DIALOG DISCARDABLE  0, 0, 179, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_FORENAME,7,17,103,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SURNAME,7,46,103,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_OCCASION,7,75,103,49,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_DATE,118,75,54,13,ES_CENTER | ES_AUTOHSCROLL
+    EDITTEXT        IDC_REMARK,7,105,165,31,ES_MULTILINE | ES_NOHIDESEL | 
+                    ES_WANTRETURN | WS_VSCROLL
+    CONTROL         "bei Termin Eintrag löschen",IDC_DEL_ENTRY,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,73,141,99,10
+    DEFPUSHBUTTON   "OK",IDOK,118,7,54,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,118,26,54,14
+    LTEXT           "Vorname:",IDC_STATIC,7,7,31,8
+    LTEXT           "Nachname:",IDC_STATIC,7,36,38,8
+    LTEXT           "Anlass:",IDC_STATIC,7,65,24,8
+    LTEXT           "Datum:",IDC_STATIC,118,65,24,8
+    LTEXT           "Bemerkung:",IDC_STATIC,7,95,39,8
+    RTEXT           "verbleibend",IDC_STATIC_REMREM,118,95,53,8
+END
+
+IDD_OPTIONS_DIALOG DIALOGEX 0, 0, 236, 114
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Optionen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "beim Start prüfen",IDC_CBOX_BG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,6,66,10
+    EDITTEXT        IDC_TIME,19,22,24,12,ES_RIGHT | ES_NUMBER | WS_DISABLED,
+                    WS_EX_TRANSPARENT
+    CONTROL         "bei jedem Start",IDC_RADIO_START,"Button",
+                    BS_AUTORADIOBUTTON | BS_LEFTTEXT | BS_RIGHT | 
+                    WS_DISABLED | WS_GROUP | WS_TABSTOP,96,17,68,10
+    CONTROL         "einmal am Tag",IDC_RADIO_DAY,"Button",
+                    BS_AUTORADIOBUTTON | BS_LEFTTEXT | BS_RIGHT | 
+                    WS_DISABLED | WS_TABSTOP,96,30,68,10
+    EDITTEXT        IDC_PATH_SOUND,13,60,181,13,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | WS_DISABLED,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Test",IDC_BTN_PLAY,200,60,23,13,WS_DISABLED
+    EDITTEXT        IDC_PATH_NAME,6,94,223,13,ES_MULTILINE | ES_AUTOHSCROLL,
+                    WS_EX_TRANSPARENT
+    DEFPUSHBUTTON   "OK",IDOK,179,10,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,179,30,50,14
+    LTEXT           "Zu prüfende Datei:",IDC_STATIC,6,84,60,8
+    CONTROL         "Sound",IDC_CBOX_SND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,49,35,10
+    CONTROL         "Spin2",IDC_SPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    WS_DISABLED,20,23,11,11
+    LTEXT           "Sekunden",IDC_TEXT_SEC,45,21,35,14,SS_CENTERIMAGE | 
+                    WS_DISABLED
+    GROUPBOX        "",IDC_GB,6,7,164,38,BS_ICON
+    GROUPBOX        "",IDC_GB2,6,49,223,31
+END
+
+IDD_INFO_DIALOG DIALOG DISCARDABLE  0, 0, 340, 118
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List2",IDC_INFO_LISTE,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_OWNERDATA | 
+                    WS_BORDER | WS_TABSTOP,7,7,326,84
+    DEFPUSHBUTTON   "OK",IDOK,283,97,50,14
+END
+
+IDD_OCCASION_DIALOG DIALOGEX 0, 0, 301, 143
+IDD_TEST DIALOGEX 0, 0, 301, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Anlassverwaltung"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_NEW,37,7,60,12,ES_AUTOHSCROLL
+    LISTBOX         IDC_LIST_OCC,7,20,90,96,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Neuer Anlass",IDC_BT_NEW,7,122,50,14
+    EDITTEXT        IDC_EDIT_WAR,113,50,106,44,ES_MULTILINE
+    EDITTEXT        IDC_EDIT_TIME,196,37,23,12,ES_CENTER | ES_AUTOHSCROLL
+    PUSHBUTTON      "Vorname",IDC_BT_FORENAME,232,34,50,12,WS_GROUP
+    PUSHBUTTON      "Nachname",IDC_BT_SURNAME,232,49,50,12
+    PUSHBUTTON      "Datum",IDC_BT_DATE,232,64,50,12
+    PUSHBUTTON      "Verbleibend",IDC_BT_REST,232,79,50,12
+    PUSHBUTTON      "Jahre",IDC_BT_YEARS,232,94,50,12
+    DEFPUSHBUTTON   "OK",IDOK,188,122,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,244,122,50,14
+    LTEXT           " Anlass:",IDC_STATIC_OCC,7,7,28,12,SS_CENTERIMAGE
+    LTEXT           "Hinweistext:",IDC_STATIC_INFO,113,37,39,12,
+                    SS_CENTERIMAGE,WS_EX_TRANSPARENT
+    LTEXT           "Tag(e):",IDC_STATIC_DAYS,171,37,24,12,SS_CENTERIMAGE,
+                    WS_EX_TRANSPARENT
+    RTEXT           "verbleibend",IDC_STATIC_CHREM,157,94,61,12,
+                    SS_CENTERIMAGE,WS_EX_TRANSPARENT
+    GROUPBOX        "Platzhalter",IDC_STATIC_PH,226,24,62,86,BS_CENTER,
+                    WS_EX_TRANSPARENT
+    CONTROL         "Tab1",IDC_WAR_TAB,"SysTabControl32",0x0,105,7,189,109
+END
+
+IDD_IMEXPORT_DIALOG DIALOG DISCARDABLE  0, 0, 172, 138
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_PATH_NAME,7,7,158,13,ES_MULTILINE | ES_AUTOHSCROLL
+    LISTBOX         IDC_DATA,7,26,95,98,LBS_MULTIPLESEL | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Alle auswählen",IDC_ALL_SEL,109,26,56,14
+    PUSHBUTTON      "Alle abwählen",IDC_ALL_DESEL,109,45,56,14
+    DEFPUSHBUTTON   "OK",IDOK,109,91,56,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,109,110,56,14
+    LTEXT           "Selektiert:",IDC_STATIC,7,124,35,8
+    RTEXT           "xxx",IDC_SEL,48,124,15,8
+END
+
+IDD_PATH_DIALOG DIALOG DISCARDABLE  0, 0, 240, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Verzeichnis wählen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,183,108,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,127,108,50,14
+    CONTROL         "Tree1",IDC_FOLDER_TREE,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
+                    WS_BORDER | WS_TABSTOP,7,17,226,84
+    LTEXT           "Pfad",IDC_STATIC_PATH,7,8,226,9
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,3,4,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040704b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "JLo Soft\0"
+            VALUE "FileDescription", "Terminplaner\0"
+            VALUE "FileVersion", "1, 3, 4, 0\0"
+            VALUE "InternalName", "Terminplaner\0"
+            VALUE "LegalCopyright", "Copyright (C) 2004\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "Terminplaner.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "Terminplaner\0"
+            VALUE "ProductVersion", "1, 0, 0, 0\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x407, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        VERTGUIDE, 101
+    END
+
+    IDD_TERMINPLANER_DIALOG, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 343
+        HORZGUIDE, 8
+        HORZGUIDE, 155
+        HORZGUIDE, 162
+        HORZGUIDE, 176
+        HORZGUIDE, 183
+    END
+
+    IDD_EDIT_ENTRY_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 172
+        VERTGUIDE, 110
+        VERTGUIDE, 118
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_OPTIONS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 229
+        VERTGUIDE, 13
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+        HORZGUIDE, 49
+    END
+
+    IDD_INFO_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 333
+        VERTGUIDE, 318
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_OCCASION_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 294
+        VERTGUIDE, 97
+        VERTGUIDE, 105
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 136
+    END
+
+    IDD_IMEXPORT_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 165
+        VERTGUIDE, 102
+        VERTGUIDE, 109
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 131
+        HORZGUIDE, 20
+        HORZGUIDE, 26
+        HORZGUIDE, 124
+    END
+
+    IDD_PATH_DIALOG, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 122
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_PLANER MENU DISCARDABLE 
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Speichern\tStrg+S",          ID_FILE_SAVE
+        MENUITEM "Speichern &unter...",         ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Importieren...\tStrg+I",     IDM_FILE_IMPORT
+        MENUITEM "&Exportieren...\tStrg+E",     IDM_FILE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Beenden\tAlt+F4",            IDOK
+    END
+    POPUP "&Eintrag"
+    BEGIN
+        MENUITEM "&Hinzufügen...\tEinfg",       IDM_NEW_ENTRY
+        MENUITEM "&Bearbeiten...\tLeer",        IDM_EDIT_ENTRY
+        MENUITEM "&Entfernen\tEntf",            IDM_REM_ENTRY
+    END
+    POPUP "E&xtras"
+    BEGIN
+        MENUITEM "&Anlassverwaltung...",        IDM_OCCA_ADMIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Optionen...",                IDM_OPTION
+    END
+    POPUP "&Hilfe", HELP
+    BEGIN
+        MENUITEM "Inf&o über Terminplaner...",  IDM_ABOUTBOX
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TITEL               BITMAP  DISCARDABLE     "res\\Termin.bmp"
+IDB_HEADER_HIGHXP       BITMAP  DISCARDABLE     "res\\ColumnHeaderSpanHighXP.bmp"
+IDB_HEADER_NORM         BITMAP  DISCARDABLE     "res\\ColumnHeaderSpanNorm.bmp"
+IDB_HEADER_ENORM        BITMAP  DISCARDABLE     "res\\ColumnHeaderEndNorm.bmp"
+IDB_HEADER_SHIGHXP      BITMAP  DISCARDABLE     "res\\ColumnHeaderStartHighXP.bmp"
+IDB_HEADER_EHIGHXP      BITMAP  DISCARDABLE     "res\\ColumnHeaderEndHighXP.bmp"
+IDB_HEADER_SORTDOWNNORM BITMAP  DISCARDABLE     "res\\ColumnHeaderSortDownNorm.bmp"
+IDB_IMAGES              BITMAP  DISCARDABLE     "res\\Icons16x16.bmp"
+IDB_HEADER_SORTUPNORMXP BITMAP  DISCARDABLE     "res\\ColumnHeaderSortUpNormXP.bmp"
+IDB_HEADER_SORTDOWNHIGHXP BITMAP  DISCARDABLE     "res\\ColumnHeaderSortDownHighXP.bmp"
+IDB_HEADER_SORTDOWNNORMXP BITMAP  DISCARDABLE     "res\\ColumnHeaderSortDownNormXP.bmp"
+IDB_HEADER_SORTUPHIGHXP BITMAP  DISCARDABLE     "res\\ColumnHeaderSortUpHighXP.bmp"
+IDB_HEADER_NORMXP       BITMAP  DISCARDABLE     "res\\ColumnHeaderSpanNormXP.bmp"
+IDB_HEADER_ENORMXP      BITMAP  DISCARDABLE     "res\\ColumnHeaderEndNormXP.bmp"
+IDB_HEADER_SNORM        BITMAP  DISCARDABLE     "res\\ColumnHeaderStartNorm.bmp"
+IDB_HEADER_SORTUPNORM   BITMAP  DISCARDABLE     "res\\ColumnHeaderSortUpNorm.bmp"
+IDB_STDFLDBTN_NORM      BITMAP  DISCARDABLE     "res\\StdFldBtnNorm.bmp"
+IDB_STDFLDBTN_HIGH      BITMAP  DISCARDABLE     "res\\StdFldBtnHigh.bmp"
+IDB_STDFLDBTN_DEAK      BITMAP  DISCARDABLE     "res\\StdFldBtnDeAk.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 24
+//
+
+1                       24      DISCARDABLE     "res\\default1.bin"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&Info über Terminplaner..."
+END
+
+#endif    // Deutsch (Deutschland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+#ifdef _WIN32
+LANGUAGE 7, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\Terminplaner.rc2"  // Nicht mit Microsoft Visual C++ bearbeitete Ressourcen
+#include "l.deu\afxres.rc"          // Standardkomponenten
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

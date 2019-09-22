@@ -1,0 +1,105 @@
+' =========================================================================
+'
+'   File....... SW21-EX06-Las_Vegas.BS2
+'   Purpose.... Simple Slot Machine Game
+'   Author..... (C) 2000 - 2005, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 01 SEP 2005
+'
+'   {$STAMP BS2}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' This program simulates a very simple slot machine game, complete with
+' sound FX. The constants TAdj and FAdj may require adjustment when using
+' on faster BASIC Stamp modules.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+LEDs            VAR     OUTL                    ' LED outputs
+LEDsDirs        VAR     DIRL                    ' DIRS control for LEDs
+
+Speaker         PIN     6                       ' speaker output
+PlayBtn         PIN     7                       ' button input to play
+
+
+' -----[ Constants ]-------------------------------------------------------
+
+TAdj            CON     $100                    ' time adjust factor
+FAdj            CON     $100                    ' frequency adjust factor
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+rndVal          VAR     Word                    ' random number
+pattern         VAR     Byte                    ' light pattern
+tone            VAR     Word                    ' tone output
+swData          VAR     Byte                    ' workspace for BUTTON
+delay           VAR     Word                    ' delay while "spinning"
+spin1           VAR     Byte                    ' loop counter
+spin2           VAR     Byte                    ' loop counter
+
+
+' -----[ Initialization ]--------------------------------------------------
+
+Reset:
+  LEDsDirs = %00111111                          ' make LEDs outputs
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  DO
+    GOSUB Get_Random                            ' get random number/tone
+    FREQOUT Speaker, 35 */ TAdj, tone */ FAdj   ' sound the tone
+    PAUSE 100
+    BUTTON PlayBtn, 0, 255, 10, swData, 1, Spin ' check for play
+  LOOP
+
+Spin:
+  LEDs = %00111111                              ' simulate machine reset
+  PAUSE 750
+  LEDs = %00000000
+  PAUSE 500
+  delay = 75                                    ' initialize delay
+
+  FOR spin1 = 1 TO 25                           ' spin the wheel
+    GOSUB Get_Random                            ' get random number
+    FREQOUT Speaker, 25 */ TAdj, 425 */ FAdj    ' wheel click
+    PAUSE delay                                 ' pause between clicks
+    delay = delay */ $0119                      ' multiply delay by 1.1
+  NEXT
+
+  IF (pattern = %00111111) THEN                 ' if all lit, you win
+    FOR spin1 = 1 TO 5
+      FOR spin2 = 0 TO 3
+        LOOKUP spin2, [$00, $0C, $12, $21], LEDs
+        LOOKUP spin2, [665, 795, 995, 1320], tone
+        FREQOUT Speaker, 35 */ TAdj, tone */ FAdj
+        PAUSE 65
+      NEXT
+    NEXT
+  ELSE
+    FREQOUT Speaker, 1000 */ TAdj, 330 */ FAdj  ' otherwise, groan...
+  ENDIF
+
+Clear_Game:
+  LEDs = %00000000                              ' clear LEDs
+  PAUSE 1000
+  GOTO Main                                     ' do it again
+
+
+' -----[ Subroutines ]-----------------------------------------------------
+
+Get_Random:
+  RANDOM rndVal                                 ' get pseudo-random number
+  tone = rndVal & $7FF                          ' keep in reasonable range
+  pattern = rndVal & %00111111                  ' mask out unused bits
+  LEDs = pattern                                ' show the pattern
+  RETURN

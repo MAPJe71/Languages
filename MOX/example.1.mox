@@ -1,0 +1,13 @@
+Method Blah1()
+    [New] dynamicVar = "string"
+    [New] dynamicVar2 = 4
+    [New] result = Bar2(dynamicVar, dynamicVar2)
+End Method
+
+Function classname.subclassname.Bar2(pParam3, pParam2)
+    Foo3
+    Return pParam3 && pParam2
+End Function
+
+Macro Foo3()
+End Macro

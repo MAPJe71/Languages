@@ -1,0 +1,675 @@
+#*******************************************
+# MacDescription = Compare waypoints to two databases
+# MacFileName = CompareDBs.gsk
+# MacAuthor = Kai Team
+# MacVersion=3.01
+#*******************************************
+$DBs=SysInfo("Databases")
+$Form1 = editform($Form1,"DB1","values",$DBs)
+$Form1 = editform($Form1,"DB2","values",$DBs)
+$Form1 = editform($Form1,"DestinationDB","values",$Dbs)
+$NoneRB=TRUE
+$DeleteRB=FALSE
+$MoveRB=FALSE
+$CopyRB=FALSE
+$RunSilentCB=FALSE
+$BothRB=TRUE
+$UniqueRB=FALSE
+$Results=""
+$CurrentDB=$_CurrentDatabase
+$Display1=TRUE
+
+MACSETTINGS Type=R FileCheck=N
+IF $NoneRB=TRUE OR $DeleteRB=TRUE
+    $Form1 = editform($Form1,"Label2","Visible","No")
+    $Form1 = editform($Form1,"DestinationDB","Visible","No")
+ELSE
+    $Form1 = editform($Form1,"Label2","Visible","Yes")
+    $Form1 = editform($Form1,"DestinationDB","Visible","Yes")
+ENDIF
+
+IF $RunSilentCB=TRUE
+    $Form1 = editform($Form1,"ListCB","Visible","No")
+    $Form1 = editform($Form1,"CountCB","Visible","No")
+ELSE
+    $Form1 = editform($Form1,"ListCB","Visible","Yes")
+    $Form1 = editform($Form1,"CountCB","Visible","Yes")
+ENDIF
+
+IF $_CtrlKey=TRUE OR $RunSilentCB=FALSE
+    WHILE TRUE
+        $FormExit = form($Form1,"")
+        BEGINCASE
+            CASE $FormExit = "SystemExit"
+            RETURN Msg="Macro Canceled"
+
+            CASE $FormExit = "DeleteRB" OR $FormExit="NoneRB"
+                $Form1 = editform($Form1,"Label2","Visible","No")
+                $Form1 = editform($Form1,"DestinationDB","Visible","No")
+                $Form1 = editform($Form1,"DisplayDest","Visible","No")
+
+            CASE $FormExit = "MoveRB" OR $FormExit="CopyRB"
+                $Form1 = editform($Form1,"Label2","Visible","Yes")
+                $Form1 = editform($Form1,"DestinationDB","Visible","Yes")
+                $Form1 = editform($Form1,"DisplayDest","Visible","Yes")
+
+            CASE $Formexit="RunSilentCB"
+                IF $RunSilentCB=TRUE
+                    $Form1 = editform($Form1,"ListCB","Visible","No")
+                    $Form1 = editform($Form1,"CountCB","Visible","No")
+                ELSE
+                    $Form1 = editform($Form1,"ListCB","Visible","Yes")
+                    $Form1 = editform($Form1,"CountCB","Visible","Yes")
+                ENDIF
+
+            CASE $FormExit = "OK"
+                MACSETTINGS Type=S Vars=DB1,DB2,DestinationDB,BothRB,UniqueRB,UserFlagCB,MacroFlagCB,ListCB,CountCB,NoneRB,FilterCB,DeleteRB,MoveRB,CopyRB,RunSilentCB,DisplayCurrent,Display1,Display2,DisplayDest
+            GOSUB Name=Run
+            BREAK
+
+            CASE $FormExit = "Cancel"
+            RETURN Msg="Macro Canceled"
+        ENDCASE
+    ENDWHILE
+ELSE
+    GOSUB Name=Run
+ENDIF
+
+BEGINSUB Name=Run
+    #Attach selected databases for comparison purposes
+    $DB1File=$_dbPath + "\" + "$DB1" + "\sqlite.db3"
+    $DB2File=$_dbPath + "\" + "$DB2" + "\sqlite.db3"
+
+    $_sql="ATTACH '$DB1File' AS DBOne"
+    $Status=Sqlite("sql",$_sql)
+
+    $_sql="ATTACH '$DB2File' AS DBTwo"
+    $Status=Sqlite("sql",$_sql)
+
+    GOSUB Name=Selection
+    GOSUB Name=Result
+
+    $_sql="DETACH DBOne"
+    $Status=Sqlite("sql",$_sql)
+
+    $_sql="DETACH DBTwo"
+    $Status=Sqlite("sql",$_sql)
+
+    GOSUB Name=Actions
+
+    BEGINCASE
+        CASE $DisplayCurrent AND $FilterCB=FALSE AND $CurrentDB<>$_CurrentDatabase
+            DATABASE Name=$CurrentDB Action=Select
+
+        CASE $Display1 AND $FilterCB=FALSE AND $CurrentDB<>$DB1
+            DATABASE Name=$DB1 Action=Select
+
+        CASE $Display2 AND $FilterCB=FALSE AND $CurrentDB<>$DB2
+            DATABASE Name=$DB2 Action=Select
+
+        CASE $DisplayDest AND $FilterCB=FALSE AND $CurrentDB<>$DestinationDB
+            DATABASE Name=$DestinationDB Action=Select
+    ENDCASE
+ENDSUB
+
+BEGINSUB Name=Selection
+    IF $BothRB
+        $_sql="SELECT Code FROM DBOne.Caches WHERE Code IN (SELECT Code FROM DBTwo.Caches)"
+        $Results=Sqlite("sql",$_sql)
+    ENDIF
+
+    IF $UniqueRB
+        $_sql="SELECT Code FROM DBOne.Caches WHERE Code NOT IN (SELECT Code FROM DBTwo.Caches)"
+        $Results=Sqlite("sql",$_sql)
+    ENDIF
+    $FormatResults="'" + Replace($_CrLf,"','",$Results) + "'"
+ENDSUB
+
+BEGINSUB Name=Result
+    IF $UserFlagCB
+        $_sql="Update DBOne.caches Set UserFlag=0"
+        $Status=Sqlite("sql",$_sql)
+
+        $_sql="UPDATE DBOne.caches SET UserFlag=1 WHERE Code IN ($FormatResults)"
+        $Status=Sqlite("sql",$_sql)
+    ENDIF
+
+    IF $MacroFlagCB
+        $_sql="Update DBOne.caches Set MacroFlag=0"
+        $Status=Sqlite("sql",$_sql)
+
+        $_sql="UPDATE DBOne.caches SET MacroFlag=1 WHERE Code IN ($FormatResults)"
+        $Status=Sqlite("sql",$_sql)
+    ENDIF
+
+    IF $ListCB
+        IF $RunSilentCB=FALSE
+            $Memo1=$Results
+            WHILE TRUE
+                $FormExit = form($ResultForm,"")
+                BEGINCASE
+                    Case $FormExit = "SystemExit"
+                    FILEERASE File=$SQLFile OnError=Continue
+                    BREAK
+
+                    Case $FormExit = "OK"
+                    FILEERASE File=$SQLFile OnError=Continue
+                    BREAK
+
+                    Case $FormExit = "Clipboard"
+                    FILEERASE File=$SQLFile OnError=Continue
+                    CLIP Data=$Results
+                    BREAK
+                ENDCASE
+            ENDWHILE
+        ENDIF
+    ENDIF
+
+    IF $CountCB
+        IF $RunSilentCB=FALSE
+            IF RegExCount($_CrLf,$Results)>0
+                $Count=RegExCount($_CrLf,$Results) + 1
+            ELSE
+                $Count=0
+            ENDIF
+            MSGOK Msg=There are $Count waypoints.
+        ENDIF
+    ENDIF
+ENDSUB
+
+BEGINSUB Name=Actions
+
+    IF $FilterCB AND $Results<>""
+        DATABASE Name=$DB1 Action=Select
+        $_sql = "Code IN($FormatResults)"
+        MFILTER Where=$_sql
+    ENDIF
+
+    BEGINCASE
+        CASE $DeleteRB AND $Results<>""
+            DATABASE Name=$DB1 Action=Select
+            $_sql = "Code IN($FormatResults)"
+            MFILTER Where=$_sql
+            IF $RunSilentCB=FALSE AND $_FilterCount>0
+                IF YesNo("You are about to delete $_FilterCount waypoints.  Are you sure?")
+                    MACROSET Dialog=DELETE VarName=$DeleteSettings
+                    DELETE Settings=<macro>
+                ELSE
+                    CANCELFILTER
+                    CANCEL Msg=Deletion Canceled.
+                ENDIF
+            ELSE
+                IF $_FilterCount>0
+                    MACROSET Dialog=DELETE VarName=$DeleteSettings
+                    DELETE Settings=<macro>
+                ENDIF
+            ENDIF
+
+        CASE $MoveRB AND $Results<>""
+            DATABASE Name=$DB1 Action=Select
+            $_sql = "Code IN($FormatResults)"
+            MFILTER Where=$_sql
+            IF $RunSilentCB=FALSE AND $_FilterCount>0
+                IF YesNo("You are about to move $_FilterCount waypoints.  Are you sure?")
+                    $MoveCopyMove=$MoveCopyMove + "cbxDestination.Text=" + $DestinationDB + $_CrLf
+                    MACROSET Dialog=MOVECOPY VarName=$MoveCopyMove
+                    MOVECOPY Settings=<macro>
+                ELSE
+                    CANCELFILTER
+                    CANCEL Msg=Move Canceled.
+                ENDIF
+            ELSE
+                IF $_FilterCount>0
+                    $MoveCopyMove=$MoveCopyMove + "cbxDestination.Text=" + $DestinationDB + $_CrLf
+                    MACROSET Dialog=MOVECOPY VarName=$MoveCopyMove
+                    MOVECOPY Settings=<macro>
+                ENDIF
+            ENDIF
+
+        CASE $CopyRB AND $Results<>""
+            DATABASE Name=$DB1 Action=Select
+            $_sql = "Code IN($FormatResults)"
+            MFILTER Where=$_sql
+            IF $RunSilentCB=FALSE AND $_FilterCount>0
+                $MoveCopyCopy=$MoveCopyCopy + "cbxDestination.Text=" + $DestinationDB + $_CrLf
+                MACROSET Dialog=MOVECOPY VarName=$MoveCopyCopy
+                MOVECOPY Settings=<macro>
+            ELSE
+                $MoveCopyCopy=$MoveCopyCopy + "cbxDestination.Text=" + $DestinationDB + $_CrLf
+                MACROSET Dialog=MOVECOPY VarName=$MoveCopyCopy
+                MOVECOPY Settings=<macro>
+            ENDIF
+
+        CASE $Results="" AND $RunSilentCB=FALSE
+            CANCEL Msg=There are no matching waypoints. Macro canceled.
+    ENDCASE
+ENDSUB
+
+<data> VarName=$MoveCopyMove
+[TfmMove]
+rbtAdd.Checked=False
+rbtAddFlag.Checked=True
+rbtAddIgnore.Checked=False
+rbtCopy.Checked=False
+rbtExistIgnore.Checked=False
+rbtFlagOnly.Checked=False
+rbtMove.Checked=True
+rbtReplace.Checked=False
+rbtReplaceFlag.Checked=True
+chkDisplay.Checked=False
+chkAddIgnore.Checked=False
+chkMergeLogs.Checked=True
+chkMergeWaypoints.Checked=True
+rbtCustomHalt.Checked=False
+rbtCustomIgnore.Checked=False
+rbtCustomSync.Checked=True
+<enddata>
+
+<data> VarName=$MoveCopyCopy
+[TfmMove]
+rbtAdd.Checked=False
+rbtAddFlag.Checked=True
+rbtAddIgnore.Checked=False
+rbtCopy.Checked=True
+rbtExistIgnore.Checked=False
+rbtFlagOnly.Checked=False
+rbtMove.Checked=False
+rbtReplace.Checked=False
+rbtReplaceFlag.Checked=True
+chkDisplay.Checked=False
+chkAddIgnore.Checked=False
+chkMergeLogs.Checked=True
+chkMergeWaypoints.Checked=True
+rbtCustomHalt.Checked=False
+rbtCustomIgnore.Checked=False
+rbtCustomSync.Checked=True
+<enddata>
+
+
+<data> VarName=$DeleteSettings
+[TfmDelete]
+cbxStop.Checked=False
+rbtFilter.Checked=True
+rbtFlagged.Checked=False
+rbtOnly.Checked=False
+rbtAll.Checked=False
+<enddata>
+
+
+<Data> VarName=$form1
+#********************************************************************
+# Form generated by GSAK form designer on Sat 10-Mar-2012 14:10:26
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Settings
+  Color = 8404992
+  Height = 475
+  Top = 336
+  Width = 592
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Action(s) to take on waypoints in Database 1:
+  Color = 15658734
+  Height = 79
+  Left = 6
+  Top = 214
+  Width = 571
+  Taborder = 6
+
+Name = Groupbox2
+  Type = Groupbox
+  Caption = Selection Options
+  Color = 15658734
+  Height = 73
+  Left = 6
+  Top = 60
+  Width = 571
+  Taborder = 7
+
+Name = Groupbox3
+  Type = Groupbox
+  Caption = Result options
+  Color = 15658734
+  Height = 55
+  Left = 6
+  Top = 146
+  Width = 571
+  Taborder = 8
+
+Name = Groupbox4
+  Type = Groupbox
+  Caption = When finished, display:
+  Color = 15658734
+  Height = 50
+  Left = 6
+  Top = 306
+  Width = 571
+  Taborder = 10
+
+Name = Groupbox5
+  Type = Groupbox
+  Container = Groupbox1
+  Height = 30
+  Left = 102
+  Top = 12
+  Width = 457
+  Taborder = 2
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 169
+  Top = 406
+  Width = 75
+  Taborder = 2
+  Caption = GO
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 340
+  Top = 406
+  Width = 75
+  Taborder = 3
+  Caption = Cancel
+
+Name = Label1
+  Type = Label
+  Color = 16777215
+  Height = 16
+  Left = 8
+  Size = 10
+  Style = bold
+  Top = 7
+  Width = 278
+  Caption = 1. Compare waypoints in this database:
+
+Name = HTMLabel2
+  Type = Label
+  Color = 16777215
+  Height = 16
+  Left = 307
+  Size = 10
+  Style = bold
+  Top = 7
+  Width = 259
+  Caption = 2. To the waypoints in this database:
+
+Name = DB1
+  Type = Combobox
+  Height = 21
+  Left = 8
+  Top = 29
+  Width = 270
+  Taborder = 4
+
+Name = DB2
+  Type = Combobox
+  Height = 21
+  Left = 307
+  Top = 29
+  Width = 270
+  Taborder = 5
+
+Name = DeleteRB
+  Type = Radiobutton
+  Color = 15658734
+  Container = Groupbox5
+  Exitonchange = Yes
+  Fontcolor = 255
+  Fontsize = 10
+  Height = 20
+  Left = 127
+  Top = 7
+  Width = 80
+  Taborder = 1
+  Caption = DELETE
+
+Name = MoveRB
+  Type = Radiobutton
+  Color = 15658734
+  Container = Groupbox5
+  Exitonchange = Yes
+  Fontcolor = 4227327
+  Fontsize = 10
+  Height = 20
+  Left = 249
+  Top = 7
+  Width = 80
+  Taborder = 2
+  Caption = MOVE
+
+Name = Label2
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 16
+  Size = 10
+  Top = 52
+  Visible = No
+  Width = 189
+  Caption = MOVE/COPY to this database:
+
+Name = DestinationDB
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 207
+  Top = 50
+  Visible = No
+  Width = 325
+  Taborder = 0
+
+Name = BothRB
+  Type = Radiobutton
+  Container = Groupbox2
+  Fontsize = 10
+  Height = 20
+  Left = 6
+  Top = 18
+  Width = 490
+  Taborder = 0
+  Caption = Select waypoints that are in both databases (duplicate waypoints)
+
+Name = UniqueRB
+  Type = Radiobutton
+  Container = Groupbox2
+  Fontsize = 10
+  Height = 20
+  Left = 6
+  Top = 42
+  Width = 535
+  Taborder = 1
+  Caption = Select waypoints in Database 1 that are not in Database 2 (unique wayponits in DB1)
+
+Name = CopyRB
+  Type = Radiobutton
+  Color = 15658734
+  Container = Groupbox5
+  Exitonchange = Yes
+  Fontcolor = 8421376
+  Fontsize = 10
+  Height = 20
+  Left = 371
+  Top = 7
+  Width = 80
+  Taborder = 3
+  Caption = COPY
+
+Name = FilterCB
+  Type = Checkbox
+  Container = Groupbox1
+  Fontsize = 10
+  Height = 20
+  Left = 7
+  Top = 17
+  Width = 80
+  Taborder = 1
+  Caption = FILTER
+
+Name = NoneRB
+  Type = Radiobutton
+  Color = -2147483633
+  Container = Groupbox5
+  Exitonchange = Yes
+  Fontcolor = 16711680
+  Fontsize = 10
+  Height = 20
+  Left = 5
+  Top = 7
+  Width = 80
+  Taborder = 0
+  Caption = NONE
+
+Name = UserFlagCB
+  Type = Checkbox
+  Container = Groupbox3
+  Fontsize = 10
+  Height = 20
+  Left = 14
+  Top = 21
+  Width = 120
+  Taborder = 0
+  Caption = Set User Flags
+
+Name = MacroFlagCB
+  Type = Checkbox
+  Container = Groupbox3
+  Fontsize = 10
+  Height = 20
+  Left = 157
+  Top = 21
+  Width = 120
+  Taborder = 1
+  Caption = Set Macro Flags
+
+Name = ListCB
+  Type = Checkbox
+  Container = Groupbox3
+  Fontsize = 10
+  Height = 20
+  Left = 300
+  Top = 21
+  Width = 120
+  Taborder = 2
+  Caption = Waypoint List
+
+Name = CountCB
+  Type = Checkbox
+  Container = Groupbox3
+  Fontsize = 10
+  Height = 20
+  Left = 443
+  Top = 21
+  Width = 120
+  Taborder = 3
+  Caption = Waypoint Count
+
+Name = RunSilentCB
+  Type = Checkbox
+  Color = 8404992
+  Exitonchange = Yes
+  Fontcolor = 16777215
+  Fontsize = 10
+  Height = 20
+  Left = 12
+  Top = 368
+  Width = 560
+  Taborder = 9
+  Caption = Run without user intervention (hold down the Ctrl key to display options if this box is checked)
+
+Name = DisplayCurrent
+  Type = Radiobutton
+  Container = Groupbox4
+  Fontsize = 10
+  Height = 20
+  Left = 12
+  Top = 20
+  Width = 127
+  Taborder = 0
+  Caption = Current Database
+
+Name = Display1
+  Type = Radiobutton
+  Container = Groupbox4
+  Fontsize = 10
+  Height = 20
+  Left = 158
+  Top = 20
+  Width = 98
+  Taborder = 1
+  Caption = Database 1
+
+Name = Display2
+  Type = Radiobutton
+  Container = Groupbox4
+  Fontsize = 10
+  Height = 20
+  Left = 304
+  Top = 20
+  Width = 93
+  Taborder = 2
+  Caption = Database 2
+
+Name = DisplayDest
+  Type = Radiobutton
+  Container = Groupbox4
+  Fontsize = 10
+  Height = 20
+  Left = 443
+  Top = 20
+  Width = 115
+  Taborder = 3
+  Caption = Destination DB
+
+<enddata>
+
+
+
+
+
+<Data> VarName=$ResultForm
+#********************************************************************
+# Form generated by GSAK form designer on Sat 19-Sep-2009 19:35:59
+#********************************************************************
+
+Name = ResultForm
+  Type = Form
+  Caption = Result of Compare:
+  Color = 15457491
+  Height = 407
+  Width = 226
+
+Name = Memo1
+  Type = Memo
+  Height = 307
+  Left = 12
+  Readonly = Yes
+  Scrollbars = Vertical
+  Top = 12
+  Width = 193
+  Taborder = 10
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 18
+  Top = 336
+  Width = 75
+  Taborder = 8
+  Caption = OK
+
+Name = Clipboard
+  Type = Button
+  Height = 25
+  Left = 128
+  Top = 336
+  Width = 75
+  Taborder = 9
+  Caption = Clipboard
+
+<enddata>
+

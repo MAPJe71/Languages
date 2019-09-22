@@ -1,0 +1,136 @@
+/* pair1.mac 
+   E. L. Woollett
+   woollett@charter.net 
+   April 15, 2011
+ */
+ 
+ " ======================================================"$
+ "  file pair1.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+ 
+" --------------------------------------------"$  
+"      UNPOLARIZED PAIR ANNIHILATION          "$
+" ---------------------------------------------"$
+"  e(-,p1) + e(+,p2) --> gamma(k1) + gamma(k2) "$
+" ----------------------------------------------"$
+"   Arbitrary Frame Covariant Symbolic Methods  "$
+" ---------------------------------------------"$
+" POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES. "$
+" Express 4-vector dot products in terms of t, u, and m^2 "$
+" Using s = (p1+p2)^2 = (k1+k2)^2, t = (p1-k1)^2 = "$
+" (k2-p2)^2, u = (p1-k2)^2 = (k1-p2)^2, s + t + u = 2*m^2 "$ 
+ 
+  " ---------------------------------------------------"$
+  invar (D(p1,p1) = m^2,
+         D(p1,k1) = (m^2-t)/2,
+         D(p1,k2) = (m^2-u)/2,
+         D(p1,p2) = -(t+u)/2,
+         D(p2,p2) = m^2,
+         D(p2,k1) = (m^2-u)/2,
+         D(p2,k2) = (m^2-t)/2,
+         D(k1,k1) = 0,
+         D(k1,k2) = m^2 -(t+u)/2,
+         D(k2,k2) = 0)$
+         
+ "------------------------------------------------------"$
+
+"  sum |M|^2 over spins of electrons and polarizations "$
+"    of the  photons, which leads to the expression: "$
+" -------------------------------------------------"$
+"      m1sq/(t-m^2)^2 + m2sq/(u-m^2)^2 +           "$
+"           (m1m2sq+m2m1sq)/((t-m^2)*(u-m^2))"$         
+" -------------------------------------------------"$
+" --    where (ignoring e^4)  ---                   "$
+
+   m1sq : tr (p2-m,mu,p1-k1+m,nu,p1+m,nu,p1-k1+m,mu);
+   
+   m2sq : tr (p2-m,mu,p1-k2+m,nu,p1+m,nu,p1-k2+m,mu);
+ 
+   m1m2sq : tr (p2-m,mu,p1-k1+m,nu,p1+m,mu,p1-k2+m,nu);   
+   
+   m2m1sq : tr (p2-m,mu,p1-k2+m,nu,p1+m,mu,p1-k1+m,nu);
+   
+   m1m2sq - m2m1sq;
+   
+   Mssq : ratsimp (m1sq/(t-m^2)^2 + m2sq/(u-m^2)^2 + 2*m1m2sq/((t-m^2)*(u-m^2)));
+   
+ "----- replace t and u in terms of dot products in arb frame  ------ "$
+  
+  Mssq_dot : expand (subst ([t=m^2-2*D(k1,p1),u=m^2-2*D(k2,p1)],Mssq));
+  
+  "=================================================="$
+  "  specialize to center of momentum frame  "$
+  
+   "---------------------------------------------------"$
+  " kinematics in center of momentum frame "$
+  " p_vec_mag : E*v, v = velocity rel to CM frame "$
+  " E^2 = m^2 + p^2 = m^2/(1 - v^2) "$
+  " initial electron 3-mom in dir. of pos z axis"$
+  " e(-,p1) e(+,p2) --> gamma(k1) gamma(k2) "$
+  " CM energy = 2*E shared equally by incident"$
+  " fermions and outgoing photons "$
+  
+
+assume (m > 0, E > 0, th >= 0, th <= %pi )$
+   
+comp_def ( p1( E,0,0,v*E),
+           p2(E,0,0,-v*E),
+           k1( E,E*sin(th),0,E*cos(th)),
+           k2 (E,-E*sin(th),0,-E*cos(th)) )$
+           
+           
+  " pf/pi = E/p = E/(vE) = 1/v "$
+  " dsigdo_CM = A*|M|^2 for given pol, where "$
+  " having absorbed e^4 into A, e^2 = 4*%pi*alpha"$
+  
+  A : alpha^2/(16*v*E^2);
+  
+  " convert to a function of angle th between "$
+  " p1_vec and k1_vec "$
+           
+  Mssq_th : D_sub (Mssq_dot,[D(k1,p1),D(k2,p1)]);
+  
+  
+  Mssq_th : trigsimp (subst (E^2=m^2/(1-v^2),Mssq_th) );  
+  
+  " simplify the denominator - override default factor "$
+  
+  mt1d : denom (Mssq_th);
+  
+  mt1d : ratsubst (x,v^2*cos(th)^2,mt1d);
+  
+  mt1d : factor (mt1d);
+  
+  mt1d : subst(x=v^2*cos(th)^2,mt1d);
+  
+  " simplify the numerator "$
+  
+  mt1n : num (Mssq_th);
+  
+  " pull out factor of 16 from numerator "$
+  
+  mt1n16 : factor (mt1n)/16;
+  
+  " change sin(th) to cos(th) in numerator "$
+  
+  mt1n16 : expand (ts (mt1n16,th));
+  
+  " simplified num/denom expression: "$
+  
+  Mssq_unpol : 16*mt1n16/mt1d;
+  
+  " divide by 4 from averaging over initial spin "$
+  " and polarization "$
+  
+  dsigdo_CM : (A/4)*Mssq_unpol$
+  
+  (display2d:true,display (dsigdo_CM),display2d:false)$
+  
+  
+  " which agrees with Greiner and Reinhardt, p.201, eqn (17)"$
+  "----------------------------------------------------------"$
+  

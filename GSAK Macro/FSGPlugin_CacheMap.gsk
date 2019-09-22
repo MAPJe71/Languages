@@ -1,0 +1,950 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display a map of found or placed caches
+# MacFileName = FSGPlugin_CacheMap.gsk
+# MacAuthor = Doblinus
+# MacVersion = 3.02
+# MacUrl=http://gsak.net/board/index.php?showtopic=17937&view=findpost&p=127452
+#*******************************************
+
+# Changes:
+#  V1.00 2011-03-12  First version 
+#  V1.01 2011-03-14  vertical position of cache logos corrected 
+#                    now using 'IsOwner' field instead of 'OwnerName' (parameter USER not used anymore)
+#  V1.02 2011-03-16  now using '$_DbPath\$tab_name\sqlite.db3' as db path 
+#                    now interpreting $Locationless as set in FSG
+#                    database names now reading from FSG setting, user can overwrite with db=xxx
+#                    new parameter CORRECTED, when set corrected cords will be used, default: false
+#                    if zoom=1 then max map size is 512px
+#                    database name is now taken from FSG, DB-Parameter can overwrite
+#  V1.03 2011-04-09  minor code improvements
+#                    fix: allow apostroph (') in cache names
+#                    new: type=all to show all caches in db
+#  V1.04 2011-04-19  Display rendering progress
+#                    new parameter ARCHIVED, archived=n suppresses displaying archived caches
+#----------------------------------------------------------------------------------------------
+#  V2.00 2011-05-03  First version using FSG tables AllFinds and PlacedStatsData only,
+#                    macro now follows FSG's guidelines for plugins
+#                    parameters 'DB' and 'TYPE=ALL' therefore is no longer allowed
+#  V2.01 2011-05-05  Quick and dirty fix for new gc layout
+#  V2.02 2011-05-08  Improved changes for new gc layout
+#                    Changes for Google Chrome browser
+#                    Version successfully tested with
+#                     - FireFox 4.0.1
+#                     - Internet Explorer 8
+#                     - Google Chrome 11
+#  V2.03 2011-05-09  Fixed: badly rounded x-position
+#  V2.04 2011-05-13  Map now centered (like older releases)
+#  V2.05 2011-05-14  vertical position of legend slightly moved down,
+#                    cache positioning and map centereing changed again due to CG updates
+#  V2.06 2011-05-14  cache positioning and map centereing changed again due to CG updates
+#  V2.07 2011-05-23  new parameters LIGHTNESS/SATURATION
+#                    Google static map format changed to PNG
+#  V2.08 2011-06-15  new parameter FILTER to extend SQL selection by user
+#  V2.09 2011-07-18  correct handling of " (double quote) in cache names
+#                    cache URL now taken from database (to reflect opencaching & others)
+#                    new parameter SMALLMAPS suppressing div offset
+#  V2.10 2011-11-27  new parameter USESMILIES
+#                    RETURN inserted at the end of main code
+#                    <PLACED> no longer allowed for type, due to FSG update
+#                    new parameter FAVPOINTS
+#----------------------------------------------------------------------------------------------
+#  V3.00 2012-01-05  Macro now can run stand alone (not called by FSG), using active GSAK table
+#                    new parameter OUTFILE
+#  V3.01 2012-01-09  AddStr()
+#                    minor code improvements
+#  V3.02 2012-06-10  max. zom level now 21
+#                    new parameter POI for evaluating file with poi data
+
+
+#MSGOK msg=Macro start, MacroParms: $_MacroParms
+
+SHOWSTATUS msg="Macro CacheMap running" Width=350
+GOSUB Name=DeclareVariables
+
+# init some variables
+GOSUB Name=InitVariables
+
+# set default parameters (map Germany)
+GOSUB Name=SetDefaultParameters
+
+# read given parameters, will overwrite defaults
+GOSUB name=GetParameters
+
+# read given parameters, will overwrite defaults
+GOSUB name=CheckInterface
+
+# check table to use
+if $CallerFSG
+	if $cache_map_type = 2
+		$_sql = "SELECT count(name) FROM sqlite_master WHERE type='table' and upper(name)='$fsg_placed_tab'"
+		$TableExists = Val(Sqlite("sql",$_sql))
+		if $TableExists = 0
+		  RETURN msg=Table for placed caches not found.$_CrLf Plugin CacheMap will now terminate.
+		endif
+		$tab_name = $fsg_placed_tab
+	else
+		$tab_name = $fsg_found_tab
+	endif
+	# Exclude locationless?
+	IF $Excludelocationless
+		if $tab_name = $fsg_found_tab
+			$Locationless = "Cachetype <> 'L'"
+		else
+			$Locationless = "Type <> 'Locationless'"
+		endif
+	ELSE
+		$Locationless = "1"
+	ENDIF
+else
+	$tab_name = "caches"
+	$Locationless = "1"
+endif
+
+# calculate correction factor and map scale from zoom level
+$zoom = Int($zoom)
+if $zoom < 1
+	$zoom = 1
+endif
+if $zoom > 21
+	$zoom = 21
+endif
+$corr = 2 ^ ($zoom - 1)
+
+# check for min/max map size
+if $zoom = 1
+	if $x_size > 512
+		$x_size = 512
+	endif
+	if $y_size > 512
+		$y_size = 512
+	endif
+else
+	if $x_size > 640
+		$x_size = 640
+	endif
+	if $y_size > 640
+		$y_size = 640
+	endif
+endif
+if $x_size < 100
+	$x_size = 100
+endif
+if $y_size < 100
+	$y_size = 100
+endif
+
+# check min/max saturation/lightness
+if $lightness > 100
+	$lightness = 100
+endif
+if $saturation > 100
+	$saturation = 100
+endif
+if $lightness < -100
+	$lightness = -100
+endif
+if $saturation < -100
+	$saturation = -100
+endif
+
+# calculate scaling
+$x_scale = $x_scale / $corr / 2			# /2 due to <div> centering
+$y_scale = $y_scale / $corr
+
+# get Mercator center for y and calculate min/max values
+$phi = $y_center
+GOSUB Name=Mercator
+$y_center_m = $mphi
+$x_min = $x_center - $x_scale * $x_size / 2
+$x_min2 = $x_center - $x_scale * $x_size
+$x_max = $x_center + $x_scale * $x_size / 2
+$x_max2 = $x_center + $x_scale * $x_size
+$y_min = $y_center_m - $y_scale * $y_size / 2
+$y_max = $y_center_m + $y_scale * $y_size / 2
+
+# check/limit map boundaries
+if $x_min < -180
+	$x_min = -180
+endif
+if $x_max > 180
+	$x_max = 180
+endif
+if $y_min < -$g_y_limit
+	$y_min = -$g_y_limit
+endif
+if $y_max > $g_y_limit
+	$y_max = $g_y_limit
+endif
+#MSGOK msg=" x min / center / max: $x_min / $x_center / $x_max $_CrLf y min / center / max: $y_min / $y_center_m / $y_max"
+
+if $smallmaps
+	$indent = 0
+else
+	$indent = Int((748 - $x_size) / 2)
+endif
+
+# output version
+$MyOut = AddStr(9,"add","$_CrLf<!-- Macro FSGPlugin_CacheMap - Version $MacroVersion - macro params: '$_MacroParms' -->$_CrLf")
+$MyOut = AddStr(9,"add","<div style='margin-top: 0px; margin-left: $indent"+"px; width:$x_size"+"px; height:$y_size"+"px;'>$_CrLf")
+
+
+# output Google map
+$_Sql = "<img style='border:1px solid #000000' src='http://maps.google.com/maps/api/staticmap?center=$y_center,$x_center&zoom=$zoom&size=$x_size" + "x$y_size&format=png&maptype=$maptype&style=feature:all|saturation:$saturation|lightness:$lightness&sensor=false'>"
+$MyOut = AddStr(9,"add",$_Sql + $_CrLf)
+# position back
+$MyOut = AddStr(9,"add","</div>$_CrLf<div style='margin-top: -$y_size"+"px;'></div>$_CrLf") 
+
+SHOWSTATUS msg="Macro CacheMap rendering map" Width=350
+
+# get total number of caches
+$_sql = "SELECT count(Code) from $tab_name where $Locationless"
+GOSUB Name=CheckArchivedAndCountry
+$num_caches_total = Val(Sqlite("sql",$_sql))
+#msgok msg="num_caches_total $num_caches_total"
+#SHOWSTATUS msg="Macro CacheMap rendering map 1" Width=350
+	
+# Exit if we don't have any caches
+if $num_caches_total = 0
+	RETURN msg=" There are no fitting caches in the database at all.$_CrLf Macro will terminate."
+endif
+
+# get number of caches (in country if set)
+#SHOWSTATUS msg="Macro CacheMap rendering map 1a" Width=350
+$_sql = "SELECT count(Code) from $tab_name where $Locationless"
+#SHOWSTATUS msg="Macro CacheMap rendering map 1b" Width=350
+GOSUB Name=CheckArchivedAndCountry
+#SHOWSTATUS msg="Macro CacheMap rendering map 1c" Width=350
+$num_caches = Val(Sqlite("sql",$_sql))
+#msgok msg="num_caches $num_caches"
+#SHOWSTATUS msg="Macro CacheMap rendering map 2" Width=350
+
+# check corrected/uncorrected
+if $corrected
+	$sqlcorr = "Latitude,Longitude"
+else
+	$sqlcorr = "LatOriginal,LonOriginal"
+endif
+
+# get cache data
+if $CallerFSG
+	$_sql = "SELECT $sqlcorr,CacheType,Code,Name,URL FROM $tab_name where $Locationless"
+else
+	$_sql = "SELECT $sqlcorr,CacheType,Code,Name FROM $tab_name where $Locationless"
+endif
+GOSUB Name=CheckArchivedAndCountry
+#msgok msg=$_sql
+$work = Sqlite("sql",$_sql)
+$list = list("MyList","create",$_CrLf)
+$list = list("MyList","replace",$work)
+#SHOWSTATUS msg="Macro CacheMap rendering map 3" Width=350
+
+# get fitting caches 
+$count = 0
+$num_caches_used = 0
+while $count < $num_caches
+	$count = $count + 1
+	if $favpoints or ($count = Int($count/10)*10) or ($count = $num_caches)
+		SHOWSTATUS msg="Macro CacheMap checking $count / $num_caches" Width=350
+		endif
+	$get_cache = list("MyList","item","$count")
+	$y = Val(Extract($get_cache,";",1))
+	$x = Val(Extract($get_cache,";",2))
+	$cachetype = Extract($get_cache,";",3)
+	$cachecode = Extract($get_cache,";",4)
+	$cachename = Extract($get_cache,";",5)
+	$cachename = Replace("""","&quot;",$cachename)
+	if $CallerFSG
+		$url = Extract($get_cache,";",6)
+	else
+		$url = "http://coord.info/$cachecode"
+	endif
+	$phi = $y
+	GOSUB Name=Mercator
+	$y = $mphi
+	if ($x > $x_min2) and ($x < $x_max2) and ($y > $y_min) and ($y < $y_max) 
+		# cache hits map
+		$num_caches_used = $num_caches_used+1
+
+		# get bitmap position x
+		$x = ($x - $x_min) / $x_scale - $logo_size / 2 
+
+		# get bitmap position y
+		$y = Int(($y - $y_min) / $y_scale + $logo_size / 2)
+
+		$x = Int($x / 2 + $x_size / 4)
+
+		# check for out of border in x
+		if $x < 0
+			$x = 0
+		endif
+		if $x > ($x_size - $logo_size)
+			$x = $x_size - $logo_size
+		endif
+		
+		$x = $x + $indent
+
+		# change top/bottom
+		$y = $y_size - $y
+
+		# check for out of border in y
+		if $y < 0
+			$y = 0
+		endif
+		if $y > ($y_size - $logo_size)
+			$y = $y_size - $logo_size
+		endif
+
+		# calculate back move
+		$deltay = $y + $logo_size
+
+		# get logo
+		GOSUB Name=GetCacheLogo
+		
+		# check for favorite points
+		if $favpoints and ($cachetype<>"E") and ($cachetype<>"Z")
+			GOSUB Name=GetNumFPs
+			$sumfps = $sumfps+$fpresult
+			$fp = ", $fpresult FPs"
+		else
+			$fp = ""
+		endif
+
+		# finally output stuff
+		$MyOut = AddStr(9,"add","<div style='margin-top:$y"+"px;margin-left:$x"+"px;width:$logo_size"+"px;height:$logo_size"+"px;'>")		
+		$MyOut = AddStr(9,"add","<a href='$url'target='_blank'>")		
+		$MyOut = AddStr(9,"add","<img width='$logo_size'src='$TypeImage'border='0'title=$_Quote$cachename ($cachecode)$fp$_Quote>")		
+		$MyOut = AddStr(9,"add","</a></div><div style='margin-top:-$deltay"+"px;'></div>$_CrLf")		
+	endif
+endwhile
+$list = list("MyList","destroy","")
+
+# check for poi file
+if $poi_file<>""
+	if FileExists($poi_file)
+		SHOWSTATUS msg="Macro CacheMap checking POI" Width=350
+		if $poi_logo_size=0
+			$poi_logo_size = $logo_size
+		endif
+		FileRead File=$poi_file
+#			msgok msg="line: $line"
+			$poi_code = AllTrim(Extract($line,";",1))
+			if $poi_code<>""
+				$poi_lat = Val(AllTrim(Extract($line,";",2)))
+				$poi_lon = Val(AllTrim(Extract($line,";",3)))
+				$poi_title = AllTrim(Extract($line,";",4))
+				$poi_logo = AllTrim(Extract($line,";",5))
+				$poi_link = AllTrim(Extract($line,";",6))
+#				msgok msg="$poi_lat$_CrLf$poi_lon$_CrLf$poi_title$_CrLf$poi_logo$_CrLf$poi_link"
+				
+				$y = $poi_lat
+				$x = $poi_lon
+				$phi = $y
+				GOSUB Name=Mercator
+				$y = $mphi
+				if ($x > $x_min2) and ($x < $x_max2) and ($y > $y_min) and ($y < $y_max) 
+					# poi hits map
+
+					# get bitmap position x
+					$x = ($x - $x_min) / $x_scale - $poi_logo_size / 2 
+
+					# get bitmap position y
+					$y = Int(($y - $y_min) / $y_scale + $poi_logo_size / 2)
+
+					$x = Int($x / 2 + $x_size / 4)
+
+					# check for out of border in x
+					if $x < 0
+						$x = 0
+					endif
+					if $x > ($x_size - $poi_logo_size)
+						$x = $x_size - $poi_logo_size
+					endif
+		
+					$x = $x + $indent
+
+					# change top/bottom
+					$y = $y_size - $y
+
+					# check for out of border in y
+					if $y < 0
+						$y = 0
+					endif
+					if $y > ($y_size - $poi_logo_size)
+						$y = $y_size - $poi_logo_size
+					endif
+
+					# calculate back move
+					$deltay = $y + $poi_logo_size
+
+					# finally output stuff
+					$MyOut = AddStr(9,"add","<div style='margin-top:$y"+"px;margin-left:$x"+"px;width:$poi_logo_size"+"px;height:$poi_logo_size"+"px;'>")	
+					if $poi_link<>""
+						$MyOut = AddStr(9,"add","<a href='$poi_link'target='_blank'>")	
+					endif
+					$MyOut = AddStr(9,"add","<img width='$poi_logo_size'src='$poi_logo'border='0'title=$_Quote$poi_title$_Quote>")		
+					if $poi_link<>""
+						$MyOut = AddStr(9,"add","</a>")	
+					endif
+					$MyOut = AddStr(9,"add","</div><div style='margin-top:-$deltay"+"px;'></div>$_CrLf")		
+				endif
+			endif
+		EndRead
+	else
+		RETURN msg=POI file '$poi_file' not found.$_CrLf Plugin CacheMap will now terminate.
+	endif
+endif
+
+$MyOut = AddStr(9,"add","<div style='margin-top: $y_size"+"px;'></div>$_CrLf")
+
+#MSGOK msg="$num_caches_used caches used"
+
+if $legend
+	# output legend
+	$MyOut = AddStr(9,"add","<div style='text-align:left; margin-top: 2px; margin-left: $indent"+"px; width:$x_size"+"px;'>$_CrLf")
+	$MyOut = AddStr(9,"add","<a style='text-align:left; text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/MacroIndex.php'>FSGPlugin_CacheMap $MacroVersion - Caches: $num_caches_used ($num_caches_total)")
+	if $favpoints
+		$MyOut =AddStr(9,"add"," - FPs: $sumfps")
+	endif
+	$MyOut = AddStr(9,"add","</a>$_CrLf")
+	$MyOut = AddStr(9,"add","</div>$_CrLf")
+endif
+
+SHOWSTATUS msg="Macro CacheMap finished" Width=350
+#MSGOK msg="CacheMap now returning$_CrLf $_MacroParms"
+if $CallerFSG
+	$p_FSGData = AddStr(9,"get")
+else
+	$MyOut = AddStr(9,"get")
+	$tempS = PutFile($strOutFileName,$MyOut)
+endif
+RETURN
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=DeclareVariables
+#-------------------------------------------------------------------------------
+	Declare Var=$MacroVersion Type=String
+	Declare Var=$currentdb Type=String
+	Declare Var=$MyOut Type=String
+	Declare Var=$x_scale Type=Numeric
+	Declare Var=$y_scale Type=Numeric
+	Declare Var=$y_scale_m Type=Numeric
+	Declare Var=$x_center Type=Numeric
+	Declare Var=$y_center Type=Numeric
+	Declare Var=$y_center_m Type=Numeric
+	Declare Var=$x_size Type=Numeric
+	Declare Var=$y_size Type=Numeric
+	Declare Var=$zoom Type=Numeric
+	Declare Var=$x_min Type=Numeric
+	Declare Var=$x_min2 Type=Numeric
+	Declare Var=$x_max Type=Numeric
+	Declare Var=$x_max2 Type=Numeric
+	Declare Var=$y_min Type=Numeric
+	Declare Var=$y_max Type=Numeric
+	Declare Var=$num_caches Type=Numeric
+	Declare Var=$num_caches_total Type=Numeric
+	Declare Var=$num_caches_used Type=Numeric
+	Declare Var=$x Type=Numeric
+	Declare Var=$y Type=Numeric
+	Declare Var=$cnt Type=Numeric
+	Declare Var=$cnt2 Type=Numeric
+	Declare Var=$corr Type=Numeric
+	Declare Var=$logo_size Type=Numeric
+	Declare Var=$incr Type=Numeric
+	Declare Var=$phi Type=Numeric
+	Declare Var=$mphi Type=Numeric
+	Declare Var=$g_y_limit Type=Numeric
+	Declare Var=$deltay Type=Numeric
+	Declare Var=$CountTemp Type=String
+	Declare Var=$get_cache Type=String
+	Declare Var=$maptype Type=String
+	Declare Var=$country Type=String
+	Declare Var=$HomeCoords Type=String
+	Declare Var=$database Type=String
+	Declare Var=$data Type=String
+	Declare Var=$Temp1 Type=String
+	Declare Var=$Parms Type=String
+	Declare Var=$tab_name Type=String
+	Declare Var=$cache_map_type Type=Numeric
+	Declare Var=$empty Type=Boolean
+	Declare Var=$legend Type=Boolean
+	Declare Var=$show_archived Type=Boolean
+	Declare Var=$ReadMasterFile Type=Boolean
+	Declare Var=$corrected Type=Boolean
+	Declare Var=$Types Type=String
+	Declare Var=$Typenums Type=String
+	Declare Var=$wpttypesSmall Type=String
+	Declare Var=$wpttypesLarge Type=String
+	Declare Var=$wpttypes Type=String
+	Declare Var=$TypeImage Type=String
+	Declare Var=$cachetype Type=String
+	Declare Var=$cachecode Type=String
+	Declare Var=$cachename Type=String
+	Declare Var=$thistype Type=String
+	Declare Var=$fsg_found_tab Type=String
+	Declare Var=$fsg_placed_tab Type=String
+	Declare Var=$sqlcorr Type=String
+	Declare Var=$filter Type=String
+	Declare Var=$url Type=String
+	Declare Var=$strNewFile Type=String
+	Declare Var=$fp Type=String
+	Declare Var=$gsak_db Type=String
+	Declare Var=$caller Type=String
+	Declare Var=$NumItems Type=Numeric
+	Declare Var=$TableExists Type=Numeric
+	Declare Var=$indent Type=Numeric
+	Declare Var=$lightness Type=Numeric
+	Declare Var=$saturation Type=Numeric
+	Declare Var=$fpresult Type=Numeric
+	Declare Var=$sumfps Type=Numeric
+	Declare Var=$apilimit Type=Numeric
+	Declare Var=$apicount Type=Numeric
+	Declare Var=$apiwaittime Type=Numeric
+	Declare Var=$towait Type=Numeric
+	Declare Var=$towait_s Type=Numeric
+	Declare Var=$smallmaps Type=Boolean
+	Declare Var=$usesmilies Type=Boolean
+	Declare Var=$favpoints Type=Boolean
+	Declare Var=$CallerFSG Type=Boolean
+	Declare Var=$strOutFileName Type=String
+	Declare Var=$strOutPathName Type=String
+	Declare Var=$poi_file Type=String
+	Declare Var=$poi_code Type=String
+	Declare Var=$poi_lat Type=Numeric
+	Declare Var=$poi_lon Type=Numeric
+	Declare Var=$poi_logo_size Type=Numeric
+	Declare Var=$poi_title Type=String
+	Declare Var=$poi_logo Type=String
+	Declare Var=$poi_link Type=String
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetParameters
+#-------------------------------------------------------------------------------
+	if $_MacroParms <> ""
+		$Parms = $_MacroParms
+		$count = RegExCount("&",$Parms)
+		$i = 1
+		while $i <= $count+1
+			$Text1 = extract($Parms,"&",$i)
+			$Text2 = upper($Text1)
+#			MSGOK msg="parameter $i:   '$Text1'   '$Text2'"
+			
+			if (AT("MAPTYPE", $Text2) = 1)
+				$Text2 = upper(extract($Text1,"=",2))
+				if $Text2 <> ""
+					begincase
+						case $text2="ROADMAP"
+							$maptype = "roadmap"
+						case $text2="SATELLITE"
+							$maptype = "satellite"
+						case $text2="HYBRID"
+							$maptype = "hybrid"
+						otherwise
+							$maptype = "terrain"
+					endcase
+				endif
+				$Text2 = ""
+			endif	
+
+			if (AT("HOME", $Text2) = 1)
+				GOSUB Name=GetHome
+				#MSGOK msg="x_center / y_center: $x_center / $y_center"
+				$Text2 = ""
+			endif
+
+			if (AT("LATITUDE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$y_center = Val($Text2)
+				endif
+				$Text2 = ""
+			endif	
+
+			if (AT("LONGITUDE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$x_center = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("ZOOM", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$zoom = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("SIZE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$x_size = Val($Text2)
+				$y_size = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("WIDTH", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$x_size = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("HEIGHT", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$y_size = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("LOGO", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$logo_size = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("LEG", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if upper($Text2) = "N"
+					$legend = false
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("ARCHIVED", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if upper($Text2) = "N"
+					$show_archived = false
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("TYPE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if upper($Text2) = "PLACED"
+					$cache_map_type = 2
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("COUNTRY", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				$country = upper($Text2)
+				$Text2 = ""
+			endif
+
+			if (AT("CORRECTED", $Text2) = 1)
+				$corrected = true
+				$Text2 = ""
+			endif
+
+			if (AT("LIGHTNESS", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$lightness = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("SATURATION", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$saturation = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("FILTER", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				$filter = Replace(":","=",$Text2)
+				#MSGOK msg="Filter: $filter"
+				$Text2 = ""
+			endif
+
+			if (AT("SMALLMAPS", $Text2) = 1)
+				$smallmaps = true
+				$Text2 = ""
+			endif
+
+			if (AT("USESMILIES", $Text2) = 1)
+				$usesmilies = true
+				$Text2 = ""
+			endif
+
+			if (AT("FAVPOINTS", $Text2) = 1)
+				$favpoints = true
+				$Text2 = ""
+			endif
+
+			if (AT("OUTFILE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$strOutFileName = $strOutPathName+$Text2
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("POIFILE", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$poi_file = "$_Install\Macros\"+$Text2
+				endif
+				$Text2 = ""
+			endif
+
+			if (AT("POILOGO", $Text2) = 1)
+				$Text2 = extract($Text1,"=",2)
+				if $Text2 <> ""
+					$poi_logo_size = Val($Text2)
+				endif
+				$Text2 = ""
+			endif
+
+			$i = $i+1
+		endwhile
+	else
+		GOSUB Name=GetHome
+	endif
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=CheckApiLimit
+#-------------------------------------------------------------------------------
+	if $apicount=-1
+		Timer Status=On Msg=No
+		$apicount = 0
+	endif
+	$apicount = $apicount+1
+	if $apicount=$apilimit
+		Timer Status=Off Msg=No
+		$towait = $apiwaittime-$_Timer
+		if $towait>0
+			$towait_s = Int($towait)+1
+			while $towait_s>0
+				SHOWSTATUS msg="API call per minute limit reached, waiting $towait_s seconds..." Width=350
+				DELAY MS=1000
+				$towait_s = $towait_s-1
+			endwhile
+			SHOWSTATUS msg="" Width=350
+		endif
+		$apicount = 1
+		Timer Status=On Msg=No
+	endif
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=GetNumFPs
+#-------------------------------------------------------------------------------
+	GOSUB Name=CheckApiLimit
+	$data = gcapi("GetUsersWhoFavoritedCache?CacheCode="+$cachecode)
+	if $_GcApiError
+		msgok msg=Error: $data
+		$fpresult = 0
+	else
+		$fpresult = RegExCount("<a:UserName>",$data)
+	endif
+#	msgok msg=$cachecode $fpresult
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetHome
+#-------------------------------------------------------------------------------
+	$Temp1 = SysInfo("locations")
+	$HomeCoords=""
+	$incr=1
+	while $HomeCoords = "" and $incr < 100
+		$data = Extract($Temp1,";",$incr)
+		#MSGOK msg="data: $data"
+		if upper(Extract($data,",",1)) = "HOME"
+			$HomeCoords = Extract($data,",",2)
+			$HomeCoords = $HomeCoords+" "+Extract($data,",",3)
+		endif
+		$incr = $incr + 1
+	endwhile
+	#MSGOK msg="HomeCoords: $HomeCoords"
+	if $HomeCoords = ""
+		MSGOK msg="Macro could not determine your home coordinates. $_CrLf Default values for center point will be used instead."
+	else
+		$Temp1 = GCalc($HomeCoords,"FormatDegrees")
+		#MSGOK msg="trans HomeCoords: $Temp1"
+		$y_center = Val(Extract($Temp1,";",1))
+		$x_center = Val(Extract($Temp1,";",2))
+		#MSGOK msg="Home $y_center,$x_center"
+	endif
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=Mercator
+#-------------------------------------------------------------------------------
+	$mphi = ArcTanh(Sin(DegToRad($phi)))
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=InitVariables
+#-------------------------------------------------------------------------------
+	$apilimit = 25
+	$apiwaittime = 60
+	$MacroVersion = MacHeader("MacVersion")
+	$MyOut = AddStr(9,"clear")
+	$p_FSGData = ""
+	$gsak_db = ""
+	$smallmaps = false
+	$usesmilies = false
+	$favpoints = false
+	$sumfps = 0
+	$apicount = -1
+	$CallerFSG = true
+	$strOutPathName = "$_Install\Macros\"
+	$strOutFileName = $strOutPathName+"CacheMap_output.htm"
+	$poi_file = ""
+	$poi_logo_size = 0
+
+	# constants
+	$x_scale = 360/512    # arround the world 
+	$y_scale = 2*$_Pi/512 # Mercator's full vertical range
+	$g_y_limit = 85.05113 # Google's static maps vertical limit
+
+	# convert Google's vertival limit to Mercator's
+	$phi = $g_y_limit
+	GOSUB Name=Mercator
+	$g_y_limit = $mphi
+
+	# define tables from FSG
+	$fsg_found_tab = "AllFinds"
+	$fsg_placed_tab = upper("PlacedStatsdata")
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=SetDefaultParameters
+#-------------------------------------------------------------------------------
+	# parameters, default values 
+	# used when not defined by user
+	$x_center = 9.33
+	$y_center = 54.77
+	$x_size = 640
+	$y_size = 640
+	$zoom = 11
+	$logo_size = 16
+	$maptype ="terrain"
+	$legend = true
+	$show_archived = true
+	$country = ""
+	$tab_name = ""
+	$cache_map_type = 1
+	$corrected = false
+	$lightness = 0
+	$saturation = 0
+	$filter = "1"
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=GetCacheLogo
+#-------------------------------------------------------------------------------
+	if $usesmilies
+		$TypeImage = "http://www.geocaching.com/images/icons/icon_smile.png"
+	else
+		# some constants
+		$Types = "A,B,C,E,G,L,M,R,T,U,V,W,Z,X,I,Y,1,2,3"
+		$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+		$NumItems = RegExCount(",",$Types )
+		$wpttypesSmall = "http://www.geocaching.com/images/wpttypes/sm/"
+		$wpttypesLarge = "http://www.geocaching.com/images/wpttypes/"
+	
+		# get image type
+		if $logo_size <= 16
+			$wpttypes = $wpttypesSmall
+		else
+			$wpttypes = $wpttypesLarge
+		endif
+		$index = 0
+		WHILE $index <= $NumItems
+			$index = $index+1
+			$thistype	= Extract($Types, "," , $Index)
+			IF $thistype = $cachetype
+				BEGINCASE
+				CASE $thistype = "Y"
+					$TypeImage = "http://gsak.net/stats/wm16.gif"
+				CASE $thistype = "L"
+					$TypeImage = "http://gsak.net/stats/1216.gif"
+				OTHERWISE
+					$Temp1	= Extract($Typenums, "," , $Index)
+					$TypeImage = $wpttypes+$Temp1+".gif"
+				ENDCASE
+				$index = $NumItems + 1
+			ENDIF
+		ENDWHILE
+	endif
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=CheckArchivedAndCountry
+#-------------------------------------------------------------------------------
+	$_sql = $_sql + " and $filter"
+	if NOT($show_archived)
+		if $tab_name = $fsg_placed_tab
+			$_sql = $_sql + " and Status <> 'Archived'"
+		else
+			$_sql = $_sql + " and Archived = 0"
+		endif
+	endif
+	if $country<>""
+		$_sql = $_sql + " and upper(country) = '$country'"
+	endif
+	#MSGOK msg="sql: $_sql"
+ENDSUB
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=CheckInterface
+#-------------------------------------------------------------------------------
+if $_MacroLevel=1
+	$CallerFSG = false
+else
+	if $_MacroLevel=2
+		# called by another macro (1 level up)
+		$caller = lower($_CallingMacro)
+		if AT("findstatgen",$caller)>0
+			# called by FSG
+			$CallerFSG = true
+#			msgok msg="called by FSG"
+		else
+			# called by other macro than FSG
+			$CallerFSG = false
+#			msgok msg="NOT called by FSG"
+		endif
+	else
+		# called by another macro (>1 level up), asuming FSG is calling
+		# this is needed as $_CallingMacro returns highest macro name
+		$CallerFSG = true
+#		msgok msg="caller FSG asumed"
+	endif
+endif
+
+if $CallerFSG
+#	msgok msg="CacheMap called by FSG!"
+else
+#	msgok msg="CacheMap running stand alone!"
+endif
+ENDSUB
+
+
+
+
+
+

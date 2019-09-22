@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="client-nojs">
+<head>
+<title>The full AviSynth grammar - Avisynth wiki</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.18.0" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="Avisynth wiki (en)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://avisynth.nl/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="Avisynth wiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.monobook&amp;only=styles&amp;skin=monobook&amp;*" />
+<!--[if lt IE 5.5000]><link rel="stylesheet" href="/skins/monobook/IE50Fixes.css?303" media="screen" /><![endif]-->
+<!--[if IE 5.5000]><link rel="stylesheet" href="/skins/monobook/IE55Fixes.css?303" media="screen" /><![endif]-->
+<!--[if IE 6]><link rel="stylesheet" href="/skins/monobook/IE60Fixes.css?303" media="screen" /><![endif]-->
+<!--[if IE 7]><link rel="stylesheet" href="/skins/monobook/IE70Fixes.css?303" media="screen" /><![endif]--><meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: avisynthnl:resourceloader:filter:minify-css:4:c88e2bcd56513749bec09a7e29cb3ffa */
+</style>
+<script src="/load.php?debug=false&amp;lang=en&amp;modules=startup&amp;only=scripts&amp;skin=monobook&amp;*"></script>
+<script>if(window.mw){
+	mw.config.set({"wgCanonicalNamespace": "", "wgCanonicalSpecialPageName": false, "wgNamespaceNumber": 0, "wgPageName": "The_full_AviSynth_grammar", "wgTitle": "The full AviSynth grammar", "wgCurRevisionId": 760, "wgArticleId": 382, "wgIsArticle": true, "wgAction": "view", "wgUserName": null, "wgUserGroups": ["*"], "wgCategories": ["AviSynth Syntax", "Scripting Reference"], "wgBreakFrames": false, "wgRestrictionEdit": [], "wgRestrictionMove": []});
+}
+</script><script>if(window.mw){
+	mw.loader.load(["mediawiki.page.startup"]);
+}
+</script>
+</head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-The_full_AviSynth_grammar action-view skin-monobook">
+<div id="globalWrapper">
+<div id="column-content"><div id="content">
+	<a id="top"></a>
+	
+	<h1 id="firstHeading" class="firstHeading">The full AviSynth grammar</h1>
+	<div id="bodyContent">
+		<div id="siteSub">From Avisynth wiki</div>
+		<div id="contentSub"></div>
+		<div id="jump-to-nav">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>
+		<!-- start content -->
+<div lang="en" dir="ltr" class="mw-content-ltr"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Introduction"><span class="tocnumber">1</span> <span class="toctext">Introduction</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Case"><span class="tocnumber">2</span> <span class="toctext">Case</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Whitespace.2C_Line_Continuation_and_Comments"><span class="tocnumber">3</span> <span class="toctext">Whitespace, Line Continuation and Comments</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Whitespace"><span class="tocnumber">3.1</span> <span class="toctext">Whitespace</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Backslash"><span class="tocnumber">3.2</span> <span class="toctext">Backslash</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Comments"><span class="tocnumber">3.3</span> <span class="toctext">Comments</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#The_END_special_keyword"><span class="tocnumber">3.4</span> <span class="toctext">The __END__ special keyword</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-8"><a href="#Keywords.2C_Identifiers.2C_Literals_and_Punctuation"><span class="tocnumber">4</span> <span class="toctext">Keywords, Identifiers, Literals and Punctuation</span></a>
+<ul>
+<li class="toclevel-2 tocsection-9"><a href="#Keywords"><span class="tocnumber">4.1</span> <span class="toctext">Keywords</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#Identifiers"><span class="tocnumber">4.2</span> <span class="toctext">Identifiers</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Literals"><span class="tocnumber">4.3</span> <span class="toctext">Literals</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#Punctuation"><span class="tocnumber">4.4</span> <span class="toctext">Punctuation</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-13"><a href="#Expressions_and_Statements"><span class="tocnumber">5</span> <span class="toctext">Expressions and Statements</span></a>
+<ul>
+<li class="toclevel-2 tocsection-14"><a href="#Expressions"><span class="tocnumber">5.1</span> <span class="toctext">Expressions</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#Statements"><span class="tocnumber">5.2</span> <span class="toctext">Statements</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#Compound_Statements"><span class="tocnumber">5.3</span> <span class="toctext">Compound Statements</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-17"><a href="#Closing_Remarks"><span class="tocnumber">6</span> <span class="toctext">Closing Remarks</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#The_Full_Avisynth_Grammar_-_For_Language_Lawyers"><span class="tocnumber">7</span> <span class="toctext">The Full Avisynth Grammar - For Language Lawyers</span></a></li>
+</ul>
+</td></tr></table>
+<h2> <span class="mw-headline" id="Introduction"> Introduction </span></h2>
+<p>From the perspective of the AviSynth interpreter each script is a series of tokens. The general term <tt>token</tt> corresponds to the basic building element of a script (if we imagine a script as a wall, then the tokens are the bricks). The AviSynth grammar is the set of rules (the recipe) for identifying and grouping tokens into higher-level structures. 
+</p><p>We present those rules in the following sections, in a bottom-up fashion (from low-level to higher-level constructs). However, for a reader with a basic understanding of programming that wants a <i>quick tour</i> of the language another road is possible: start directly with the <a href="#Expressions_and_Statements">Expressions and Statements</a> section and visit previous sections if a clarification is needed.
+</p>
+<h2> <span class="mw-headline" id="Case"> Case </span></h2>
+<p>The very first and maybe most important one rule of the AviSynth grammar is case. <b>AviSynth ignores case</b>:
+</p>
+<pre>aViSouRCe 
+</pre>
+<p>is just as good as 
+</p>
+<pre>AVISource
+</pre>
+<p>For the AviSynth Grammar both entries correspond to the <b>same token</b>. Thus, you should always have in mind that capitalisation does not matter when defining your variables and functions; you must always ensure that they are unique in a <i>case-insensitive</i> manner.
+</p>
+<h2> <span class="mw-headline" id="Whitespace.2C_Line_Continuation_and_Comments"> Whitespace, Line Continuation and Comments </span></h2>
+<p>The first layer of grammar rules concerns the identification of tokens out of the overall script text. Text that does not belong to a token is commonly referred to as <i>whitespace</i> in most programming and scripting languages.
+</p>
+<h3> <span class="mw-headline" id="Whitespace"> Whitespace </span></h3>
+<p>Whitespace in AviSynth language consists of:
+</p>
+<ul><li> Space, tab and newline characters (except inside <i>string literals</i>).
+</li><li> The backslash (\) character when it is the <i>first or last non-whitespace character in a line</i> (and <i>not inside a string literal</i>).
+</li><li> Comments.
+</li><li> Anything from the appearance of the __END__ special keyword up to the end of the script file.
+</li></ul>
+<h3> <span class="mw-headline" id="Backslash"> Backslash </span></h3>
+<p>The backslash character serves the role of <i>line continuation</i>. It is used to split a large line of code in multiple ones for better readability of the script when editing, yet serve it to the AviSynth interpreter as a single logical line of code. Line splitting examples (both valid and equal):
+</p>
+<pre>Subtitle("Hello, World!", 100, 200, 0, \
+  999999, "Arial", 24, $00FF00)
+</pre>
+<p>-or-
+</p>
+<pre>Subtitle("Hello, World!", 100, 200, 0,
+  \ 999999, "Arial", 24, $00FF00)
+</pre>
+<h3> <span class="mw-headline" id="Comments"> Comments </span></h3>
+<p>Comments serve the purpose of code documentation. They come in the following flavors:
+</p>
+<ul><li> <i>Standard comments</i>: They start with a pound (<b>#</b>) character and extend to the end of the line.
+</li></ul>
+<ul><li> <i>Block comments</i> (AviSynth v2.58 and later): They start either with <b>/*</b> or <b>[*</b> and extend until a (closing) <b>*/</b> or <b>*]</b>, respectively, is found downstream the script text. They can span multiple lines and the <b>[*</b> form also supports nested block comments.
+</li></ul>
+<p>Examples of comments:
+</p>
+<pre><a href="/index.php/AviSource" title="AviSource">AviSource</a>("myclip.avi")    # this is a standard comment
+</pre>
+<pre>/* this is a block comment 
+we can write a lot here
+SubTitle("Hello, World!")
+and also comment out multiple lines of code
+*/
+</pre>
+<pre>[* this is a nested block comment
+[* 
+a meaningful example will follow later&#160;:)
+*]
+for the time being just experiment *]
+</pre>
+<p>The comments mechanism has higher precedence than the backslash. If you comment out a line that ends with \, line continuation will <b>not</b> happen. A quick example from real life (someone did submitted a bug report for this):
+</p>
+<pre><a href="/index.php/ColorBars" title="ColorBars">ColorBars</a>
+<a href="/index.php/ShowFrameNumber" title="ShowFrameNumber">ShowFrameNumber</a>
+Trim(0,9) # select some frames  \
+  + Trim(20,29)
+</pre>
+<p>The above example does not return frames [0..9,20..29] as the user intended because the "\" is masked by the comment start "#" character before it; thus the line continuation never happens. The comment should go at the last line.
+</p>
+<h3> <span class="mw-headline" id="The_END_special_keyword"> The __END__ special keyword </span></h3>
+<p>The __END__ special keyword can be used to quickly disable some last commands of the script. Example:
+</p>
+<pre><a href="/index.php/Version" title="Version">Version</a>()
+__END__
+<a href="/index.php/ReduceBy2" title="ReduceBy2">ReduceBy2</a>()
+Result is not reduced and we can write any text here
+</pre>
+<h2> <span class="mw-headline" id="Keywords.2C_Identifiers.2C_Literals_and_Punctuation"> Keywords, Identifiers, Literals and Punctuation </span></h2>
+<p>The second layer of grammar rules - once whitespace has been handled and tokens have been identified - concerns the categorisation of tokens (that is, finding the <i>type</i> of the tokens). Tokens generally belong to one of the following categories:
+</p>
+<ul><li> <i>Keywords</i>: Tokens with specific, standard meaning for the AviSynth language (ie <i>reserved words</i>).
+</li><li> <i>Identifiers</i>: Tokens that identify an entity (a variable, a function, etc.).
+</li><li> <i>Literals</i>: Tokens that represent a value (ie a constant quantity).
+</li><li> <i>Punctuation</i>: This generic term comprises all tokens with specific, standard meaning for the AviSynth language that are too short to be considered keywords. They include:
+</li></ul>
+<dl><dd><ul><li> <a href="/index.php/Operators" title="Operators">Operators</a>.
+</li><li> Grouping and ordering tokens.
+</li></ul>
+</dd></dl>
+<h3> <span class="mw-headline" id="Keywords"> Keywords </span></h3>
+<p>The following are AviSynth language's keywords. We use here an all lowercase notation, but bear in mind that since AviSynth <i>ignores case</i>, any equivalent combination of uppercase / lowercase letters counts as a keyword (for example: try, Try, tRy, trY, TRy, TrY, tRY, TRY):
+</p>
+<ul><li> function&#160;: Begins the declaration of a <a href="/index.php/User_defined_script_functions" title="User defined script functions">user-defined script function</a>.
+</li><li> global&#160;: Modifies a variable, such that it has global scope.
+</li><li> return&#160;: Returns (the result of the expression on the right) from the enclosing 'script block' - usually a function or the main script, but may also be a try or catch block, an Eval string or an Import file.
+</li><li> try&#160;: Starts the try part of a <tt>try..catch</tt> block. See <a href="/index.php/Control_structures" title="Control structures">Control structures</a> for details.
+</li><li> catch&#160;: Starts the catch part of a <tt>try..catch</tt> block. See <a href="/index.php/Control_structures" title="Control structures">Control structures</a> for details.
+</li></ul>
+<p>The following keyword is a special <a href="#Identifiers">identifier</a> (ie variable):
+</p>
+<ul><li> last&#160;: The special <i>last</i> variable available on any scope for implicit assignment (see below in <a href="#Expressions_and_Statements">Expressions and Statements</a> for details).
+</li></ul>
+<p>The following keywords are special <a href="#Literals">literals</a> (ie constants):
+</p>
+<ul><li> true&#160;: Boolean constant denoting a positive truth value (a true statement).
+</li><li> false&#160;: Boolean constant denoting a negative truth value (a false statement).
+</li><li> yes&#160;: Same as true.
+</li><li> no&#160;: Same as false.
+</li></ul>
+<p>The following keywords are used only inside arguments lists of function declarations to declare the <i>type</i> of arguments:
+</p>
+<ul><li> clip&#160;: The function argument following the keyword is a video clip.
+</li><li> int&#160;: The function argument following the keyword is an integer.
+</li><li> float&#160;: The function argument following the keyword is a floating point number.
+</li><li> string&#160;: The function argument following the keyword is a character string.
+</li><li> bool&#160;: The function argument following the keyword is a boolean (true/false) variable.
+</li><li> val&#160;: The function argument following the keyword can be of <b>any</b> type (ie any of the above types).
+</li></ul>
+<h3> <span class="mw-headline" id="Identifiers"> Identifiers </span></h3>
+<p>Identifiers, as the term suggests, are specific and unique names that you use in your script to refer to distinct entities. In AviSynth language identifiers are used to <i>name</i> the following types of entities:
+</p>
+<ul><li> <a href="/index.php/Script_variables" title="Script variables">Variables</a>&#160;: A variable is a symbolic placeholder for a value that can be read and changed (as a result of an assignment) many times during script execution.
+</li><li> Functions&#160;: A function is a piece of code that performs a specific computation and returns its result to the caller.
+</li></ul>
+<p>Thus, whenever you need in your script to refer to a variable or function, either <a href="/index.php/Internal_functions" title="Internal functions">built-in</a> or <a href="/index.php/User_defined_script_functions" title="User defined script functions">user-defined</a> you have to use an identifier. Bear in mind that since AviSynth <i>ignores case</i>, your identifiers should be unique in a  <b>case-insensitive</b> manner. 
+</p><p>For example, the following is probably an error:
+</p>
+<pre>MyClip = <a href="/index.php/AviSource" title="AviSource">AviSource</a>("clip1.avi")
+myclip = AviSource("clip2.avi")    # oops! these two lines assign to the *same* variable
+</pre>
+<p>while this is correct:
+</p>
+<pre>MyClip = AviSource("clip1.avi")
+YourClip = AviSource("clip2.avi")
+</pre>
+<h3> <span class="mw-headline" id="Literals"> Literals </span></h3>
+<p>Literals are all the constant (ie specific) values that you use in your scripts. For instance, all the tokens that appear at the right side of the assignment operator (the "=" character) in the examples below are literals:
+</p>
+<pre>a_num = 123
+another_num = 2.456
+</pre>
+<pre>a_string = "this is a string literal"
+</pre>
+<pre>another_string = """this is a multiline
+       string literal. Note that the 2nd line has leading spaces (which are included)
+while this line has not. Also newlines are included in this type
+       of strings"""
+</pre>
+<pre>a_boolean = true
+</pre>
+<p>As you can see, literals can be of any type (except clips; currently AviSynth does not have clip-type literals). The thing that differentiates them from identifiers is that they are not names that hold a value but bare values. 
+</p>
+<h3> <span class="mw-headline" id="Punctuation"> Punctuation </span></h3>
+<p>As said before, this generic term comprises all tokens with specific, standard meaning for the AviSynth language that are too short to be considered keywords. The tokens that are bundled under this catch-all category are:
+</p>
+<ul><li> <a href="/index.php/Operators" title="Operators">operators</a>: Operators apply an operation to one or more entities (and allow to retrieve the result of the operation); this is the reason that they are named that way. 
+</li></ul>
+<dl><dd> In essence operators are mini-functions that are defined in the script grammar with a more user-friendly syntax (for instance, instead of calling <tt>Add(a, b)</tt> it is easier to write <tt>a + b</tt>). 
+</dd><dd> Due to their significance in the AviSynth language operators are documented in a <a href="/index.php/Operators" title="Operators">separate page</a>. They are just listed here for completeness:
+<ul><li> Assignment: =
+</li><li> Sign and common math operations: + , - , * , / ,&#160;% , ++ (the last is for clips only)
+</li><li> Comparisons: ==,&#160;!= , &lt;&gt; , &lt; , &gt; , &lt;= , &gt;= 
+</li><li> Boolean operations:&#160;! , &amp;&amp; , || 
+</li><li> Ternary operation (if...else):&#160;?:
+</li></ul>
+</dd></dl>
+<ul><li> Grouping / ordering tokens. These include:
+</li></ul>
+<dl><dd><ul><li> The comma character [<b>,</b>]: For separating arguments in function argument lists only.
+</li><li> The dot character [<b>.</b>]: When successive calls to functions are chained together with the use of the OOP notation.
+</li><li> The parenthesis, opening and closing [<b>()</b>]: For grouping expressions into a single unit. Also for grouping arguments of a function declaration or call.
+</li><li> The (curly) brackets [<b>{}</b>]: For grouping multiple statements in a single <i>block</i> of code (currently: function bodies and <tt>try...catch</tt> blocks only).
+</li></ul>
+</dd></dl>
+<h2> <span class="mw-headline" id="Expressions_and_Statements"> Expressions and Statements </span></h2>
+<p>The third layer of grammar rules - after whitespace has been handled and tokens have been identified and distributed to the available categories (keywords, identifiers, etc.) - concerns the grouping of tokens in higher-level structures of the grammar: expressions and statements. A little terminology is necessary at this point to clarify the difference between them.
+</p>
+<ul><li> Expressions are groupings of tokens that perform a computation and return a value. They form a distinct part of either a larger enclosing expression or a statement.
+</li><li> Statements are the smallest standalone element of an AviSynth script; in other words a statement is a single unit of script code (in the case of AviSynth language, this is typically a line of script code).
+</li></ul>
+<p>Having made this distinction, lets see each one in more detail at the sections that follow.
+</p>
+<h3> <span class="mw-headline" id="Expressions"> Expressions </span></h3>
+<p>Expressions are the first step in the creation of the higher-level grammar constructs. They combine tokens in order to <i>compute a new value</i> from old ones and deliver this new value to either a surrounding expression or directly to an even higher-level construct, ie a statement. 
+</p><p>A few examples will help to fully understand the concepts presented above:
+</p>
+<pre># 10 is a literal; 
+# it is also an expression; a grouping can have just 1 element
+a = 10
+
+# a + 7 is an expression; so is (a + 7) / 5
+b = (a + 7) / 5
+
+# b &gt; 0, 12, 25 are expressions (see 1st line); 
+# [b &gt; 0&#160;? 12&#160;: 25] is also an expression
+c = b &gt; 0&#160;? 12&#160;: 25
+
+# BlankClip(...) below is an expression; 
+# so is Trim(...)
+<a href="/index.php/Trim" title="Trim">Trim</a>(<a href="/index.php/BlankClip" title="BlankClip">BlankClip</a>(width=b, height=c, pixel_type="<a href="/index.php/RGB32" title="RGB32">RGB32</a>"), 0, a)
+
+# all the above lines of code are statements
+</pre>
+<p>Most of the time the result of an expression will be a video clip; however an expression's result can be of any type supported by the scripting language (clip, int, float, bool, string) and this is how utility functions such as <a href="/index.php/Internal_functions" title="Internal functions">internal script functions</a> operate.
+</p><p>Combining all information presented above, we can now see that an AviSynth <i>expression</i> typically has one of these forms (with square brackets, ([]), we enclose optional elements, with the vertical bar character, (|), we separate alternatives, with the pound character, (#), we enclose comments): 
+</p>
+<ul><li> <i>Literal</i>, ie:
+</li></ul>
+<pre>numeric_constant
+| string_constant
+| bool_constant
+</pre>
+<p>The value of the <i>expression</i> is the value of the constant.  
+</p>
+<ul><li> <i>Identifier</i>, ie:
+</li></ul>
+<pre>variable_name 
+| <a href="/index.php/Clip_properties" title="Clip properties">clip_property</a>
+| function_name                                  # without (args) #
+</pre>
+<p>The value of the expression is the value returned by <a href="/index.php/Clip_properties" title="Clip properties">clip properties</a> or contained inside <a href="/index.php/Script_variables" title="Script variables">script variables</a> (which must have been previously initialized).
+</p>
+<ul><li> <i>Expression</i>, ie:
+</li></ul>
+<pre>[ + | - |&#160;! ] expression                         # unary operator expression #
+| ( expression )                                 # expression inside parentheses #
+| expression-1 operator expression-2             # binary operator expression #
+| bool_expression&#160;? expression-1&#160;: expression-2  # the ternary operator #
+| function_name[ ( args ) ]                      # function call #
+| expression.function_name[ ( args ) ]           # OOP notation #
+</pre>
+<p>The value of the expression is either the result of the computation of the sub-expressions or the return value of the function_name call.  
+</p><p>Looking a bit closer at the possible expression alternatives, the following notes can be made:
+</p>
+<ul><li> The first three cases show that one can manipulate expressions using all of the usual arithmetic and logical <a href="/index.php/Operators" title="Operators">operators</a> (from C) as you'd expect on ints, floats, vals, and bools.
+</li></ul>
+<dl><dd><ul><li> Strings can be concatenated with '+'.  
+</li><li> The following operators are also defined on video clips: 
+</li></ul>
+</dd></dl>
+<pre>  a + b   
+  # is equivalent to:
+  <a href="/index.php/Splice" title="Splice">UnalignedSplice</a>(a, b) 
+</pre>
+<dl><dd><dl><dd> and:
+</dd></dl>
+</dd></dl>
+<pre>  a ++ b
+  # is equivalent to:
+  <a href="/index.php/Splice" title="Splice">AlignedSplice</a>(a, b)
+</pre>
+<ul><li> The fourth case shows that one can execute code conditionally with the ternary operator.
+</li><li> The fifth case shows that a function call is, from the grammar's perspective, a special type of expression.
+</li><li> The sixth case shows <b>OOP notation</b>, an alternate syntax for chaining function calls, which is equivalent to:
+</li></ul>
+<pre>  function_name(expression, args)
+</pre>
+<h3> <span class="mw-headline" id="Statements"> Statements </span></h3>
+<p>Statements are the smallest standalone element of an AviSynth script/ Statements do not compute a value; <i>they are evaluated for their side effects</i> (which are most of the time the assignment of a value computed by an expression to a <a href="/index.php/Script_variables" title="Script variables">variable</a>).
+</p><p>Statements are grouped together to form a script. An AviSynth script is simply the aggregate of a number of statements.
+</p><p>All statements in AviSynth scripting language have one of these forms (with square brackets, ([]), we enclose optional elements, with the vertical bar character, (|), we separate alternatives, with the pound character, (#), we enclose comments): 
+</p>
+<pre>[ global ] variable_identifier = expression
+| [ return ] expression
+| try_catch_block
+| function_declaration
+</pre>
+<p>For each specific type of statement, the following notes can be made:
+</p>
+<ul><li> In the first case, <i>expression</i> is evaluated and the result is assigned to an identifier. The identifier can only identify a variable, either local or global (if the optional <tt>global</tt> keyword is present). That is you can only assign to <a href="/index.php/Script_variables" title="Script variables">variables</a>. Hence the name <i>variable_identifier</i>. 
+</li></ul>
+<ul><li> In the second case, <i>expression</i> is evaluated and the result is used as follows:
+</li></ul>
+<dl><dd><ul><li> If the <tt>return</tt> keyword is present or the statement is the last in its script block, it is used as the "return value" of the active script block - that is, either a function or the entire script. In the latter case, the return value is typically the video clip that will be seen by the application which opens the AVS file.
+</li><li> Otherwise, if the result is a clip, it is assigned to the special variable <tt>last</tt>. If the result is not a clip, it is simply discarded. 
+</li></ul>
+</dd></dl>
+<p>The last two cases are the only <i>compound statements</i> supported by AviSynth script language. They are presented in detail in the section that follows.
+</p>
+<h3> <span class="mw-headline" id="Compound_Statements"> Compound Statements </span></h3>
+<p>A compound statement is a block of statements that is considered a single unit of code (ie statement). Thus a compound statement is a multiline statement. As we saw, AviSynth supports two types of compound statements: the <i>try_catch_block</i> and <i>function_declaration</i>.
+</p>
+<ul><li> The <i>try_catch_block</i> statement has the following form:
+</li></ul>
+<pre>try {                         # the try part is always executed #
+  [ statement                 # you can put as many statements as you want #
+    ...
+    statement ]               # an empty block is allowed (but not very useful!) #
+}
+catch (variable_identifier) { # catch part is executed only if an error occurs in try part #
+  [ statement                 # you can put as many statements as you want #
+    ... 
+    statement ]               # an empty block is allowed and causes the error to be ignored #
+}
+</pre>
+<dl><dd> It implements the <tt>try..catch</tt> <a href="/index.php/Control_structures" title="Control structures">control structure</a>. See there for details.
+</dd></dl>
+<ul><li> The <i>function_declaration</i> statement has the following form:
+</li></ul>
+<pre>function identifier( [ argument_list ] )
+/* from v2.60 you can also put comments here */
+{
+  [ statement                 # you can put as many statements as you want #
+    ...
+    statement ]               # an empty function is allowed (but not very useful!) #
+}
+</pre>
+<dl><dd> It declares a <a href="/index.php/User_defined_script_functions" title="User defined script functions">user-defined function</a> and makes it available for calling to the rest of script code, by using the <i>identifier</i> as the name of the function to be called.
+</dd></dl>
+<dl><dd> The optional <i>argument_list</i> (yes, you can have functions without arguments) declares the type and name of function's arguments, as well as whether they are required or are optional. Optional arguments are also called <i>named arguments</i>, because you can supply them by name in a function call. It has the following form: 
+</dd></dl>
+<pre>argument-1 , ... , argument-K , optional_argument-K+1 , ... , optional_argument-N
+</pre>
+<dl><dd> <i>argument-i</i> (i = 1 to K) and <i>optional_argument-j</i> (j = K + 1 to N) have the following forms (again, with square brackets, ([]), we enclose optional elements, with the vertical bar character, (|), we separate alternatives, with the pound character, (#), we enclose comments), respectively:
+</dd></dl>
+<pre>[ type_keyword ] identifier     # (normal) argument
+[ type_keyword ] "identifier"   # optional argument    
+</pre>
+<p>As you can see, optional arguments distinguish from (normal) arguments in that they are enclosed in double quotation marks. In a function call you can refer to an optional argument as: <i>identifier</i> = value. You can also refer to in the normal way as if it was a normal, positional argument.
+</p><p>Three more things to note are the following:
+</p>
+<ul><li> Once you declare an optional argument, all subsequent arguments <i>must</i> also be declared optional.
+</li><li> If you don't supply the type of the argument in the declaration (ie one of the type <a href="#Keywords">keywords</a> presented above), the argument is of the <tt>val</tt> type. That is it can be of any type. Consequently in the body of the function you have to query for its type, if you want your code to be robust.
+</li><li> Function declarations can be written in any order and at any point in the script where a statement is allowed, independently of where the functions themselves are called. The presence of the declaration itself does not interfere with the order of script execution or its result. However, the usual convention is to group functions together at the start of the script.
+</li></ul>
+<p>A few examples will help to clarify things:
+</p>
+<pre>function MyFunc1() {                 # a function with no arguments
+    ...
+}
+
+function MyFunc2(clip c, int n) {    # a function with two (normal) arguments
+    ...
+}
+
+function MyFunc3(clip c, string "text", bool "invert") {
+    ...                              # a function with one argument and two optional arguments
+}                                    # if they are not supplied, it uses some default values
+
+function MyFunc4(clip "c", bool "invert, int "n") {
+    ...                              # you can declare a function with all arguments optional
+}
+
+function MyFunc5(clip clp, effect, "text") {
+    ...                              # a function with two normal and one optional argument
+}                                    # the last two arguments are of val (ie any) type
+...
+f = MyFunc1()
+g = MyFunc2(<a href="/index.php/ColorBars" title="ColorBars">ColorBars</a>(), 6)      # all normal arguments *must* be supplied
+...
+h = MyFunc3(g, "some text", false)   # you can supply optional arguments as if they were normal
+i = MyFunc3(g)                       # but you can omit them also entirely
+j = MyFunc3(g, invert=true)          # or you can pass some of them by name
+...
+k = MyFunc4()                        # MyFunc4 will use defaults for all its arguments
+l = MyFunc4(g, n=12)                 # you can supply some optional arguments as positional
+...                                  # and some by name
+...
+m = MyFunc5(g, 25, "test")           # you can pass any type in the last two arguments of MyFunc5
+n = MyFunc5(g, "dissolve", text=m)   # this can be both flexible *AND* dangerous if you don't check
+o = MyFunc5(g, g)                    # the type of the arguments; you can of course omit optional ones
+</pre>
+<h2> <span class="mw-headline" id="Closing_Remarks"> Closing Remarks </span></h2>
+<p>The set of rules for identifying and grouping tokens into higher-level structures (ie the AviSynth Grammar) ends with statements. An AviSynth script is simply the aggregate of a number of statements. In it you place as many statements as required to do the job. The grammar does not care how you do so. However, there are a couple of things that are worth noting here to make developing scripts easier:
+</p>
+<ul><li> The return value of the entire script is either (cf. the second case of <a href="#Statements">Statements</a> section above):
+</li></ul>
+<dl><dd><ul><li> The result of a <tt>return expression</tt> statement anywhere in the main script block (ie not in a function body or inside a <tt>try...catch</tt> block); all statements below that one will be ignored. As a shorthand, a bare expression as the final statement is treated as if the keyword <b>return</b> was present.
+</li><li> If there is no (explicit or implicit) return, a void value (ie a value of the 'undefined' type) is returned. For example, this will happen if the last statement is an assignment.
+</li></ul>
+</dd></dl>
+<ul><li> AviSynth provides a mechanism to include other scripts inside the current script block: the <a href="/index.php/Import" title="Import">Import</a> function. The result of calling Import is the same as if you have typed the entire imported script text at the point of the function call. 
+</li></ul>
+<ul><li> Making self-contained scripts and using <a href="/index.php/Import" title="Import">Import</a> to include them in you scripts is a way to organise and <i>reuse</i> your code (for example, your favorite <a href="/index.php/User_defined_script_functions" title="User defined script functions">used-defined functions</a>). 
+</li></ul>
+<h2> <span class="mw-headline" id="The_Full_Avisynth_Grammar_-_For_Language_Lawyers"> The Full Avisynth Grammar - For Language Lawyers </span></h2>
+<p>For those readers that prefer a formal definition of the AviSynth script language's grammar, there is one available (though <b>not</b> "officially-endorsed" at the moment) in <a href="/index.php/Formal_AviSynth_grammar" title="Formal AviSynth grammar">Extended Backus-Naur form</a> (or EBNF for short).
+</p>
+<!-- 
+NewPP limit report
+Preprocessor node count: 104/1000000
+Post-expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key avisynthnl:pcache:idhash:382-0!*!0!!en!*!* and timestamp 20161114182452 -->
+</div><div class="printfooter">
+Retrieved from "<a href="http://avisynth.nl/index.php?title=The_full_AviSynth_grammar&amp;oldid=760">http://avisynth.nl/index.php?title=The_full_AviSynth_grammar&amp;oldid=760</a>"</div>
+		<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks"><a href="/index.php/Special:Categories" title="Special:Categories">Categories</a>: <ul><li><a href="/index.php/Category:AviSynth_Syntax" title="Category:AviSynth Syntax">AviSynth Syntax</a></li><li><a href="/index.php/Category:Scripting_Reference" title="Category:Scripting Reference">Scripting Reference</a></li></ul></div></div>		<!-- end content -->
+				<div class="visualClear"></div>
+	</div>
+</div></div>
+<div id="column-one">
+	<div id="p-cactions" class="portlet">
+		<h5>Views</h5>
+		<div class="pBody">
+			<ul>
+				<li id="ca-nstab-main" class="selected"><a href="/index.php/The_full_AviSynth_grammar" title="View the content page [c]" accesskey="c">Page</a></li>
+				<li id="ca-talk" class="new"><a href="/index.php?title=Talk:The_full_AviSynth_grammar&amp;action=edit&amp;redlink=1" title="Discussion about the content page [t]" accesskey="t">Discussion</a></li>
+				<li id="ca-viewsource"><a href="/index.php?title=The_full_AviSynth_grammar&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></li>
+				<li id="ca-history"><a href="/index.php?title=The_full_AviSynth_grammar&amp;action=history" title="Past revisions of this page [h]" accesskey="h">History</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="portlet" id="p-personal">
+		<h5>Personal tools</h5>
+		<div class="pBody">
+			<ul>
+				<li id="pt-login"><a href="/index.php?title=Special:UserLogin&amp;returnto=The_full_AviSynth_grammar" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in / create account</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="portlet" id="p-logo">
+		<a title="Visit the main page" style="background-image: url(/skins/common/images/avisynth-logo-gears-mod.png);" href="/index.php/Main_Page"></a>
+	</div>
+	<script type="text/javascript"> if (window.isMSIE55) fixalpha(); </script>
+	<div class="generated-sidebar portlet" id="p-navigation">
+		<h5>Navigation</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-mainpage-description"><a href="/index.php/Main_Page" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+				<li id="n-portal"><a href="/index.php/Avisynth_wiki:Community_portal" title="About the project, what you can do, where to find things">Community portal</a></li>
+				<li id="n-recentchanges"><a href="/index.php/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r">Recent changes</a></li>
+				<li id="n-randompage"><a href="/index.php/Special:Random" title="Load a random page [x]" accesskey="x">Random page</a></li>
+				<li id="n-help"><a href="/index.php/Help:Contents" title="The place to find out">Help</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="generated-sidebar portlet" id="p-community">
+		<h5>community</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-currentevents"><a href="/index.php/Avisynth_wiki:Current_events" title="Find background information on current events">Current events</a></li>
+				<li id="n-Old-Wiki"><a href="http://avisynth.nl/index.php/Template:OldWiki" rel="nofollow">Old Wiki</a></li>
+				<li id="n-Doom9-Forum"><a href="http://forum.doom9.org" rel="nofollow">Doom9 Forum</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="generated-sidebar portlet" id="p-in_other_languages">
+		<h5>in other languages</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Deutsch-.28Ge.29"><a href="/index.php/Main_Page/de">Deutsch (Ge)</a></li>
+				<li id="n-Espa.C3.B1ol-.28Es.29"><a href="/index.php/Main_Page/es">Español (Es)</a></li>
+				<li id="n-Fran.C3.A7ais-.28Fr.29"><a href="/index.php/Main_Page/fr">Français (Fr)</a></li>
+				<li id="n-.E6.97.A5.E6.9C.AC.E8.AA.9E-.28Ja.29"><a href="http://www.avisynth.info" rel="nofollow">日本語 (Ja)</a></li>
+				<li id="n-Polski-.28Pl.29"><a href="/index.php/Strona_g%C5%82%C3%B3wna">Polski (Pl)</a></li>
+				<li id="n-.D0.A0.D1.83.D1.81.D1.81.D0.BA.D0.B8.D0.B9-.28Ru.29"><a href="/index.php/Main_Page/ru">Русский (Ru)</a></li>
+			</ul>
+		</div>
+	</div>
+	<div id="p-search" class="portlet">
+		<h5><label for="searchInput">Search</label></h5>
+		<div id="searchBody" class="pBody">
+			<form action="/index.php" id="searchform">
+				<input type='hidden' name="title" value="Special:Search"/>
+				<input type="search" name="search" title="Search Avisynth wiki [f]" accesskey="f" id="searchInput" />
+				<input type="submit" name="go" value="Go" title="Go to a page with this exact name if exists" id="searchGoButton" class="searchButton" />&#160;
+				<input type="submit" name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton" />
+			</form>
+		</div>
+	</div>
+	<div class="portlet" id="p-tb">
+		<h5>Toolbox</h5>
+		<div class="pBody">
+			<ul>
+				<li id="t-whatlinkshere"><a href="/index.php/Special:WhatLinksHere/The_full_AviSynth_grammar" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+				<li id="t-recentchangeslinked"><a href="/index.php/Special:RecentChangesLinked/The_full_AviSynth_grammar" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+				<li id="t-specialpages"><a href="/index.php/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+				<li><a href="/index.php?title=The_full_AviSynth_grammar&amp;printable=yes" rel="alternate">Printable version</a></li>
+				<li id="t-permalink"><a href="/index.php?title=The_full_AviSynth_grammar&amp;oldid=760" title="Permanent link to this revision of the page">Permanent link</a></li>
+			</ul>
+		</div>
+	</div>
+</div><!-- end of the left (by default at least) column -->
+<div class="visualClear"></div>
+<div id="footer">
+	<div id="f-poweredbyico">
+		<a href="http://www.mediawiki.org/"><img src="/skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+	</div>
+	<ul id="f-list">
+		<li id="lastmod"> This page was last modified on 9 May 2013, at 22:33.</li>
+		<li id="viewcount">This page has been accessed 18,260 times.</li>
+		<li id="privacy"><a href="/index.php/Avisynth_wiki:Privacy_policy" title="Avisynth wiki:Privacy policy">Privacy policy</a></li>
+		<li id="about"><a href="/index.php/Avisynth_wiki:About" title="Avisynth wiki:About">About Avisynth wiki</a></li>
+		<li id="disclaimer"><a href="/index.php/Avisynth_wiki:General_disclaimer" title="Avisynth wiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+</div>
+</div>
+<script>if(window.mw){
+	mw.loader.load(["mediawiki.user", "mediawiki.util", "mediawiki.page.ready", "mediawiki.legacy.wikibits", "mediawiki.legacy.ajax"]);
+}
+</script>
+<script>if(window.mw){
+	mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"monobook","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,
+	"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;mw.user.tokens.set({"editToken":"+\\","watchToken":false});;mw.loader.state({"user.options":"ready","user.tokens":"ready"});
+	
+	/* cache key: avisynthnl:resourceloader:filter:minify-js:4:99acc2c3ab516bb21085c70c2195f3df */
+}
+</script><!-- Served in 0.112 secs. --></body></html>

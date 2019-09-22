@@ -1,0 +1,37 @@
+<!-- https://sourceforge.net/projects/aelfornotepad/ -->
+<NotepadPlus>
+    <UserLang name="AEL" ext="ael">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="yes" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;00&quot;00</Keywords>
+            <Keywords name="Folder+"></Keywords>
+            <Keywords name="Folder-"></Keywords>
+            <Keywords name="Operators">&quot; $ &amp; ( ) , : ; @ [ ] ^ _ { | } ~ +</Keywords>
+            <Keywords name="Comment">1/* 2*/ 0//</Keywords>
+            <Keywords name="Words1">abstract&#x000D;&#x000A; context&#x000D;&#x000A; macro&#x000D;&#x000A; globals&#x000D;&#x000A; ignorepat&#x000D;&#x000A; switch&#x000D;&#x000A; if&#x000D;&#x000A; ifTime&#x000D;&#x000A; else&#x000D;&#x000A; random&#x000D;&#x000A; goto&#x000D;&#x000A; jump&#x000D;&#x000A; local&#x000D;&#x000A; return&#x000D;&#x000A; break&#x000D;&#x000A; continue&#x000D;&#x000A; regexten&#x000D;&#x000A; hint&#x000D;&#x000A; for&#x000D;&#x000A; while&#x000D;&#x000A; case&#x000D;&#x000A; pattern&#x000D;&#x000A; default&#x000D;&#x000A; catch&#x000D;&#x000A; switches&#x000D;&#x000A; eswitches&#x000D;&#x000A; includes&#x000D;&#x000A;</Keywords>
+            <Keywords name="Words2">=&gt;</Keywords>
+            <Keywords name="Words3"></Keywords>
+            <Keywords name="Words4">_ * #</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF8040" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FF0000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000A0" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="E10005" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="10" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="10" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="0000A0" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="B301FE" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

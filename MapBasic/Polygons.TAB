@@ -1,0 +1,16 @@
+!table
+!version 900
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 4
+    PolygonType Char (20) ;
+    DateAndTime DateTime ;
+    Officer Char (20) ;
+    Remark Char (254) ;
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "76dc0a1c-3e4c-449e-ac89-1de00c029dd3"
+end_metadata

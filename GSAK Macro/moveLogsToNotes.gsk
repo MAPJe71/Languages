@@ -1,0 +1,54 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Move user log files to Notes area
+# MacAuthor = javapgmr
+# MacFileName =  MoveLogToNotes.gsk	
+# MacUrl =
+#*******************************************
+GOSUB Name=Declare
+Goto position=top
+$ThisRecord = 0
+WHILE not($_EoL)
+  $ThisRecord = $ThisRecord + 1
+  # only show status every 10 records
+  IF frac($ThisRecord/10) = 0
+      $status = "Record: " + "$ThisRecord" + " of " + "$_Count"
+      ShowStatus msg="$status"
+  ENDIF
+  
+	IF IsEmpty("%userLog")
+	ELSE
+
+		If $d_UserNote <> ""
+		      $strUserNote = Extract($d_UserNote, "$~", 1)
+		      $strUserLog = Extract($d_UserNote, "$~", 2)
+		EndIf
+	
+		$strUserNote = $strUserNote + $_NewLine + "%userLog"	
+		
+		If $strLogs <> "" and $strLogs <> $strUserLog
+		    $d_UserNote= $strUserNote + "$~" + $strLogs
+		EndIf
+		
+	EndIF
+
+  GOTO Position=next
+ENDWHILE
+
+#*******************************************************
+#   Variable declarations for
+#   moveLogsToNotes.gsk
+#
+#   Generated 09/22/2007 7:12:21 PM on GSAKVariables.gsk Rev V0.20 B11
+#
+#*******************************************************
+
+
+BEGINSUB Name=Declare
+Option Explicit=Yes
+
+Declare Var=$status Type=String
+Declare Var=$strUserLog Type=String
+Declare Var=$strUserNote Type=String
+Declare Var=$ThisRecord Type=Numeric
+ENDSUB

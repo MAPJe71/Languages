@@ -1,0 +1,10 @@
+|This is a dll script, which does not have any sections.
+function extern long func1(long var1)
+{
+    |do something
+}
+
+function void funct2(long var2)
+{
+    |do something
+}

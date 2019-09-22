@@ -1,0 +1,183 @@
+'************************************************************************************
+'**  SearchPoint
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		2 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub SearchARegion
+Declare Sub OpenTable
+Declare Sub About
+Declare Sub End_Program
+
+'Function to check whether a table is open or not
+Declare Function TableIsOpen (ByVal sTabName As String) As Logical
+
+Define AppName "SearchPoint Sample Code"
+Define AppNameMenu "&SearchPoint"
+Define AppNameToolbar "SearchPoint"
+Define AppVersion 0.8
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Global sTable as String
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+	
+	Create ButtonPad AppNameToolbar as
+		ToolButton
+		Icon 8001 File "Bird.dll"
+		HelpMsg "Fly to France\nBird"
+		DrawMode DM_CUSTOM_POINT
+		Cursor 8001 File "Bird.dll"
+		Calling SearchARegion
+	Show
+	
+	sTable = "FR_Départements2006"
+
+	If Not TableIsOpen(sTable) Then
+		Call OpenTable
+	End If
+	
+End Sub Main
+
+'*********************************************************************************************
+Sub SearchARegion
+'*********************************************************************************************
+
+	Dim fX, fY As Float,
+		i, iFound, iRowID, iWinID As Integer,
+		sTableClicked As String 
+
+		iWinID = FrontWindow()
+
+	If Not TableIsOpen(sTable) Then
+		Call OpenTable
+	End If
+	
+	'Determine the point where the user clicked
+	fX = CommandInfo(CMD_INFO_X)
+	fY = CommandInfo(CMD_INFO_Y)
+
+	iFound = SearchPoint(iWinID, fX, fY)
+
+	'Process the search results 
+	For i = 1 to iFound
+		'Get the name of the table(s) where the user clicked
+		sTableClicked = SearchInfo(i, SEARCH_INFO_TABLE)
+		'Get the RowID number of the object that was clicked
+		iRowID = SearchInfo(i, SEARCH_INFO_ROW)
+
+		If sTableClicked = sTable Then
+			Select * From sTableClicked Where RowID = iRowID into TmpSel Noselect
+			Note "You clicked in" +  Chr$(10) + "Département: " + TmpSel.Nom_Département +  Chr$(10) + "Région: " + TmpSel.Nom_Région
+			Close Table TmpSel
+		End If 
+	Next
+
+
+End Sub SearchARegion
+
+'*********************************************************************************************
+Sub OpenTable
+'*********************************************************************************************
+
+	OnError Goto ErrorHandler
+	
+	Close All Interactive
+	
+	Open Table ApplicationDirectory$() + "Tables\" + sTable + ".TAB" Interactive
+	Map From sTable
+		Position (0,0) Units "in"
+		Width 5 Units "in" Height 5 Units "in" 
+	Set Map Window FrontWindow() Zoom Entire
+	
+	Exit Sub
+
+	ErrorHandler:
+		Note Error$()
+
+End Sub OpenTable
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to use the SearchPoint()" Position 3dW, 1dH
+		Control StaticText title "and SearchInfo() function in your MapBasic application." Position 3dW, 2dH
+		Control StaticText title "Click the Bird Button on the SearchPoint Toolbar to see how" Position 3dW, 4dH
+		Control StaticText title "it works:" Position 3dW, 5dH
+		Control StaticText title "- The cursor becomes a bird when moved over the Map window" Position 3dW, 6dH
+		Control StaticText title "- Click on a French department and a dialog box will tell you" Position 3dW, 7dH
+		Control StaticText title "  where you clicked." Position 3dW, 8dH
+		Control StaticText title "Please note: the bird is specifically searching for map objects" Position 3dW, 10dH
+		Control StaticText title "in the table FR_Départements2006. If you click on map objects" Position 3dW, 11dH
+		Control StaticText title "in other tables, the bird will not do anything." Position 3dW, 12dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 35dW, 15dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************
+Function TableIsOpen (
+	ByVal sTabName As String)
+As Logical
+
+	Dim iCounter, iNumberOfTables As Integer
+
+	iNumberOfTables = NumTables()
+	If iNumberOfTables = 0 Then
+		Goto no_tables_open
+	End If
+
+	For iCounter = 1 to iNumberOfTables
+		If TableInfo(iCounter, TAB_INFO_NAME) = sTabName Then
+			TableIsOpen = TRUE
+			Exit Function
+		End If
+	Next
+
+	no_tables_open:
+	TableIsOpen = FALSE
+
+End Function
+
+'*********************************************************************************************

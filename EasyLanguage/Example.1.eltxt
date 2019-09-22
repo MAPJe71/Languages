@@ -1,0 +1,79 @@
+method double UpdateExitVaRShQTY(string StratDuration)
+    vars: double x;
+begin
+    return x;
+end;
+
+Method int SharesToBuy()
+    Vars: int XXX, string DurTrade, double StopOffsetVal;
+Begin
+    StopOffsetVal = 0;
+    If chkbxVaRSize.Checked Then
+    Begin
+        If cbxDurTgtsStop.Text <> " Not Set…" Then
+        Begin
+            DurTrade = cbxDurTgtsStop.Text;
+            Print("Trade Duration: " + DurTrade);
+            
+            Switch (DurTrade)
+            Begin
+                Case " Day Trade ": //Note: <sp>String<sp>
+                    If strtonum(cbxStpLossOffset.Text) <> 0 Then
+                    StopOffsetVal = ThisATR * strtonum(cbxStpLossOffset.Text) astype double; //Alt_DayATRStpLoss;
+                    Print("Day StopLoss Offset: " + cbxStpLossOffset.Text);
+                    
+                Case " Mini-Swing ":
+                    StopOffsetVal = ThisATR * strtonum(cbxStpLossOffset.Text) astype double; // Alt_MiniATRStpLoss;
+                    Print("Mini-Swing StopLoss Offset: " + cbxStpLossOffset.Text);
+                    
+                Case " Swing ":
+                    StopOffsetVal = ThisATR * strtonum(cbxStpLossOffset.Text) astype double; // Alt_SwingATRStpLoss;
+                    Print("Swing StopLoss Offset: " + cbxStpLossOffset.Text);
+            End;
+            Print("Computed StopOffset Value: " + numtostr(StopOffsetVal,2));
+            If StopOffsetVal <> 0 Then
+                XXX = Round((strtonum(updEntryShares.Text) astype double / StopOffsetVal), 0) astype int
+            Else 
+                XXX = 0 astype int;
+        End;
+    End
+    Else 
+        XXX = strtonum(updEntryShares.Text) astype int;
+    
+    Return XXX;
+End;
+
+Method void GAPEntryLogic()
+    Vars: double x;
+begin
+
+end;
+
+method double GetNextFTP(int UpDown, double RefMaxPrice, double RefMinPrice, out string FTPSelstr)
+    vars: double x;
+begin
+    return x;
+end;
+
+Method void ORState(out datetime BreakdownDT,
+                    out bool BreakdownFlag,
+                    out int BreakdownState,
+                    out datetime DTBreakout,
+                    out bool BreakoutFlag,
+                    out int BreakoutState,
+                    in double LastPrice,
+                    in double ORHigh,
+                    in double ORLow,
+                    in double ATRNow,
+                    in double ThisPcntATR )
+    vars: double x;
+begin
+
+end;
+
+Method bool Set2MinORState()
+    Vars: bool x;
+begin
+    return x;
+end;
+

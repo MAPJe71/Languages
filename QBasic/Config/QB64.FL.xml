@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+    <functionList>
+        <associationMap>
+            <association id=    "qb64_basic"          userDefinedLangName="QBasic/QB64"    />
+            <association id=    "qb64_basic"          ext=".bas"                           />
+            <association id=    "qb64_basic"          ext=".bi"                            />
+            <association id=    "qb64_basic"          ext=".bm"                            />
+        </associationMap>
+        <parsers>
+            <!-- =============================================== [ QBasic / QB64 ] -->
+            <!-- Implemented by RhoSigma, 05/22/2017                               -->
+
+            <!--
+            |   Does match any active (not commented out) FUNCTION or SUB,
+            |   ie. every line starting with FUNCTION or SUB keyword (case ignored)
+            |   optionally with leading whitespace (to match also FUNCTIONs/SUBs in
+            |   indented DECLARE LIBRARY blocks). The match displayed in the function
+            |   list is the entire FUNCTION/SUB line as found in your source, ie. it
+            |   includes the argument list (if any) and a trailing comment (if any),
+            |   hence you can use the list not only for quick jumps to any function
+            |   in your source, but also as quick reference for the required arguments
+            |   and/or any special notes given in the trailing comment.
+            |   Additionally any "Folder in Comment" markers are included in the List.
+            \-->
+            <parser
+                displayName="QBasic/QB64"
+                id         ="qb64_basic"
+            >
+                <function
+                    mainExpr="(?mi)^[\x09|\x20]*(?:'~~~|FUNCTION|SUB)[\x09|\x20]+[\x09|\x20-\xff]*$"
+                />
+            </parser>
+        </parsers>
+    </functionList>
+</NotepadPlus>

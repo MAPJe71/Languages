@@ -1,0 +1,14 @@
+<Language name="Ruby" imagelistpath="">
+    <CommList param1="#" param2="" />
+    <CommList param1="//" param2="" />
+    <CommList param1="/\*" param2="\*/" />
+    <Group name="MODULE" subgroup="" icon="0" child="0" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^[\s\t]*module\s+" regexfunc="[\w]+" regexend="" bodybegin="" bodyend="" sep="" />
+    </Group>
+    <Group name="CLASS" subgroup="" icon="0" child="0" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^[\s\t]*class\s+" regexfunc="[\w]+" regexend="" bodybegin="" bodyend="" sep="" />
+    </Group>
+    <Group name="FUNCTION" subgroup="" icon="0" child="0" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^[\s\t]*def\s+" regexfunc="[\w\?!\.=]+" regexend="" bodybegin="" bodyend="" sep="" />
+    </Group>
+</Language>

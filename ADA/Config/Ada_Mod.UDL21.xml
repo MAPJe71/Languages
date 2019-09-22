@@ -1,0 +1,63 @@
+<!-- https://notepad-plus-plus.org/community/topic/17752/udl-folding-problems-in-ada/3 -->
+<UserLang name="ADA Mod" ext="a ada app" udlVersion="2.1">
+    <Settings>
+        <Global caseIgnored="yes" allowFoldOfComments="yes" foldCompact="no" forcePureLC="0" decimalSeparator="2" />
+        <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+    </Settings>
+    <KeywordLists>
+        <Keywords name="Comments">00-- 01 02 03 04</Keywords>
+        <Keywords name="Numbers, prefix1"></Keywords>
+        <Keywords name="Numbers, prefix2"></Keywords>
+        <Keywords name="Numbers, extras1"></Keywords>
+        <Keywords name="Numbers, extras2"></Keywords>
+        <Keywords name="Numbers, suffix1"></Keywords>
+        <Keywords name="Numbers, suffix2"></Keywords>
+        <Keywords name="Numbers, range"></Keywords>
+        <Keywords name="Operators1">. * : &lt; &gt; = / - + @ &quot; &apos; ( )</Keywords>
+        <Keywords name="Operators2">&quot;is new&quot; &quot;is array&quot; &quot;and then&quot; &quot;is access&quot;</Keywords>
+        <Keywords name="Folders in code1, open">is</Keywords>
+        <Keywords name="Folders in code1, middle">begin</Keywords>
+        <Keywords name="Folders in code1, close">end</Keywords>
+        <Keywords name="Folders in code2, open">#if then loop declare</Keywords>
+        <Keywords name="Folders in code2, middle">#else #elsif else elsif</Keywords>
+        <Keywords name="Folders in code2, close">#end end</Keywords>
+        <Keywords name="Folders in comment, open"></Keywords>
+        <Keywords name="Folders in comment, middle"></Keywords>
+        <Keywords name="Folders in comment, close"></Keywords>
+        <Keywords name="Keywords1">abort abstract accept access aliased all at body declare delay delta digits entry generic goto limited new of package pragma protected range requeue select separate tagged task terminate until</Keywords>
+        <Keywords name="Keywords2">when while with for others reverse loop case</Keywords>
+        <Keywords name="Keywords3">function procedure begin is</Keywords>
+        <Keywords name="Keywords4">exception raise</Keywords>
+        <Keywords name="Keywords5">return exit null</Keywords>
+        <Keywords name="Keywords6">array record constant renames subtype type use record</Keywords>
+        <Keywords name="Keywords7"></Keywords>
+        <Keywords name="Keywords8">in out</Keywords>
+        <Keywords name="Delimiters">00(type 00subtype) 01 02((EOL)) 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+    </KeywordLists>
+    <Styles>
+        <WordsStyle name="DEFAULT" fgColor="C0C0C0" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="COMMENTS" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="117702655" />
+        <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="NUMBERS" fgColor="0080C0" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="KEYWORDS2" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="KEYWORDS3" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS4" fgColor="FF8000" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS5" fgColor="FF8000" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS6" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS7" fgColor="FF0000" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="KEYWORDS8" fgColor="FF8000" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="OPERATORS" fgColor="FF8000" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="FOLDER IN CODE1" fgColor="FF0000" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="FOLDER IN CODE2" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="FOLDER IN COMMENT" fgColor="FF8000" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="0" />
+        <WordsStyle name="DELIMITERS1" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="1" nesting="117702655" />
+        <WordsStyle name="DELIMITERS2" fgColor="0000FF" bgColor="1D1D1D" fontName="" fontStyle="0" nesting="117702655" />
+        <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+    </Styles>
+</UserLang>

@@ -1,0 +1,428 @@
+-------------------------------------------------------------------------------
+----  DCLST_EX.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about DCLST_EX.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----            FROM                        Sec 3-E
+----    Conditions:
+----    Data types:
+----            ARRAY OF STRING             Sec 2
+----            BOOLEAN                     Sec 2
+----            DISP_DAT_T                  Sec 2
+----            FILE                        Sec 2
+----            INTEGER                     Sec 2
+----            STRING                      Sec 2
+----    Directives:
+----            ALPHABETIZE                 Sec 1
+----            COMMENT                     Sec 1
+----            INCLUDE                     Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            ADD_DICT                    Sec 3-B
+----            ACT_SCREEN                  Sec 4-I
+----            ATT_WINDOW_S                Sec 4-C
+----            CHECK_DICT                  Sec 3-B
+----            CLR_IO_STAT                 Sec 3-A,C
+----            CNV_STR_INT                 Sec 4-E
+----            DEF_SCREEN                  Sec 4-B
+----            DET_WINDOW                  Sec 4-I
+----            DISCTRL_LIST                Sec 4-G,H
+----            FORCE_SPMENU                Sec 4-A,B,C
+----            IO_STATUS                   Sec 3-A,
+----            ORD                         Sec 4-H
+----            READ_DICT                   Sec 4-E,F
+----            REMOVE_DICT                 Sec 4-I
+----            SET_FILE_ATR                Sec 4-G
+----            STR_LEN                     Sec 4-F
+----            UNINIT                      Sec 3-C
+----            WRITE_DICT                  Sec 4-D,H,I
+----    Statements:
+----            ABORT                       Sec 3-B
+----            CLOSE FILE                  Sec 4-I
+----            FOR...ENDFOR                Sec 4-F
+----            IF...THEN...ENDIF           Sec 3-A,B,C,D; 4-F,H,I
+----            OPEN FILE                   Sec 3-A; 4-H
+----            READ                        Sec 4-A,B,H
+----            REPEAT...UNTIL              Sec 4-H
+----            ROUTINE                     Sec 3-A,B,C,D,E
+----            SELECT...ENDSELECT          Sec 4-H
+----            WRITE                       Sec 3-A,B,C,D;4-A,I
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B,C,D;4
+----            CR                          Sec 4-A,B,C
+----            END                         Sec 3-A,B,C,D; 4-I
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+----    Predefined File Names:
+----            TPDISPLAY                   Sec 4-D,G,H,I
+----            TPFUNC                      Sec 4-D,H
+----            TPPROMPT                    Sec 4-D,H,I
+----            TPSTATUS                    Sec 4-D,I
+----    Devices Used:
+----            RD2U                        Sec 3-B
+----    Predefined Windows:
+----            ERR                         Sec 4-C
+----            T_ST                        Sec 4-C
+----            T_FU                        Sec 4-C
+----            T_PR                        Sec 4-C
+----            T_FR                        Sec 4-C
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM DCLST_EX
+    %COMMENT='DISCTRL_LIST '
+    %ALPHABETIZE
+    %NOLOCKGROUP
+    %INCLUDE DCLIST -- the include file from the dictionary DCLISTEG.UTX
+
+-------------------------------------------------------------------------------
+----  Section 2:  Variable Declarations
+-------------------------------------------------------------------------------
+VAR
+    exit_Cmnd    : INTEGER
+    act_pending  : INTEGER    -- decide if any action is pending
+    display_data : DISP_DAT_T -- information needed for DICTRL_LIST
+    done         : BOOLEAN    -- decides when to complete execution
+    Kb_file      : FILE       -- file opened to the TPKB
+    i            : INTEGER    -- just a counter
+    key          : INTEGER    -- which key was pressed
+    last_line    : INTEGER    -- number of last line of information
+    list_data    : ARRAY[20] OF STRING[40] -- exact string information
+    num_options  : INTEGER    -- number of items in list
+    old_screen   : STRING[4]  -- previously attached screen
+    status       : INTEGER    -- status returned from built-in call
+    str          : STRING[1]  -- string read in from teach pendant
+    Err_file     : FILE       -- err log file
+    Opened       : BOOLEAN    -- err log file open or not
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  Op_Err_File Declaration
+----                Open the error log file.
+-------------------------------------------------------------------------------
+Routine Op_Err_File
+Begin
+    Opened = false
+    Write TPPROMPT(CR,'Creating Auto Error File ..............')
+    OPEN FILE Err_File ('RW','RD2U:\D_LIST.ERR') -- open for output
+    IF (IO_STATUS(Err_File) <> 0 ) THEN
+        CLR_IO_STAT(Err_File)
+        Write TPPROMPT('*** USE USER WINDOW FOR ERROR OUTPUT ***',CR)
+    ELSE
+        Opened = TRUE
+    ENDIF
+End Op_Err_File
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  Chk_Add_Dct Declaration
+----                Check whether a dictionary is loaded.
+----                If not loaded then load in the dictionary.
+-------------------------------------------------------------------------------
+Routine Chk_Add_Dct
+Begin -- Chk_Add_Dct
+    -- Make sure 'DLST' dictionary is added.
+    CHECK_DICT('DLST',TPTSSP_TITLE,STATUS)
+    IF STATUS <> 0 THEN
+        Write TPPROMPT(CR,'Loading Required Dictionary.............')
+        ADD_DICT('RD2U:\DCLISTEG','DLST',DP_DEFAULT,DP_DRAM,STATUS)
+        IF status <> 0 THEN
+            WRITE TPPROMPT('ADD_DICT failed, STATUS=',STATUS,CR)
+            ABORT -- Without the dictionary this program can not continue.
+        ENDIF
+    ELSE
+        WRITE TPPROMPT ('Dictionary already loaded in system. ')
+    ENDIF
+End Chk_Add_Dct
+
+-------------------------------------------------------------------------------
+----  Section 3-C:  Log_Errors Declaration
+----                Log detected errors to a file to be reviewed later.
+-------------------------------------------------------------------------------
+ROUTINE Log_Errors(Out: FILE; Err_Str:STRING;Err_No:INTEGER)
+BEGIN
+    IF NOT Opened THEN -- If error log file not opened then write errors to
+                       -- screen
+        WRITE (Err_Str,Err_No,CR)
+    ELSE
+        IF NOT UNINIT(Out) THEN
+            CLR_IO_STAT(Out)
+            WRITE Out(Err_Str,Err_No,CR,CR)
+        ELSE
+            WRITE (Err_Str,Err_No, CR)
+        ENDIF
+    ENDIF
+END Log_Errors
+
+-------------------------------------------------------------------------------
+----  Section 3-D:  Chk_Stat Declaration
+----                Check the global variable, status.
+----                If not zero then log input parameter, err_str,
+----                to error file.
+-------------------------------------------------------------------------------
+ROUTINE Chk_Stat ( err_str: STRING)
+BEGIN -- Chk_Stat
+    IF( status <> 0) then
+        Log_Errors(Err_File, err_str,Status)
+    ENDIF
+END Chk_Stat
+
+-------------------------------------------------------------------------------
+----  Section 3-E:  TP_CLS Declaration
+-------------------------------------------------------------------------------
+ROUTINE TP_CLS FROM ROUT_EX
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- DCLST_EX
+
+-------------------------------------------------------------------------------
+---- Section 4-A: Perform Setup operations
+-------------------------------------------------------------------------------
+    TP_CLS -- Call routine to clear and force the TP USER menu to be visible
+    Write (' ***** Starting DISCTRL_LIST Example *****', CR, CR)
+    Chk_Add_Dct -- Call routine to check and add dictionary
+    Op_Err_File -- Call routine open error log file
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Define and Active a screen
+-------------------------------------------------------------------------------
+    DEF_SCREEN('LIST', 'TP', status) -- Create/Define a screen called LIST
+    Chk_Stat ('DEF_SCREEN LIST') -- Verify DEF_SCREEN was successful
+    ACT_SCREEN('LIST', old_screen, status) -- activate the LIST screen that
+                                           -- that was just defined.
+    Chk_Stat ('ACT_SCREEN LIST') -- Verify ACT_SCREEN was successful
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Attach windows to the screen
+-------------------------------------------------------------------------------
+    -- Attach the required windows to the LIST screen.
+    -- SEE:
+    --      Chapter 7.9.1 "USER Menu on the Teach Pendant,
+    --      for more details on predefined window names.
+    ATT_WINDOW_S('ERR', 'LIST', 1, 1, status)   -- attach the error window
+    Chk_Stat('Attaching ERR')
+    ATT_WINDOW_S('T_ST', 'LIST', 2, 1, status)  -- attach the status window
+    Chk_Stat('T_ST not attached')
+    ATT_WINDOW_S('T_FU', 'LIST', 5, 1, status)  -- attach the full window
+    Chk_Stat('T_FU not attached')
+    ATT_WINDOW_S('T_PR', 'LIST', 15, 1, status) -- attach the prompt window
+    Chk_Stat('T_PR not attached')
+    ATT_WINDOW_S('T_FK', 'LIST', 16, 1, status) -- attach the function window
+    Chk_Stat('T_FK not attached')
+
+-------------------------------------------------------------------------------
+----  Section 4-D:  Write dictionary elements to windows
+-------------------------------------------------------------------------------
+    -- Write dictionary element,TPTSSP_TITLE, from DLST dictionary.
+    -- Which will clear the status window, and display intro message in
+    -- reverse video.
+    WRITE_DICT(TPSTATUS, 'DLST', TPTSSP_TITLE, status)
+    Chk_Stat( 'TPTSSP_TITLE not written')
+    -- Write dictionary element,TPTSSP_FK1, from DLST dictionary.
+    -- Which will display "[TYPE]" to the function line window.
+    WRITE_DICT(TPFUNC, 'DLST', TPTSSP_FK1, status)
+    Chk_Stat( 'TPTSSP_FK1 not written')
+    -- Write dictionary element, TPTSSP_CLRSC, from DLST dictionary.
+    -- Which will clear the teach pendant display window.
+    WRITE_DICT(TPDISPLAY, 'DLST', TPTSSP_CLRSC, status)
+    Chk_Stat( 'TPTSSP_CLRSC not written')
+    -- Write dictionary element, TPTSSP_INSTR, from DLST dictionary.
+    -- Which will display instructions to the prompt line window.
+    WRITE_DICT(TPPROMPT, 'DLST', TPTSSP_INSTR, status)
+    Chk_Stat( 'TPTSSP_INSTR not written')
+
+-------------------------------------------------------------------------------
+----  Section 4-E:  Determine the number of menu options
+-------------------------------------------------------------------------------
+    -- Read the dictionary element, TPTSSP_NUM, from DLST dictionary,
+    -- Into the first element of list_data.
+    -- list_data[1] will be an ASCII representation of the number of
+    -- menu options. last_line will be returned with the number of
+    -- lines/elements used in list_data.
+    READ_DICT('DLST', TPTSSP_NUM, list_data, 1, last_line, status)
+    Chk_Stat( 'TPTSSP_NUM not read')
+    -- convert the string into the INTEGER, num_options
+    CNV_STR_INT(list_data[1], num_options)
+
+-------------------------------------------------------------------------------
+----  Section 4-F:  Initialize the data structure, display_data
+----                Which is used to display the list of menu options.
+-------------------------------------------------------------------------------
+    -- Initialize the display data structure
+    -- In this example we only deal with window 1.
+    display_data.win_start[1]   = 1  -- Starting row for window 1.
+    display_data.win_end[1]     = 10 -- Ending row for window 1.
+    display_data.curr_win       = 0  -- The current window to display, where
+                                     -- zero (0) specifies first window.
+    display_data.cursor_row     = 1  -- Current row the cursor is on.
+    display_data.lins_per_pg    = 10 -- The number of lines scrolled when the
+                                     -- user pushes SHIFT Up or Down. Usually
+                                     -- it is the same as the window size.
+    display_data.curs_st_col[1] = 0  -- starting column for field 1
+    display_data.curs_en_col[1] = 0  -- ending column for field 1, will be
+                                     -- updated a little later
+    display_data.curr_field     = 0  -- Current field, where
+                                     -- zero (0) specifies the first field
+    display_data.last_field     = 0  -- Last field in the list (only using one
+                                     -- field in this example).
+    display_data.curr_it_num    = 1  -- Current item number the cursor is on.
+    display_data.sob_it_num     = 1  -- Starting item number.
+    display_data.eob_it_num     = num_options -- Ending item number, which is
+                                              -- the number of options read in.
+    display_data.last_it_num    = num_options -- Last item number, also the
+                                              -- number of options read in
+    -- Make sure the window end is not beyond total number of elements in list.
+    IF display_data.win_end[1] > display_data.last_it_num THEN
+        display_data.win_end[1] = display_data.last_it_num -- reset to last item
+    ENDIF
+    -- Read dictionary element, TPTSSP_MENU, from dictionary DLST.
+    -- list_data will be populated with the menu list information
+    -- list_data[1] will contain the first line of information from
+    -- the TPTSSP_MENU and list_data[last_line] will contain the last
+    -- line of information read from the dictionary.
+    READ_DICT('DLST', TPTSSP_MENU, list_data, 1, last_line, status)
+    Chk_Stat('Reading menu list failed')
+    -- Determine longest list element & reset cursor end column for first field.
+    FOR i = 1 TO last_line DO
+        IF (STR_LEN(list_data[i]) > display_data.curs_en_col[1]) THEN
+            display_data.curs_en_col[1] = STR_LEN(list_data[i])
+        ENDIF
+    ENDFOR
+
+-------------------------------------------------------------------------------
+----  Section 4-G:  Display the list.
+-------------------------------------------------------------------------------
+    -- Initial Display the menu list.
+    DISCTRL_LIST(TPDISPLAY, display_data, list_data, DC_DISP, status)
+    Chk_Stat('Error displaying list')
+    -- Open a file to the TPDISPLAY window with PASSALL and FIELD attributes
+    -- and NOECHO
+    SET_FILE_ATR(kb_file, ATR_PASSALL)  -- Get row teach pendant input
+    SET_FILE_ATR(kb_file, ATR_FIELD)    -- so that a single key will
+                                        -- satisfy the reads.
+    SET_FILE_ATR(kb_file, ATR_NOECHO)   -- don't echo the keys back to
+    -- the screen
+    OPEN FILE Kb_file ('RW', 'KB:TPKB') -- open a file to the Teach pendant
+                                        -- keyboard (keys)
+    status = IO_STATUS(Kb_file)
+    Chk_Stat('Error opening TPKB')
+    act_pending = 0
+    done = FALSE
+
+-------------------------------------------------------------------------------
+----  Section 4-H:  Control cursor movement within the list
+-------------------------------------------------------------------------------
+    REPEAT -- Wait for a key input
+        READ Kb_file (str::1)
+        key = ORD(str,1)
+        key = key AND 255 -- Convert the key to correct value.
+        SELECT key OF -- Decide how to handle key inputs
+
+            CASE (KY_UP_ARW) : -- up arrow key pressed
+                IF act_pending <> 0 THEN -- If a menu item was selected...
+                    -- Clear confirmation prompt
+                    WRITE_DICT(TPPROMPT, 'DLST', TPTSSP_CLRSC, status)
+                    -- Clear confirmation function keys
+                    WRITE_DICT(TPFUNC, 'DLST', TPTSSP_CLRSC, status)
+                ENDIF
+                DISCTRL_LIST(TPDISPLAY, display_data, list_data, DC_UP, status)
+                Chk_Stat ('Error displaying list')
+
+            CASE (KY_DN_ARW) : -- down arrow key pressed
+                IF act_pending <> 0 THEN -- If a menu item was selected...
+                    -- Clear confirmation prompt
+                    WRITE_DICT(TPPROMPT, 'DLST', TPTSSP_CLRSC, status)
+                    -- Clear confirmation function keys
+                    WRITE_DICT(TPFUNC, 'DLST', TPTSSP_CLRSC, status)
+                ENDIF
+                DISCTRL_LIST(TPDISPLAY, display_data, list_data,
+                DC_DN, status)
+                Chk_Stat ('Error displaying list')
+
+            CASE (KY_ENTER) :
+                -- Perform later
+
+            CASE (KY_F4) : -- "YES" function key pressed
+                IF act_pending <> 0 THEN -- If a menu item was selected...
+                    -- Clear confirmation prompt
+                    WRITE_DICT(TPPROMPT, 'DLST', TPTSSP_CLRSC, status)
+                    -- Clear confirmation function keys
+                    WRITE_DICT(TPFUNC, 'DLST', TPTSSP_CLRSC, status)
+                    IF act_pending = num_options THEN
+                        -- Exit the routine
+                        done = TRUE
+                    ENDIF
+                    -- Clear action pending
+                    act_pending = 0
+                ENDIF
+
+            CASE (KY_F5) : -- "NO" function key pressed
+                -- Clear confirmation prompt
+                WRITE_DICT(TPPROMPT, 'DLST', TPTSSP_INSTR, status)
+                -- Clear confirmation function keys
+                WRITE_DICT(TPFUNC, 'DLST', TPTSSP_CLRSC, status)
+                -- Clear action pending
+                act_pending = 0
+
+            ELSE : -- User entered an actual item number. Calculate which
+                -- row the cursor should be on and redisplay the list.
+                IF ((key > 48) AND (key <= (48 + num_options))) THEN
+                    -- Translate number to a row
+                    key = key - 48
+                    display_data.cursor_row = key
+                    DISCTRL_LIST(TPDISPLAY,display_data,list_data,DC_DISP,status)
+                    Chk_Stat ('Error displaying list')
+                    key = KY_ENTER
+                ENDIF
+        ENDSELECT
+        IF key = KY_ENTER THEN -- User has specified an action
+            -- Write confirmation prompt for selected item
+            WRITE_DICT (TPPROMPT, 'DLST',
+            (TPTSSP_CNF1 - 1 + display_data.cursor_row), status)
+            -- Display confirmation function keys
+            WRITE_DICT(TPFUNC, 'DLST', TPTSSP_FK2, status)
+            -- Set action pending to selected item
+            act_pending = display_data.cursor_row -- this is the item selected
+        ENDIF
+    UNTIL done -- repeat until the user selects the exit option
+
+-------------------------------------------------------------------------------
+----  Section 4-I:  Cleanup before exiting program
+-------------------------------------------------------------------------------
+    -- Clear the TP USER menu windows
+    WRITE_DICT(TPDISPLAY, 'DLST', TPTSSP_CLRSC, status)
+    WRITE_DICT(TPSTATUS, 'DLST', TPTSSP_CLRSC, status)
+    -- Close the file connected to the TP keyboard.
+    CLOSE FILE Kb_file
+    -- Close the error log file if it is open.
+    IF opened THEN
+        close file Err_File
+    ENDIF
+    Write TPPROMPT (cr,'Example Finished ')
+    REMOVE_DICT ( 'LIST', dp_default, status) -- remove the dictionary
+    write ('remove dict', status,cr)
+    Chk_Stat ('Removing dictionary')
+    ACT_SCREEN(old_screen, old_screen, status) -- activate the previous screen
+    Chk_stat ('Activating old screen')
+    DET_WINDOW('ERR', 'LIST', status) -- Detach all the windows that were
+    Chk_stat ('Detaching ERR window')
+    DET_WINDOW('T_ST', 'LIST', status) -- previously attached.
+    Chk_stat ('Detaching T_ST window')
+    DET_WINDOW('T_FU', 'LIST', status)
+    Chk_stat ('Detaching T_FU window')
+    DET_WINDOW('T_PR', 'LIST', status)
+    Chk_stat ('Detaching T_PR window')
+    DET_WINDOW('T_FK', 'LIST', status)
+    Chk_stat ('Detaching T_FK window')
+
+END DCLST_EX

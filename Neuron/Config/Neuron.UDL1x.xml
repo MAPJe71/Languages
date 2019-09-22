@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="Neuron" ext="hoc ses nrn">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="yes" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">"00"00</Keywords>
+            <Keywords name="Folder+">{</Keywords>
+            <Keywords name="Folder-">}</Keywords>
+            <Keywords name="Operators">&apos; - " $ % & ( ) , [ \ ] ^ | + < = ></Keywords>
+            <Keywords name="Comment">1/* 2*/ 0//</Keywords>
+            <Keywords name="Words1">abs allobjects allobjectvars arc3d area argtype atan atan2 attr_praxis batch_run batch_save continuerun coredump_on_error cos diam3d define_shape delete_section diam_changed disconnect distance doEvents doNotify eqinit erf erfc execute execute1 exp fadvance fclamp fclampi fclampv fcurrent finitialize fit_praxis fmatrix fprint frecord_init fscan fstim fstimi getSpineArea get_loc get_segment getstr ghk has_loc hoc_pointer_ hoc_stdio hocmech init initnrn int ion_charge ion_register ion_style ismembrane issection loc log log10 load_file load_func load_proc load_template machine_name n3d name_declared nernst nrncontrolmenu nrnglobalmechmenu nrnmainmenu nrnmechmenu nrnpointmenu nrnsecmenu numarg object_id object_push object_pop parent_connection parent_node parent_section pop_section printf print_session prmat prstim psection pt3dchange pt3dclear pt3dconst pt3dinsert pt3dremove pt3dadd pt3dstyle push_section pval_praxis quit retrieveaudit ri ropen run saveaudit save_session secname sectionname section_exists section_orientation setdt setSpineArea show_errmess_always sin solve spine3d sprint sqrt sred sscanf startsw stdinit stopsw stop_praxis strcmp system tanh this_node this_section topology unref wopen x3d xbutton xcheckbox xfixedvalue xlabel xopen xpvalue xradiobutton xred xslider xstatebutton xvalue xvarlabel y3d z3d</Keywords>
+            <Keywords name="Words2">AlphaSynapse APCount CVode Deck ExpSyn Exp2Syn File FInitializeHandler GUIMath Glyph Graph HBox IClamp Impedance IntFire1 IntFire2 IntFire4 KSGate KSState KSTrans List LinearMechanism Matrix MechanismStandard MechanismType NetCon NetStim KSChan ParallelContext ParallelNetManager PlotShape PWManager Pointer Python Random RangeVarPlot SaveState SEClamp SectionBrowser SectionList SectionRef Shape StringFunctions SymChooser TextEditor Timer ValueFieldEditor VBox VClamp Vector</Keywords>
+            <Keywords name="Words3">access break cai cao celsius cm connect continue create delete depvar diam do double dt eca ek else ena eqn external for for forall forsec func if ifsec ina insert iterator iterator_statement ki ko L local localobj nai nao n_hh new nseg obfunc objectvar objref print proc public Ra read return setpointer stdrun steps_per_ms stop stoprun strdef secondorder t this tstop uninsert v v_init while</Keywords>
+            <Keywords name="Words4">begintemplate endtemplate xmenu xpanel</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="12" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="12" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="FF0080" bgColor="FFFFFF" fontName="" fontStyle="3" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="00BF00" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="00BF00" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="408080" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="FFFF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

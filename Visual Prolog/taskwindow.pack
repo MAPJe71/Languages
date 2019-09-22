@@ -1,0 +1,25 @@
+/*****************************************************************************
+
+                        Copyright (c) Becerril 2003 Private
+
+******************************************************************************/
+
+#include @"TaskWindow\TaskWindow.ph"
+
+% privately used packages
+#include @"pfc\fileSystem\fileSystem.ph"
+#include @"pfc\vpi\vpitoolbar\vpitoolbar.ph"
+#include @"pfc\string\string.ph"
+#include @"engine\engine.ph"
+#include @"pfc\vpi\vpimessage\vpimessage.ph"
+#include @"pfc\exception\exception.ph"
+
+% private interfaces
+#include @"resourceIdentifiers.i"
+
+% private classes
+#include @"TaskWindow\AboutDialog.cl"
+
+% implementations
+#include @"TaskWindow\TaskWindow.pro"
+#include @"TaskWindow\AboutDialog.pro"

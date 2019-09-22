@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+    <!-- language doesnt really mean anything, its more of a comment -->
+    <AutoComplete language="OpenSCAD">
+        <!--
+        Environment specifies how the language should be interpreted. ignoreCase makes autocomplete
+        ignore any casing, start and stopFunc specify what chars a function starts and stops with.
+        param specifies parameter separator and terminal can be used to specify a character that stops
+        any function. Using the same character for different functions results in undefined behaviour.
+
+        05/11/2009
+        The basic word character are : A-Z a-z 0-9 and '_' 
+        If your function name contains other characters,
+        add your characters in "additionalWordChar" attribute (without separator)
+        in order to make calltip hint work
+        -->
+        <Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" additionalWordChar=""/>
+        <!--
+        The following items should be alphabetically ordered.
+        func="yes" means the keyword should be treated as a fuction, and thus can be used in the parameter
+        calltip system. If this is the case, the retVal attribute specifies the return value/type. Any
+        following Param tag specifies a parameter, they must be in order. The name attributes specifies
+        the parameter name.
+        -->
+        <KeyWord name="$fa"/>
+        <KeyWord name="$fn"/>
+        <KeyWord name="$fs"/>
+        <KeyWord name="$t"/>
+        <KeyWord name="$vpr"/>
+        <KeyWord name="$vpt"/>
+        <KeyWord name="$vpd"/>
+        <KeyWord name="$parent_modules"/>
+        <KeyWord name="abs"/>
+        <KeyWord name="acos"/>
+        <KeyWord name="asin"/>
+        <KeyWord name="assign"/>
+        <KeyWord name="atan"/>
+        <KeyWord name="atan2"/>
+        <KeyWord name="ceil"/>
+        <KeyWord name="children"/>
+        <KeyWord name="circle"/>
+        <KeyWord name="color"/>
+        <KeyWord name="cos"/>
+        <KeyWord name="cross"/>
+        <KeyWord name="cube"/>
+        <KeyWord name="cylinder"/>
+        <KeyWord name="difference"/>
+        <KeyWord name="echo"/>
+        <KeyWord name="exp"/>
+        <KeyWord name="floor"/>
+        <KeyWord name="for"/>
+        <KeyWord name="hull"/>
+        <KeyWord name="if"/>
+        <KeyWord name="import"/>
+        <KeyWord name="include"/>
+        <KeyWord name="intersection"/>
+        <KeyWord name="intersection_for"/>
+        <KeyWord name="len"/>
+        <KeyWord name="linear_extrude"/>
+        <KeyWord name="ln"/>
+        <KeyWord name="log"/>
+        <KeyWord name="lookup"/>
+        <KeyWord name="max"/>
+        <KeyWord name="min"/>
+        <KeyWord name="minkowski"/>
+        <KeyWord name="mirror"/>
+        <KeyWord name="module"/>
+        <KeyWord name="multmatrix"/>
+        <KeyWord name="norm"/>
+        <KeyWord name="offset"/>
+        <KeyWord name="parent_module"/>
+        <KeyWord name="polygon"/>
+        <KeyWord name="polyhedron"/>
+        <KeyWord name="pow"/>
+        <KeyWord name="projection"/>
+        <KeyWord name="rands"/>
+        <KeyWord name="render"/>
+        <KeyWord name="resize"/>
+        <KeyWord name="rotate"/>
+        <KeyWord name="rotate_extrude"/>
+        <KeyWord name="round"/>
+        <KeyWord name="scale"/>
+        <KeyWord name="search"/>
+        <KeyWord name="sign"/>
+        <KeyWord name="sin"/>
+        <KeyWord name="sphere"/>
+        <KeyWord name="sqrt"/>
+        <KeyWord name="square"/>
+        <KeyWord name="str"/>
+        <KeyWord name="surface"/>
+        <KeyWord name="tan"/>
+        <KeyWord name="translate"/>
+        <KeyWord name="undef"/>
+        <KeyWord name="union"/>
+        <KeyWord name="use"/>
+        <KeyWord name="version"/>
+        <KeyWord name="version_num"/>
+    </AutoComplete>
+</NotepadPlus>

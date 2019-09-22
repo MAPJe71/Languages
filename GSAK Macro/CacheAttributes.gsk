@@ -1,0 +1,1483 @@
+#*******************************************
+# MacVersion = 1.4.1
+# MacDescription = Inserts Cache Attributes into GSAK user notes
+# MacAuthor = Faina09
+# MacFileName = CacheAttributes.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=13361
+#
+# Inserts Cache Attributes into GSAK user notes
+# processing just the caches currently filtered
+#
+# Change History:
+#  Ver - Date
+#  0.1 - 27th June, 2009 - first beta
+#  0.2 - 1st July, 2009 - add Anti-Hammer time, add log file
+#  0.3 - 2nd July, 2009 - as first field in UserNote, and only if not empty
+#  0.4 - 2nd September, 2009 - added <data> fields for all attributes icons 
+#                            - AttributesImages to display Attributes as icons
+#                            - $ErrorCnt to avoid using invalid html or update user notes with empty strings
+#  0.5 - 4th September, 2009 - user dialog to set some parameters
+#                            - let the user skip errors on (archived?) caches
+#  1.0 - 9th November, 2009 - Uses the SQLite DB table loaded from PocketQuery
+#  1.0.1 - fix img locations
+#  1.0.2 - check $d_LastGPXDate > [20091104]
+#  1.0.3 - add user option: write or not "NONE" if no attributes found
+#  1.1 - add online fetch if no attributes found
+#  1.1.2 - $ChkOnLineNone Check online if only "NONE" attribute found
+#  1.1.3 - fix Flashlight attrib
+#  1.2 - 29th March 2010 - works with GSAK 7.7.0.109
+#                        - uses GPX 1.0.1 and DO NOT grabs attributes from web
+#  1.3 - option to DELETE CacheAttributes from UserNote
+#  1.4 - new attributes from groundspeak 20100815
+#  1.4.1 - deprecated instr removed
+# See SUB Initialize to set macro behaviour and PERSONALIZE parameters
+#*******************************************
+
+#Debug Status=on
+
+# Version check
+VERCHECK Version=7.7.0.109 (You can find the latest version of GSAK in the forums at http://support.gsak.net/.)
+$Revision = Alltrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1))
+
+# THIS CODE INSPIRED TO AddLogs.gsk by Kai Team & Lignumaqua
+# AND USES GetHTML.vbs FROM AddLogs.gsk by Kai Team & Lignumaqua
+GOSUB Name=DeclareVariables
+GOSUB Name=Initialize
+
+# sort by code, goto top, start!
+# SORT by="Code"
+Goto position=top
+
+$totalRecordCount = $_Count
+$result1 = "" 
+$MyCount=$_Count
+
+GOSUB Name=DisplayForm
+
+# Main loop: cycling through the caches in the active filter
+While NOT ($_EOL)
+	$cnt=$cnt+1
+	$ErrorCnt=0
+	SHOWSTATUS msg="Retrieving cache #$cnt: $d_Code - $d_Name" Width=$msgWidth
+	$MyCount=$MyCount-1
+	$result1 = $result1 + $d_code + " - " + $d_Name + $_NewLine
+	$Attributes=""
+	GOSUB Name=ProcessCache
+	GOTO Position=Next
+EndWhile
+
+SHOWSTATUS Msg="ALL Done" Width=$msgWidth
+$result2 = "Total $cnt Caches processed:" + $_NewLine
+
+# copy the log of operations performed on the clipboard
+$Message = "$result2" + $_NewLine + "$result1"
+CLIP DATA=$Message
+#Pause Msg=$Message
+
+# save log to disk
+$Message="Elaboration ended at: " + DateFormat($_Today) + " $_NewLine$Message"
+$DataLogged = PutFile($Htmlfilepath + "\CacheAttributes.log", $Message)
+IF Left($DataLogged,7) = "*Error*"
+  Pause Msg="$DataLogged"
+  Cancel
+ENDIF
+
+#######################
+BEGINSUB Name=ProcessCache
+	$GCcode = $d_Code
+	$Attributes = ""
+	
+	IF ($ChkDELETE)
+		GOSUB Name=DeleteFromUserNote
+	ELSE
+		GOSUB Name=GetAttributes 
+		GOSUB Name=ExtractAttributes
+		IF ($attrcnt>0 and $ErrorCnt=0)
+			GOSUB Name=UpdateUserNote
+		ENDIF
+	ENDIF
+
+	$result1 = $result1 + $Attributes + $_NewLine 
+ENDSUB
+
+
+#######################
+BEGINSUB Name=GetAttributes
+    # retieve attributes from DB
+	$_sql="SELECT aId,aInc FROM Attributes where aCode='$GCcode'"
+	#$_sql="SELECT * FROM AttName where aCode='$GCcode'"
+	$codes = Sqlite("sql",$_sql)
+	#Pause Msg="$_sql $codes"
+ENDSUB
+
+
+########################
+BEGINSUB Name=ExtractAttributes
+	IF $codes="99;0"
+		$codes=""
+	ENDIF
+	$attrcnt = RegExCount(";",$codes)
+	$Attributes = ""
+	$AttributesText = ""
+	IF ($attrcnt=0 AND $ChkNone)
+		$Attributes = "NONE"
+		$attrcnt=1
+	ELSE
+		$i = 1
+		# for each attribute retrieved by sql
+		# VER 1.1 fix numer of attributes
+		WHILE $i <= $attrcnt
+			$attr_yn = Extract($codes,$_CrLf,$i)
+			#@Pause Msg="*$attr_yn*"
+			$attrID=Extract($attr_yn,";",1)
+			$attrYN=Extract($attr_yn,";",2)
+			
+			$attrGif = Extract($AttributeGif,";",Val($attrID))
+			IF (Val($attrYN)=1)
+				$attrGif = $attrGif + "-yes.gif"
+				$attrName = Extract($AttributeListY,";",Val($attrID))
+			ELSE
+				$attrGif = $attrGif + "-no.gif"
+				$attrName = Extract($AttributeListN,";",Val($attrID))
+			ENDIF
+			$attrEntry = "<img src="+$_Quote+"../macros/cacheattributes/"+$attrGif+$_Quote+" Alt="+$_Quote+$attrName+$_Quote+" title="+$_Quote+$attrName+$_Quote+" width=30 height=30>"
+			#@Pause Msg="$attr_yn: $attrID / $attrYN / $attrName / $attrGif"
+			#@Pause Msg="$attrEntry"
+
+			IF ($AttributesImages = 0)
+				# no icons
+				# each attribute on a new line:
+				$Attributes = $Attributes + $_NewLine + $attrName
+			ENDIF
+			IF ($AttributesImages = 1)
+				# icons only
+				$Attributes = $Attributes + $attrEntry
+			ENDIF
+			IF ($AttributesImages = 2)
+				# icons+text
+				# AFTER the attribute table must place attributes text
+				$Attributes = $Attributes + $attrEntry
+				$AttributesText = $AttributesText + $attrName + ", "
+			ENDIF
+			
+			$i = $i + 1
+		ENDWHILE
+		
+		IF ($AttributesImages = 2)
+			# AFTER the attribute table must place attributes text
+			$Attributes = $Attributes + $_NewLine + $AttributesText
+		ENDIF
+	ENDIF
+	#@Pause Msg="******$Attributes*******"
+ENDSUB
+
+
+#######################
+BEGINSUB Name=UpdateUserNote
+	#@SHOWSTATUS msg="Updating UserNote for $GCcode, please wait..." Width=$msgWidth
+	# THIS CODE INSPIRED TO SpoilerSync.gsk by clyde
+	$Attributes = "*Cache Attributes*" + $_NewLine + $Attributes + $_NewLine + "*End Cache Attributes*" + $_NewLine
+	#load the existing text in field UserNote
+	$UserNote = $d_UserNote
+	# if alredy exists Cache Attributes in user notes we must remove them and replace
+    # with he ones just found
+    IF RegEx("\*Cache Attributes\*",$UserNote)
+      # preserve any notes before the Cache Attributes
+      $Part1 = Extract($d_UserNote,"*Cache Attributes*",1)
+      # preserve any notes after the Cache Attributes
+      $Part2 = Extract($d_UserNote,"*End Cache Attributes*",2)
+      # now insert then new Cache Attributes AS FIRST 
+ 	  IF (RegEx("\r\n$",$Part1) OR RegEx("^\r\n",$Part2))
+        $UserNote =  $Attributes + $Part1 + $Part2
+	  ELSE
+		# need a NewLine after existing UserNote
+        $UserNote =  $Attributes + $Part1 + $_NewLine + $Part2
+	  ENDIF
+    ELSE
+      # else part - No Cache Attributes, put them in AS FIRST
+      $UserNote =  $Attributes + $UserNote
+    ENDIF
+	
+	#only one crlf
+	$UserNote = RegExReplace("\r\n\r\n",$UserNote,$_NewLine)
+	#update the field UserNote
+	$d_UserNote = $UserNote
+	#@SHOWSTATUS Msg="Done: updated $GCcode" Width=$msgWidth
+ENDSUB
+
+#######################
+BEGINSUB Name=DeleteFromUserNote
+	$UserNote = $d_UserNote
+	# if alredy exists Cache Attributes in user notes we must remove them and replace
+    # with he ones just found
+    IF RegEx("\*Cache Attributes\*",$UserNote)
+      # preserve any notes before the Cache Attributes
+      $Part1 = Extract($d_UserNote,"*Cache Attributes*",1)
+      # preserve any notes after the Cache Attributes
+      $Part2 = Extract($d_UserNote,"*End Cache Attributes*",2)
+      $UserNote =  $Part1 + $Part2
+    ENDIF
+	#only one crlf
+	$UserNote = RegExReplace("\r\n\r\n",$UserNote,$_NewLine)
+	#update the field UserNote
+	$d_UserNote = $UserNote
+ENDSUB
+
+#######################
+# PERSONALIZE parameters here
+BEGINSUB Name=Initialize
+	# init variables
+	$cnt=0
+	$ErrorCnt=0
+	
+	# messages window width
+	$msgWidth=500
+	
+	# $AttributesImages=0 no icons, 1 icons only, 2 icons+text
+	$AttributesImages=2
+	
+	# Set and validate file paths
+	$Htmlfilepath = $_Install + "\Macros\CacheAttributes"
+	IF NOT(FolderExists($htmlfilepath))
+		$BatFile = $_Install + "\babel.bat"
+		$result = PutFile($BatFile, "MD " + quote($htmlfilepath))
+		FILEOPEN File="$BatFile" Wait=yes
+		GOSUB Name=SaveIcons
+	ENDIF
+	$HTMLFile = $Htmlfilepath + "\CacheAttributes.html"
+	$DataFile = $Htmlfilepath + "\CacheAttributes.xml"
+	# use a list of the 44 (+1 void) attributes, grab from
+	# select vfrom,vto from lookup where type='attributes' order by cast(vfrom as int)
+	$AttributeListY="Dogs allowed;Access or parking fee;Climbing gear;Boat;Scuba gear;Recommended for kids;Takes less than an hour;Scenic view;Significant hike;Difficult climbing;May require wading;May require swimming;Available at all times;Recommended at night;Available during winter;;Poison plants;Snakes;Ticks;Abandoned mines;Cliff / falling rocks;Hunting;Dangerous area;Wheelchair accessible;Parking available;Public transportation;Drinking water nearby;Public restrooms nearby;Telephone nearby;Picnic tables nearby;Camping available;Bicycles;Motorcycles;Quads;Off-road vehicles;Snowmobiles;Horses;Campfires;Thorns;Stealth required;Stroller accessible;Needs maintenance;Watch for livestock;Flashlight required"
+	# "not" list, just to have some description more english ;-)
+	$AttributeListN="No Dogs allowed;No Access or parking fee;No Climbing gear;No Boat;No Scuba gear;Not Recommended for kids;Takes more than an hour;No Scenic view;No Significant hike;No Difficult climbing;Not require wading;Not require swimming;Not Available at all times;Not Recommended at night;Not Available during winter;;No Poison plants;No Snakes;No Ticks;No Abandoned mines;No Cliff / falling rocks;No Hunting;Not Dangerous area;No Wheelchair accessible;Parking not available;No Public transportation;No Drinking water nearby;No Public restrooms nearby;No Telephone nearby;No Picnic tables nearby;No Camping available;No Bicycles;No Motorcycles;No Quads;No Off-road vehicles;No Snowmobiles;No Horses;No Campfires;No Thorns;Stealth not required;No Stroller accessible;Not Needs maintenance;No Watch for livestock;No Flashlight required"
+    # .. and this are the 44 (+1 void) corresponding partial names of gif icons:
+	$AttributeGif="dogs;fee;rappelling;boat;scuba;kids;onehour;scenic;hiking;climbing;wading;swimming;available;night;winter;;poisonoak;snakes;ticks;mine;cliff;hunting;danger;wheelchair;parking;public;water;restrooms;phone;picnic;camping;bicycles;motorcycles;quads;jeeps;snowmobiles;horses;campfires;thorn;stealth;stroller;firstaid;cow;flashlight"
+	# 20100815: added attributes 48..59:
+	$AttributeListY=$AttributeListY+";;;;UV Light Required;Snowshoes;Cross Country Skis;Special Tool Required;Night Cache;Park and Grab;Abandoned Stucture;Short hike (less than 1Km);Medium hike (1Km-10Km);Long hike(+10Km);Fuel Nearby;Food Nearby;"
+	$AttributeListN=$AttributeListN+";;;;No UV Light Required;No Snowshoes;No Cross Country Skis;No Special Tool Required;No Night Cache;No Park and Grab;No Abandoned Stucture;No Short hike (less than 1Km);No Medium hike (1Km-10Km);No Long hike(+10Km);No Fuel Nearby;No Food Nearby;"
+	$AttributeGif=$AttributeGif+";;;;UV;snowshoes;skiis;s_tool;nightcache;parkngrab;abandonedbuilding;hike_short;hike_medium;hike_long;fuel;food;"
+ENDSUB
+
+
+#######################
+BEGINSUB Name=DisplayForm
+	$FMsg="Add the attributes of " + NumToStr($MyCount) + " caches to user notes"
+	$FormParameters=EditForm($FormParameters, "FMsg", "Caption", $FMsg)
+	$FormParameters=EditForm($FormParameters, "FormParameters", "Caption", "Cache Attributes " + $Revision)
+	IF (FileExists($DataFile))
+		# If the file exists read the saved values and assign them to variables
+		MACSETTINGS File=$DataFile Type=R
+	ELSE
+		$ChkNone=true
+		$ChkDELETE=false
+	ENDIF
+	$FAttributesImages=NumToStr($AttributesImages)
+	$FChkNone=$ChkNone
+	$FChkDELETE=$ChkDELETE
+	WHILE TRUE
+	   $FormExit = Form($FormParameters,"")
+	   BEGINCASE
+		   CASE $FormExit = "SystemExit"
+		   Cancel Msg="Macro Cancelled"
+
+		   CASE $FormExit = "OK"
+			$AttributesImages=Int(Val($FAttributesImages))
+			IF $AttributesImages>2 or $AttributesImages<0
+				$AttributesImages=2
+			ENDIF
+			$ChkNone=$FChkNone
+			$ChkDELETE=$FChkDELETE
+			MACSETTINGS File=$DataFile Type=S Vars=AttributesImages,ChkNone,ChkDELETE
+		   BREAK
+
+		   CASE $FormExit = "Cancel"
+		   Cancel Msg="Macro Cancelled"
+	   ENDCASE
+	ENDWHILE
+ENDSUB
+
+
+#######################
+BEGINSUB Name=DeclareVariables
+#*******************************************************
+#   Variable declarations for
+#   C:\Program Files\gsak\Macros\CacheAttributes.gsk
+#
+#   Generated 02/07/2009 on GSAKVariables.gsk Rev V0.31
+#
+#*******************************************************
+# WARNING: DO NOT declare $d_* variables!!
+
+Option Explicit=Yes
+
+Declare Var=$Arguments Type=String
+Declare Var=$attrcnt Type=Numeric
+Declare Var=$Attributes Type=String
+Declare Var=$AttributesText Type=String
+Declare Var=$AttributeListY Type=String
+Declare Var=$AttributeListN Type=String
+Declare Var=$AttributeGif Type=String
+Declare Var=$AttributesImages Type=Numeric
+Declare Var=$BatFile Type=String
+Declare Var=$CacheURL Type=String
+Declare Var=$ChkNone Type=Boolean
+Declare Var=$ChkDELETE Type=Boolean
+Declare Var=$cnt Type=Numeric
+Declare Var=$codes Type=String
+Declare Var=$DataFile Type=String
+Declare Var=$DataLogged Type=String
+Declare Var=$DisplayTime Type=String
+Declare Var=$ErrorCnt Type=Numeric
+Declare Var=$FAttributesImages Type=String
+Declare Var=$FChkNone Type=Boolean
+Declare Var=$FChkDELETE Type=Boolean
+Declare Var=$FMsg Type=String
+Declare Var=$FormExit Type=String
+Declare Var=$GCcode Type=String
+Declare Var=$GetHTML Type=String
+Declare Var=$gifcnt Type=Numeric
+Declare Var=$Hours Type=Numeric
+Declare Var=$HTML Type=String
+Declare Var=$HTMLFile Type=String
+Declare Var=$Htmlfilepath Type=String
+Declare Var=$Log Type=String
+Declare Var=$Message Type=String
+Declare Var=$MyCount Type=Numeric
+Declare Var=$msgWidth Type=Numeric
+Declare Var=$Part1 Type=String
+Declare Var=$Part2 Type=String
+Declare Var=$result Type=String
+Declare Var=$result1 Type=String
+Declare Var=$result2 Type=String
+Declare Var=$Revision Type=String
+Declare Var=$SearchString Type=String
+Declare Var=$Secs Type=Numeric
+Declare Var=$tmp Type=String
+Declare Var=$totalRecordCount Type=Numeric
+Declare Var=$User Type=String
+Declare Var=$UserNote Type=String
+Declare Var=$VBSFile Type=String
+Declare Var=$i Type=Numeric
+Declare Var=$j Type=Numeric
+Declare Var=$k Type=Numeric
+Declare Var=$attr_yn Type=String
+Declare Var=$attrID Type=String
+Declare Var=$attrYN Type=String
+Declare Var=$attrName Type=String
+Declare Var=$attrGif Type=String
+Declare Var=$attrEntry Type=String
+Declare Var=$attrDB Type=String
+Declare Var=$attrIDDB Type=String
+Declare Var=$attrYNDB Type=String
+ENDSUB
+
+
+##############################
+BEGINSUB Name=SaveIcons
+$tmp = PutFile($Htmlfilepath + "\available-no.gif", MimeDecode($available_no))
+$tmp = PutFile($Htmlfilepath + "\available-yes.gif", MimeDecode($available_yes))
+$tmp = PutFile($Htmlfilepath + "\bicycles-no.gif", MimeDecode($bicycles_no))
+$tmp = PutFile($Htmlfilepath + "\bicycles-yes.gif", MimeDecode($bicycles_yes))
+$tmp = PutFile($Htmlfilepath + "\boat-yes.gif", MimeDecode($boat_yes))
+$tmp = PutFile($Htmlfilepath + "\campfires-no.gif", MimeDecode($campfires_no))
+$tmp = PutFile($Htmlfilepath + "\campfires-yes.gif", MimeDecode($campfires_yes))
+$tmp = PutFile($Htmlfilepath + "\camping-no.gif", MimeDecode($camping_no))
+$tmp = PutFile($Htmlfilepath + "\camping-yes.gif", MimeDecode($camping_yes))
+$tmp = PutFile($Htmlfilepath + "\cliff-yes.gif", MimeDecode($cliff_yes))
+$tmp = PutFile($Htmlfilepath + "\climbing-no.gif", MimeDecode($climbing_no))
+$tmp = PutFile($Htmlfilepath + "\climbing-yes.gif", MimeDecode($climbing_yes))
+$tmp = PutFile($Htmlfilepath + "\cow-yes.gif", MimeDecode($cow_yes))
+$tmp = PutFile($Htmlfilepath + "\danger-yes.gif", MimeDecode($danger_yes))
+$tmp = PutFile($Htmlfilepath + "\dogs-no.gif", MimeDecode($dogs_no))
+$tmp = PutFile($Htmlfilepath + "\dogs-yes.gif", MimeDecode($dogs_yes))
+$tmp = PutFile($Htmlfilepath + "\fee-yes.gif", MimeDecode($fee_yes))
+$tmp = PutFile($Htmlfilepath + "\firstaid-yes.gif", MimeDecode($firstaid_yes))
+$tmp = PutFile($Htmlfilepath + "\flashlight-yes.gif", MimeDecode($flashlight_yes))
+$tmp = PutFile($Htmlfilepath + "\hiking-no.gif", MimeDecode($hiking_no))
+$tmp = PutFile($Htmlfilepath + "\hiking-yes.gif", MimeDecode($hiking_yes))
+$tmp = PutFile($Htmlfilepath + "\horses-no.gif", MimeDecode($horses_no))
+$tmp = PutFile($Htmlfilepath + "\horses-yes.gif", MimeDecode($horses_yes))
+$tmp = PutFile($Htmlfilepath + "\hunting-yes.gif", MimeDecode($hunting_yes))
+$tmp = PutFile($Htmlfilepath + "\jeeps-no.gif", MimeDecode($jeeps_no))
+$tmp = PutFile($Htmlfilepath + "\jeeps-yes.gif", MimeDecode($jeeps_yes))
+$tmp = PutFile($Htmlfilepath + "\kids-no.gif", MimeDecode($kids_no))
+$tmp = PutFile($Htmlfilepath + "\kids-yes.gif", MimeDecode($kids_yes))
+$tmp = PutFile($Htmlfilepath + "\mine-yes.gif", MimeDecode($mine_yes))
+$tmp = PutFile($Htmlfilepath + "\motorcycles-no.gif", MimeDecode($motorcycles_no))
+$tmp = PutFile($Htmlfilepath + "\motorcycles-yes.gif", MimeDecode($motorcycles_yes))
+$tmp = PutFile($Htmlfilepath + "\night-no.gif", MimeDecode($night_no))
+$tmp = PutFile($Htmlfilepath + "\night-yes.gif", MimeDecode($night_yes))
+$tmp = PutFile($Htmlfilepath + "\onehour-no.gif", MimeDecode($onehour_no))
+$tmp = PutFile($Htmlfilepath + "\onehour-yes.gif", MimeDecode($onehour_yes))
+$tmp = PutFile($Htmlfilepath + "\parking-no.gif", MimeDecode($parking_no))
+$tmp = PutFile($Htmlfilepath + "\parking-yes.gif", MimeDecode($parking_yes))
+$tmp = PutFile($Htmlfilepath + "\phone-no.gif", MimeDecode($phone_no))
+$tmp = PutFile($Htmlfilepath + "\phone-yes.gif", MimeDecode($phone_yes))
+$tmp = PutFile($Htmlfilepath + "\picnic-no.gif", MimeDecode($picnic_no))
+$tmp = PutFile($Htmlfilepath + "\picnic-yes.gif", MimeDecode($picnic_yes))
+$tmp = PutFile($Htmlfilepath + "\poisonoak-no.gif", MimeDecode($poisonoak_no))
+$tmp = PutFile($Htmlfilepath + "\poisonoak-yes.gif", MimeDecode($poisonoak_yes))
+$tmp = PutFile($Htmlfilepath + "\public-yes.gif", MimeDecode($public_yes))
+$tmp = PutFile($Htmlfilepath + "\quads-no.gif", MimeDecode($quads_no))
+$tmp = PutFile($Htmlfilepath + "\quads-yes.gif", MimeDecode($quads_yes))
+$tmp = PutFile($Htmlfilepath + "\rappelling-yes.gif", MimeDecode($rappelling_yes))
+$tmp = PutFile($Htmlfilepath + "\restrooms-no.gif", MimeDecode($restrooms_no))
+$tmp = PutFile($Htmlfilepath + "\restrooms-yes.gif", MimeDecode($restrooms_yes))
+$tmp = PutFile($Htmlfilepath + "\scenic-no.gif", MimeDecode($scenic_no))
+$tmp = PutFile($Htmlfilepath + "\scenic-yes.gif", MimeDecode($scenic_yes))
+$tmp = PutFile($Htmlfilepath + "\scuba-yes.gif", MimeDecode($scuba_yes))
+$tmp = PutFile($Htmlfilepath + "\snakes-yes.gif", MimeDecode($snakes_yes))
+$tmp = PutFile($Htmlfilepath + "\snowmobiles-no.gif", MimeDecode($snowmobiles_no))
+$tmp = PutFile($Htmlfilepath + "\snowmobiles-yes.gif", MimeDecode($snowmobiles_yes))
+$tmp = PutFile($Htmlfilepath + "\stealth-no.gif", MimeDecode($stealth_no))
+$tmp = PutFile($Htmlfilepath + "\stealth-yes.gif", MimeDecode($stealth_yes))
+$tmp = PutFile($Htmlfilepath + "\stroller-no.gif", MimeDecode($stroller_no))
+$tmp = PutFile($Htmlfilepath + "\stroller-yes.gif", MimeDecode($stroller_yes))
+$tmp = PutFile($Htmlfilepath + "\swimming-yes.gif", MimeDecode($swimming_yes))
+$tmp = PutFile($Htmlfilepath + "\thorn-yes.gif", MimeDecode($thorn_yes))
+$tmp = PutFile($Htmlfilepath + "\ticks-yes.gif", MimeDecode($ticks_yes))
+$tmp = PutFile($Htmlfilepath + "\wading-yes.gif", MimeDecode($wading_yes))
+$tmp = PutFile($Htmlfilepath + "\water-no.gif", MimeDecode($water_no))
+$tmp = PutFile($Htmlfilepath + "\water-yes.gif", MimeDecode($water_yes))
+$tmp = PutFile($Htmlfilepath + "\wheelchair-no.gif", MimeDecode($wheelchair_no))
+$tmp = PutFile($Htmlfilepath + "\wheelchair-yes.gif", MimeDecode($wheelchair_yes))
+$tmp = PutFile($Htmlfilepath + "\winter-no.gif", MimeDecode($winter_no))
+$tmp = PutFile($Htmlfilepath + "\winter-yes.gif", MimeDecode($winter_yes))
+
+$tmp = PutFile($Htmlfilepath + "\AbandonedBuilding-no.gif", MimeDecode($AbandonedBuilding_no))
+$tmp = PutFile($Htmlfilepath + "\abandonedbuilding-yes.gif", MimeDecode($abandonedbuilding_yes))
+$tmp = PutFile($Htmlfilepath + "\food-no.gif", MimeDecode($food_no))
+$tmp = PutFile($Htmlfilepath + "\food-yes.gif", MimeDecode($food_yes))
+$tmp = PutFile($Htmlfilepath + "\fuel-no.gif", MimeDecode($fuel_no))
+$tmp = PutFile($Htmlfilepath + "\fuel-yes.gif", MimeDecode($fuel_yes))
+$tmp = PutFile($Htmlfilepath + "\hike_long-no.gif", MimeDecode($hike_long_no))
+$tmp = PutFile($Htmlfilepath + "\hike_long-yes.gif", MimeDecode($hike_long_yes))
+$tmp = PutFile($Htmlfilepath + "\hike_med-no.gif", MimeDecode($hike_med_no))
+$tmp = PutFile($Htmlfilepath + "\hike_med-yes.gif", MimeDecode($hike_med_yes))
+$tmp = PutFile($Htmlfilepath + "\hike_short-no.gif", MimeDecode($hike_short_no))
+$tmp = PutFile($Htmlfilepath + "\hike_short-yes.gif", MimeDecode($hike_short_yes))
+$tmp = PutFile($Htmlfilepath + "\nightcache-no.gif", MimeDecode($nightcache_no))
+$tmp = PutFile($Htmlfilepath + "\nightcache-yes.gif", MimeDecode($nightcache_yes))
+$tmp = PutFile($Htmlfilepath + "\parkngrab-no.gif", MimeDecode($parkngrab_no))
+$tmp = PutFile($Htmlfilepath + "\parkngrab-yes.gif", MimeDecode($parkngrab_yes))
+$tmp = PutFile($Htmlfilepath + "\s_tool-yes.gif", MimeDecode($s_tool_yes))
+$tmp = PutFile($Htmlfilepath + "\skiis-yes.gif", MimeDecode($skiis_yes))
+$tmp = PutFile($Htmlfilepath + "\snowshoes-yes.gif", MimeDecode($snowshoes_yes))
+$tmp = PutFile($Htmlfilepath + "\UV-yes.gif", MimeDecode($UV_yes))
+ENDSUB
+
+
+##############################
+<data> VarName=$available_no
+R0lGODlhHgAeALMAANTU1HBwcENDQwAAAJqamuVSUv///yoqKpMAAL29va6urq0ZGeYAAO/v72BgYH9/
+fyH5BAAAAAAALAAAAAAeAB4AAAT/0CRGq734Kpm7t4qFDGRpnujQjWmLihXrztaAxDMpCG9F3hRZ6mAA
+9CglIEN4ehgIR4ZJySwBDLxTbYo7ERupreDwqyxODoNicNi5LYeGoVimnEsbxyAx71sADQIEBgEkC10D
+cmQODw+DBBYBegIGD2wGBTiURiYJRlsDG2QACg+ZQYOWJZQ8W4N6D2BOhxQFBmRWnDWvJAYNnkW0DAUm
+RKqRTzsHCcxXAAdUJU5ZFnJ9qgPTJKdLJBslFo3iWQMCD7iYOIzgPjkDaQnRJqAzg4XyJPQuinXd+e0z
+iHDqx0JfCnPkCKoA6A4FFYMNk3SI2EIJgwkfMmLgg1GjRj4RAQAAOw==
+<enddata>
+
+<data> VarName=$available_yes
+R0lGODlhHgAeAMQAAM/PzzAwML+/v+/v7xAQECAgIJ+fn2BgYDMzM7u7u3BwcFBQUN/f36+vr4+Pj6qq
+qiIiIn9/f0BAQP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAA
+AAAeAB4AAAXT4JQgVGmeaGoij6i+8PmQcZ1Cdq7vfCxJvVhgwgjCIhOH8QWYAJeowmRgI0gCKCvhdJg0
+KIGf+BQYTCaAbUngPDUmBwr7fD4BBgvDRFFSnJ8lZgUUBxERDhMGJwpxEhMRYGhtJQtoKAIAL2+DAA1I
+gIiQJpWAJ3pxEQMEnyYME1gmAJkppyVEAq4AWFJUJkOii4k/BQLFuVh+iiasJwRmdMDMbAtuEykFhtmA
+EhGDBGdqJYVLlQJQtHvnKILqvkTtJtzU8PRQNPQICfUUCSL39v1CAAA7
+<enddata>
+
+<data> VarName=$bicycles_no
+R0lGODlhHgAeALMAAGxsbI2Nje5cXEhISCoqKpQBAd3d3bMcHM08PAAAAMzMzBEREeYAAP///7e3t+7u
+7iH5BAAAAAAALAAAAAAeAB4AAAT9sDlGq734Opm7t1NVJGRpnmjSjWmLWoXozqSVxBRLp/Yt769KCccQ
+NBoD0uaY5AmHFUQAhWz1oBQEtRmkoIjGoxhgfZ6IugThsXB6SYMAgBA4/BILxZQwIJRsBApiDWx2OQkD
+BgGEYg5+FmsKSQsPBg4JCFEPcYQAAwAGDwQgBm0JAI4NcwIiAxIOZHiWFqolBnwGoQqGDAgNBASlJAAN
+tE0ADwoOygkBBrwCcFNqxRW1aqbMWAwsfojVFA7CJa6x22kBD5DJk8jTZz/EAIAGg+8ovAgPDVNXcXM0
+iCBocgXIuRpmDB4sqJAEGoYNfWSICK9CiA8YNXDIyHFDBAA7
+<enddata>
+
+<data> VarName=$bicycles_yes
+R0lGODlhHgAeALMAAN3d3URERO7u7hERESIiIoiIiHd3d8zMzFVVVZmZmaqqqru7u2ZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATi0K32qr0426ak/uClUGGZEWaqrmzrvtfizEEl0/BSZE796jyf6zYr
+OhgvggOQaQgGKkTB0EgwFsjL4LBrBFCaxsH4DDAt5oJDUFyAN4JDbSAALB7YSkEgXTMCBgACb3gAUA9X
+SgwEAgsACgMBDgp5DwN2FooWAAQIAIIHCAIVCQ4NBIYVDA6Hkj4McQoHdwkAWTIVUhVKPpoPDYcHChky
+h2CSJIWHFZJZFwYOOxcJo3BylgYCCRqXRxbQBhgNAEbSYeR2bOYYUgaE3AYLCwlCMPb3+PklyfoNd/o2
+JPCD4c9BBAA7
+<enddata>
+
+<data> VarName=$boat_yes
+R0lGODlhHgAeALMAAIiIiO7u7qqqqkRERFVVVRERESIiInd3d8zMzN3d3ZmZmWZmZru7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASH0LH2qr042yak/uAlUGGZGWaqrmzrvnAsX0xtM0IR24jEOIBZJRFU
+OFCzQcBQCDCED8Xz4CBcGgOSYTAgAL7gL89BLpurFcN5zWYHLb+2/JzQWQjzPJl06TkCZIB/gYSDZAca
+BQcDBgIAilkCCxw5AAwEBI5Qm5ydnp+gL3xQDU+cPxNCpQ4RADs=
+<enddata>
+
+<data> VarName=$campfires_no
+R0lGODlhHgAeALMAAOxaWm9vbwAAAP///y0tLUtLS5QBAe7t7d3d3awXF6SkpL0oKMzMzOYAAIiIiLu7
+uyH5BAAAAAAALAAAAAAeAB4AAAT/cLxGq734Kpm7t4plCGRpEoSpCt24kg7ymmLlrlswk5Zg2K/DQLbr
++YCmwGCZmhmPlBtBuHQUK6ZfVDBdLh9XikrbMCC8y4Og8HqWyAD0UEBUud+VuFdRGDRpWCsBCXleBUpW
+doEnAwVwA2obYIpiKg4DOgB5DgRpK3cClwoCAZpRGxKfiyV9AyQIpg16iYCVlgOjfQubbasFTQQBKSm7
+FAkKCH8sq2cPOiuPaiVuaAi0BAoHsXHPy7ZrDHIKD2ixN94NKwWocksKhFs8q0lU1cJkLncB7O1eDMVl
+0JXgt4SBsAIx5Jgz0smLNWUkgoVbEusClwMPdyTJVnHCh48YB8h5BAmSXAQAOw==
+<enddata>
+
+<data> VarName=$campfires_yes
+R0lGODlhHgAeALMAAN3d3e7u7oiIiHd3d7u7uyIiIhEREURERKqqqszMzFVVVZmZmWZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATV0JH2qr0424ak/uCFUOFGhkV5CYDqWt3wuoHTziHj7CeONbWdwJcB
+7nYEIgZw3AUeCuWj0dy1bj7DoepYbHuuwWFbVQwcw1nBcVg3n53kTOBgPBJNgfs57z50TgYdHjNkBg9M
+DmZHaX0ID1sMgAGNKm0VBQMUDQZiFAcLAGAaTAR2GQYMeIElTQACh1MLQU2nIAqrRwsEXAADsZYLXEcI
+UVkDtEe+KS+pg8NHCQPMIM/R0wosXNLUF1TKekUDuTu2JwUBr6OoDAgBBLENclIZvBP0G7wRADs=
+<enddata>
+
+<data> VarName=$camping_no
+R0lGODlhHgAeALMAAIuLi7m5udnZ2edTU5UAAGtqaisrKwAAAERERMo4OKsZGeYAAP///xEREe9fX+7u
+7iH5BAAAAAAALAAAAAAeAB4AAATYkIVFq734Bpm7t1NFHGRpnujRjWmLWoSYGo1bWkdMsSYA2CRcTlZq
+PB41m3C4KwEYjJ+yYtItRkYocko5WQlPaJS7QFkHYsa2taxWHGlpqu2mDB7a5IuaKgwqCWJyJ3QlAgx/
+FHBqeiaFBwhiiQuLBXN8JxtQAFZwApddJ5FiBkyUDJaEmCWaDJ8kna+OqwcGcXWUqTe0YVClJgkVA6oU
+o2nHxw5vYggWxsjQDMqKUM0Vz9HI06fWFA0I4OHi4+IKFQoNj0AlX+rrsB3vLlYLIR/3Ghz4+xsRADs=
+<enddata>
+
+<data> VarName=$camping_yes
+R0lGODlhHgAeALMAABEREbu7u4iIiN3d3e7u7mZmZpmZmSIiInd3d1VVVczMzKqqqkRERDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASU0IX2qr042xak/uA1haRGlWh6HYCKGoJLAgTRyp/gODGe0TubD6Pb
+8YaXgdEhRBaWu95Q6RgQgjfcM2owSmUKY+NgbLoYxkGls0Pg2MdHIi1Diy1UR8G1oFsQfihkXhdAO3sv
+SycWXTtqH3ZQkpNLDBeRlJmVl5qdRpYWAAyjpKWmp6RZSKsui6wVCQGvIhKuQxwOEQA7
+<enddata>
+
+<data> VarName=$cliff_yes
+R0lGODlhHgAeALMAACIiInd3d0RERO7u7mZmZlVVVYiIiJmZmREREaqqqt3d3czMzLu7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASp0LH2qr0428ak/uA1haRGlWiqrhbDsGHgOAWsAYOj2FrnGA8AgFeR
+zQSPhWNow80ciEcgQPTNMEiW8SkoJACyRDTlfEoEDIIvi7KamQfHQrU1Ow6WMapsnzEJBClufXgAHgUM
+VB91fTOBDQ0ET0AZfI1cDwV2PZeED4NsRZ19O5pmoQQ5o3ZIVgNMFaqrZkANBgYBsBUJs3aBRMDBFSfC
+FYjFLRLERBwOEQA7
+<enddata>
+
+<data> VarName=$climbing_no
+R0lGODlhHgAeALMAAJCQkNfX15kEBEpKSgAAAHFxcS4uLu5YWLu7u848PKqqquYAAP///+9fX//8/O7u
+7iH5BAAAAAAALAAAAAAeAB4AAAT/kKFFq734Kpm7t4olEGRJAExgmCzajabBzApbDjMjVjAp0zYSImch
+CHgmgEPFWuGIFdKR0jMNAIDALPDI6aLSSgJAuGpziqt3VixNFw3DkLEslFDrtpvXTbUceWAmbw0zCC1r
+XxQ2AwcVhTUmc156NwwJj2SSiZU+Em8JLJNQi4xljlSbgaVBAw6oCwkFK6Nsgox0sA1ktYoLQSQFgAqg
+BIm+wCczYVTHnSZdmgSYFIWrv0E/AyUIutfABX4lAa+PlLebdiR45dWk2DYzK8o57XC2rFYMkXhe9oXP
+lA0w0G+NgwaPng3QcubYjIMdShRo6NAgwgoTPmjEMCTjxo1DAiIAADs=
+<enddata>
+
+<data> VarName=$climbing_yes
+R0lGODlhHgAeALMAAIiIiERERKqqqt3d3REREe7u7lVVVSIiIszMzGZmZnd3d7u7u5mZmTMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATi0K32qr042yak/uABAIRAgQ/gDKfGOI5woE8Dx19wO3R9C5/Frpda
+tSoUw45HrBACAAYCNigsUQLAIyDdCQyqJfMDawhhCAWhEr6CYATrCtMefmy824IuHmd0eTBAF2duGjoI
+DzdahH0gNhOLGIV2HwZPi2sWlDc9gHoKM5wwnn1ao34fCYIBAVYJio40Lw6aQgGxYj1WDJsOuH2pGXi4
+FUIEdZUfCnMWU3KyIEIKFrTBpCgwMw/W18IXSoPd3igqBgfj5DkDK95ie0cPCezuwQBmFwzQ9VQLC7BC
+JjRBYcZBBAA7
+<enddata>
+
+<data> VarName=$cow_yes
+R0lGODlhHgAeAMZ9AEJCQiUlJS0tLT4+PjU1NQ4ODjw8PBoaGhISEh0dHRQUFAUFBQEBATMzM7u7u/j4
++G5ubuTk5FZWVv7+/nR0dPv7+9zc3PX19YODgwoKCjIyMuPj4/Ly8iEhIXNzc6qqqjk5Oe7u7tTU1KKi
+olBQUHh4eERERM3Nzevr69fX15KSkpaWlk9PT35+fnZ2dmdnZ1JSUhYWFigoKKCgoJGRkff398/Pz+3t
+7UlJSWVlZebm5ry8vISEhMjIyJubm1tbW/39/b+/v4qKip2dnY+Pj5eXl5ycnHp6evHx8fn5+eHh4a6u
+rt3d3bOzs7S0tLe3t3BwcKioqDY2Nt/f37Gxsfr6+sXFxdXV1aampsrKyp6enlNTU11dXY2Njbm5ua2t
+rUdHR4mJiezs7Orq6pmZmdbW1mBgYM7OzkBAQFhYWPz8/G9vb9DQ0NHR0b29vbKysn19faysrFVVVaSk
+pKWlpWZmZo6OjmRkZPPz84uLi3t7e9PT02JiYv///wAAAP///yH+FUNyZWF0ZWQgd2l0aCBUaGUgR0lN
+UAAh+QQBAAB/ACwAAAAAHgAeAAAH/oB/Dg1+hYaHiImGDR+Cio+Qhx+EkZWJHZaZmpucnZ6foI8FAQqI
+CwcJqaqrqwUMhxpeKiC0LF0+T266u7y8PK+GBUUPY8UhQH3JysvMdFkCsEzM09TKK11ShhlhSdXey9fZ
+hSAh3+Z94YYEGxtCQjQW58zphQupCwsZAGfI8ugzGApAkiKN2gMLQcoos0LEhoxILMYoi/BkhAcTGhLc
+4aAsB5QElSD06YGkByIGLCJscFClhaUFcPq48NEHzaECTvpAGWDBZaUCWPo0MLGhyQJDP6qMQCDAhs9I
+ApgoyeBnhxWBheqEYLFgywYIlmLgIPCKhLhCHeS4kgLhQKi3FHDjyn1EaW4DB3MLORBUN9TdP4EAADs=
+<enddata>
+
+<data> VarName=$danger_yes
+R0lGODlhHgAeALMAAERERO7u7qqqqiIiIt3d3VVVVREREXd3d5mZmczMzIiIiLu7u2ZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATX0K32qr042yakvgMgip8lUKXirGyCakP5IGztBK+MHbYd6JpOrxYD
+XhbDGsB4TLKWzApPAVA5CIUCwWGIVgy/ykpRUQi8loQA0FEEDowAGf2oEQy1BX3GEii2Nwx7DwUBNgJF
+gwo8CwsIgxcEAAUMAHCQFYY1c5BWKwGJXgWJBQqLoV4LAQUpZ1FIElAWA1aPTAcECkgLSwVCLHsAW5oO
+CCI5UQaeDpx0AwiGCwwNSAhdoh1yoXEEjbIlA8OCGgZC4xfIDwwO5x8EAtcbehkN8akS6XTUDhEAOw==
+<enddata>
+
+<data> VarName=$dogs_no
+R0lGODlhHgAeALMAAJMBAe9bW3JyckdHRysrK93d3QAAAMc0NBEREeYAAP///4iIiLa2tu7u7pmZmczM
+zCH5BAAAAAAALAAAAAAeAB4AAAT/ULFEq734Mpm7t1MFGGRpnqjRjWmKLAxRWoDYnkShCKZl1BTWDfFQ
+SHoVgwCYEKKIRqNjliz8bClBNMrg+QoyprP02hqtvsX0GjQJCgMDgfFwNHaqJOJuDFQOCws6RjEmMnkU
+JEVRfhQBZkYIKD4DkI0Jj2ZxJz5alhWZUZtIiQSQfaBbC5NJBoNcqI5Rq5ytDls8CG+XmYekCSQLW6O6
+B6BWrIkGwlEpxhQHKT4GG4QpA5djiMCmotcK2bWJwncPLd3hVIl3lQw3UWLqwDrUCpIpovHbywoDprQo
+ojxAEM/HPwMO1qC4paDBKjHTEPi6gYLJBYoY2VAI8aGjBg4eBENuiAAAOw==
+<enddata>
+
+<data> VarName=$dogs_yes
+R0lGODlhHgAeALMAAIiIiLu7u0RERBEREd3d3Xd3d5mZmSIiIszMzKqqqu7u7lVVVWZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATF0IX2qr0425ak/uCVUGGZHSY4AAGalg3hFG85II6TgHR65znDh/Aq
+AIEBRobgsgGOOSIGIAwVCItHI4AwKGaZwfcYCBgAAFmudSFlcND4cVASyO85QcmIl+tDDX1yACZqSH2E
+JQZHSgMMhkduIE9Afw8DBXBRKZQ5GgtAiSUBQDsZdjk9IQdHlheoDq4fT18IH6x5Jl92ASCVhQ4PHXQa
+QFklTwKsohhACMQggYQGVRmLDgrMHwOSNRjd3hpb4aMS4ORbDhEAOw==
+<enddata>
+
+<data> VarName=$fee_yes
+R0lGODlhHgAeALMAAIiIiERERLu7u+7u7hEREZmZmSIiIqqqqlVVVczMzGZmZt3d3Xd3dzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASo0In2qr0423ak/uB1UOETAKhRquUDOHDQtkQHM3OIDHAvsLmLokd0
+DEhBU7E4ICQfNlgBkCACnjzYtTKELZ5EmaUgKIN7hedHQEwwxGruUuuMV+fHOOG+HACfCAULS2lxGwBZ
+RkkEAY0YXTBJAT1wSj1JDT4iPQlYPggIUQ5bQQVzPU1PBIlFC0iYbEQLAHWGCGGGF5OULa8aBigpJQ0C
+uRpsE8YVxA4RADs=
+<enddata>
+
+<data> VarName=$firstaid_yes
+R0lGODlhHgAeAKIEAKxcX7h+gP///44wM8DAwAAAAAAAAAAAACH5BAEAAAQALAAAAAAeAB4AAANPSDDc
+/vABFat16+rNu/+WII4i+JCk6aCj2rClO8CCPMM23QV0z0I8n7D2CA57wKMvqdQVm06HEZriRFVXUxa0
+/XQ9307YRgZlyozJmTxJAAA7
+<enddata>
+
+<data> VarName=$flashlight_yes
+R0lGODlhHgAeAPeqAAEBAQICAru7uwQEBAgICBsbG+rq6gYGBv39/TMzM19fXwMDA2FhYfv7+/r6+hcX
+F/j4+AUFBdra2uLi4oqKipeXl6qqqomJiVJSUn19fVNTU0dHRykpKYKCgiEhIR0dHfHx8TExMQkJCeHh
+4SoqKhQUFAcHB56enjg4OAoKCllZWUZGRri4uPLy8vb29kxMTOTk5HNzc87OzouLi8DAwGJiYra2tufn
+5/7+/jQ0NJ2dnaKioq2trZiYmLS0tJGRkWxsbNzc3NLS0u3t7XFxcd3d3cfHxzAwMA8PD/Dw8E9PTxUV
+FeXl5dvb27e3t0RERBgYGMrKysTExGZmZs3NzQ0NDQwMDBAQEDo6Ouvr65WVlY+Pj/z8/BEREQ4ODlhY
+WIiIiMzMzN7e3ktLS39/fy4uLkJCQjY2NqioqLCwsMHBwVRUVPPz8yMjI3l5eR8fH6ysrEBAQOnp6Vxc
+XM/Pz+zs7JmZmXx8fKurqy0tLdPT08nJyfn5+Wtra4SEhIeHhzw8PJKSkjs7O1dXV35+fnd3d3t7exMT
+E8XFxQsLC8LCwltbW+7u7mlpaZycnDc3N25ubisrK/f39yUlJT8/P4ODg7GxsRYWFq6urqenp0pKSoGB
+gTIyMlFRUY6OjtfX142NjUNDQycnJ+/v75SUlMjIyEhISHZ2dv///wAAAP///wAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+ACH5BAEAAKoALAAAAAAeAB4AAAj/AFUJSJCqoMGDCBMaJGFBIKAuASIQOGBiQAAAGA8CCLBgwcWLCwYQ
+SGWBoMKTCAE8KBApQMEPKGMWTOGoQZQWWxLJ3DmjAZAHpxwo2IkSQIYGMVwyQBWDqMIAd7j8GZAqjgE4
+JZwijEAIAgURqTjo2fNG68EImxyAGrnE0gQUZg0uIIPqwoFUBEjhcBO3IABIEGZQTUXERaYMWbUeEGUI
+gZ27qcYMOfHlxxWiKY4wCIQoy44qBctMkDCowhmiWCx8aoHKRigvBQuUMsBjxwuiOYSg2o1KzYZUAJCg
+GaXJjAaij+jw3o3gRo1UCpL0OTn4IAcZdXzIgLB8BIYKRgqcxIRscECHtwQKdKKBgHmQEZ5MUDf4YMUL
+HSxSkfCjwkOP9rvx0YhMDNSQBggCZCBBAQSsUAEYH/DAGwy/xWQAb00wYAAFBVmhRSGCMLJbETnItJwD
+HVzggikFHdJDHjrs5sQlJi4nxhqYgDBHQZOIUAkqYXCy03K70fDECZLggYEHizBBRQhEEbmbFBoooAgM
+EtzAApRRSonKhpQooQAGUGjl5W44yOHDDyqYdSaRU2iVgAAXvIkKG21oJYBAdtrg1JyqBAQAOw==
+<enddata>
+
+<data> VarName=$hiking_no
+R0lGODlhHgAeALMAAOdUVGtra////ygoKJMAAEZGRre3twAAAL8qKpmZmagUFOYAAIiIiO7u7tbW1hER
+ESH5BAAAAAAALAAAAAAeAB4AAAT8UJhFq734Gpm7t1NFHGRpnujRjSnJGEyrimIbCHjQWgdRm4MDAyfQ
+pXi93yFhOAwaAsdjVyn5KKPbIAA1Uimm60IhYBSIQRnSWgEMHMSYunoSI4gS2QyMQrSJTXN8KGIAOA1p
+R3QpAG0JAg1eJ2soAo1YDwwNDpIklCc4lwsjDw4GnZ8lA0SiBAVSKKkkj6xtBYqDJ1AOQwIKSiayZwK3
+cAm/WLGLJo8OJDcSfsnByyVdJXDOYiye1QdnDSZDgdslqUNyJBvhJOV7Cygbia8bYTWpUWmlBUN1NN5Q
+AjFIcOBGgURJMqAYkCbAlAdQBExhUyHEh4saOGDcuCECADs=
+<enddata>
+
+<data> VarName=$hiking_yes
+R0lGODlhHgAeALMAALu7u4iIiO7u7hEREURERCIiIt3d3ZmZmczMzHd3d6qqqlVVVTMzM2ZmZv///wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATA0AH2qr04W6ak/uClUGGZFeYVAEGaNk7cuCAVxE5CawfwFAIHYrDD
+JByFRnBWvDAcAQKO1KwABAUDrlV9SBs3nK+bCAyC4q4FhnNg1Q8EDnFw67rt2SAgMDCLbQQWAwgKfy4F
+eRYEBkRFdWkPAwaCTUEIYYIBB1ULMYJaBwwCjo8OBhVsAIc7SxZaCF1SAioeVTdcFR20VQBIiwa+eAgo
+kpQ3XUFjmw8wBFQa0BcFJAlEZzGlGAxjcBe+E94P3A4RADs=
+<enddata>
+
+<data> VarName=$horses_no
+R0lGODlhHgAeALMAAP///wEBAXFxcUhISJMAACwsLO7u7u9cXKqqqtE9PeYAALu7u4iIiMzMzN3d3ZmZ
+mSH5BAAAAAAALAAAAAAeAB4AAAT/ECxFq734Ipm7t4hFBGQZCIOpmt1oPgBQrLRYuSRs0HUVEDcTI8VT
+WUhAigthmBVZPmTQAGA8oRRTUkGINXiFxaN01FYOMauKEROQo2YKGuBwBwqNWJtUJg1SWwcPDFYCVHox
+KWVsegYJFQkDAg6IADAAO0cLlTEHZ5x2AlYWBZx6nnKICCsWA6annzFOWAoBr7CpakY+VIemqAoHPJoN
+Aoh5iMA4tAELCwbQVX4MD3nKrD7PAIYLK8YG18wCDV8AREJVAI9KzAEIVg66JWwFDghbOGULVgirKs8B
+Hjj4ESSAvhTjVixYZUwKuzIOUpRaUeeOOYdcynwh0USFDBIVFjFeuHKnxIBZBCtM+MASw6aVLVtuigAA
+Ow==
+<enddata>
+
+<data> VarName=$horses_yes
+R0lGODlhHgAeALMAAO7u7kRERBEREXd3d93d3aqqqpmZmWZmZiIiIlVVVYiIiLu7u8zMzDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATY0K32qr0421ak/uBVUKAwBCGGpIbjkGn8tIAgy4KC3nEBrLwUwKEI
+plyMT2NhCLqIGYVrEGQ8CYcKwvrMggIB22PhMiiKg+HTlcjk1oAFwbUIHObrlgOQIa//gC5ZJkUXDYGI
+TwUhAYmJQCCOgYUhQ2qSNTELDANrXICUIQsLAKVQAgEKBp8wokNpCxkHew5tMQMMDAIOOxdSvzcFRQSh
+FVINBIsyC0UFyhekMwQ3C224fYuzYikEKIcZBFQIvDJJFQCtDy8V4SDp7hYJkBhLRilkE/YZSw4RADs=
+<enddata>
+
+<data> VarName=$hunting_yes
+R0lGODlhHgAeANUAAAoKCo+Pj7u7u7Ozs4aGhnx8fExMTFZWVqqqql9fX0RERDAwMN3d3To6OiYmJszM
+zCIiIh0dHWlpae7u7hERERMTE3d3d2ZmZkNDQ1VVVYSEhJWVldnZ2ezs7OXl5X19fYmJiTExMUlJSYqK
+ihoaGm5ubrKyso6OjpaWlpOTk35+foiIiHNzczMzM////5mZmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAb/QJegBSsaI4fCa8lkYSpG
+YwshjBYXyiXr8CIksi9JyApDEI0AyVKyML5YRUCDtTRYIdEI4Q2NvqMQJidvAGQwEQEvdmR/RisPIgkv
+BYVRAEoNhjCNRS0vRZIJVlwHmptwRhYTKystdG1FDl2mp1EtEy6rEAEElZKZppydLsQTFi+ZALO0wkXE
+DAIjkzANirS1tsQURWoVkhHXzSvERhjIdFYXAgKsrC8b7S8Cz0ayXAVR48T7Lh4d/PtWoHnDpKDBFx6I
+PTjI8EUAFhA1DJhIccA/FxwqDtAAsaPDAPiK6APo4gEHgAKjVHiDrhMEki5eDODHgIwsA1wcSHGBgAqC
+uwtLNswjloEMlwULXpQq0hOGhQduWCgISGZPIV5FLjDYhiDlqakIJkywIktCEQPIYDBQUOSF1zdTFWRw
+cSHKqzgBApCoWSQD1LZSXbQVUG+aEbQqCBthgOer4haCYQBIBM7uixT5LABegWCxgksvMJABgCJMJQp/
+37By9GGPKEMgNDgE9oKIaraSS9SxcgbGNgOJCBxogecNBQALEgTXaUuxSuVMlPBiQsBApSjzhhhacIDO
+kocGKvOeFwQAOw==
+<enddata>
+
+<data> VarName=$jeeps_no
+R0lGODlhHgAeALMAAP///+1aWmhoaEVFRZMAACgoKAAAAIiIiMs2NqsZGeYAALy8vO7u7hEREaqqqpmZ
+mSH5BAAAAAAALAAAAAAeAB4AAATeECxFq734Opm7t45FGGRpnqjRjWmLihXrzpZBxDNdkTcl56caDwcM
+7ko9xa8oRBJNi0ar6fSdHIfp8ZT8DRjSV0VwKJsPiKeBkRVTFoC4PB4gCgCMhf5RLljgc3NpPneBcgd/
+cQsDBgUHcnUUAXEMjEZvAA8GDQMFBoUAkQqTAiScnioVB5oCDHFZG3QVASStr6kUpq5yA5wDvwkxDbtx
+A0IDgW0mSQnJQgWBqFyzcwJNj4ouSZMSuAomAwelM0kI41RFQ1be6Shd7O3TPujxNh318m8f+xlwE/wA
+4UQAADs=
+<enddata>
+
+<data> VarName=$jeeps_yes
+R0lGODlhHgAeALMAAERERLu7u+7u7mZmZiIiIhEREaqqqpmZmd3d3czMzHd3d1VVVYiIiDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASa0IX2qr0422ak/uBlUGGZEWaqrmzrvnAsl0ExYwZzX4tghwOGcCgE
+aAS6UMDBbDIFqMvAIQhYD0JSZel0BqRdZ3LLDBgJjLBTYAQtD48CAKVQMwcVefTCgA8ETDodYQgVf4Ea
+BYBNAHIAj5AUik5tFwBdYxqXYiddWhoEXXgZaWUmpQ4JIAAMoyasrjuys7QrnzcNX7NLE7hLEQA7
+<enddata>
+
+<data> VarName=$kids_no
+R0lGODlhHgAeALMAAI6OjnFxcUtLS5QCAgUFBSsrK+vr69ra2ulVVf///8vKyqampru6uvT09LUiIuYA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/MLFHq734Lpm7t4s1EGRpnijRjWXhCrDgFqlaDXcsBAHgAzwZ7WQh
+4CgOwGLBODQSUIMCKCNWCAVHBQFNLAIxwCExrZaKO0TFERieAgbDwmyjFAILhRZZwyoMAGYWdwcMAWoU
+LDUNB20kgwGNS0cPigInAl5VgwAGAgYHCoiVJAEoTY6QoTAJBpQjAFhuAQmBdQ93CgmmVa8GBDvAbZoF
+qgkFmXIAew8IAmIGEgSgbRbPDb+ZXQev2tIbcxYBurEFXVAArwzoBLQHABbrBkNjTwcko1y7JLoKFvNu
+AJxTMCbfrxb+KiRAoQuKghjMHJyYUKHBJRMForUqAWCUIgIJaywoYICiwLoE7wQaYMaikwUADUyZuFQA
+AAMGX4C9MkeRAp4GAGjUbBWUBCEJzBAoCABpwRgo2Aw86RL1ySgHAoog67HARw8lS7oC8bGAZRFZOl7o
+EIIMBrMLGEtiOTGE0oOeH/LG46C377oIADs=
+<enddata>
+
+<data> VarName=$kids_yes
+R0lGODlhHgAeANUAAJ2dnWJiYgwMDMPDw4GBgbi4uKqqqk1NTXp6eq6urtTU1PLy8kFBQba2tqampklJ
+SS0tLTY2NlVVVcrKyjo6On9/f5SUlD09PZCQkPb29vT09EZGRoqKiunp6QQEBOTk5CEhIY2NjREREVxc
+XBwcHCQkJPz8/BUVFc7OznNzcxkZGaKiolJSUoeHhzAwMG9vb2lpaSgoKFdXV93d3Xd3d+bm5u7u7ru7
+u4iIiERERJmZmczMzGZmZjMzM////wAAACH5BAAAAAAALAAAAAAeAB4AAAb/QN+t9ysaj8iksWcQKp/Q
+o4H49HgEApFWYIWCjtas6EQquSi5DSMSU3GjP4+IBEEfJAEazqLDVHgHLiRvSnIxDzAEGAAGAzMZPpEd
+AwAvGzEiHkoCJQctNx8mkT4GNDk5EjgzPhMhMhCZSB4nDBUoODm4NF9JPDY1ACMxhEUeJSMJOxI+OD4S
+XjsdFgcgmkYCLikKNzzMMzRRIjYKCBGxRQIRFR88BgY/zeBGOUg5Pg4sJNY/6esSNjN27JhBzwiPJDcU
+pHAh4BoEbcqW2UiC40cPXj94mMDAQIQRDzFgTPBBQ4QEjEYm5gAngUcPHwkk6IuDTZuPHvZsGMB1yp4E
+/x0zbDgZt5CLABIHLCxQOcrHDBEgZuj4YS/SjR9NVkgoIUAFBQQ7fEwF0ZQZPBvPbkSa2m0Ghw0gIAQo
+4MMGr1WQnv64MVVcpIM/wk5IEeECgQ4XjTQbNdCq0Loef4josUPHAQYYfCARETbSjp7d/iK5YUDCBQ4a
+nh3p8dhG5MVTj4i4F+gFiqtIQKh1ikNHXcBHcNjAcQGpjgXy5k3GcYM0D5NIXjYIgEmugQw4voDwPZwK
+CB6rbtATQcPGBAQXTszqwQPAqkgZatSANMpEhw8LRnUogABuw1kusECDBQDowEEFBITAiAErYEBABS0Q
+qAMBAVwAAiFygBBBDg9scDJBBIU9wAILl4GIRocUtPEGFVcIcMKLImAxhgoqnBCjjDAS0gNucPRohFpD
++AjHjj4EAQA7
+<enddata>
+
+<data> VarName=$mine_yes
+R0lGODlhHgAeAMQAAIiIiO7u7hERESIiIru7u2ZmZnd3d8zMzDMzM93d3ZmZmaqqqlVVVURERA4ODp+f
+nyUlJaKiohsbGxQUFB8fHxISEv///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAA
+AAAeAB4AAAXEoBU5V2meaGpOj6i+8PmQcZ1Wdg43QA8YDV2Ml7AYLQuGEIZQBI6JwvIlADyNhMFUNSAc
+A4ZtqnDEasUXxLUMFguKxkPZAtgujlLA9yzUGxUmCHJhSwxHBwIoUksDVwF8aAJyRkpoJgpHdZYlBkcL
+MAWQTFCJKFVPAZUwAo4IKphHBGkwkxaLpmsWBGQJhCd+FoCmAp1zV7IoA3IHKQMWcGxlohdVpScDPQYA
+BAsFAAID3kGb5FMS5ScQyOgXXgQU5eoWIQA7
+<enddata>
+
+<data> VarName=$motorcycles_no
+R0lGODlhHgAeALMAANPT0wEBAZQAAP///01NTW9ubu1ZWSsrK9hGRu7u7oiIiJmZmcEuLuYAALu7u6qq
+qiH5BAAAAAAALAAAAAAeAB4AAAT/cLxGq734Opm7t44lBGRpnmjQjejiLOkpVmy5DPgRl1Yg0KbNQLHj
+VUg/So0wABSNlFKyIVAACIfCk9STVgw4wpZ7NE3BjrGqbGJ8h4q4+KDQmbqmhOGNG6QfQzJsJAc4exQM
+JApNCQNid2wHBDc4CBUIjTgJAQVEUA2KfaKHDWA4AAAOnmRRBQ5aAYt9pKYDsJBRAQRygKMVDAlWGwCe
+PQ7EVglZQ4a/Nw8EBA9OFgoPJQ4JMH6UtAWbJAsLFgMHBwnohYXMOG5Kx0SF5LF9G0KiB1MIOFoD80xD
+mPTqAyOAJQpg+ll4AMNcrDS6oj3idLBBInE9AECbpKzIgooII6iVUeBA1RgFFUfgUWOGxkqWXjLARDGl
+wYQPODEA4JCz584IADs=
+<enddata>
+
+<data> VarName=$motorcycles_yes
+R0lGODlhHgAeALMAAKqqqhEREVVVVe7u7kRERN3d3SIiImZmZnd3d7u7u4iIiDMzM8zMzJmZmf///wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/0IH1qr0425Wk/uCVGGGpEWbQJE1gvo0jU2/ZOUptCk6hhwoGYYH4
+fRQyh8CoWSQdCWYm9lRYFcuFgvYaPL9RAK5mSA4EB4ULyfAuSwYBtYciALyywSMN/CYLfgUFCTkfCAkI
+a34MDE8HO1Z2fg4MDwgDQR0FahgBCZsKBQMGCDiOAHISBHYMLhYKABYJAw0PUHOxAgUHA64NtRYOBgsD
+xWVlpjI5AEUJDDllGw4PSDIdN08kCSiNDkXTwQE8ODxiT8AJj90HAeAVALULFApRD6urFgcFAQsAOb8X
+AjBAJWcAFw0NGAgwwMqVhQD0CDkEEcoBrYlSMmYkoTGDgFgdCDE0mhDSXqMIADs=
+<enddata>
+
+<data> VarName=$night_no
+R0lGODlhHgAeALMAAO1aWv7+/pUCAkhISNfX13RzcywrKwAAAIiIiMErK5mYmKoaGuYAALu7u6qqqhER
+ESH5BAAAAAAALAAAAAAeAB4AAATTMDRGq734Opm7t44lHGRpnujRjWmLitX4uLR1CHHjInNq3xUAYpBC
+EHqn3yERDBhQiIDDVzExKYtiIEBMVksFQAy1kb6+pMEAR2GVCNvAmZJiM9yDuNNLr48PCnpdJUoodgJ5
+ek8mhYZNenMMNEAUAHFTfJI0A2KVWwWRLgMNW50MADqhYAgIpHoBpm6MaAcGr6+xqiUPgbcBCocIs30n
+BgUODQ0OBYt2AIsqtJMlV6cET43TtaYJJNnaCLnf06wLMeOTPXYX2i7rEx/xGKTw8vKkEQA7
+<enddata>
+
+<data> VarName=$night_yes
+R0lGODlhHgAeALMAAIiIiLu7u0RERO7u7iIiIqqqqhEREXd3d5mZmVVVVczMzN3d3WZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASl0IX2qr0421ak/uBVUGGZEWaaGqpKBCDAtpwDCBqgzCbg/I4B6eIr
+tA5AXMbnUJqQA0dC03EYUwlcw3lZAFshAdAxBGMQY665Ih6X14boeH0xKMZWOls+ZtATAXg/MCoHAAAB
+fHgDKCoNioJCZgZogg4IPAQALQQHBQEBBQeNFgCMehg6QAtvawR3P36opUCks4cCCFOzFTwYrbMNhLwW
+gRPEwg4RADs=
+<enddata>
+
+<data> VarName=$onehour_no
+R0lGODlhHgAeALMAAK+vr8HBwZcEBGhoaFBQUCcnJwAAAI2NjeVTU805OeYAAODg4P////Dw8EBAQKCg
+oCH5BAAAAAAALAAAAAAeAB4AAAT/kAVFq734Apm7t4AlGGRZOo6pkt1YDkDDzEwDDCtbCbtBLItBwVAY
+FgZAwspi4FESDWHp8SgdG1UTs7l7LEiF2dCweBQCAW2llNilDA7g2zEul7aEhlPhMqDBJgUNSgZbQQ97
+LmhnaWAPSDoUBkgFCw6JfkAMWXALlThMNyaJaAsNBysHAIVrDWMlewgzhCoODaySDDmxjTm6Fg4MZyuY
+KwFhBcDCvaM9KsfCTLo5PgjOKr+tr7vXJLa4Cgai1CTFJKrgk56W5Ilxn+lkA2bkXBQCj1/xedvUiYOR
+wpHwAubNiksVEtxZMyWAA4I5yhTbMiXKqz9gBjRocy+eiR8LIw6kKALnQBJ7fCiqgCGDhg0csDrUm4lS
+wYQPODEE4JCz584IADs=
+<enddata>
+
+<data> VarName=$onehour_yes
+R0lGODlhHgAeAMQAAEBAQPDw8GBgYFBQUHBwcNDQ0LCwsDMzM7u7uxAQEJCQkKqqqoCAgCIiIjAwMKCg
+oMDAwCAgIODg4P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAA
+AAAeAB4AAAX/4IQcVGmeaGoei6i+8LmQcQkAddnEghFMwEnAIMilBhIJwUGJRCgOQnJgpCQeAcGz9HiY
+IoSAN1coRB6SUgS4lTwiBUjtUUhAcRRAEg9gJgpjKgMBWygQck0nEQFUKhICD0yGEBGHJg4PUioCEhES
+eCcQSROBep5FKAYEMIcSAQwpCgYpAZIqEECNKAABKRMxuIgqvycAEw7Chse3DhOFecfJXxPSJhDNzxTE
+ggHVJ9smtVUpvCmq4yiyKZyeoDWmj44Eb1VnmtzZNQ6MMHR2Du6K+QE0pwCmNI4iEcyBhUAhS2rCBMqB
+RIICHA6YAFAwBV2JHj+CDEH1goZHGAcQDJyMgUCEyZUlUk4IAQA7
+<enddata>
+
+<data> VarName=$parking_no
+R0lGODlhHgAeALMAAO9bWwAAAI6OjpIAAC8vL2xsbLu7u9I/P0RERKwYGOYAAP/////8/FVVVaqqqujo
+6CH5BAAAAAAALAAAAAAeAB4AAATZcBlFq734Opm7t441BGRpnmjQDQTivrCbkmJ1LHiu5wKBWoFBBbAr
+5gonYHBoNDZMyiWF2NQ9oBXTYYg4NQy7Jy1bMgAqiRSYV4oGDIwzZeTVGdpkEjheoZcQdngUJmt8cyYF
+gWODZTkMCX2NbIsKhDoIQnMEGzo+lJY6hgpUOXeClZKhcqM5D56fqapMrkl5b02iB6+noDgFMZCHtYx6
+lyiZCn6wxTldx5G8sc7Pwiq2azjT1MnLt80zJMgjbtgL2ini5Mbg4R0lLS/sJsgKEx/3GGD2+PhgEQA7
+<enddata>
+
+<data> VarName=$parking_yes
+R0lGODlhHgAeALMAAFVVVSIiIqqqqu7u7oiIiBEREZmZmWZmZnd3d93d3bu7u0RERDMzM////wAAAAAA
+ACH5BAAAAAAALAAAAAAeAB4AAASMsCnmqr04Wyak/uAlUGGZBRmzrGy7mpjSzHRNG6Qp2zx9wLteD6AT
+ChNF2uJSAARnxNBzmXkSSlMNoKbA1qiYBder1BzG0q/GSp6BKxxb7vM00rpt+2yAytsHcyB1PQMGfUkz
+CC4LgYgNbzBrapGCk5SSZZeYbpqbj51VlpSBKiwFmgx4oJITqxepDREAOw==
+<enddata>
+
+<data> VarName=$phone_no
+R0lGODlhHgAeALMAAJMAAAEAANTU1P///4KBgXBwcCUlJUJCQq2trb29ve9aWp+fn70qKuYAAO/v72Fg
+YCH5BAAAAAAALAAAAAAeAB4AAATccKxGq734Ipm7t4gFBCRpIAaRlGzbjaYzHMXa3oFYwcIwEIcB7mYJ
+AHYE388gHLKKxgpDuQgMDM4SNEpR+FYEbDZXYR274fGzbJaq15QbY/cmbUsPBf19JwX1FDBjfSQ+gA2C
+ToQBPQNniINsLRsDD4+JRJIsBT5Vl4qaJUwDAiSfOIuMPmKnLqElnAMFJa1aryU+pbR7tnFDCz4HBwEH
+CLWpAaM+DwEOBK3IAcC5AQQOXJBkvk4ywUwE2CPRAbES0tfh4wEJSsTgph1qwg9ibRUJH/kZ7Pj6/uwR
+AAA7
+<enddata>
+
+<data> VarName=$phone_yes
+R0lGODlhHgAeAMQAAICAgBAQEEBAQCAgIJ+fnzAwMO/v72BgYM/Pz3BwcDMzM7u7u7+/v6+vr1BQUBYW
+Ft/f36qqqo+Pj6SkpAYGBiIiIpiYmP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAA
+AAAeAB4AAAWu4GVRWGmeaGo+0TWpqOPAafTQQzMADI1WtILhIkj0fEhMAHG5AASXJBLQdBaiUhq1ScBc
+ClnY9tKTDMKqLeCMFjcPbW0TEIcdmo26CnpB6FMBVX8pEE1ggyYNb4gmCVyMJQNNfpAYTBdsjI4XCZWB
+fZUYBE0OAgECeX+SVQcBBnR/o00QGAAGAX+uVQKSsHqbF10Et4MMVacAuCoKUqcCB4cwCguhGAsXC8yI
+0xchADs=
+<enddata>
+
+<data> VarName=$picnic_no
+R0lGODlhHgAeALMAAJYCAgAAAEZGRomJif///+pVVSUlJXFxcbu7u+7t7c07O+YAAMzMzKqqqu9gYN3d
+3SH5BAAAAAAALAAAAAAeAB4AAATekKBFq734Npm7t40FBGRpnmjQjWmLihXrzlYAxDNdkTcl56car6IY
+GI9IoyG4K/UWDoJ0SiUImJTTM4p8EBpK7AL1LJgGhEFLqMWRBITHumIQ2K8BQcFtkC7zdyp0CIQIJBt7
+PiQMBAd5hYY1d3cJBAlPAAIIBAyTdoIUcFVUDhVRo1KgCwaQCIychApEUg+tqihoBCZlXy9NJowNbRRR
+vlknUo7DUHglbG9+KU8KYidoDC6YJs8BXsot2iTPfQR/LokLLNxATjjr7EM+7/A2HfTSFhMf+xib+vz8
+NkUAADs=
+<enddata>
+
+<data> VarName=$picnic_yes
+R0lGODlhHgAeALMAACIiIt3d3czMzKqqqhEREe7u7lVVVZmZmWZmZnd3d4iIiERERLu7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASp0LH2qr042zak/uA1UGGZAWaqrmzrvhagzHRdo+ni7HzfLyqZ4rCr
+BRyDGW6lcBQuTQXsOLgYHAETYMEFPq4OxIWwQxG63hhjzagQHcuKwJF4NNjtMZpbcO4XDA4Cfxg6PoeI
+Phh3eHOCeGw7AZAlTQ4EGlQsc1UalitkYR8NO2klYHEYR1IpTQIhTXkmR3UgpA4pAGUlR6Ywv8DBGSTC
+FXfFFoETwncOEQA7
+<enddata>
+
+<data> VarName=$poisonoak_no
+R0lGODlhHgAeALMAAGpqari4uJQBAQEAANbW1uBNTYGBgcnIyOTk5KWlpUpKSpKSkh8fH/z7+78uLuYA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/sIVHq734Jpm7t4klDGRpnujQjWmLihW7NAbgvtUgxPPcMLcBUJXT
+VQoJQwChuBkaJEtpR3EsAo3F0MRgGBKHaJFEfRRqhG0JwX4ypaay49lokhgABGBhuDbgJgUVDgcEBiQB
+CQEBAAF9CAeAJQaCVQhACghYV0kNNJKIBw5HXY0AX3oAjX9jk4aVZgpKqg0JqgCFoEILBwGwBVcAG6pY
+BAqSXQsEtgu/jJAABJ5pcHgJBAjXAbyjVTM1qk8MUgwKtQsLpwEHer8Et3lQFgzrjLwEBFg0ALAO4QgN
+bFjgpc5WuAXQfA3aYEwMBUbh9iRQEKCcBGndHjhQY6EBgQOFRrAssbOhwYEEGVk4fDBgxqKKFUsw8NjF
+CAWV5ACoObFhSxkWulLMtEMmBhEKQUpoOfEzaNIpHZ66KPNgwoerGERi3Vq1QQQAOw==
+<enddata>
+
+<data> VarName=$poisonoak_yes
+R0lGODlhHgAeANUAADExMUJCQry8vMbGxtXV1eXl5d/f38/Pz4ODg/T09BMTE9DQ0KSkpHBwcBkZGba2
+tsPDw3l5eVZWVgkJCfLy8qqqqgICAm1tbbm5ubGxsZ6eniAgIJKSko+Pj4qKioCAgIWFhTw8PHV1dWpq
+ajQ0NPb29rOzs6CgoIyMjNnZ2ZaWlru7u6mpqePj4+Li4uHh4bKysuzs7NjY2L6+vpubm0pKSlpaWurq
+6nx8fM3NzVBQUHNzc9vb2////2ZmZgAAACH5BAAAAAAALAAAAAAeAB4AAAb/wN6K9Csaj8ikkVQRKp9H
+i0VZIUKvzw1UKsV6ixNPD3GZfK8WWoLW6zmmUO11AtEgBK6Q+fnpoRUaESomJSoKSRsKCAwQcE8ABicm
+CA0yJI4WEy0FBTg9BRJQIQYIAz4IPQkBRRYOIi4XHggeMD2OSBMJESYqJwMLID8WGBUCJj6TKDEHe0kW
+ES6+Pg03ABY6BgI9KAIsCCU9Is1IwxARPbsZiTswpycxPtMmCeNIEQYRCykDKQ81H8calDgRr8EAHvVY
+WVDQYQGhEiZGZBjk40SJBg0IpZBwC4wCEhxksPCh4mILARB9tDC1oI2MDbcW2mBwIAaLFAJUDPjWIB4K
+sHTxfJwDEMVBgB4sUKBogMDEgBY+BAiIlyJF0AYvKGDagOGAiQYo+C1AOUYgCosI4kV40cNHFA45GkQQ
+cKKnjw8cDByIWqJEWh8MEhBYdWSCgAvT0qrQIGGG0R4CFpRIysDUG2c9CBzgV2vGiwBSmiSAwIJDgwkd
+C3NI8OBBlQxEi2zI7EABai8KRiiwnfpEDzlnhMXpQTg4lg6xjStXYmX5ExIrnENZIaS59B/QewQBADs=
+<enddata>
+
+<data> VarName=$public_yes
+R0lGODlhHgAeALMAAIiIiKqqqszMzDMzM2ZmZpmZmREREVVVVSIiIu7u7t3d3Xd3d7u7u0RERP///wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASq0IXxqr0428Gk/uDFIGGpNWaqrmzrvnDsHgFj33iuoxcANIJDY0gI
+DIcMwvGQGNIuBkZF2quKLEpLAzDFcC1fC7VS0BaGAkrlKeY9EAmDJV1pOO74vH6v59n5gIEOfngAcg0J
+gncFJAMCg3WLAwoKBAOKDAYBDoxNkYOJdwiPgQQFeAtnGXluIB13YRivAikEeK1QBAtyKVu4MsDBwsPE
+FSTEbMOPE8FADhEAOw==
+<enddata>
+
+<data> VarName=$quads_no
+R0lGODlhHgAeALMAAGtra0tLS////wEBAS0tLZUBAe9XV9tJSe7u7oiIiOYAAMDAwN3d3ZmZme9gYKqq
+qiH5BAAAAAAALAAAAAAeAB4AAAT/UDxFq734Lpm7t4tVDGRpnujQjWmLihVbLkjgmtZQxCXADIRbKafj
+ARmLhJBELFJGBAIguGw6FQWGYNuoVk47imPLFVpJYcVYgExuUmd0ZcxoLAKJ6OubSjsYSglaAgAnZwQP
+SQZzAggJW0qGXwB4AQhkAotimJE4XwkNmJiaapgNCQFUOQGsAA+imYwCCzQIAIU5BKB5ALCkdA0ACQu4
+FZZktr0CeAkIaSMBtwO3FghImAShj4QBaQeFA48I1SQElwIJj4PBBAdzC+FbIKkDoei9qHgDG+5iqPIV
+EDRAoGsLJRslCEi4cmDALAuJEvhgk0KhxCsFlFggsGHLnRZIKiL1w6KCDwF6LgIIaCBFgIMYcW4oawQg
+zYUlJ1BeUTDhg08MG3r+/LkhAgA7
+<enddata>
+
+<data> VarName=$quads_yes
+R0lGODlhHgAeALMAALu7u+7u7t3d3SIiIlVVVXd3dxEREaqqqkRERIiIiMzMzJmZmTMzM2ZmZv///wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/0B32qr04Wwak/uAFDGGpIWaqVgYQEGvZCA8Vg4MAJDfONLZeRuAo
+LoQYRHG5MCAryqVu1xHmpAsAITEIxohFAS8BbqgYh91yGUgUE05QY0sIrO9rXiixwPvXCwkIJBkIhg0H
+f3cKLgEFBRkMfAk/ilgFCQpmF3VsDQ1FCAkJAQYLkFCfDw2oDwMBOmsMfW4OcwwDmAebbgGEpE4Mdg6j
+DmALDVdLAAa1MA8JWhR9xAXEhnAdjEuCoRV1CwGSRQ2GFwweq0UKDw4AFwcKCTPGGgPVFQoOAdBxFQMd
+1qHIYECAvHwO2H1gQMBLBgIOFuTy9kRdEUcZCMUwgMDhtwMVCjPomxDyAQJ9EQAAOw==
+<enddata>
+
+<data> VarName=$rappelling_yes
+R0lGODlhHgAeALMAAO7u7kRERBEREaqqqpmZmczMzN3d3Xd3d2ZmZiIiIlVVVYiIiLu7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAT90LH2qr042zak1ggjOmQJDMEzUB+2lHCcJO0TLEq1FEQcL7UXifBY
+MGwMH+nYggGNloKS+UkuHwWqNUbVCABDgYNY2cK6mgCDIOgBy9PWAcBYBDoO1sNcQlcEeD8XfFcYAlJg
+JQV6cD5oCVILQg4AAhkHcRhJdyVvGQ1SZxkCBgaJeQkLpggXk4UYDacAPTBkRVwfrkoFlnx+OkoLBwYk
+ALoeGpgwACkVCMSZo6dhg9EZRtMArA8NSsgadgKqMCmBuLnND88kBuLevzrpD4AkAwrvLXbX7PjoINPn
+wMm7EErJAG4CvQCEcaDBLwSMLhwQQZHigT0SItZo4dBBBAA7
+<enddata>
+
+<data> VarName=$restrooms_no
+R0lGODlhHgAeALMAAP///9nY2JQBAQEBAUlISGlpaSwsLO9cXIiIiMIvL7u7u9dERKqqqpmZmeYAAO7u
+7iH5BAAAAAAALAAAAAAeAB4AAAT/EChHq734Mpm7t4wlDGQ5GAVJEGbbjWWhSCQCBIjRkmIlGI0HYKio
+DYeMlMkyEFQOR6IxCng0dANm4+ArHIsD2zBlEN4IzCGXIvhOAaXZEJFWP6XhI2JAiNIrA0cBCXdgCDgI
+iYozfxSBY01PhmAtNo0Ojw8lThQLNZQmlnUNJpwOIwigJaKAQwYrfASmAqk7eZeBAQOURQsVCapGuAAF
+BXskxgS+nXwxt2kMD1gkD6mzpDUGrI5D2Ks0pp41iQDDACwmBjQDhGw1DwHladXHYYeGa6d5c3VDLOp4
+bOSjpaffOT5u9i1zkKBgKz0DvAQ8YgqKvIdz9q0TA6edAyjmL6RsmDhkAAOPB0JSIVkugIKFHjEpmqlI
+CQGaiWIyscVzhykHEz4IxTAj6NChMyIAADs=
+<enddata>
+
+<data> VarName=$restrooms_yes
+R0lGODlhHgAeALMAAERERO7u7hEREd3d3SIiIqqqqlVVVZmZmczMzHd3d7u7u4iIiGZmZjMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/0Kn2qr0421ak/uBVUCHBVAAQPgQoMIr3LM6wtOvVHIHjKxWaz1E4
+hV6I4RA4U/oCBxLmMDwxlsHqo9FzIFQXpQXb9FlivgVGqRbK3GoAe+2zLRbJt/3Oj6nDPkYPBj9BTBg0
+f2MOAQIXA2+HF4l0B4iRGpSADSkPAAYEmBmaYwgPCo6nAgVMC5IPjqQVDgwJigwLBq1ABhYnsg9EATiw
+Aa6GD5ZBDcA+yhY0uw2HfA6Ksw5gFqGtAQjUAZDXwcYLqXcDrYVZaXQ+Kg1kQkAUcO4OvXLrQgMPv0Pj
+5iSQN2QGAXuA2rlRZ2YBAISLCnXYV7CAAYjYnBBMkw6NNUR8GELeMfJQZEgwUnKonKay5SkJKV1imOYg
+AgA7
+<enddata>
+
+<data> VarName=$scenic_no
+R0lGODlhHgAeALMAANPT05UBAQAAAHFxce5WVomIiCsrK0RERMQxMeYAAP///+9gYP/8/O7u7ru7u9ZG
+RiH5BAAAAAAALAAAAAAeAB4AAATvUKlEq734Apm7t4AVCIJxnAepCui5dqMjSek6028V6PJcqzfFT2AR
+7CiP21AQHBaNlYVvxVTmKKQDIXojFYKzAul5YGwpUokXLBETK1mFmatYs91kyRxdF3zvY3AsM3sJC3Zg
+eIIHN4Ujf4mBWINKRwkBJieQCoqTjF1QFCOInJIJcaChl6Sdp35BAyqWmA03AKYktUEGshVJsG9YA2y3
+vXy2waebqSSWaTPJr2xUAgh0akXL0FQFZ4bQ2Wx9KwWFadHaatxy3lLRBwXx8vHU8PHWFAjR1Pz8s0/9
+AhrDILCgqgQTPijEMGOhQ4QKIgAAOw==
+<enddata>
+
+<data> VarName=$scenic_yes
+R0lGODlhHgAeALMAALu7u3d3dxERESIiIszMzO7u7t3d3TMzM2ZmZlVVVZmZmURERIiIiP///wAAAAAA
+ACH5BAAAAAAALAAAAAAeAB4AAASwsLXgqr0420Xk0mBYCQSTHUu6CJiastcyZIDkYfYtVrX9XbnGb9fT
+WYJDUVGIyyUzi2CuwpBKTJqotUHdYqFbrqNq/bbC3TJIa01LzTH02LtGqioDlSIH3wRFZFd1UyGBDX1u
+EhQaAwU5BhoCjkEHGksSCBkBVgQZCFaQGIaEF6M2GaYSqFurbaKsr66lsLOyFqliMQy7vLtQvb07wiIJ
+w8Y8x8ObCskibADFzRcDZBEAOw==
+<enddata>
+
+<data> VarName=$scuba_yes
+R0lGODlhHgAeALMAABERESIiIoiIiHd3d0RERFVVVaqqqt3d3ZmZmbu7u+7u7mZmZszMzDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASn0Jn2qr0425ak/uCVBGEIDBlRhoNDrXAsW4AAzGUw4vzTvL3G7VJw
+LHoPAQnTWjUUh0QCUWAFhp+nY7t9AAhYmoIBDDUIKoYjoQEwFKhLYFAtCO6FKzdMM0huBX5bBGpcLgJb
+CCAIDgcHhg4DAQKPWwxeCHxMkA4MWA2UDgIxC50IC0sZLSpIGggHmq1uo60ZAQqstRcNcbq+v8DBv6m/
+gcJqE76EDhEAOw==
+<enddata>
+
+<data> VarName=$snakes_yes
+R0lGODlhHgAeANUAANHR0fLy8pOSk0dGRv79/pubnHt6e+Hh4WxrbPb29igoJ8rJy+rp6omJibKxsqqq
+q8LBwYKBgtra2zMzM/r6+1tbXObl5u7u7tbW1mRkZHV0dby8vNzc3KWjpbq3uePj5c3NzsfHx1FRUTo6
+Om9ub7u7u/z6+4aGiEFAQNjY2Nzb3KanqN7g3u3q7Ly6vevr8Ovr7MG+wS4uL/Ht8t/d3r++vtPT0/f3
++OXi5vr2+3FxcIiGiF5eXtfa2P///wAAACH5BAAAAAAALAAAAAAeAB4AAAb/QF9p8isaj8ikcfIQKp/Q
+44MYrSYV1qw2q6BuoaLGglMSVL7JSCohaDgWnw7amLGEMAaSIdLgzYshEgUjMjIKWH8/Mj0HJIlKNRQG
+j0krPg6JEwMjIzw8KAY+AQ1oKA00PioUPiYEFj4WG186GAEPDhg+PjYwJj4ACw+IUQgQPhcJFB8PMCkc
+BwnHABSyUBk1Pi0YEScgPgyjDA0BARw3NgsiTwLRBKI2rgUMDLo2KbowAAEISgg5ODYQFPABw4ADFhss
+BNCVIACABCEIDFDSwccHLBMI0NjhQwAECBcOlMBQoMQBH46UDIRgRMQNHxI0YIAQYMGCAwN9THpSYQaB
+SJSKBHij8MKijwQYBKCo4oDhgxMkKogQoePECQMVJgyLokBHBw8uPMSgwQAEUEpFJmRwkAFtEi9u58B1
+O6FEXCMlhMz9U9dHEAA7
+<enddata>
+
+<data> VarName=$snowmobiles_no
+R0lGODlhHgAeALMAAP///5UAANLS0gAAAElISGlpae1ZWYiIiCQkJLu7u9lJSbkmJuYAAO9gYKSkpO7u
+7iH5BAAAAAAALAAAAAAeAB4AAATlECRGq734Opm7t44VDGRpnujQjWmLihVbIkfhmtYQxPMDAI4bKafj
+DQ4/gAAhJBYpo8LvIBxWTDvoIAGgVp2kLGORZDavJ3HjZztTUuruF41aVBreG9h0MFQMBCRLKXslG34U
+DQ4EP4EnhSRcAIgMBklyOFcFeZFJdomXAo4qV0ickl1xl0Gkb0gPCbEJPkkHnwxrl1Q5G5e+SZS5U60M
+jL/Hk3e1xALIyMESVhTOzpQLJZBCBJQjCBYEB+Hi4m1Hss2UCiEVCLQCsrGjB/CxCjHZVWEd+S5iDBMf
+AmLgAlCgQC4RAAA7
+<enddata>
+
+<data> VarName=$snowmobiles_yes
+R0lGODlhHgAeALMAAERERO7u7iIiIjMzM6qqqszMzGZmZpmZmREREVVVVd3d3Xd3d4iIiLu7u////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAASx0LXxqr0420Gk/uBFUGGZCWaqWgJjrKUQOM4BgwztFOidGTSGD9Rw
+CIeZHK2HtMxoi6YFoDNKK0DdUaqkBRKVAunWqToIVAfAV6QpGIdnMGTYVtrWh8CsWGtydnhHBWY0BwhJ
+DgENjA1yRgmFWhkHkpaSdg9pl5xzFwqdnQ2IU6GWAQd+V1QNF0yaDLGysi8VDI2Ei4wFBK5PBY2MYLbB
+xQSkVxpjyQ8Drcx3EstIzg4RADs=
+<enddata>
+
+<data> VarName=$stealth_no
+R0lGODlhHgAeALMPAO1aWgEBAZeXl3p6elZWVjQ0NJMAALy8vKwZGe/v7+YAAP/////8/M/Pz9/f3///
+/yH5BAEAAA8ALAAAAAAeAB4AAAT/8B1Fq734Hpm7t1NlBGSxnGi6HGQbdGNgqmfSrG5rGaKcHgJCgYQr
+CV+VAI9iMDWGucDCMTgkTgQkhbRUIBZR2e3UEAygllYXYBQcFrZFI5xuISqABAN4lLKiaQMOJwAVCGFF
+OWkEB2cBd0xRiS51LgWFkS6TOkk5BQxdMUR/ip2WYKEtmySVMgM3XD1SDI6USQQCgwwnaj0oDA5BrBU0
+vL1MxSsWA1fJCwyYCgAqCQNaCiQEg8nQeCcOWcNbJc7P0QBztuMBY87dFADWnOMCu+XmeFDXPve/5/PY
+tvU78U6aOAUCBqooeMiCQhoMHT5cGO3CRIogPmjMsCHExo0bAiIAADs=
+<enddata>
+
+<data> VarName=$stealth_yes
+R0lGODlhHgAeAMQWALy8vD8/P8/Pzw8PDy8vL+/v77u7u09PT39/f9/f329vbx8fH4+Pj19fX5+fnzMz
+MyUlJe3t7ZCQkFBQUP///wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABYALAAA
+AAAeAB4AAAXOoGVUZGme6GmIaVBRcByn5djKOAzQEB3ksIKAsqP5ZADGYUEilggNprHyExBSlAQCUIAd
+plRKijCECRyKK/hHWkwkAIqQIhiASYMDYiiIEJVSTmAICTFdVlhFUw0ACAEDbDSCdyWRiZQmliiTmJon
+nGAECkNGMGlTBw6FM5IxCQ5fJnFApUCKAwhdQLs4BQh2JgMNq7w5CQ3AY8U5AndlyzIIUwzQQC431TkF
+ySUDxNlIKA7guwomB+S8ahW66cx2D+68DA8j8rQrNphTKyEAOw==
+<enddata>
+
+<data> VarName=$stroller_no
+R0lGODlhHgAeAOYAALA7O8XFxXUAAB0dHby8vAMDAxQUFAoKCiAgIBERET09PW5ubhoaGnR0dDQ0NA4O
+Dj8/Py8uLvj4+Orq6vX19fOIiPJ6ev7+/jk5OSUlJfLy8qmpqbNISIODg9/f37xERONtbfv7+3Nzc19f
+X0JCQn19fXZ2djIyMlBQUNTU1NfX1+Tk5FNTU+7u7qCgoO3t7WZmZkNDQ2dnZ8/Pz+Rvb/Dw8Nzc3FZW
+VmNjY39/f8TExLQ/P4WFhdBbW/Pz8yYmJpmZmdPT07Ozs5KSkrKyspGRkblERJ2dnVhYWFtbW7m5ueHh
+4XBwcCIiIre3t0lJSbGxsevr6+Pj44qKisrKyv39/Xt7e7+/v6amptplZezs7E5OTtvb2zY2Nn5+fs3N
+zebm5sjIyM7Ozt3d3b29vYeHh9HR0cHBwZaWllVVVXp6esPDw0VFRXh4eNbW1sdSUigoKJeXl9xnZ0dH
+R62trYSEhImJidXV1SsrK7hDQ+Li4vr6+v///wAAAOYAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gHwE
+foSFhoeIhxuCiY2OhhuGAn2UlZaXmH2Nk5mdlRAlPJKFnJcDDR0xmCYXTmWGfQKFABGWDEF8fBI3lQ8u
+ezCUsLGFHAiVC7m5AQV9cGIrGJXDBwDFeJQNynwpfXMtZAOVCcN9Dh+zB30nFMoNMiFDzeOGBpUI6IQA
+6gpCSh0u+NTJZOhYpQjW9Knrk4EAHw0MCBYyWMlAQj/7WEjJRaeToQyYBlx840ZZEo+FOoksVCFXlIgS
+CVF6MIJFk09ZWPLB4gmWgy+5NBApgGKCHgssmfQstKWFMjA41IRQhpTQDnsx/QRQdgUCkG25qmLEesnQ
+Vj5HFMwAq4zGLHFlrQsFoLCAhBYoaJawnQDibVxCORQU8FCEUgIUcVQoE6Gjh99pKRm+6DJv5hMrbPrI
+4JLnsabIGCi8SCFi4SUHEjzIeQzLgBk+F3JNwfSASq4abvXZg4WDT5gTMCT4gFnpBp8ZDkbwJfVZpgk+
+XijZ4PPjUjI7lO7UMEIKFgY+KtKUuDAmwSUSfGwgaVNlRQRZiQo0CED/jIJMC+gHWKOKWKFBjwSIiEMA
+CiigQ4EAADs=
+<enddata>
+
+<data> VarName=$stroller_yes
+R0lGODlhHgAeAOZ/AEJCQiUlJS0tLT4+PjU1NQ4ODjw8PBoaGhISEh0dHRQUFAUFBQEBATMzM7u7u/j4
++G5ubuTk5FZWVv7+/nR0dPv7+9zc3PX19YODgwoKCjIyMuPj4/Ly8iEhIXNzc6qqqjk5Oe7u7tTU1KKi
+olBQUHh4eERERM3Nzevr69fX15KSkpaWlk9PT35+fnZ2dmdnZ1JSUhYWFigoKKCgoJGRkff398/Pz+3t
+7UlJSWVlZebm5ry8vISEhMjIyJubm1tbW/39/b+/v4qKip2dnY+Pj5eXl5ycnHp6evHx8fn5+eHh4a6u
+rt3d3bOzs7S0tLe3t3BwcKioqDY2Nt/f37Gxsfr6+sXFxdXV1aampsrKyp6enlNTU11dXY2Njbm5ua2t
+rUdHR4mJiezs7Orq6pmZmdbW1mBgYM7OzkBAQFhYWPz8/G9vb9DQ0NHR0b29vbKysn19faysrFVVVaSk
+pKWlpWZmZo6OjmRkZPPz84uLi3t7e9PT02JiYv///wAAAMDAwCH5BAEAAH8ALAAAAAAeAB4AAAf/gH8O
+DX6FhoeIiYYNH4KKj5CHH4SRlYkdlpkDI3EmmYUJFBgAiS4TT0sPZpkHe319DxKGBSNVdYV5FpkQr69W
+DH4yZxEghj8bmRS9fSJ+YCFuCYYKEVGZGhe9FC8VKguHMRgInwNNXhgzfTyflQE7fRwH7JBbG69fwPOJ
+UBW9P/qIFNBZhkJepgJcYGAqJIDNsj5YPhE48YrDmwUkxjzswyJTjhC9dNw50u9hhHGRMtBYFmQAmY2v
+Zlji1WvIABswXznJB2nNqwsQAIihskLJxgk1NFTK0GKOgQVTaBRCQKJIil4eTmhhF+CGFJ5+CuDQ4+kF
+ChnfLIG4cEMEhbSIdwg8QFKmRIZICtr0mfBKSKICWZapAIuIT58eGnI8wGPQkIQ+NgiYqfFgoSIXfVoU
+stAnACJeYQpd6SMAEo4+KeTAmcAEpSEAfSykKQEkQoxElBis6JWkIyIGdnqpkYWogYNDEox0QQMJhg8i
+nhI5EEQJ4CHjfwIBADs=
+<enddata>
+
+<data> VarName=$swimming_yes
+R0lGODlhHgAeALMAABEREd3d3aqqqiIiInd3d0RERFVVVZmZme7u7ru7u4iIiGZmZszMzDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATZ0KX2qr042yak/uAlUGGZDWaqrmw1KAHQasXh3Mp8GckdBDfUbAFk
+KCiLW6IFUBwWQgviVsBwEoaWwndpTG8LVuPmIFhs5ICq+XUgZI8e2WFiz3GVLZkRst/JKAAMNwgkGX5/
+ZEsPAAQKUReIiXNVIJKTc2oggzcdnYpknm8gV1kECTkKCKkJYQoJlTqysx+xORVmeRUNuY0WkA8MMgcB
+YQUBZgbFAAEIrgyuhnkBDMIIDIXUCAPXAdwMCd+LGAoCMhxhHFUNEw8GAigc0rQf8/Ts9Bg97fc9EQA7
+<enddata>
+
+<data> VarName=$thorn_yes
+R0lGODlhHgAeALMAAI+Pj////8bGxtjY2FJSUuvr63BwcCYmJqqqqhUVFeTk5PX19Tc3NwAAAPr6+goK
+CiH5BAAAAAAALAAAAAAeAB4AAAS3MIDTqrVHrSXS/QcifeRRBEFHfoi3Ymfqvg1FVyYaDABzPCvgrRbT
+7QjBIdGo6M0uwlsuUDBEk8Op4IqVxlQ37ifBMDhQYJq4QgAIzrr0a91giIyyIb2SMAziT100BwtogSR7
+MIZ6SlqHH4k4X49QjTEDNmqWOlUMmllFOgBrkUsoDgMGDKSbVEhhSgyFKZF7CQQIf4uwLwCzgIw0uEZy
+gi8EcMWImS+OWQiguzQiCMwgGhyUNSIRADs=
+<enddata>
+
+<data> VarName=$ticks_yes
+R0lGODlhHgAeANUAAKOjo56eniMjI9vb28/Pz8nJyXl5eVhYWObm5uLi4t7e3tzc3C0tLdXV1Tg4OJmZ
+mY6OjjMzMwkJCRsbGwQEBBUVFQ4ODgEBAfr6+v7+/vb29vz8/P39/fj4+PX19bu7u/f39/Ly8vPz8/T0
+9PHx8e/v7+np6fDw8K+vr+vr69jY2Orq6u3t7dnZ2cLCwqqqquzs7LS0tLa2tmBgYOjo6O7u7j4+PmRk
+ZJKSksfHx4uLi8zMzPn5+fv7+////wAAACH5BAAAAAAALAAAAAAeAB4AAAb/QN8n8isaj8ikMfISKp/Q
+44topBUvRqzkR/ltfwJjwRg2Uny+Ypf7Q/u2l3U7EEV7ia1BaHVSWLI+JRVPgz88aAkiaByHaAFuJlFq
+DgMDCz49PIcdGmgmJAmSElhePysePT4YHBiZaT8Mkj8XWB+YPRkePh09qRi7srQ/Dz4qPjytPB0bmhi/
+PqRPcQlpAr/IuBjLGRoXaHJJFyOvaB483BqtuRk6Z69PPEUcPhwjPBw9GxsYuhk9WD52QJnwQ4GPEIc2
+8OKgIcMyXW8kEFQioYuPFj409OrAQ2EPEBn0+Wggy4eLGwfTgejBIQMIHx42cDDgg8KXJBY6pCGg6pg9
+tQ0aWHE4kcYYuCMQ0khokFLDOY0Y7P2yMMFHjicEHvxw4QNEio8cRKBaiTDVLBJQuqRAgQYGAkYiRGwY
+ISIDTxk/Cj2xkcZBBh8sSHTwYKIGi0M/CpBM+6PEK4M+EDjeZ4dLzZtKfKBYgiYVGhxqDkCL4s1AkhkA
+1Pzh4iFauDYQ2Mw6gmWNgzRHj0gAoMHMbCNwfsRYLMlHrJIHklApMshCGShYCrj+EeGDrOtGbA3BHqW6
+jyAAOw==
+<enddata>
+
+<data> VarName=$wading_yes
+R0lGODlhHgAeALMAAO7u7oiIiFVVVbu7uyIiIkRERGZmZt3d3ZmZmXd3d6qqqhEREczMzDMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAS/0I32qr0426ak/uClUGGZEWaqfkSxmg3gIG8YOHgNxrOeFYFCy3cR
+HHAOwIL4WAyQSAPz9oQGmINDA+ohDgI3nGEAIOkGAgYO8CAAAAJfYIEcVAiBQ8JXQB4wKDp9SGZMWw5q
+NEwVfUoygUx9NDdXizdxDwcMiw8CbBUGfylLTRWkC0uBgaemGAUIngEGAAkNB7AACrG7AAECChlqBgxw
+agnCxsgOacsZCyjPTdAU0Q/U0xeFnNZ22xZPE9sNTxEAOw==
+<enddata>
+
+<data> VarName=$water_no
+R0lGODlhHgAeALMAANXV1QEAAG5ubkhISO9ZWf///ysrK5MAAMs6OoiIiKoXF7kkJOYAALu7u+7u7qSk
+pCH5BAAAAAAALAAAAAAeAB4AAAT7sDRGq734Ppm7t491BGRpnmjQIUbqBkYykGKFvKlQCHQVHJURzpQo
+zFS+gCIYELRIhmPg2CiULCVCZVFwPAFemINUAFyTAYCWgqg2HI5N1WwoPM6U0mYRFDQeLQ9xLToJeAwl
+RQlAFEIpG1JYJAMSP0wpAFaHJgWajAyOnGabJQ4FT5+hU3YmkiRVUqkmha1oAYomsiSQtXklOne5l5kn
+rjBlKLLIvYicmiefCqzMJ5lSwhQEhtQmGzwp0cW2twXb4Jc9viWUDS8Ga6Ckzi+UCJfGJKZPKIqy+AFz
+GggcKNDUjFT//BBcKLDEpwtDhjyc8KEiBjcWMzKoEgEAOw==
+<enddata>
+
+<data> VarName=$water_yes
+R0lGODlhHgAeALMAAIiIiERERBEREaqqqu7u7mZmZiIiIt3d3czMzJmZmXd3d1VVVbu7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAATM0LH2qr042zak/uA1UGGZGVcBoKZlAMEHOEBrFY7y4YNdzTFNw4G4
+kR6GhSXIcAhADkcFR6AIENVHg1BxHEIIR8AgaTIIhE7zO+yBEo7CoyZQMBIGQSJNwdVAM38mcEEfAR4t
+YU8gAlE2XiYEDiwhh24hTUolCjQmgSYdhSA8JgdOJkNfIY2qJo6VDpclYaIZny1wOiBNtYCdIJKLJocM
+IGStJo1SHwuxPg+SlBi3Nk0IDNjZ2JK9IQXa4NnCGEfPIA3F5pgS5eoV6A4RADs=
+<enddata>
+
+<data> VarName=$wheelchair_no
+R0lGODlhHgAeALMAAO5cXAAAAEtKSv///ysrK3BwcJQAAMo4OKsXF7u7u9fX14iIiOYAAO7u7qqqqpmZ
+mSH5BAAAAAAALAAAAAAeAB4AAATycCRGq734Opm7t45lBGRpnmjQjaaQJESKihVLDrgin1Zg1CQBDhfb
+kXo+oDBnLCGTFMNSUWw+oQwELtF0Vk4/CkDSPX7BFQC3fCUtDumXfNdOSBDp4YB+Jj1wBQIAFQcLhnwU
+JUsCN4MUhYaMM30KAwslOI4MYwMNKUgEOCZDmpySJkhCOooCrXhiAw6TiTdrKWGbezx9A6syuAAFu7QB
+REavDAfDDCWVsjIECrgHCmtPSw8ylQTIYzFXf7FVAQUNnTGaCGbEfkPVdjgNRW9AbeTmehLjWLjMKQIL
+HiwosK9EP3tlDFqY8KEhBjsMHTq0EwEAOw==
+<enddata>
+
+<data> VarName=$wheelchair_yes
+R0lGODlhHgAeALMAAERERIiIiN3d3aqqqlVVVSIiIpmZmREREe7u7szMzHd3d2ZmZru7uzMzM////wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAS60LH2qr042zak/uA1UGGZFSXBTGZ7OLDQmgAMozNYx3m4C6SeZscQ
+6mBF4xCpxAQGv5VUeGBIdjab0ABT/AJgcI8AA1Ri4bC5lXAELNk4otWAHeDxLMFETlwAgIEAZA4DLR4l
+HQ53JQ4yJQswCyY3IQ0viIwabYYfBTKKAQJJGoQGGgdtDYQ2OBpchUEPCwgOCBS1DgayrzajVjC3FQEG
+riUKuVkMxkYExAEKzCC8TRuk1RdWLNgPDVYRADs=
+<enddata>
+
+<data> VarName=$winter_no
+R0lGODlhHgAeALMAAOVRUZYDA2xsbP///yoqKktLS8g0NO7u7t3d3czMzIiIiJmZmQAAABEREeYAALS0
+tCH5BAAAAAAALAAAAAAeAB4AAAT/cDxHq734Ppm7t1MVMGRJFs9TmCzTjawyzIPSmlYgxvRh3yQLQ0eB
+lRozIK5CIjpghEdilngQlEIGwbBrKA6JhK9REvhK2cMAsGMsUgtStFGYPYJM5IxdFDwUCg9kDAgJCzRX
+QnUDU3wOAD4KCAMFCwgHkzMrWSoEAwdcRVUEAggIAjJRA4lMJV+HoY93DwtRUwINVy6tJAIEBJKOABsJ
+lwQLcWi8JjINTgYMDac3WSZeNQqOBjLJLNUEByiXfgvaCH8ECEsU0VdTB1aADAmxAQ+Xd4NCG6USC8UC
+/CR4dkiBAEq72G2gge0gtjUVINGwsY/KQQEkGvxJ4ayCARqbT5iAY8QgoKtAd4ZE/MSKXbQ31r48OHBg
+ARknAHRVa6FRzAAECgY5gbETyAxdJYYmdKCEwZeJLIYW5QE1aoemKFQAceIgxIevF6Z4Bft1SgQAOw==
+<enddata>
+
+<data> VarName=$winter_yes
+R0lGODlhHgAeALMAAERERFVVVXd3dyIiIhEREaqqqt3d3e7u7ru7u4iIiGZmZjMzM5mZmczMzP///wAA
+ACH5BAAAAAAALAAAAAAeAB4AAAT/0JX1qr0424Wk/uCFDGEFIAhQPmqZOLCTrOsLHzNdErCeAaTKoNCA
+NQpB2qDDsBASh0YDR7AocKADLLA4tBio5mNJCMAQGh7M4DAQBgpEIoGoPgwNRixpARgdUw0vOAlsAAwG
+B2wwLRgFXA4HCogKCw0ICwIGBgIvCwUOfBhQoAkDMygPBQxLRQoEFCCVC4WbCLaAiQsMYjQvVTZNBAYK
+PhVPMlA3cw69JQMHAbcHAggMDQal2QkLBiCwD0UHI3PhaLxDiQUPdo4Omg7W2ArVDbQIOHoJCg4BGR0x
+kgmAwaxfgQ5aCGYABYhfMXZyUNgpgCOGPwxdAD1Q8PDBHATrOyrYG3BD1DEGIY9BwXeAQbsF8Ux+I6LF
+QIJ2xjLAkJnTY0IZPTPYUPhsxYkCjUAESBk0Q5EJTS8AKBIBADs=
+<enddata>
+
+<data> VarName=$AbandonedBuilding_no
+R0lGODlhHgAeAMQAAEMAAM6LiwcHBwMDA7a2tskAAOkgIAwMDPWnp30vL50AABQUFNJ9fevr6xgYGPnM
+zJ0uLvj4+OrCwrIAABISEvDw8L5ISPz8/Pe4uOs4OLMAAOYAAP///wAAAAAAAAAAACH5BAAAAAAALAAA
+AAAeAB4AAAX/IEdsZGme6EmIpea+rlLMCmy721gCXe93A5/gR+zgTBoeMfhbHJhEDSkpTS6LvUNRutF0
+AJmusgf1ObFcbycQtpKbWF+6x2GL371hvDfvcOpSGQFAQnt8U3R/AIEMFRx5hkaIfn8cDCUIfx16RY+S
+XYmPDhBhBgl5nkSefZU+DGEFpwKtdH6HoJSpdbAJs5qht2q0lBITJBbDtKyalX8PBhuCtMqTzdYcCNDS
+j83Bodd+2dEB4J/Cv7k+CdpK1LjJ6B3iVu7nuvEcGG0A9cD+PQ0AdSG3qto1dL52jSv4zlqDC6kSKhTk
+LdefCMMkTuTRp8gBCj84+VgkpiMWLZCKG5BEogYLFJE/AJgYcQOGDBo1j+RgkaKnz50hAAA7
+<enddata>
+<data> VarName=$abandonedbuilding_yes
+R0lGODlhHgAeAKIGADMzM7u7u6qqqiIiIv///wAAAP///wAAACH5BAEAAAYALAAAAAAeAB4AAANyaAHV
+/jA6IJS8+AmWexxeKI4ZQYaEeZbpiqVq6zpwA8vrreOSGtU2nu8xJOKAQZ+pSDsKncxkc4hEQmq7rLSX
+7S6tRq0XPC2bC+Qt+qnkhc/rdjQOr7qnu3Ceq8XrLl56fzOEhRyFDwABiBABCoeEigYJADs=
+<enddata>
+<data> VarName=$food_no
+R0lGODlhHgAeAOYAAEtLS+s4OMkAAA8PDwMDA7a2ts6Li/7+/gcHB50AAOvr6/Wnp6WlpX0vLxQUFJmZ
+mdJ9fekgID8/PwwMDBsbG2INDfz8/CcnJ4tISOQaGtgkJN5oaAYGBldXVwkJCSoqKqBSUr29vdQLCx4e
+Hmlpac4FBUkcHNaIiDY2NvDw8Pn5+RUVFS4GBuIuLqioqEhISF0bG8DAwMHBwezs7LIAAPj4+ON0dLZz
+c/e4uO3t7erq6tfX1xISErcDA0MAALMAAOYAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gEEF
+QISFhoeIhwWChT+Oj44JApMJkJaOQIOFPkKdnkIEngifpEKYhj+cpKGfDhOspD+EqbKpIw8PQaBCL7pB
+vgClskA/Qj61GL+6BBS/Qr8OCioUsbOdx0AtBs4EAM4pvkHBn8PF1z1AAdug3kEIzr/jnuWfMAHpBuy/
+7+HynfSeJBi4F6CCg3b8nomrRuyThCAQCjVACG8hOWueUATZYeOeABC/ZPyKEY+huU4rlEGQVWJBkAPK
+gli4YJKUDmXYRJyY8StHiA7CMHpyoUwICxqENvxiUOqf0E4kigoxIQCIhm1MmwL09EGqkAZV1WUN2vDT
+AK9fM6S70dTUUyFnbp19WhAhnaqaZtE+o0vs7ry3cXV9+oXjXiq8ngKTCqIgiIFafrd2UvwJ5i9sh52W
+TfxLAYfKRTGrkgw3SA3BniwLFu128+TOPEDLNQaZtIeiE1KjxYbqZClYo5r6MDToEiRJlIyfysQokfPn
+zAMBADs=
+<enddata>
+<data> VarName=$food_yes
+R0lGODlhHgAeANUgAEtLSw8PDzMzM7u7u6WlpZmZmUhISL29ve3t7aqqqldXV9PT0z8/PycnJ/z8/MDA
+wBsbG2lpaYSEhOrq6gkJCR4eHqioqCIiItLS0vn5+SoqKhUVFTY2NjAwMP///wAAAP///wAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAAAeAB4AAAa7QNBA8Ckaj8ikUZAQKp/Q
+Y4IYrSYv1qy1Uih4jIavR2zQfiTj7wcy/rQ9GYgWky4C3mIPIBtw1D93eW56WR1paoGDg3tWDId2eItZ
+jn+JeIxVHI+AYw+dY5hRG5sNh2kODVoTfx8KBwhjCAcKZhasRQRjBGZFEbcfuR67vBq/wcNmAb8LYwu8
+H8ptR5vJv9Ra0WpG13zWv1bZSNzg3tLV5kXjVeHT31UU5dpKVM9QAgP1UQNC9PlF9yCCAAA7
+<enddata>
+<data> VarName=$fuel_no
+R0lGODlhHgAeAOYAAOs4OOkgIM6Li7a2tgMDAwcHB/7+/vWnp8kAAOvr650AAAkJCfDw8LS0tAwMDAYG
+BmINDfj4+Kurq0VFRcDAwNvb2xQUFOHh4X5+fm9vb4SEhHV1dfz8/IqKilpaWh4eHiQkJKWlpZaWlre3
+t+3t7fLy8hsbG/Pz89J9fTk5OUUCAuN0dMPDw30vL8zMzEgFBXt7e4GBgfnMzPB6esbGxhISEmBgYNfX
+142Njew6Oj8/P7q6umxsbEJCQkhISE5OThgYGOrCwldXVw8PD/e4uEMAALMAAOYAAP///wAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gEgD
+R4SFhoeIhwOChUaOj44KCJMKkJaOR4OFRUmdnkkEngWfpEmYhkacSKurJayrDAmhpUaEqbWpSJ+zn7oO
+tLZJRbgCu6UMDkMPpLVHRp3DRwCcnbxJFkm6GRQLn83P0LjUvKPZnSE7y53fn0UAzpzknbpJMUgSnuyf
+ArgQ2J3l6AFpUGHCumC9IBRqIWreJxsNDjojheTGincBDqwywOrTAgY1TCH0xAoFRo0cV5Gi0EPkxF6s
+BJxMieRCBk8ieLgER/JVkByEZrD6UCFFJw0YdlJ8hURGAGkCVMLo0AmDBqUwmR54CiBqEh0sOuHYgLUn
+UyRboSZZQKKbBCFlc+edXZV2WpIGP5JcABE321y6T1N5GDHBhUSecv8iIfLOiAoaJ3wcXvo3ARJ+zl6Y
+yDcy8Vma0VJxfumXVQIOr2heFjfZc4TPTENz0ld6VYLXrFTrkk27VJJfAH1HQ4WYlDzhhgZdgiSJ0vJT
+mRglmk49eiAAOw==
+<enddata>
+<data> VarName=$fuel_yes
+R0lGODlhHgAeANUwADMzM7u7uwkJCbS0tAYGBqurq0VFRdvb24SEhG9vb+Hh4cDAwKqqqn5+fhgYGDk5
+OYqKimxsbIGBgRISEnt7e6WlpWBgYPDw8FdXV1paWkhISB4eHpaWlj8/PwMDAyQkJI2NjcPDw+3t7U5O
+Tg8PD8bGxszMzLq6uvPz8xsbGyIiInV1dbe3t0JCQv///wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAADAALAAAAAAeAB4AAAaxQFgA8Coaj8ikEcAQKp/Q
+I4MYrSZVSpd2y91aka5q+GscQ8MkAtn8DCcWgi87W6yc1OL8S+IqWOdJYw4DBwZ6Z0cWA2JdjWwCFxNR
+jo1ICy2TlFwKCUYcEZmaWhsHD0UIDaGiLxQQRQ0IqpovHSFFICuylC8CInEFGLqORQMjLwofwpUvGSwG
+JoyiYx4lKBrRq0UCKX/SgGfeXHLhXt3k32TpRVTqUQAB7VUBQuzxS/NBADs=
+<enddata>
+<data> VarName=$hike_long_no
+R0lGODlhHgAeAOYAAAcHBzw8PFpaWqWlpUtLS8kAAPDw8Pb29ra2tnh4eGlpaQMDAy0tLeHh4Z0AAK6u
+rre3t5ycnCQkJBgYGPn5+TAwMPz8/JOTk+vr6yoqKmZmZu3t7VRUVN7e3tbW1l1dXcDAwJaWloSEhOs4
+OMzMzAYGBuTk5MsXF86Li3w6OgkJCekgILS0tOeZmUVFRdvb270KCoeHh3t7eycnJwwMDMMQEH0vL04M
+DEkcHFAODus3N75ISDU1NRERES4GBs4aGtYNDX5+fr0JCXp6eldXV3g5OYtISMkVFVhYWFsZGcuIiCsr
+K6ioqOrq6r6+vsPDw05OTnV1dYYyMppXV9YjI/Wnp2BgYOo3N6dkZBISEh0dHRQUFKdZWfj4+J+fn5CQ
+kOg0NLIAAM8bGx4eHmINDYKCgvSmpug1NYg6Ost9fcQQELq6ug8PD50uLphVVd4VFdQLCz8/P7RxcVtb
+W7xoaEMAALMAAOYAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gHgI
+d4SFhoeIhwiChXaOj44OBZMOkJaOd4OFdXmdnnkLngCfpHmYhnacpEgaGhOdPGVfLqV2hKm2qaQeeHgB
+eXEHFE0YQaS2d3Z5dbmqnQsCvnkQG0s9EAcqn8jKy7ZiN57Q0h4PnRp4Gdu3nnVqd1duFaDRAQANA53R
+DOvJn8x3qCiJMs4ePn14+HniRirHjztgpGypdy9fnn39unVSYIFOIRsUG5jL8yFdxk9QAkxoY6sAF18A
+qGVgsybbyVJ5yNiCU8VegAN4gMo4xg6ntztA0IyaIeICLaL+jObxEYbQDqmdGGLFUSCZM5xaOxHAkyBP
+lg0maKRZcUcIJyK90RTcFEs2zwU8AvIMMMM21V08chcWpZtAAoUnnQYYaPEmmZwOgOfmGZvggYV5eg14
+adFVx5TIgqPSZYEnhCfF0YrUuHMEReCsgyfjsYCHw2kDYzB8MHLmzogUksdGoPCiRGIDAF5EAIEFxp0T
+zsLKThADw5DjAEJ0OJAgyQivsEVP12LigITMAKL5YoDiBHjplPPM6cIC/YSgJRjgSdFMegASVnTChBMV
+iADCKA9EkIcEJHAAECoalRJKJ6PgVIchg1wCiSSUaHhKJowkIuKIIAYCADs=
+<enddata>
+<data> VarName=$hike_long_yes
+R0lGODlhHgAeAOZEAFpaWqWlpTw8PGlpaUtLS3h4ePDw8Pb29uHh4TMzMy0tLbu7u/n5+WZmZvz8/O3t
+7be3t5ycnCoqKjAwMK6uriQkJBgYGISEhJ+fn8zMzJOTkwYGBpaWllRUVAkJCbS0tNvb20VFRV1dXYeH
+h8DAwAwMDHt7e2BgYCcnJ9jY2Kqqqg8PD97e3uTk5M/PzxsbGyIiIsPDw6ioqG9vb05OTldXV2NjY7q6
+uurq6n5+fh4eHhISEiEhIXV1dRUVFTk5OUhISD8/P////wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAEQALAAAAAAeAB4AAAf/gEQL
+CUOFhoeIiYYJKoKKj5CHKoSRlYkwlgANDRaFKCMcIZaPCEJCAkNBBww4QjmjigCnQxAPLxsQBx6WMyY+
+h7KoCBSFDUISlgQpDBEThcFDCAHPQgqwPxgMPUPQ0tTWlhYFKQ8d3LPe5+CRAw4uNrvnwsRDIseWNKjA
+s7USKze6YCGCJuCAEIMmBCKqwMnTBQ2iFEqcSNEQASEFhux40KJEAFPIhtQwNSAZxiEahAAYEsCBkAaF
+UgopWeligQoMYhQKYCCdCxYzTRag4MAZSwMYEAxZ4QBD0JpCPgjhYIinLB5AhJx4GumiS3M7DegQIuKC
+gQlcIV2MwADEhrBDTUBEIAFBQdpHNkecPDqEA4sDBezS7IqxRIsDFfjKOiVY6LkPfC0c3NC4koAMJwrJ
+yDDhAolCFCIMqZAB7CFKFRMlWJBa0QJBqFOvJhIIADs=
+<enddata>
+<data> VarName=$hike_med_no
+R0lGODlhHgAeAOYAAAcHB6WlpTw8PFpaWktLS8kAALa2tvDw8Hh4ePb29gMDA2lpaS0tLa6urp0AAOHh
+4ZycnFRUVAkJCRgYGPn5+ZOTk7e3t+vr6yQkJGZmZioqKu3t7bS0tDAwMM6Li9bW1l1dXYSEhMzMzGIN
+DcDAwNvb25aWlvz8/MsXF+Tk5Hw6OkVFRekgIN7e3gYGBus4OHt7e+eZmWBgYKdZWS4GBskVFbIAAG9v
+b8PDw4KCgtYiIh4eHus3N50uLhEREb0KCtQLC9jY2DU1NfWnp+o3N5pXV404OIeHh7q6upCQkLRxcSsr
+KxQUFBUVFScnJ6ioqMSCgnp6ehISEug1NUkcHMENDadkZH0vLx0dHct9fb6+vg8PD1sZGYg6OoNAQFhY
+WNYNDcMQELkFBb5ISFtbW+MvL5+fn35+furq6r0JCcuIiMANDXg5OfSmpldXV94VFfj4+D8/PwwMDItI
+SEMAALMAAOYAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gHcG
+doSFhoeIhwaChXWOj44OBZMOkJaOdoOFdHidnngKngCfpHiYhnWcpF8ZGROdQjlJK6V1hKm2qaQfd3cC
+eHEJFGgXZ6S2dnV4dLmqnQoDvngWG0s+FgkSn8jKy81NMDfQ0h8NnRl3Gtu3nsx2OmpBBOMCAA8BndEM
+68mfXkR21nCiZw8fHn38unWKAKWMHTEjmESrdy/fnX2euJGSYKTQlYn2zOEBkS5hqQk9qtgpMMMXAGoa
+tiDJZrIUnhG2gAypJyDBHZ8wjrGz6c0OmC6jnISoQEtoP6J4aNggNAZqJ41WqRRI5swm1k4E7iDAI2VD
+CjlZWNhJw8lNrwU1zsGKxVPhzgA8AdqoTVX3DtyMQ+UiwEABR6cAB2K8Saakhd+4eMIiaHCiw+EDZmJs
+5VHkMeCncjncMeEJcTQ2YezU8PD3auDId07ciVD6wI4LIOZMsfNCBeSwECiUcHEZQAkIJKz8sIPC2VfY
+CI5ciFLcRIsECLi84OoaNHQsKRJgwHsAQDRfDDyg4P5cMh4ycDiQBzDhpwsGd1Q0ey5AhIxOT2jRQQgk
+jNIABHhgIEIE7qCiUCmhdDKKTXQYMsglkEhCCYanZMJIIiCG6GEgADs=
+<enddata>
+<data> VarName=$hike_med_yes
+R0lGODlhHgAeAOZEAFpaWqWlpTw8PGlpaUtLS3h4ePDw8Pb29uHh4TMzMy0tLbu7u/n5+WZmZvz8/O3t
+7be3t5ycnCoqKjAwMK6uriQkJBgYGISEhJ+fn8zMzJOTkwYGBpaWllRUVAkJCbS0tNvb20VFRV1dXYeH
+h8DAwAwMDHt7e2BgYCcnJ9jY2Kqqqg8PD97e3uTk5M/PzxsbGyIiIsPDw6ioqG9vb05OTldXV2NjY7q6
+uurq6n5+fh4eHhISEiEhIXV1dRUVFTk5OUhISD8/P////wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAEQALAAAAAAeAB4AAAf/gEQL
+CUOFhoeIiYYJKoKKj5CHKoSRlYkwlgANDRaFKCMcIZaPCEJCAkNBBww4QjmjigCnQxAPLxsQBx6wQz4m
+M0OyqAgUhQ1CEqMTEQwpBMGzCAGFsgqWPQwYP4bCQ9LUQtaVHQ8pBZ3Qw9PQ4pUeNi4OA+nexUMiyLxD
+AjT0tRIrbujSx22WgANCEJogaKgCJ08XNIhiSLGiPgJCCgzZ8aBFiQCmkg2pYWpeJYwaNQgBMCSAAyEN
+CqkUYjISygoMYhQKYODbEBcsaFpCScHBhJ0GMCAYssIBBqEnhXwQwsEQT1k8gAg5AdWmkJcdrBrQIUTE
+BQMTukLCyAzEBqRDTkBEIAFBgdpHKEdkhMuBxYECdmuuzViixYEKLQ1AOxV46F5ZHxIPsZBwQ+NKAjKc
+KCQjw4QLJApRiDCkQoawiChZTL1gdaIFglRbTAA7EAA7
+<enddata>
+<data> VarName=$hike_short_no
+R0lGODlhHgAeAOYAAAcHB0tLSzw8PFpaWskAAKWlpba2tnh4ePDw8AMDA2lpaZ0AACQkJMDAwJycnPn5
++czMzAwMDPb29t7e3ssXF1RUVPSmppaWlq6uruvr6zY2NjAwMC0tLc6Li+Tk5Hw6OueZmZOTk2INDQYG
+BhgYGOkgINvb2+s4OLS0tPz8/JpXV30vL5mZmcYSEt4VFcPDw6JUVFtbW5+fn7IAAMTExEhISF1dXWFh
+YSgoKBISEh0dHUkcHOg1NXp6eoeHh5ZCQus3N6ioqL6+vtEICOo3N/j4+OMvL50uLqdkZHd3d70KCh4e
+Hl0bG4SEhItISDk5Ob0JCXg5Oc7Ozr5ISGBgYFdXV29vb1sZGcMQELRxcRUVFe3t7ct9fS4GBskVFUMA
+ALMAAOYAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gGIG
+YYSFhoeIhwaChWCOj44LBJMLkJaOYYOFX2OdnmMJngCfpGOYhmCcpKGdDRA0GqykYISptKmrng0TYgJj
+EaW0YWBjX7eqnbJjA2I1wMG1ncbDqlpJVp43vaWdwsTSt0wOD1IBnQDMvtzen9NEKk+y6Nvr0e0tYUY/
+OKLp3Kb2PokoZEHBOX/1hpUicYTWEBgH6UFTyE0ELQIrxsxTN/Ebt2kYAWhgweAfu39juswgNAVlt4D/
+dhCg5vJkpwBiDozJscVDBC4lwkDhVEWMGIOebI7BqTOEmAFjClgImsrp0U9KmTJ48KJTAQQgXAzLwgvp
+S4o3c2JIscErAhkgmGYCUXE1KUycKMRc8PSVWRQsYbx0MAsQ7VIxKcRU4ItgSQYbTniEOfEB610x40yM
+cAvAhIMGSJSEoYAsa04fGXpwvjBBwoErJ2gW9nj4gA4PEkp+ndeLQwcKNE3rjFEERVQEAEiIkTCCg5gP
+x5QKgEClUxAhG5o0GIXBwRgGECpMQ0U717l/XwwNugRJEiX2pzIxSkS/vvxAADs=
+<enddata>
+<data> VarName=$hike_short_yes
+R0lGODlhHgAeANU/AFpaWjw8PEtLS6WlpWlpaXh4ePDw8DMzM7u7uzAwMPz8/MzMzMDAwC0tLZycnCQk
+JPn5+Z+fn/b29lRUVN7e3u3t7djY2GBgYJOTk+Hh4dvb26qqqrS0tK6urpaWls/PzxgYGOTk5ISEhAYG
+BgwMDLe3tzY2NkhISCEhIR4eHnt7e29vbxISEiIiIqioqGNjYzk5ORUVFcPDw2ZmZpmZmQkJCXV1dU5O
+TldXV4eHhw8PDyoqKl1dXf///wAAAP///yH5BAEAAD8ALAAAAAAeAB4AAAb/wB/i4Csaj8ik8bARKp/Q
+44YYrSZb1iNjsUhkswxKL/DNAsblZEy1Mp7J6WLCAbEI3Oi4DRKBId9xPhMVFgUgR4CBNS8fCgR4cIFF
+ATeQkk+Jl0gmNA+an6BRAj0FPiwVISQDPT07RTisj1WjpRg9AD4DCj0zRbY9sqKkDxAyRQMGGQNFH2LB
+ULQdCl65BhEZPjoKEcBWoxw9HkbIZygnPRfdsz27E+MGKT08IgYJ6sJ0GiPHBj4aDgxKNLgHjVQOUvx8
+eKAgocDAZ09okQghwRMyH2fGPPSG8AyHaj5A9JAwYmOVAAsuFHHRRQSDIh0c+HiwwB0SKqGKHECQ0wgC
+ByE4Ne38EQQAOw==
+<enddata>
+<data> VarName=$nightcache_no
+R0lGODlhHgAeAOYAAEMAAAMDAwcHB+s4OMkAALa2tjMzM86Li4eHh2ZmZgwMDLS0tHh4eBQUFAYGBktL
+S+kgIBISEuHh4Z0AAPWnp4GBgSQkJEhISDAwMMyKimlpadjY2K6urmIgIJ+fn0JCQrsICCoqKn5+fmBg
+YL0KClRUVPn5+dsSEoSEhLp4eEkcHNB8fMEODr5ISG5ubtYjI61fX7q6uscTE9vb23t7e+QxMcnJyVdX
+V30vL+geHvPz8+fn50kHB+rq6oaGhmVlZWUmJhsbG80ZGdLS0uBwcHo4ONSHh7IAABgYGEVFReTk5LcE
+BOg1NZKSkoE/P/Dw8JE8POMaGtHR0aysrMzMzKEEBDk5OeqcnKurqzY2Ng8PDykpKXUhIRUVFS4GBh4e
+HohFRZtZWZVHR7MAAOYAAJmZmf///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gGYF
+ZISFhoeIhwWChWOOj2MgVQSUE5CXjmSDhQBnng40TygBnmcCZ2alqmeZhmOdDjZmHGekqg0KtqtjhK+8
+rwhmZhi1q6UKq2a8ZGNnB7xLGWYmnrqluMasvZ4AvAMHO9WlZg3JqsvN3DJkAxkRxZ6n2aXoqh0D7E7w
+pvP026UBUuBjwqVcvH6e6qm6sKIQjFLyPKXa1WtiqRtE8EG4suBDxHkKV3WB8oLMCTH8EIY01o0MARwf
+s6005uUIoRYItTHLqYIAGRJFyggdOlTBTFURLlQwkoPdAWFQoSKZGWKEhw1RKUBwGnUDhwU603kyELWs
+VqdDRIQ48wDsSitlkc1GIQOik6e2YVchYODAgN+/DyQA+WX3g9t/pfZm+yLlTMtXZzRgyatKsTELErjx
+YhGmRxbKiRmcUeBAFWZPQcDUICOER0LEniqIeLdqi5ISMXR46EAYtKckMzT8cJGgeIIpZqgk0KKZWcud
+q0YMbTLUB7FVzxuJNaYrZikAhgZhgjSBEgFL45dpYpSovfv1gQAAOw==
+<enddata>
+<data> VarName=$nightcache_yes
+R0lGODlhHgAeANU/AGZmZru7u4eHh7S0tOHh4UtLS3h4ePPz85+fnwwMDH5+fjk5ORISEh4eHvz8/CQk
+JAYGBufn56qqqszMzKurq7q6uoSEhEhISNjY2CoqKoGBgUJCQnJyclRUVPDw8DAwMK6urtvb2y0tLWBg
+YGlpaXt7exUVFSIiIgMDA9LS0hsbG2xsbI2NjaKiotXV1erq6j8/P1dXV8DAwOTk5N7e3jY2NhgYGA8P
+D8nJyUVFRfn5+TMzM5mZmf///wAAAP///yH5BAEAAD8ALAAAAAAeAB4AAAbpwF9g5ysaj8ikcScRKo2P
+xPMpISYhJY8l2Zv6TkoIrgfympGCXu9zPnbdRYajp2u3C+oId2+OqR0MdmYLaj0cgl4oIWoeIohTF3M9
+BwBPb5ZIHQeFEQMbj0kmKwgyLFagqKmqZiIAPK+wsFJnDBcaFZuFuoU2UxkjCBi7w2oYIANTO8TEKQoZ
+PgXIT4TLahMlD0fRXgIGEDvg4QUEShvST91KDeRJJBTcBursRjAtLzXw8kUqCjQuHLOmaFCg5MGMDrgQ
+LLCTIwQJABAjUugxAcCNRyNiwbLAxsypVUsCgEQSQMjHVDtKBgEAOw==
+<enddata>
+<data> VarName=$parkngrab_no
+R0lGODlhHgAeAOYAAEMAAAcHBzMzM+s4OMkAALa2tgwMDGZmZs6Li/Wnp5+fn0VFRQ8PD4qKioeHhwMD
+A50AANjY2LS0tHh4eOHh4SQkJEtLS9LS0tvb266urh4eHhQUFOkgIBUVFTAwMLVzcxgYGBISEurq6jY2
+Nrq6ugYGBn5+fmlpaaurq+IuLmBgYIGBgY2NjSoqKvPz82xsbC4GBuQxMWIgIMEODn0vL4iIiGVlZUkc
+HIhFReTk5BsbG75ISNHR0aVjY+MaGs7Ozrp4eIc5OdJ9fSkpKXo4OL0KCtSHh7sICGINDc0ZGYtISEkH
+B5tZWczMzPLy8uUbG0hISMsYGPz8/LIAAMKAgFRUVKysrNIfH2gmJs9fXzk5OWUmJkJCQrcEBOgeHu3t
+7R0dHZKSkoaGhoQvL78LC25ubrMAAOYAAJmZmf///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAeAB4AAAf/gGkF
+Z4SFhoeIhwWChWaOj44QBJMQkJaOZ4OFAGqdagwMag+eAZ6mnpiGZgAGLBFpaRE1BqYbBqOnamaEq7td
+QLDBThgdubSnu2dmagC7Ax+eIyRpKLXHyLydWANnKQAvaAJgUmkLahu5psnLag0I3GY9aWgPLmkNpemo
+2WoKaQgpzkRRUsEDLAX59Oni1wDWh11kxvyAhU9hp3WdFsC6gKRQAlgLEurD2ClDmgsgsnDjkCCDGpHp
+SKrpgOELGgpCuD0J8tLiQmWmGLAQAYvKlTMEaMDMJdOUBg1qYEwhtMNn03Q3CJwpQgSN169fDVw1FQLK
+CiNezgxAEKxtGhBXsFuoUPAqWAIOatkGi5BBwk92nQS4bXs37wUTLdRY8NtUy2DCPs4c4dRp8d9TDiaU
+EMC5swUKW3at6sSFMT9PmdNp4MFMNKcT1a6mzlWBQqdmZ2YwETHisqnUBkqYqt1JB44YZ5IsuXi60woT
+IXINyVGFhAsFMlz79rQAwwkbZQ6IP2AlTZMDoVorww30lIqvYb6K8ZCLfSPAuXD1TAfA0KBLkEhCCYCp
+ZMJIIggmaGAgADs=
+<enddata>
+<data> VarName=$parkngrab_yes
+R0lGODlhHgAeANU8AGZmZtLS0rS0tLu7u+Hh4Q8PD0VFRdjY2B4eHtvb24qKio2NjYeHh3h4eKurq5+f
+nyQkJAwMDK6urn5+furq6hUVFUtLS/Pz82xsbLq6uszMzDY2NmBgYISEhDAwMBsbGyoqKjk5OWlpaaqq
+qoGBgRISEkhISNXV1cPDw6KiouTk5N7e3vz8/E5OTu3t7SIiInt7e1RUVD8/PwYGBi0tLXJychgYGEJC
+QjMzM5mZmf///wAAAP///wAAAAAAAAAAACH5BAEAADwALAAAAAAeAB4AAAb/QN4Atysaj8ikETcSKp/Q
+44ioLBSiz1cysjjodIdFBBstJb5oXaJCfjp0AeMGpXO0k4ZvHJPDfVg6BndHCno7Ajo5Oxc6CoNGD4YY
+HRAeXw+PRYVwOxA4LV6NmTt5nIhpgqMSpmkSo0UVCS45BGhrr0UFCxRfFAtXuEcICMF3NAA5ycrKY2Ql
+JiQZjGnUOjZQIBwPodXUBxICUDjd3QETIDsW4U8h5GgaMBBH6lEMDTM4+foWBEo360/sKUHQL4kIO1AE
+JiGIREYKChvqNRhY8MOEFSdqNINCYoISCCpiSHsQ4o6BBCIAqFz5RgMAYIM4LFPWwQMZKsWO4BiQE8kA
+ByE4g+3kEQQAOw==
+<enddata>
+<data> VarName=$skiis_yes
+R0lGODlhHgAeANU/ADAwMHh4ePz8/DMzM7u7u9vb2xISEktLSwYGBpaWlu3t7VRUVLS0tMPDwyQkJLe3
+t/Pz8+Tk5AMDAzk5OW9vby0tLXJychgYGDw8PMDAwMzMzGZmZhUVFaqqqqWlpVpaWtLS0tjY2M7Ozr29
+vQ8PD0hISFdXV42NjUVFRT8/P5OTk2xsbJmZmTU1Naurq8/PzyIiIjY2NioqKvDw8Glpad/f33t7e7Gx
+sQwMDCcnJ4SEhNXV1fn5+f///wAAAP///yH5BAEAAD8ALAAAAAAeAB4AAAb/wB9h4Csaj8ikcdARKp/Q
+Y4eoNByoR8Mi94Q9HRHG89CjRIs9o6u3gCoEF/QzXRz1MFBQzyFX0n0WPQlPAAIhRn9IfwgRAgBKDWyI
+c0cbPQ9JCz0aR4mdRxIFPQdHCKIon35IJj0FCEYBPRmKlEgvPRZFFxA9E7SqSCU9CgY+CT03SZ6TSZEJ
+hQIVyrVIGD0CIj0ewNNKDD09PHzd5Egt4Jjcv0mxPTWv5alIHLwCPSvq8kfHCizDxeuOAOjxSKA9CvQE
+IRlYEBa4HgGOZGj1ysY1GQ7BRSwyMFasgmR6fCiCI0IPMT46QiSYEWIRU5sqgSPlo51LgSyLtEsBakcr
+LQkcc64zMONkkpA0mEVRcU1as2EklGDJouPEkxgPfCUZQOCMVyQEhEz9KjVsEAA7
+<enddata>
+<data> VarName=$snowshoes_yes
+R0lGODlhHgAeAOZOALu7uwMDA7GxscnJyczMzJGRkRUVFSEhIY+PjwkJCaysrJycnMPDw2ZmZpWVldXV
+1cjIyJKSkq6uroiIiM/Pz9vb27S0tBISEs7Ozs3NzZeXl8XFxaGhobOzs8DAwKmpqTw8PJqamioqKtDQ
+0MbGxqqqqi0tLT8/P6urq4yMjL29vZ6enqenp9/f3yIiIu/v7wYGBh4eHqKioq+vr319fVFRUdLS0icn
+J42NjdbW1g8PD8rKyjAwMJ+fn7a2tiQkJNPT07i4uLy8vNHR0cvLy8fHxxsbG0tLS6SkpDY2NnV1dTMz
+M////wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAE4ALAAAAAAeAB4AAAf/gE4A
+S02FhoeIiYZLJYKKj5CHJYSRlYkuiQcMBAQMB4pMTJaFCQMTTUomAzCJoaNNPj2oqEgdraKjA0sFu0sR
+KrejIqHEoS8xiK6WHCuzsxxHybiVEjxKh0oFH4cBypUWOM7XCBKHJAIABZZDRUru7xoUh0RGBxmWDgKz
+10oCEYYOIBTaEKJSghH8ZmEIUMjAg2JMDFQa8CPhBIGFhDjYB8JDpRsQB3wqBGQfqhwMI83IsGTJiG2F
+UgRJeM3Cv0oPLuiwcQhDiHfvIMirtEAAix2HJCAQ1wSBrUrdmCQ4hALBNUOp9FnyVqjGAqYLZIzi2kRE
+C4ihkoydZoiAggZvMt8+SFmJbBMPGhIW2PDK7gUGBq7RICFxrSIQFThVOPGq8SNKjiMtARC5EgBBkCsv
+uhwIADs=
+<enddata>
+<data> VarName=$s_tool_yes
+R0lGODlhHgAeAOZQAPDw8MzMzLu7uxsbG9jY2A8PD4eHh/z8/CQkJN7e3uTk5AMDA3h4eMnJyXt7ewwM
+DD8/Py0tLX5+fioqKk5OTm9vbwkJCWZmZo2Njerq6tLS0vb29lFRUQYGBtvb25mZme3t7bGxsaqqqhgY
+GHV1dVpaWp+fn9XV1RYWFiIiIhUVFWNjY11dXRISEoGBgbKysrS0tCYmJjAwMAoKCqioqEtLS1dXV2xs
+bEJCQjk5Oc/Pz0lJSaurqycnJ1RUVK6urmlpaUVFRfPz82BgYJCQkPn5+ZaWlsHBwYSEhJOTk01NTR4e
+Hjw8PDMzM////wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAFAALAAAAAAeAB4AAAf/gFAC
+TU+FhoeIiYZNIoKKj5CHIoSRlYkplpmahiUrD5uWRk4gFKCRGE6pFaaPF6mpNYkFpksHrwAIhy4ZA6Yk
+r04aHYUPG04fijwBATeKNMAGhT6pRSOJJ04Kn4cTTxYNrwcQTwYNAE4MiQpOLIc2CQCFKh6vCTPdDk7R
+iEIEC4ZEUiUwhCDDqySF8u0ztMCJgyf/KrwycSjCOSc6rJlwIgFRCycwSCCJYcsJgV6HcGwg0ONDkHXp
+DiF4FWJHKg8oEVE4wgRYzEVOAASQICPACxSQICAIoCEVEEQQhhRoUqKJ1atYszaJ8ISDkkQXLgIbS/bV
+j5yFmpRdu5bAMEMcK9jKHZvj0Le5c0HMOlQAQ4CSeIGF4MqqsOHDmighPtREwGJEAgQpPtwYSiAAOw==
+<enddata>
+<data> VarName=$UV_yes
+R0lGODlhHgAeAOZVAHKUoMPDw7S0tDw8PMzMzDMzM0tLS7u7u+Hh4RISEgkJCfz8/D8/P1paWpmZmYqK
+iu3t7XV1dTY2Nnt7e8/Pz2lpaX5+fqqqqvPz8wMDA0VFRfb29g8PD6urq6KiopCQkH50vWBgYPn5+YGk
+xpaWlnKWoJycnHGZnzAwMAEBAXWiowcKCgsPD0VdYVFRUSIiIi0tLaioqENdXnSfolRUVEVfYjk5OYpK
+20NaXtLS0l96hkhISCEhIdvb2x4eHnSgooeHhxsbG09qb7e3t2aNkHSeoQkMDK6uroSHzCcnJ8bGxo6p
+6tXV1QQFBXKeoY+p7YtE34125gwREf///wAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAFUALAAAAAAeAB4AAAf/gFUH
+BVSFhoeIiYYFF4KKj5CHF4SRlYkvlpmam5EmBB+GKAQEAz6jDYgRBAEKigFTAoYDU1MGVExTQ4gIUx2P
+r7GFs7VUE1MLCYY2tC6/sLK0tjy0IYYPUxCtrs/C0YVK3FS8DpDA0MRUFVMiyRK0DOXhw7ZUCQtTqNcI
+GfHBVPOGBDzjBSTSqwCGGNDSYKjBlA0aaMGIFGMKBg6FjE1JYkgBhik9plCoRIMWhQoWNkzJgcgDrSkR
+LDl4SQuCBEQ7aC0IkonBkVUPkiHKQMKBBU5Ikyo1JKWp06dQn6Z4ZISIk6tYs2rNqkKGohojnogdS7Ys
+2SU/FAlBEqWt27dwM+HOaJKoBQgoePPq3av3RhFFK3SUAEC4sOHDhU/ggMQiqmOoiSgtjXxgsqIDgiRP
+LoA5EAA7
+<enddata>
+
+
+<Data> VarName=$FormParameters
+#********************************************************************
+# Form generated by GSAK form designer on mar 27-lug-2010 19:58:34
+#********************************************************************
+
+Name = FormParameters
+  Type = Form
+  Caption = CacheAttributes parameters
+  Height = 277
+  Width = 425
+
+Name = LabelAttrImages
+  Type = Label
+  Height = 13
+  Left = 86
+  Top = 54
+  Width = 177
+  Caption = 0 no icons, 1 icons only, 2 icons+text:
+
+Name = FAttributesImages
+  Type = Edit
+  Height = 21
+  Left = 280
+  Top = 50
+  Width = 43
+  Taborder = 1
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 86
+  Top = 193
+  Width = 75
+  Taborder = 2
+  Caption = OK
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 248
+  Top = 193
+  Width = 75
+  Taborder = 3
+  Caption = Cancel
+
+Name = FMsg
+  Type = Label
+  Color = 32768
+  Height = 16
+  Left = 88
+  Size = 10
+  Top = 16
+  Width = 200
+
+Name = FChkNone
+  Type = Checkbox
+  Height = 17
+  Left = 88
+  Top = 88
+  Width = 193
+  Taborder = 11
+  Caption = write "NONE" if no attributes found
+
+Name = FChkDELETE
+  Type = Checkbox
+  Height = 17
+  Left = 87
+  Top = 130
+  Width = 213
+  Taborder = 12
+  Caption = DELETE CacheAttributes from UserNote
+
+<enddata>
+
+
+
+
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "lisp_syntax"        langID="30"                             />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ LISP ] -->
+
+			<parser
+				displayName="[TBD] LISP - LISt Processing"
+				id         ="lisp_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

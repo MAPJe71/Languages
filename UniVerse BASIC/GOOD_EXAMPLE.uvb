@@ -1,0 +1,24 @@
+
+*File: GOOD_EXAMPLE:
+A = “”
+
+CALL MySub(A); * Call a local subroutine
+PRINT A
+
+CALL SameNameSUBR(A); *Call a local subroutine
+PRINT A
+
+“CALL *SameNameSUBR(A); *Call an external subroutine”
+PRINT A
+
+STOP
+
+*Define the local subroutine
+SUBROUTINE MySub (B)
+    B = “In local MySub”
+RETURN
+
+*Define another local subroutine
+SUBROUTINE SameNameSUBR(B)
+    B = “In local SameNameSUBR”
+RETURN

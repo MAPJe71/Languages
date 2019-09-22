@@ -1,0 +1,57 @@
+// line comment
+//line comment
+
+!  line comment
+! line comment
+!line comment
+
+/*
+block comment
+*/
+
+/*
+    block comment
+*/
+
+    /*
+    block comment
+    */
+
+/* block comment
+*/
+
+/*
+block comment */
+
+/* one-line block comment */
+
+
+INT FUNCTION _KRN_Alarm_ClearSelection(INT iDspType =-1, INT iMonitor = -1)
+
+    INT     iError = -1;
+    INT     iFormID = -1;
+
+    IF iMonitor = -1 THEN
+        iMonitor = KRN_MM_GetMonitor();
+    END
+
+    IF iDspType =-1 THEN
+        iDspType = miAlarmDsp[iMonitor];
+    END
+
+    SELECT CASE iDspType
+    CASE ALM_CURRENT
+        iFormID = mhCurrentForm[iMonitor];
+    CASE ALM_HISTORY
+        iFormID = mhHistoryForm[iMonitor];
+    CASE ALM_SHELVED
+        iFormID = mhShelvedForm[iMonitor];
+    END SELECT
+
+    IF iFormID <> -1 THEN
+        iError = KRN_DG_FormClearSelection(mobjAlarmDataGrid, iFormID);
+    END
+
+    RETURN iError;
+END
+

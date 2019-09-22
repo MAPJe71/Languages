@@ -1,0 +1,759 @@
+#************************************************************************************** 
+# MacDescription = FSG Plugin - generates a list of friends which went caching with you
+# MacFileName = FSGPlugin_FriendsList.gsk
+# MacAuthor = hulmgulm
+# MacVersion=2.0.1
+# MacUrl=http://gsak.net/board/index.php?showtopic=18001
+#************************************************************************************** 
+# Usage:
+#   Add the following code to a FindStatsGen annotation section:
+#   <plugin>FSGPlugin_FriendsList?UserData=4&ProfileLinks=false&TxtFriend=Visited by</plugin>
+#
+#   As this plugin does not generate a head line, you might want to add 
+#   <subhead>This is a list</subhead>
+#   to the annotation too.
+#
+# Parameters:
+# *	Separator
+#   Used to define the separator used to separate the friends. (default: ,)
+#
+# * UserData
+#   Used to specify the UserData/UserNote field used to store the friends.
+#   Valid values are (default: 1):
+#      1, 2, 3, 4 for UserData, User2, User3, User4
+#      N for UserNote
+#
+# * ProfileLinks
+#   Used to enable/disable the generation of links to the friends user profile on gc.com.
+#   Valid values are: true, false (default: true)
+#
+# * TxtFriend
+#   Name of the type of "friends" which get displayed. This is displayed as the header of
+#   the first table column as well as it is used as "tag" for the extended list 
+#   capabilities (see below).
+#   (default German: Freund, default English: Friend)
+#
+# * Numbering
+#   Used to enable numbering the of the list elements in the output
+#   Valid values are: true, false (default: true)
+#
+# * TaggedOnly
+#   Used to toggle the calculation of the percentage between total finds or the total 
+#   number of finds tagged with TxtFriend
+#   Valid values are: true, false (default: false)
+#
+# * CountFriends
+#   Specifies the number of friends to output in main table
+#   Valid values are even numbers (default: 20)
+#
+# * ExtendedParenthesis
+#   Allows to change the separators for the extended version from
+#   the default <TxtFriend=...> to [TxtFriend=...],{TxtFriend=...}
+#   or (TxtFriend=...)
+#   Valid values are: <[({ (default: <)
+# 
+# * ExtraList
+#   Allows to suppress the output of friends that didn't make it into the 
+#   main list
+#   Valid values are: true, false (default: true)
+#
+# * CountExtraFriends
+#   Specifies the number of friends to output that didn't make it into the 
+#   main list
+#   Valid values are even numbers (default: 20)
+#
+# * Unlisted
+#   Used to enable/disable the output number of unlisted of friends
+#   Valid values are: true, false (default: true)
+#
+# Friend list simple version:
+#   The whole content of the selected UserData field is treated as a list of friends, 
+#   separated by the chosen separator. E.g.:
+#     Clyde,lignumaqua,Kai Team
+#
+# Friend list extended version:
+#   To specify several separate lists in one of the UserData fields at the same time,
+#   the following notation has to be used:
+#     <TxtFriend=friend1,friend2>
+#   where TxtFriend is the same text as specified by the TxtFriend parameter. E.g.:
+#     <Friend=Clyde,lignumaqua,Kai Team>
+#     <Weather=sunny>
+#
+# Using the ExtendedParenthesis parameter it is possible to change the syntax to one 
+# of the following:
+# <TxtFriend=friend1,friend2>
+# (TxtFriend=friend1,friend2)
+# [TxtFriend=friend1,friend2]
+# {TxtFriend=friend1,friend2}
+#
+# ### Warning: ###
+# If you store your friends in the UserNote field, it is recommended to use the 
+# extended version of this macro (<TxtFriend=friend1,friend2>) or you have to make 
+# sure that your "User Notes" and "Log Section" do not contain other content. You will 
+# get unexpected results if they do!
+# 
+#************************************************************************************** 
+IF $_MacroLevel = 1
+    RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_FriendsList[?AdditionalParameters]</plugin>"
+ENDIF 
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitLanguage
+
+# initialize parameter variables
+$FLUserData = "Userdata"
+$FLProfileLinks = true
+$FLSeparator = ","
+$FLNumbering = true
+$FLTaggedOnly  = false
+$FLCountFriends = 20
+$FLExtraList = true
+$FLCountFriendsExtra = 20
+$FLExtendedParenthesisOpen = "<"
+$FLExtendedParenthesisClose = ">"
+$FLUnlisted = true
+# initialized in langues $FLFriends = "Friends"
+
+# parse parameters
+IF $_MacroParms <> ""
+    $count = RegExCount("&",$_MacroParms)
+    $i = 1
+    WHILE $i <= $count+1
+        $Text1 = extract($_MacroParms,"&",$i)
+        $Text2 = upper($Text1)
+
+        IF (AT("USERDATA", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "1"
+                    $FLUserData = "Userdata"
+                CASE $work = "2"
+                    $FLUserData = "User2"
+                CASE $work = "3"
+                    $FLUserData = "User3"
+                CASE $work = "4"
+                    $FLUserData = "User4"
+                CASE $work = "N"
+                    $FLUserData = "UserNote"
+                OTHERWISE 
+                    MSGOK msg="$FLLangUserDataError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("PROFILELINKS", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "true"
+                    $FLProfileLinks = true
+                CASE $work = "false"
+                    $FLProfileLinks = false
+                OTHERWISE 
+                    MSGOK msg="$FLLangProfileLinksError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("TXTFRIEND", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work <> ""
+                    $FLFriend = $work
+                OTHERWISE 
+                    MSGOK msg="$FLLangTxtFriendError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("SEPARATOR", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work <> ""
+                    $FLSeparator = $work
+                OTHERWISE 
+                    MSGOK msg="$FLLangSeparatorError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("NUMBERING", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "true"
+                    $FLNumbering = true
+                CASE $work = "false"
+                    $FLNumbering = false
+                OTHERWISE 
+                    MSGOK msg="$FLNumberingError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("TAGGEDONLY", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "true"
+                    $FLTaggedOnly = true
+                CASE $work = "false"
+                    $FLTaggedOnly = false
+                OTHERWISE 
+                    MSGOK msg="$FLTaggedOnlyError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("COUNTFRIENDS", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE val($work) >0
+                    $FLCountFriends = val($work)
+				OTHERWISE 
+                    MSGOK msg="$FLCountFriendsError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("EXTENDEDPARENTHESIS", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "<"
+                    $FLExtendedParenthesisOpen = "<"
+                    $FLExtendedParenthesisClose = ">"
+                CASE $work = "("
+                    $FLExtendedParenthesisOpen = "("
+                    $FLExtendedParenthesisClose = ")"
+                CASE $work = "["
+                    $FLExtendedParenthesisOpen = "["
+                    $FLExtendedParenthesisClose = "]"
+                CASE $work = "{"
+                    $FLExtendedParenthesisOpen = "{"
+                    $FLExtendedParenthesisClose = "}"
+                OTHERWISE 
+                    RETURN msg="$FLExtendedParenthesisError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("EXTRALIST", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "true"
+                    $FLExtraList = true
+                CASE $work = "false"
+                    $FLExtraList = false
+                OTHERWISE 
+                    MSGOK msg="$FLExtraListError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("COUNTEXTRAFRIENDS", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE val($work) >0
+                    $FLCountFriendsExtra = val($work)
+                OTHERWISE 
+                    MSGOK msg="$FLCountFriendsExtraError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        IF (AT("UNLISTED", $Text2) <> 0)
+            $work = AllTrim(extract($Text1,"=",2))
+            BEGINCASE 
+                CASE $work = "true"
+                    $FLUnlisted = true
+                CASE $work = "false"
+                    $FLUnlisted = false
+                OTHERWISE 
+                    MSGOK msg="$FLUnlistedError $_CrLf $Text1"
+            ENDCASE 
+        ENDIF 
+
+        $i = $i+1
+    ENDWHILE 
+ENDIF 
+
+# Initialise Variables
+$out = ""
+SHOWSTATUS msg="Generating friends list '$FLFriend' ..." Width=350
+
+
+# If there is at least one entry inside <name= > then only use the extracted part
+$Tmps = RegExEscape ($FLExtendedParenthesisOpen+$FLFriend+"=")
+$_sql = "SELECT count(Code) FROM AllFinds WHERE g_regex("+SqlQuote($Tmps+".*")+",$FLUserData)"
+$work = Sqlite("sql", $_sql)
+IF Val($work)=0
+    $FLStripped = $FLUserData
+    $FLsqlAnd = ""
+    IF $FLTaggedOnly
+        $_sql = "SELECT count(Code) FROM AllFinds WHERE $FLUserData<>'' "
+        $work = Sqlite("sql", $_sql)
+        $totalpercent = Val($work)
+    ENDIF 
+ELSE 
+    IF $FLTaggedOnly
+        $totalpercent = Val($work)
+    ENDIF 
+    VSUB Status=off
+    $FLStripped = "g_RegexReplace('(?s)"+RegExEscape($FLExtendedParenthesisClose)+".*$',g_RegexReplace("+SqlQuote("(?s)^.*"+$Tmps)+", "+$FLUserData+",''),'')"
+    VSUB Status=on
+    $FLsqlAnd =  "AND lLogid IN (SELECT lLogid FROM AllFinds WHERE g_regex("+SqlQuote($Tmps+".*")+",$FLUserData))"
+ENDIF 
+
+# Get friend names
+$_sql = "SELECT replace($FLStripped, '$FLSeparator', '|') AS data FROM AllFinds WHERE $FLStripped <> "+$_Quote+$_Quote+" $FLsqlAnd group by "+$FLStripped
+$work = Sqlite("sql", $_sql)
+
+$status = List("Friends", "create", "|")
+$work = Replace($_NewLine, "|", $work)
+# Make sure that no empty entries sneak in
+$work = Replace("||", "|", $work)
+$status = List("Friends", "replace", $work)
+$status = List("FriendsProcessed", "create", "|")
+
+
+$_sql = "DROP TABLE Friends"
+$status = Sqlite("sql", $_sql, "error=Trap")
+$_sql = "CREATE TABLE Friends (id name, name text, founds int, UNIQUE(id) )"
+$status = Sqlite("sql", $_sql)
+
+$count = Val(List("Friends", "Count", ""))
+$i = 1
+
+# Add friends and found count to DB
+WHILE $i < $count+1
+    $Tmps = List("Friends", "Item", NumToStr($i))
+    $work = Alltrim(List("Friends", "Item", NumToStr($i)))
+
+    IF List("FriendsProcessed", "Find", $work) = "0"
+        SHOWSTATUS msg="Generating friends list '$FLFriend' ..." Width=350
+        $Tmps = RegExEscape( $work )
+        $_sql = "INSERT OR REPLACE INTO Friends (id, name, founds) SELECT "+SqlQuote(Lower($Work))+", "+SqlQuote($Work)+", count(name) FROM AllFinds WHERE g_regex("+SqlQuote("([^\w]|^)"+$Tmps+"([^\w]|$)")+","+$FLStripped+") "+$FLsqlAnd
+        $status = Sqlite("sql", $_sql)
+    ENDIF 
+
+    $i = $i + 1
+
+    $status = List("FriendsProcessed", "add", $work)
+ENDWHILE 
+
+
+GOSUB Name=FriendsList
+
+$p_FSGData = $out
+
+BEGINSUB Name=FriendsList
+    # Determine the number of finds you've made by owner
+    SHOWSTATUS msg="Rendering friends list '$FLFriend' ..." Width=350
+    # Determine the cutoff poInt for listing owners based on number of
+    # their caches found
+    $Cutoff = 0
+    # Generate an unduplicated list of the owners of all found caches in the database
+
+    # Initialize Variables
+    $ThisRecord = 0
+    $Count = 0
+    $_sql = "SELECT founds as c, name from Friends ORDER BY c DESC, name COLLATE NOCASE"
+    $work = Sqlite("sql",$_sql)
+    $list = list("sql","replace",$work)
+
+    # Sorted list of Owners, largest # finds at the top.
+    $list = List("sql","item","1")
+    $maxnum = Val(Extract($list,";",1))
+    $index = 0
+    $result = ""
+    $result2 = ""
+    $result3 = ""
+    $tmpB = TRUE
+    $totalowners = $_SqlRows
+
+    SHOWSTATUS msg="Generate output for friends list '$FLFriend' ..." Width=350
+    WHILE $index < $totalowners AND $tmpB = TRUE
+        $tmpN = $index + 1
+        $list = List("sql","item","$tmpN")
+        $UserSort = Val(Extract($list,";",1))
+        $OwnerID = "" #Extract($list,";",2)
+        $OwnerName = Extract($list,";",2)
+        IF $index >$FLCountFriends-1 AND $UserSort > $Cutoff
+            GOSUB Name=MakeUserLink
+            $index=$index+1
+            $indexstring = Str($index,2,0)
+            $result3 = $result3 + "$UserLink,$UserSort;"
+        ENDIF 
+        IF $index <=($FLCountFriends-1) and $index >($FLCountFriends/2)-1
+            GOSUB Name=MakeUserLink
+            $index=$index+1
+            $indexstring = Str($index,2,0)
+            IF $FLNumbering
+                $result2 = $result2 + "$indexstring - $UserLink,$UserSort;"
+            ELSE 
+                $result2 = $result2 + "$UserLink,$UserSort;"
+            ENDIF 
+
+        ENDIF 
+        IF $index <=($FLCountFriends/2)-1
+            GOSUB Name=MakeUserLink
+            $index=$index+1
+            $indexstring = Str($index,2,0)
+            IF $FLNumbering
+                $result = $result + "$indexstring - $UserLink,$UserSort;"
+            ELSE 
+                $result = $result + "$UserLink,$UserSort;"
+            ENDIF 
+
+        ENDIF 
+        IF $index >($FLCountFriends-1) AND $UserSort <= $Cutoff
+            $tmpB = FALSE
+        ENDIF 
+    ENDWHILE 
+    $listedowners = $index
+    IF $listedowners > ($FLCountFriends/2)-1
+        IF $FLExtraList
+            $listedowners = $FLCountFriends*2
+        ELSE 
+            $listedowners = $FLCountFriends
+        ENDIF 
+    ENDIF 
+    $unlistedowners = $totalowners - $listedowners
+
+    SHOWSTATUS msg="Generate output friends list '$FLFriend' ..." Width=350
+
+    # Generate output
+    # Initialise section variables
+    $colspan = 1
+    $note=""
+    $maxwidth=50
+    IF not ($FLTaggedOnly)
+        $totalpercent = $FindsWithDuplicates
+    ENDIF 
+    GOSUB Name=Open2Col
+    GOSUB Name=Table2Col
+    GOSUB Name=Mid2Col
+    $result = $result2
+    GOSUB Name=Table2Col
+    GOSUB Name=Close2col
+    IF $result3 <> "" and $FLExtraList
+        $out = $out + "<b><i>$Lang40</i></b><div align='center'><table style='text-align: left; align: center;'>"
+        $out = $out + $CR+ "<tr>" + $CR
+        $result = $result3
+        $index = 0
+        $NumItems = RegExCount(";",$result)
+        WHILE $index < $NumItems AND $index < $FLCountFriendsExtra
+            $index = $index + 1
+            $data = Extract($result, ";" , $Index)
+            $text = Extract($data, ",", 1)
+            $num  = Val(Extract($data, ",", 2))
+            $out = $out + "<td style='$stOwners3'><span >$text ($num)</span></td>" + $CR
+            IF $index/4 = Int($index/4) AND $index <> $FLCountFriendsExtra
+                $out = $out + "</tr><tr>" + $CR
+            ENDIF 
+        ENDWHILE 
+        $out = $out + "</tr>" + $CR
+        $out = $out + "</table></div>" + $CR
+    ENDIF 
+    IF $unlistedowners >0 AND $FLUnlisted
+        $out = $out + "<br /><i>$user $FLUnlisted1 "
+        $out = $out + "<b>$unlistedowners</b> $FLUnlisted2</i><br />" + $CR
+    ENDIF 
+    # output legend
+    $out = $out + "<a style='text-align:center; text-decoration:none; font-size: xx-small;'"
+    $out = $out + " href='" + MacHeader("MacURL") + "'>FSGPlugin_FriendsList " + MacHeader("MacVersion") + "</a>" + $CR
+ENDSUB # FriendsList
+
+BEGINSUB Name=MakeUserLink
+    # Generate HTML link from GC userID
+    # Format: http://www.geocaching.com/profile/?id=216368
+    # Input: Ensure database is on one of the users cache so $d_OwnerId &
+    # $d_Ownername are valid
+    # Output: $UserLink
+    IF Len($OwnerName) > 20 AND $FLNumbering
+        $ShrunkOwnerName = Left($OwnerName,18) + "..."
+    ELSE 
+        $ShrunkOwnerName = $OwnerName
+    ENDIF 
+    $ShrunkOwnerName = Replace(","," ",$ShrunkOwnerName,true)
+    $ShrunkOwnerName = Replace(";"," ",$ShrunkOwnerName,true)
+
+    IF $FLProfileLinks = true
+        #Strip off the first character
+        $tmpS = Left($OwnerId,1)
+        $OwnerId = SubStr($OwnerId,2,0)
+
+        BEGINCASE 
+            CASE $tmpS = "T"
+                $UserLink = "<a href='http://www.terracaching.com/profile.cgi?ID=$OwnerId'>"
+            CASE $tmpS = "A"
+                $UserLink = "<a href='http://geocaching.com.au/cacher/" + Replace(" ","+",$OwnerName,TRUE) + "'>"
+            OTHERWISE 
+                IF NumToStr(Val($OwnerId))= $OwnerId     # equal - $OwnerId is number, link is created from $OwnerId
+                    $UserLink = "<a href='http://www.geocaching.com/profile/?id=$OwnerId'>"
+                ELSE # not equal - $OwnerId is something else, link is created from $OwnerName
+                    $UserLink = "<a href='http://www.geocaching.com/profile/?u="+HttpEncode($OwnerName)+"'>"
+                ENDIF 
+        ENDCASE 
+
+        $UserLink = $UserLink + $ShrunkOwnerName + "</a>"
+    ELSE 
+        $UserLink = $ShrunkOwnerName
+    ENDIF 
+
+ENDSUB #MakeUserLink
+
+BEGINSUB Name=Open2Col
+    # Open the table for two column output
+    $out = $out + "<!-- Open2Col -->" + $CR
+    $out = $out + "<table border='0'>" + $CR
+    $out = $out + "<tr>" + $CR
+    $out = $out + "<td valign='top' align='center'>" + $CR
+ENDSUB #Open2Col
+
+BEGINSUB Name=Mid2Col
+    # Add the HTML for between two, two column sections
+    $out = $out + "<!-- Mid2Col -->" + $CR
+    $out = $out + "</td>" + $CR
+    $out = $out + "<td  valign='top' align='center'>" + $CR
+ENDSUB #Mid2Col
+
+BEGINSUB Name=Close2Col
+    # Finish two column output
+    $out = $out + "<!-- Close2Col -->" + $CR
+    $out = $out + "</td></tr></table>" + $CR
+ENDSUB #Close2col
+
+BEGINSUB Name=Table2Col
+    # This subroutine writes a fixed format stats table, taking these inputs:
+    # $result : semicolon delimited record pairs, each record is a 'text'
+    #           and a 'number' separated by a comma
+    # $maxnum : The largest number in the dataset
+    # $note   : Any note that should appear beneath the table
+    # $totalpercent : The total that percentage is based on, nomrally $FindsWithDuplicates
+    # 
+    # NB. It would be 'nicer' to calculate $maxnum in this routine, but there
+    # is a significant cycle saving by doing it in the stats generating routines
+    # They've already been through the data once after all!
+    # Open the table and write the header line to the output variable
+    $out = $out + "<!--  Table2Col -->" + $CR
+    $out = $out + "<table border='0' summary='' width='371' style='text-align: left;'>" + $CR
+
+    $out = $out + "<tr><td style='$stTab2cHead'><b> $FLFriend </b></td><td style='$stTab2cHead'><b> $Lang05 </b></td>"
+
+    IF $FLTaggedOnly
+        $out = $out + "<td style='$stTab2cHead'><b> $Lang06 </b></td>"
+        $out = $out + "<td style='$stTab2cHead'><b> $LangStatus29b " + NumToStr($totalpercent) + "</b></td></tr>" + $CR
+    ELSE 
+        $out = $out + "<td style='$stTab2cHead'><b> $Lang06 </b></td>"
+        $out = $out + "<td style='$stTab2cHead'>&nbsp;</td></tr>" + $CR
+    ENDIF 
+
+    # How many records?
+    $NumItems = RegExCount(";",$result)
+    # Go through the data, one record at a time
+    $index = 0
+    WHILE $index < $NumItems
+        $index = $index + 1
+        # Get one data element
+        $data = Extract($result, ";" , $Index)
+        $text = Extract($data, ",", 1)
+        $num  = Val(Extract($data, ",", 2))
+        # Replace ampersands with &amp; etc to keep the HTML sweet
+        $text = Replace("&","&amp;",$text,true)
+        $text = Replace("%lt","&lt;",$text,true)
+        $text = Replace("%gt","&gt;",$text,true)
+        # Calculate the percentage of this record
+        IF $totalpercent > 0
+            $pc = ($num/$totalpercent) * 100
+        ELSE 
+            $pc = 0
+        ENDIF 
+        $percent = left("$pc",4)
+        # Call the subroutine to write a row out
+        GOSUB Name=Table2ColRow
+    ENDWHILE 
+    # write table footer
+    $out = $out + "</table>" + $CR
+    IF $note <> ""
+        $out = $out + "<span style='$stSmall'>$note</span>" + $CR
+    ENDIF 
+
+ENDSUB # Table2Col
+
+BEGINSUB Name=Table2ColRow
+    # Write a row in the standard half width layout
+    # If this is the largest data element, make the bar red and highlight it
+    IF $num = $maxnum
+        $style1 = $st2cHi1
+        $style2 = $st2cHi2
+    ELSE 
+        $style1 = $st2c1
+        $style2 = $st2c2
+    ENDIF 
+
+    # Write the row data to the output variable
+    $out = $out + "<!-- Table2Col Row-->" + $CR
+    $out = $out + "<tr><td style='$style1'>$text</td>" + $CR
+    $out = $out + "<td style='$style2'>$num</td>" + $CR
+    $out = $out + "<td style='$style2'>$percent %</td>" + $CR
+    $out = $out + "<td style='$style2' width='$maxwidth'>" + $CR
+
+    IF $maxnum = 0
+        $maxnum = 1
+    ENDIF 
+
+    $width = Int($maxwidth * $num / $maxnum)
+
+    IF $width=0 AND $num >0
+        $width = 1
+    ENDIF 
+
+    IF $width>0
+        GOSUB Name=HBar
+    ENDIF 
+    $out = $out + "</td></tr>" + $CR
+ENDSUB #Table2ColRow
+
+BEGINSUB Name=HBar
+    # Output the horizontal bar for the 'graph' display
+
+    IF $UseImageBars
+        IF $num = $maxnum
+            $image = $imagepath + $ImageRH
+            $out = $out + "<img src='$image' border='0' width='$width' "
+        ELSE 
+            $image = $imagepath + $ImageBH
+            $out = $out + "<img src='$image' border='0' width='$width' "
+        ENDIF 
+        $out = $out + "height='15' alt='$num' title='$num' />" + $CR
+    ELSE 
+        IF $UseHeatBars
+            $heatnum = $num
+            $heatmax = $maxnum
+            GOSUB Name=GetHeatColor
+            $out = $out + "<span title='$num' style='display:block; background: #$HeatColor; width:$width" + "px;'>&nbsp;</span>"
+        ELSE 
+            IF $num = $maxnum
+                $out = $out + "<span title='$num' style='display:block; background: $stRedBar; width:$width" + "px;'>&nbsp;</span>"
+            ELSE 
+                $out = $out + "<span title='$num' style='display:block; background: $stBlueBar; width:$width" + "px;'>&nbsp;</span>"
+            ENDIF 
+        ENDIF 
+
+    ENDIF 
+ENDSUB #HBar
+
+BEGINSUB Name=GetHeatColor
+    $begRed = 20
+    $redChange = 180
+    $begGreen = 50
+    $greenChange = 150
+    $begBlue = 0
+    $blueChange = 0
+
+    IF $heatmax > 0 AND $heatnum > 0
+        # Use log scale to enhance color differences
+        IF $heatmax = 1 AND $heatnum = 1
+            $heatx = 1
+        ELSE 
+            $heatx = Log($heatmax,$heatnum)
+        ENDIF 
+
+        $heaty = 1-($heatnum/$heatmax)
+        # Scale so one color is always at full intensity
+        IF $heatx >= $heaty
+            $heaty = $heaty/$heatx
+            $heatx = 1
+        ELSE 
+            $heatx = $heatx/$heaty
+            $heaty = 1
+        ENDIF 
+    ELSE 
+        $heatx = 0
+        $heaty = 0
+    ENDIF 
+    $red=$begRed+($redChange*$heatx)
+    $dec=$red
+    GOSUB Name=dectohex
+    $redhex=$hex
+    $green=$begGreen+($greenChange*$heaty)
+    $dec=$green
+    GOSUB Name=dectohex
+    $greenhex=$hex
+    $blue=$begBlue+($blueChange*$heatx)
+    $dec=$blue
+    GOSUB Name=dectohex
+    $bluehex=$hex
+    $heatcolor = $redhex + $greenhex + $bluehex
+    $heatstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+
+ENDSUB #GetHeatColor
+
+BEGINSUB name=dectohex
+    # Takes input from 0-255 as a decimal number in $dec
+    # and returns it as a two character hex string in $hex
+
+    $hexlookup="0123456789ABCDEF"
+    $c_d = Int($dec)
+    $c_q = Int($c_d/16)
+    $c_r = $c_d - ($c_q*16)
+    $hex = SubStr($hexlookup,$c_q+1,1) + SubStr($hexlookup,$c_r+1,1)
+ENDSUB 
+
+BEGINSUB Name=InitLanguage
+    DECLARE Var=$FLFriend Type=String
+    DECLARE Var=$FLUnlisted1 Type=String
+    DECLARE Var=$FLUnlisted2 Type=String
+    DECLARE Var=$FLLangUserDataError Type=String
+    DECLARE Var=$FLLangProfileLinksError Type=String
+    DECLARE Var=$FLLangTxtFriendError Type=String
+    DECLARE Var=$FLLangSeparatorError Type=String
+    DECLARE Var=$FLNumberingError Type=String
+    DECLARE Var=$FLTaggedOnlyError Type=String
+    DECLARE Var=$FLCountFriendsError Type=String
+    DECLARE Var=$FLExtendedParenthesisError Type=String
+    DECLARE Var=$FLExtraListError Type=String
+    DECLARE Var=$FLCountFriendsExtraError Type=String
+    DECLARE Var=$FLUnlistedError Type=String
+
+    # default: English
+    $FLFriend = "Friend"
+    $FLLangUserDataError = "Error at ListItems parameter:"
+    $FLLangProfileLinksError = "Error at ProfileLinks parameter:"
+    $FLLangTxtFriendError = "Error at TxtFriend parameter:"
+    $FLLangSeparatorError = "Error at Separator parameter:"
+    $FLNumberingError = "Error at Numbering parameter:"
+    $FLTaggedOnlyError = "Error at TaggedOnly parameter:"
+    $FLCountFriendsError = "Error at CountFriends parameter:"
+    $FLExtendedParenthesisError = "Error at ExtendedParenthesis parameter:"
+    $FLExtraListError = "Error at ExtraList parameter:"
+    $FLCountFriendsExtraError = "Error at CountFriendsExtra parameter:"
+    $FLUnlistedError = "Error at Unlisted parameter:"
+    $FLUnlisted1 = "got accompanied by"
+    $FLUnlisted2 = "other friends"
+
+    IF $Language = "Deutsch"
+        $FLFriend = "Freund"
+        $FLLangUserDataError = "Fehler beim ListItems-Parameter:"
+        $FLLangProfileLinksError = "Fehler beim ProfileLinks-Parameter:"
+        $FLLangTxtFriendError = "Fehler beim TxtFriend-Parameter:"
+        $FLLangSeparatorError = "Fehler beim Separator-Parameter:"
+        $FLUnlisted1 = "wurde ausserdem von "
+        $FLUnlisted2 = "weiteren Freunden beim Cachen begleitet"
+        $FLNumberingError = "Fehler beim Numbering-Parameter:"
+        $FLTaggedOnlyError = "Fehler beim TaggedOnly-Parameter:"
+        $FLCountFriendsError = "Fehler beim CountFriends-Parameter:"
+        $FLExtendedParenthesisError = "Fehler beim ExtendedParenthesis-Parameter:"
+        $FLCountFriendsExtraError = "Fehler beim CountFriendsExtra-Parameter:"
+        $FLExtraListError = "Fehler beim ExtraList-Parameter:"
+        $FLUnlistedError = "Fehler beim Unlisted-Parameter:"
+    ENDIF 
+ENDSUB 
+
+BEGINSUB name=DeclareVariables
+    OPTION Explicit=Yes
+
+    DECLARE Var=$FLUserData Type=String
+    DECLARE Var=$FLProfileLinks Type=Boolean
+    DECLARE Var=$FLSeparator Type=String
+    DECLARE Var=$FLStripped Type=String
+    DECLARE Var=$FLsqlAnd Type=String
+    DECLARE Var=$FLNumbering Type=Boolean
+    DECLARE Var=$FLTaggedOnly Type=Boolean
+    DECLARE Var=$FLCountFriends Type=Numeric
+    DECLARE Var=$FLExtendedParenthesisOpen Type=String
+    DECLARE Var=$FLExtendedParenthesisClose Type=String
+    DECLARE Var=$FLCountFriendsExtra Type=Numeric
+    DECLARE Var=$FLExtraList Type=Boolean
+    DECLARE Var=$FLUnlisted Type=Boolean
+ENDSUB 
+
+

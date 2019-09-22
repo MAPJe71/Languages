@@ -1,0 +1,1835 @@
+/* mfiles.mac  console bug work jan-19-2012, 01-09-2011,  9-21-2011  */
+/************************************************************************
+    mfiles.mac is a package of Maxima functions which 
+    contains code for working with files from inside
+    Maxima. This file loads mfiles1.lisp, also available
+    on the author's webpage. This code should work with
+    Maxima ver. 5.26.0.
+    
+    Copyright (C) 2011,2012  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+/* the jan. 19, 2012 revision of mfiles.mac and Ch. 2, Maxima by Example
+   conforms to Maxima v. 5.26.0, and the examples have been carried
+   out using the XMaxima interface. All functions which require file
+   names (except file_search) must have the full path:
+   ie:  "c:/work2/text1.txt"  (not "text1.txt")
+   
+   To simplify the typing, the revised Ch. 2 recommends placing the
+   lines (but replacing c:/work2 with your own work folder path):
+   
+   maxima_userdir: "c:/work2" $  
+   
+    maxima_tempdir : "c:/work2"$
+
+    file_search_maxima : append(["c:/work2/###.{mac,mc}"],file_search_maxima )$
+
+     file_search_lisp : append(["c:/work2/###.lisp"],file_search_lisp )$
+
+     bpath : "c:/work2/"$
+
+     mkp (_fname) := sconcat (bpath,_fname)$
+     
+    in your maxima-init.mac file, so these settings and definitions
+    are available at startup of Maxima.
+    
+    you can then use read_text(mkp("text1.txt"))
+    
+    instead of read_text ("c:/work2/text1.txt")
+    
+    although both versions work.
+    
+    You can then change the base (beginning) of the path (bpath)
+    on the fly :
+    bpath : "c:/work3/temp1";
+    for example, and the next use of mkp will reflect that choice.
+    
+                  
+    */
+                    
+
+/*  
+     functions:
+     
+     probe_file 7-18-11
+     
+     sbreak 7-18-11 calls nothing, called by breakline1
+     
+     breakline1 7-18-11 calls sbreak, called by break_file_lines
+     
+     rename_file 7-16-11 calls nothing
+     
+     delete_file 7-16-11 calls nothing
+     
+     read_line  7-2-11  calls nothing
+     
+     print_file 7-16-11 calls read_line
+     
+     read_data 7-17-11 calls read_line
+     
+     eol_chars calls nothing   
+     
+     unix calls eol_chars
+     windows  calls eol_chars
+     mac   calls eol_chars
+     
+     ftype calls eol_chars
+     
+     file_length calls nothing          
+     file_lines calls read_line
+     
+     ls (path) calls directory, defined in mfiles1.lisp
+     scut(string) calls nothing
+     dir(path) calls ls and scut
+     sword1 calls nothing
+     sword_ic calls sword1
+     sword  calls sword1     
+     
+     file_info (file) calls file_length, file_lines, ftype
+     
+     folder_info1 (path)   calls scut and ls
+     folder_info (path)    calls folder_info1
+     
+     number_files (path)  calls ls
+     number_folders(path)  calls ls     
+     
+     wsearch 7-2-11  calls  sword and sword_ic
+     read_text  7-2-11  calls read_line
+     
+     print_lines 7-16-11 calls read_text          
+     
+     break_file_lines 7-18-11 calls ftype, read_text, breakline1
+     
+     pbreak_lines 7-18-11 calls read_text and breakline1
+     
+     pbreak ()  jan. 19, 2012 calls pbreak_lines 
+     
+     reply_to jan. 19, 2012 calls read_text
+     
+     file_convert 7-16-11  changes file type (unix, windows, mac).
+           calls eol_chars, read_text, ftype, delete_file, rename_file
+     
+     copy_file 7-16-11 calls ftype, read_text, file_convert
+                 preserves file type (unix, windows, mac)
+     
+     getopts  7-2-11  calls nothing
+        
+     search_file  7-2-11
+        calls getopts, read_text, wsearch
+     
+     search_mfiles(file-or-path,substring,options)
+            calls ls, getopts, search_file
+            
+     ssource(substring) calls search_mfiles with target
+        "c:/maxsource/"
+            
+     sloc 7-16-11 calls nothing, called by text_replace
+     
+     text_replace 7-16-11 calls sloc and sword
+     
+     replace_file_text 7-16-11 calls
+         ftype, text_replace, read_text, delete_file, file_convert     
+     
+  */
+  
+   /** mfiles1.lisp defines $directory, rename1 ***********/ 
+ 
+  load("mfiles1.lisp")$
+ 
+  
+  
+  
+  
+ /********* probe_file (file) 7-18-11  *********************/
+   
+   /* experimental: works with Windows binary version
+      of Maxima. Uses Lisp function probe-file. */
+            
+         
+  probe_file (pfile) :=
+    block ([aa,as],
+      aa : ?probe\-file (pfile),
+      if not aa then return (false),
+      as : string (aa),
+      parse_string (simplode (rest (charlist (as),sposition ("p",as)))))$ 
+      
+  
+  
+  
+  /*********** sbreak(string,n) 7-18-11  **************/
+   
+   /*  calls nothing.
+       given a string and integer n,
+      returns list :
+         [string of len <= n,   remainder of given string]
+       the given string being broken at a space or else
+       terminated with '\'    */
+         
+
+sbreak (sbstr,sbnmax) := 
+    block ( [aL,a1s,a2s,a1sr,nrem,a2sp ],
+      
+      if slength (sbstr) <= sbnmax then
+        return ([sbstr,""]),       
+        
+      aL : charlist (sbstr),      
+      
+      a1s : simplode (rest (aL,-(length(aL) - sbnmax))),
+      
+      a2s : simplode (rest (aL,sbnmax)),
+      
+      /* case: no space in string  */
+      
+      if not sposition (space, a1s) then
+       (  a1s : sconcat (a1s,"\\"),
+          return ([a1s,a2s]) ),      
+      
+      a1sr : sreverse (a1s),      
+      
+      nrem : sposition (space,a1sr),      
+      
+      a1s : sreverse(simplode(rest(charlist(a1sr),nrem))),      
+      
+      a2sp : sreverse(simplode(rest(charlist(a1sr),-(slength(a1sr) - nrem+1)))),      
+      
+      a2s : sconcat (a2sp,a2s),
+   
+      [a1s,a2s])$
+      
+  /**********  end sbreak *****************************/
+  
+/*
+(%i2) sbreak ("I am a concerned citizen",8);
+(%o2)                     [I am a, concerned citizen]
+(%i3) display2d:false$
+(%i4) sbreak ("I am a concerned citizen",8);
+(%o4) ["I am a","concerned citizen"]
+(%i5) sbreak ("I am a concerned citizen",20);
+(%o5) ["I am a concerned","citizen"]
+(%i6) sbreak("thisislineone",4);
+(%o6) ["this\\","islineone"]
+(%i7) display2d:true$
+(%i8) sbreak("thisislineone",4);
+(%o8)                         [this\, islineone]
+(%i9) sbreak("thisislineone",8);
+(%o9)                         [thisisli\, neone]
+*/
+
+ /************** breakline1(astring,nmax) 7-18-11 *****************************/
+   /* accepts one string and
+      returns a list of strings, all of length less than or equal
+      to brnmax
+      
+      calls sbreak   */
+      
+   breakline1 (brstr,brnmax) := 
+    block ([rL:[],ssc ],      
+      if slength(brstr) < brnmax then return ([brstr]),
+       ssc : copy (brstr),
+      while slength (ssc) > brnmax do
+       ( [ss1,ssc] : sbreak (ssc, brnmax),
+         rL : cons (ss1, rL)),
+      if slength (ssc) > 0 then
+         rL : cons (ssc,rL),         
+      reverse (rL))$
+      
+   /******* end breakline1 *************************/
+   
+/*
+(%i11) display2d:false$
+(%i12) mystring : "All functions in stringproc.lisp that return characters, return Maxima-characters. Due to the fact, that the introduced characters are strings of length 1, you can use a lot of string functions also for characters. As seen, supcase is one example. "$
+(%i13) slength(mystring);
+(%o13) 248
+(%i14) breakline1(mystring,30);
+(%o14) ["All functions in","stringproc.lisp that return","characters, return",
+        "Maxima-characters. Due to the","fact, that the introduced",
+        "characters are strings of","length 1, you can use a lot",
+        "of string functions also for","characters. As seen, supcase",
+        "is one example. "]
+(%i15) breakline1(mystring,60);
+(%o15) ["All functions in stringproc.lisp that return characters,",
+        "return Maxima-characters. Due to the fact, that the",
+        "introduced characters are strings of length 1, you can use",
+        "a lot of string functions also for characters. As seen,",
+        "supcase is one example. "]
+*/
+
+      
+  
+  
+  
+  
+  
+  
+  
+  /********** rename_file (fold,fnew) 7-16-11 **************/
+   /* experimental: works with Windows Maxima 
+   
+       uses Lisp rename1 defined in mfiles1.lisp  */
+   
+      
+   rename_file (rfold,rfnew) := 
+     block ([astr ],
+       if not file_search (rfold) then
+       (print ("   file ",rfold," not found "),
+        return (false)),
+        astr : string (part (?rename1 (rfold,rfnew),1)),
+        parse_string (simplode (rest (charlist (astr),sposition ("p",astr)))))$
+  
+  
+  
+  
+      /******** delete_file (file)  7-16-11 *****************/
+      /* uses Lisp delete-file */
+
+   delete_file (dfile) := 
+    block (
+      if not stringp (dfile) then
+            (disp (" filename must be a string "),
+               return (false)),
+     if not file_search (dfile) then
+      (print ("  ",dfile," not found."),
+       return (false)),
+     ?delete\-file (dfile),
+     done)$
+     
+  
+  
+  
+  
+     /*************  7-2-11  read_line (stream) ***********************/
+   /* uses Lisp function read-char.
+      This is a replacement for current Maxima readline function
+      which behaves incorrectly with a Mac file.
+      calls nothing.
+         */
+  
+  read_line(rl_strm) := 
+   block ([ll,lms,lls,nm, rL:[],tflag:false,
+                 lp,lps,llps,np,pp,bflag:false ],        
+     
+    do 
+     (         
+        pp : fposition(rl_strm),
+       
+        
+       ll : ?read\-char (rl_strm, false),
+       
+       if ll = false then 
+         (tflag:true,return()),       
+       
+       lms : cunlisp (ll),
+       lls : slength (lms),       
+        
+       if lls = 0 then
+        (disp("string of length 0"),tflag:true,return()),
+        
+       nm : cint (lms),       
+        
+       if lfreeof ([10,13],nm) 
+          then rL : cons (ascii (nm), rL)      
+              
+       else
+        (  /* if we are here after reading just the first char on
+               the line, then we have a blank line case */
+               
+          if pp = 1 then bflag:true,
+       
+          /* We have found the first and maybe only
+                  eol char.  */
+                  
+           pp : fposition(rl_strm),
+                       
+           /* The next char is either another eol char
+                (which could be the end of a blank line)
+           or else the first char of the next line 
+           or else end of file. */           
+                       
+           lp : ?read\-char (rl_strm,false),           
+                       
+           if lp = false then return(),
+           
+           lps : cunlisp(lp),
+                       
+           llps : slength(lps),
+                       
+           if llps = 0 then
+             (disp("string of length 0"),tflag:true,return()),
+             
+           np : cint (lps),                      
+                  
+           if not lfreeof([10,13],np) then
+              (if np = nm then fposition(rl_strm,pp),  return())
+            else
+             (fposition(rl_strm,pp),return())
+               
+           )),                
+    
+    if bflag then ""
+    else if tflag then false
+    
+    else if (length (rL) = 0) then ""    
+    else simplode (reverse (rL)))$
+   
+   /********** end 7-2-11 read_line (stream) ***********************/
+   
+  /********* print_file (file)  ***************************/
+  /* calls read_line
+  
+      This is a replacement for current Maxima
+      function printfile, which behaves incorrectly
+      with a Mac text file.   */
+  
+  print_file (pfile) :=
+   block ([ss,ll],
+        
+     if not stringp (pfile) 
+         then ( disp (" file name must be a Maxima string "),
+              return (false)),
+      
+      if not file_search (pfile) then
+         (disp (" file not found "),return (false)),
+      
+      ss : openr (pfile),   
+      while ( ll : read_line (ss)) # false do
+         if ll = "" then print(ll)
+          else printf(true,"~a~%",ll),
+       
+      close(ss),
+      pfile)$
+      
+   /******** end print_file(file) *************************/ 
+   
+
+
+   /*********** read_data 7-17-11  ****************************/
+   /*   calls read_line . 
+   
+   
+      if only a file name is given, then  the
+     data separators can be an arbitrary mixture
+     of spaces and commas, but the commas are
+     converted to spaces, so strings with spaces
+     will choke the code if you only provide the
+      filename, or you provide (filename," ").
+    
+    
+    
+    syntax: read_data(filename,data-sep-string,mult,line-list)
+      with ";" for example in second slot,
+         and false in third slot.
+      (mult is set to true by default.)
+      
+      The data separator string can be anything
+      recognised by split, and the boolean parameter
+      mult is used by split.
+      
+      
+      In addition, the data-sep-string can be "text",
+      in which case *all* lines of the stream are read
+      in as individual strings.
+      
+      Thus the syntax read_data(filename,"text") does
+      no line splitting.
+      
+     The most complicated four arg syntax has the
+     form
+       read_data (filename, " ", true, [2,4] )
+       
+     for example, where for split line data items,
+     (ie., not lines 2 and 4) space is being used
+     as the data separator, but lines 2 and 4 should
+     be read into separate sublists as a whole as
+     one string for the whole line, doing no splitting
+     for lines 2 and 4.
+   */
+   
+   
+   
+ read_data([rdargs]) := 
+    block ([s,r,l,filename,dsep,mult:true,mix:false,
+              whole:[],ln],
+ 
+     filename : part (rdargs,1),
+     
+     if not stringp (filename) 
+       then ( disp (" file name must be a Maxima string "),
+              return (false)),
+      
+    if not file_search (filename) then
+      (disp (" file not found "),return (false)),
+      
+    if length (rdargs) = 1 then mix : true
+       else if length(rdargs) = 2 then dsep : part (rdargs,2)
+       else if length (rdargs) = 3 then (dsep : part (rdargs,2), mult : part (rdargs,3))
+       else (dsep : part (rdargs,2), mult : part (rdargs,3),whole : part(rdargs,4)),    
+      
+    s : openr (filename),
+    r : [],
+    ln : 0,
+    
+    while (l : read_line(s)) # false do
+      (          
+       if l # "" then
+       ( ln : ln + 1,
+         /* replace tabs by spaces */
+         l : ssubst (" ",ascii(9),l),  /* ascii(9) is tab char */
+         if dsep = "text" then
+            r : cons (l,r)     
+         else if not lfreeof (whole,ln) then            
+            r : cons (l,r)
+         else if mix then                      
+             r : cons (map(parse_string, split(ssubst (" ",",",l))), r)              
+         else r : cons (map(parse_string, split(l,dsep,mult)), r))),
+            
+    close (s),
+    reverse (r))$  
+    
+   /************** end read_data *********************************/
+   
+   
+   
+   
+ /************** eol_chars (file) 7-15-11 **********************/
+  /* returns list [13,10] if windows
+                  [10] if unix
+                  [13] if mac
+                  
+    uses Lisp function read-char              
+                  
+  */
+ 
+ eol_chars(eolfile) :=
+
+  block([sf,lch,eolL :[],nch,Nf : 0,n1:-1 ],
+  
+    if not stringp (eolfile) then
+      (disp (" filename must be a string "),
+       return (false)),
+  
+    if not file_search (eolfile)
+        then (disp(" file not found "),return(false)),
+        
+    sf : openr (eolfile),    
+    do 
+     ( lch : ?read\-char (sf,false), 
+          
+      if lch = false then return(),
+      nch : cint (cunlisp (lch)), 
+          
+      if not lfreeof ([10,13],nch) then
+        (  Nf : Nf + 1,
+           if Nf = 1 then
+           ( n1:nch,
+              eolL : cons (nch,eolL))
+         else
+           ( if (nch # n1) then
+              (eolL : cons (nch,eolL)),
+              return ()))),       
+        
+    close(sf),
+      
+    reverse (eolL))$    
+    
+ /********** end: eol_chars *************************/
+ 
+ /*
+ (%i9) eol_chars("c:/work2/text1.txt");
+(%o9) [13,10]
+*/
+
+
+
+ /***********  unix (file) *****************************/
+ 
+   unix (ffnm) :=
+     (if eol_chars (ffnm) = [10] then true else false)$
+      
+      
+  /**********  windows (file) *****************************/
+  
+  windows (ffnm) :=
+     (if eol_chars (ffnm) = [13,10] then true else false)$
+     
+
+     
+  /**********  mac (file) **********************************/
+  
+  mac (ffnm) :=
+     (if eol_chars (ffnm) = [13] then true else false)$
+     
+ 
+ 
+      
+      
+   /************ ftype (file) **********************/   
+   /* calls eol_chars  */
+     
+  ftype (ft_file) := 
+    block ( [ eolchL  ],
+      if not stringp (ft_file) then
+        (disp (" filename must be a string "),
+           return (false)),
+      if not file_search (ft_file) then
+       ( print("  file ",ft_file," not found"),
+         return (false)),
+      eolchL : eol_chars (ft_file),
+      if eolchL = [10] then unix
+      else if eolchL = [13,10] then windows
+      else if eolchL = [13] then mac
+      else eolchL )$
+     
+
+      
+      
+    /************* file_length(file) ***********************/
+
+  /* file_length("name of file") returns the total
+     number of characters in the file, including the
+     end of line chars
+     calls nothing  */
+
+file_length(fnm) := block ([ss,lss],
+
+    if not stringp (fnm) then
+      (disp (" filename must be a string "),
+       return (false)),
+       
+   if not file_search (fnm) then
+      (disp (" file not found "),return (false)),
+      
+   ss : openr (fnm),
+   lss : flength (ss),
+   close (ss),
+   lss)$    
+      
+
+
+   /*********** file_lines (file)  **************************/
+     
+  /* file_lines (filename) returns the list
+      [number of non-blank lines, total number of lines].
+      
+      calls read_line   */
+      
+  
+  file_lines(fnm) := block ([ss,nl:0,nbl:0,lss],
+  
+    if not stringp (fnm) then
+      (disp (" filename must be a string "),
+       return (false)),
+  
+   if not file_search (fnm) then
+      (disp (" file not found "),return (false)),
+      
+   ss : openr (fnm),
+   
+  while (lss : read_line(ss)) # false do
+     (nl : nl + 1,
+     if slength (lss) = 0 then (nbl : nbl + 1)),
+   
+   close (ss),
+   
+   [nl - nbl,nl])$
+   
+
+
+      
+  /************** ls 7-15-11 ********************************/
+  /* ls(path-string) returns a list of file names
+      (as strings) matching
+     the path supplied. The list items include the
+     drive and folder information 
+     Since use is made of the Lisp directory function,
+     this may not work for non-GCL lisps.
+     calls directory, defined in mfiles1.lisp
+     
+     */
+     
+      
+    ls(apath) := block ([aaL:[],vv],
+            if not stringp (apath) then
+              (disp (" path must be a string "),
+                return (false)),
+             directory (apath),
+             for vv in %% do
+               ( string(vv),
+                 sremove ("\\",simplode (rest 
+                  (charlist (%%),sposition ("p",%%)))),
+              aaL : cons (%%,aaL)),
+             reverse(aaL))$  
+             
+
+ 
+    
+    
+   /************* scut 7-15-11 ******************************/
+  /* scut(string) removes everything from the beginning
+     of the string to the last forward slash (if string
+     contains a forward slash) or else does nothing */
+     
+    
+ scut (ds) := 
+   block ([dsr,nrem],
+     
+     if not integerp (sposition ("/",ds)) then ds
+     else
+       ( dsr : sreverse (ds),
+          nrem : slength(ds) - (sposition ("/",dsr) - 1),
+          sreverse(simplode(rest(charlist(dsr),-nrem)))))$       
+          
+          
+   /***** dir: 7-15-11
+     experimental version which strips off everything except the
+        file name as a string, works with windows binary version of Maxima.
+        May not work with non-GCL lisps.
+        
+        calls ls and scut   ***************/
+        
+    
+    dir (apath) := 
+      block ([aL:[],pL,va],      
+        if not stringp (apath) then
+            (disp (" path must be a string "),
+               return (false)),
+               
+         pL :  ls(apath),
+         
+         for va in pL do            
+             aL : cons (scut(va),aL),
+         reverse(aL))$
+ 
+       
+          
+      
+      
+   /***************  sword1 7-15-11 ***********************/
+
+   /* sword1(string,nbegin,nlength) returns either
+      true or false depending on whether the text substring
+      (beginning at nbegin and having length nlength)
+      is a separate word.
+      
+      sword1 is called by sword and sword_ic
+       */
+      
+  sword1 (mms,pp,qq) := 
+    block ([sleft:false,sright:false ],
+       /* check left hand side of substring */
+       
+      if (pp = 1) or (not alphanumericp (charat (mms,pp - 1)))
+        then sleft : true,
+        
+         /* now check right hand side */
+         
+      if (pp + qq - 1 = slength (mms)) or
+              (not alphanumericp (charat (mms,pp + qq)))
+              then sright : true,
+              
+       if sleft and sright then true else false )$    
+      
+      
+      
+      
+       /********** sword_ic for ignore case search 7-15-11  ************/
+     /*  calls sword1  */
+    
+    
+  sword_ic (ms,ss,nstart) := 
+    block ([ln,sl,ns,nnew,sep ],
+    
+      ln : slength (ms),
+      sl : slength (ss),                  
+      ns : ssearch (ss,ms,sequalignore,nstart),             
+      
+      /* if substring is not found in
+          the string beginning the
+          search at nstart, ssearch returns
+          false */
+          
+      if not ns then return(false),
+      
+      /* here we know ns is some integer 
+          and is the position of the first
+          substring found so far */
+      
+      /* check if it is a separate word */
+      
+      sep : sword1 (ms,ns,sl),
+            
+      if sep then return(ns),
+      
+      /* is substring found at end of the line? */
+      
+      if ns + sl -1 = ln then return (false),
+      
+      /* search for possible next substring */
+      
+      nnew : ns + 1,
+       do
+       (ns : ssearch (ss,ms,sequalignore,nnew),
+        if not ns then return(),
+        if sword1(ms,ns,sl) then return(),
+        if ns + sl -1 = ln then (
+           ns : false,
+           return())
+         else nnew : ns + 1),
+        
+      ns)$  
+      
+   /*********** end    sword_ic  *******************/
+         
+ /*
+ (%i5) sword_ic("This is the first line.","is",1);
+(%o5)                                  6
+(%i6) sword_ic("This is the first line.","Is",1);
+(%o6)                                  6
+(%i7) sword_ic("This is the first line.","IS",1);
+(%o7)                                  6
+(%i8) sword_ic("This is the first line.","IS",7);
+(%o8)                                false
+*/     
+      
+      
+      
+      
+   /************************ sword  7-14-11 ***********************/
+
+  /* sword(string,substring,nstart) 
+       starts search at char pos nstart
+       and
+      returns false if substring is not
+      found or if substring is found but
+      is not a separate word.
+      
+      Otherwise returns the postion
+      of the start of the first substring
+      found.
+      
+      sword calls sword1.
+      
+        */
+  
+  sword (ms,ss,nstart) := 
+    block ([ln,sl,ns,nnew,sep ],
+    
+      ln : slength (ms),
+      sl : slength (ss),                  
+      ns : ssearch (ss,ms,sequal,nstart),             
+      
+      /* if substring is not found in
+          the string beginning the
+          search at nstart, ssearch returns
+          false */
+          
+      if not ns then return(false),
+      
+      /* here we know ns is some integer 
+          and is the position of the first
+          substring found so far */
+      
+      /* check if it is a separate word */
+      
+      sep : sword1 (ms,ns,sl),
+            
+      if sep then return(ns),
+      
+      /* is substring found at end of the line? */
+      
+      if ns + sl -1 = ln then return (false),
+      
+      /* search for possible next substring */
+      
+      nnew : ns + 1,
+       do
+       (ns : ssearch (ss,ms,sequal,nnew),
+        if not ns then return(),
+        if sword1(ms,ns,sl) then return(),
+        if ns + sl -1 = ln then (
+           ns : false,
+           return())
+         else nnew : ns + 1),
+        
+      ns)$
+      
+   /*********** end sword *****************/     
+/*
+(%i2) sword("This is the first line.","is",1);
+(%o2)                                  6
+(%i3) sword("This is the first line.","is",7);
+(%o3)                                false
+*/
+      
+      
+      
+      
+      
+      
+      
+      
+      
+   /******* file_info ****************/
+      
+   file_info(filename) := 
+     block(                
+       if not stringp (filename) then
+          (disp (" filename must be a string "),
+             return (false)),
+             
+       if not file_search (filename)
+          then return(false),
+       
+       flatten (cons (file_lines(filename),
+          [ftype(filename), file_length (filename)])))$
+          
+          
+
+   /*********  folder_info1   ******************/
+   /*   calls scut
+       called by folder_info  */
+   
+   
+   folder_info1 (fp) := 
+     block ([v, aL, rL:[],fiL  ],       
+       aL : ls (fp),
+       if aL = false then return (false),
+       if aL = [] then return (aL),
+       for v in aL do
+           if file_search (v) = false then
+                  rL : cons ([scut(v),"  folder "],rL)
+           else
+            ( fiL : file_info (v),
+              rL : cons ([scut (v),part (fiL,2),
+                        float (part (fiL,4)/1000)],rL)),       
+       reverse (rL))$
+   
+   
+   
+       
+    /**********  folder_info  ********************/
+    /*  calls folder_info1  */   
+
+ folder_info (path):=
+     block([fpprintprec:2,bL,vp,nfi,nfo,
+                  fis : "file,",fos : "folder"],
+        bL : folder_info1 (path),
+        if bL = false then return (false),
+        if bL = [] then disp ("no files or folders"),
+        
+        nfi : number_files (path),
+        if nfi > 1 then fis : "files,",
+        nfo : number_folders (path),
+        if nfo > 1 then fos : "folders",
+        print("  ", nfi,fis,nfo,fos),               
+        
+        for vp in bL do
+            apply ('print,vp))$ 
+        
+ /*
+ 
+(%i10) folder_info ("c:/work2/temp1/");
+   9 files, 1 folder 
+atext1.txt 6 0.2 
+atext2.txt 7 0.2 
+calc1news.txt 116 4.2 
+ndata1.dat 9 0.3 
+stavros-tricks.txt 44 1.4 
+temp11   folder  
+text1.txt 5 0.2 
+text2.txt 5 0.2 
+trigsimplification.txt 157 5.0 
+wu-d.txt 4 0.3 
+(%o10) done
+
+*/
+
+        
+        
+        
+        
+        
+
+
+ number_files (path) :=
+     block ([aL,nn:0,v  ],
+         aL : ls (path),
+         if aL = false then return(false),
+         if aL = [] then return (0),
+         for v in aL do 
+           if file_search (v) # false then
+              nn : nn + 1,   
+          nn)$
+          
+  number_folders (path) := 
+      block ([aL,nn:0,v  ],
+         aL : ls (path),
+         if aL = false  then return(false),
+         if aL = [] then return (0),
+         for v in aL do 
+           if file_search (v) = false then
+              nn : nn + 1,   
+          nn)$
+          
+          
+ /*
+ 
+ (%i25) number_files ("c:/work2/temp1/");
+(%o25) 9
+(%i26) number_folders ("c:/work2/temp1/");
+(%o26) 1
+
+*/  
+
+
+   
+
+   
+   
+   
+   
+      /*********** 7-2-11  wsearch ************************/
+      /*  wsearch calls sword and sword_ic  */   
+    
+    /* default mode of wsearch is cs = case sensitive */
+    /* optional third arg can be either cs or ic (ignore
+         case)  */
+         
+     /* syntax:  wsearch(substring,string)  default case sensitive
+                 wsearch(substring,string,cs)  same effect as default
+                 wsearch(substring,string,ic)  ignore case in search
+             */
+         
+     
+     wsearch ([ww]) := 
+       block ([wss,wls,wm:cs ],
+        wss : part (ww,1),
+        wls : part (ww,2),
+        
+        if length (ww) > 2 then
+          (wm : part(ww,3),
+           if lfreeof ([cs,ic],wm) then
+            (disp (" optional 3rd arg can be cs or ic "),
+           return(false))),
+           
+        if wm = ic then
+           sword_ic (wls,wss,1)
+        else
+           sword (wls,wss,1))$
+           
+   
+   
+   
+  /*************  7-2-11 read_text ****************/
+  
+  /*  read_text(filename) preserves blank lines in the source
+     file, and reads in each line as a string,
+     returns a list of strings, one for each physical
+     line in the source file.
+     
+        calls read_line
+   */
+      
+   
+   
+  read_text(rt_file) := 
+     block ([s,r:[],l ],      
+     
+      if not stringp (rt_file) 
+         then ( disp (" file name must be a Maxima string "),
+              return (false)),
+      
+      if not file_search (rt_file) then
+         (disp (" file not found "),return (false)),
+      
+      s : openr (rt_file),
+    
+      while (l : read_line(s)) # false do
+          r : cons (l,r),
+       
+      close(s),
+    
+      reverse (r))$
+      
+  /********** end read_text (file) ************************/
+   
+
+
+   /************* print_lines (file,start,end) 7-16-11   *******************/
+   /* calls read_text
+   
+       This is useful for taking a quick look at
+       the top etc of a file from inside Maxima.  */
+    
+  print_lines(fname,nstart,nlast) := 
+      block ([llines,n1 ],
+       if not stringp (fname) then
+         (disp (" filename must be a string "),
+          return (false)),
+       llines : read_text (fname),
+       if not llines then return (false),
+       for n1 : nstart thru nlast do
+         printf(true,"~a ~%",part (llines,n1)),
+         fname)$
+         
+
+
+
+ /*********  break_file_lines (fold,fnew,nmax) 7-18-11  *****************/ 
+   /* calls ftype, read_text, breakline1 */      
+   
+
+ break_file_lines(bfl_fs,bfl_fd,bfl_nlen) := 
+   block ([ft,textL,sd,stemp,ls1,text2L,ls2  ],
+     if not stringp (bfl_fs) then
+          (disp (" filename must be a string "),
+           return (false)),
+     
+     if not stringp (bfl_fd) then
+          (disp (" filename must be a string "),
+           return (false)),
+           
+     if not integerp (bfl_nlen) then
+        (disp (" bfl_nlen must be an integer "),
+         return(false)),
+         
+     ft : ftype (bfl_fs),
+         
+       /* textL is a list of strings */
+         
+      textL : read_text (bfl_fs),               
+           
+      /* now look at each line of the source
+         text file */
+         
+         
+     if ft = unix then
+     
+         (sd : openw (bfl_fd),
+          for ls1 in textL do 
+           ( if slength (ls1) <= bfl_nlen then printf (sd,"~a~%",ls1)
+              else
+               ( text2L : breakline1 (ls1,bfl_nlen),
+                 for ls2 in text2L do printf (sd,"~a~%",ls2))),
+          close (sd))
+             
+      else 
+         ( stemp : openw("REPLACETEMP.TXT"),
+           for ls1 in textL do
+             ( if slength (ls1) <= bfl_nlen then printf (stemp,"~a~%",ls1)
+                else
+                 ( text2L : breakline1 (ls1,bfl_nlen),
+                   for ls2 in text2L do printf (stemp,"~a~%",ls2))),
+           close (stemp),
+           file_convert ("REPLACETEMP.TXT",bfl_fd,ft)),            
+      
+      bfl_fd)$ 
+      
+    /********** end  break_file_lines ***************************/
+    
+    /*********** pbreak_lines(file,nlen) *********************************/
+  /***   prints broken lines to console screen ****/
+  
+  
+pbreak_lines(pbl_fs,pbl_nlen) := 
+   block ([textL,ls,text2L,ls2  ],
+     if not stringp (pbl_fs) then
+          (disp (" filename must be a string "),
+           return (false)),     
+                
+     if not integerp (pbl_nlen) then
+        (disp (" pbl_nlen must be an integer "),
+         return(false)),     
+         
+       /* textL is a list of strings */
+         
+      textL : read_text (pbl_fs),               
+           
+      /* now look at each line of the source
+         text file */      
+         
+      for ls in textL do 
+        ( if slength (ls) <= pbl_nlen then printf (true,"~a~%",ls)
+           else
+             ( text2L : breakline1 (ls,pbl_nlen),
+               for ls2 in text2L do printf (true,"~a~%",ls2))))$ 
+      
+    /*  end pbreak_lines */
+       
+
+
+/*********** pbreak() ******************************/
+
+/* pbreak calls pbreak_lines  **********/
+
+/* note that pbreak() and replay_to use the function mkp, discussed
+   in chapter 2, and normally defined in maxima-init.mac
+    with the lines
+     bpath : "c:/work2/"$
+     mkp (_fname) := sconcat (bpath,_fname)$
+    where the form of bpath is appropriate only if
+       c:/work2/ is your work folder.
+       
+     */  
+
+
+pbreak() := pbreak_lines (mkp("ztemp.txt"),72)$
+
+
+
+
+   /******************  reply_to(name) *************************/
+  /*  calls read_text.
+  
+     First, dump message into ztemp.txt, and check that lines are
+     folded. If not, run pbreak_lines (mkp("ztemp.txt"),60), say, if
+     you want lines less than or equal to 60 chars,
+     (or else just pbreak() if 72 chars is ok) and
+     copy result from Xmaxima console screen to ztemp.txt,
+     overwriting ztemp.txt.
+     
+     Then run reply_to ("Ray") for example, and copy
+     Xmaxima console output into Email message pane
+     to start the edit of your reply.  */
+  
+  reply_to (rt_str) := 
+    block ([rnm,textL,ls1,lls ],
+      rnm : sconcat (rt_str,">"),
+      /* rnm : sconcat ("  ",rnm), */
+      textL : read_text (mkp("ztemp.txt")),
+      for ls1 in textL do 
+       ( lls : sconcat (rnm,ls1),
+         printf(true,"~a~%",lls)))$
+  
+
+
+
+  /************   file_convert  7-16-11    ********************/
+  /*  1. file_convert(file,newtype) changes end of line chars
+              in given file.
+              
+      2. file_convert(f1,f2,newtype) creates file f2 with same
+          content as f1 but with new type of eol chars newtype.                   
+            
+      newtype can be windows, unix or mac 
+      
+      calls package functions eol_chars, read_text, ftype,
+           delete_file, rename_file
+      
+       */
+       
+   
+  file_convert([v]) := 
+  
+    block ([fsame,ntL,eol,linesL,l1,stemp,
+             oldfname,newtype,newfname ],
+    
+     if length(v) = 2 then
+       ( fsame:true,
+         oldfname : part(v,1),
+         newtype : part(v,2))
+       
+     else if length (v) = 3 then
+       (fsame : false,
+        oldfname : part(v,1),
+        newfname : part(v,2),
+       
+        if newfname = oldfname then 
+           (disp(" use file_convert(f,ntype) to convert file f to same name"),
+             return(false)),
+             
+        if not stringp (newfname) then
+           (disp ("new filename must be a string "),
+              return (false)),     
+          
+        if file_search (newfname) # false then 
+         (print (" file ",newfname," already exists "),
+           return (false)),           
+           
+        newtype : part (v,3))
+       
+     else
+      (disp("file_convert(f1,ntype) or file_convert(f1,f2,ntype)"),
+       return (false)),
+   
+     if not stringp (oldfname) then
+      (disp ("old filename must be a string "),
+       return (false)),
+       
+     if not file_search (oldfname) then
+       (disp (" file not found "),
+         return (false)),
+            
+     if newtype = ftype (oldfname) then
+       ( print ("check of first line of source file shows eol chars are already ",newtype),
+           return (false)),        
+        
+     if newtype = windows then ntL : [13,10]
+     else if newtype = unix then ntL : [10]
+     else if newtype = mac then ntL : [13]
+     else 
+      (disp (" valid types are windows, unix and mac "),
+       return (false)),          
+          
+     /* convert decimal form to strings */
+     
+     eol : map ('ascii, ntL),
+     
+     /* create list of strings containing contents
+        (including blank lines) of old file using
+        read_text (which uses read_line )  */
+        
+
+     /* disp(" fc: before read_text "), */
+     
+     linesL : read_text (oldfname),
+     
+     /* disp (" fc: after read_text"),
+        display (linesL),
+      */
+     
+     if (not linesL) or (length (linesL) = 0)
+       then ( disp(" empty file "), return(false)),
+       
+       
+       
+     stemp : openw ("FCONVERT.TXT"),
+       
+     for l1 in linesL do
+      ( flatten (cons (l1, eol)),
+        apply ('sconcat, %%),
+        printf (stemp,"~a",%%)),     
+        
+     close (stemp),
+     
+     /* disp(" fc: call rename_file"), */
+     if fsame then
+       (delete_file (oldfname),
+         rename_file ("FCONVERT.TXT",oldfname) )
+         
+     else rename_file ("FCONVERT.TXT",newfname))$       
+
+     
+   /********* end file_convert ******************************/
+   
+
+
+   /********** copy_file(ffrom,fto) 7-16-11 **************************/
+   /* calls ftype, read_text, file_convert
+                 preserves file type (unix, windows, mac)  */
+   
+   copy_file (fsource,fdest) :=
+  
+      block ([ft,textL,sd,lss,st],
+       
+       if not stringp (fsource) then
+          (disp (" filename must be a string "),
+           return (false)),
+           
+       if not file_search (fsource) then 
+        ( print ("  file ",fsource," not found"),
+          return (false)),
+       
+       if not stringp (fdest) then
+          (disp (" filename must be a string "),
+           return (false)),       
+         
+       ft : ftype (fsource),
+       
+       /* textL is a list of strings */
+         
+      textL : read_text (fsource),      
+      
+      
+      /* now look at each line of the source
+         text file */
+         
+      if ft = unix then
+         (sd : openw (fdest),
+          for lss in textL do        
+              printf (sd,"~a~%",lss),
+          close (sd))
+             
+      else 
+         ( st : openw("REPLACETEMP.TXT"),
+           for lss in textL do        
+             printf (st,"~a~%",lss),
+           close (st),           
+           file_convert ("REPLACETEMP.TXT",fdest,ft)),            
+      
+      fdest)$ 
+
+  /********* end copy_file *********************/
+  
+
+  
+  /***********  7-2-11  getopts ******************/
+  /* getopts calls nothing  */
+  
+     
+  getopts ([z]) := 
+    block ([goodopts:[word,all,ic,cs],qp,
+                nwmode:0,ncmode:0, anerr : false,rL : []  ],
+      /* disp ("getopts "),
+         display (z),
+       */
+      
+      for qp in z do
+        ( if lfreeof (goodopts,qp) then 
+            (disp (" options can only be word,all,ic, and cs"),
+               anerr:true,
+                return ()),
+                
+          if not lfreeof ([word,all],qp) then 
+             ( nwmode : nwmode + 1,
+               if nwmode = 2 then
+                  (disp (" can only have one of the two options: word or all"),
+                   anerr:true,
+                    return())
+               else  rL : cons ([w,qp],rL))
+             
+          else
+             ( ncmode : ncmode + 1,
+               if ncmode = 2 then 
+                  (disp (" can only have one of the two options: ic or cs "),
+                  anerr : true,
+                  return ())
+               else rL : cons ([c,qp],rL))),
+               
+      /*  display (rL), */
+      if anerr then return (false),
+      rL)$  
+      
+   /********** end 7-2-11 getopts ****************************/
+   
+   
+   
+  /************* 7-2-11 version search_file ****************/
+  
+  /*  syntax: search_file (file,substring,options)
+  
+       options can be one or two of:
+           {ic|cs} and {word|all}
+       where ic = ignore case, cs = case sensitive,
+       word = distinct separate word, all = not necessarily
+           a distinct word,
+       and **can be in any order**.
+       
+       The simplest version:
+       
+           search_file (file,substring)
+         
+       assumes the default options:
+         cs =case sensitive, and word = distinct separate word,
+         
+       Some other legal forms are:
+       
+       search_file (file,ss,ic)
+       search_file (file,ss,ic,all)
+       search_file (file,ss,all)
+       search_file (file,ss,all,ic)       
+       etc.  
+       
+       calls getopts, read_text, wsearch 
+    */
+    
+    
+       
+  search_file ([u]) :=   
+
+    block ([fname,ss,wmode : word,cmode:cs,lines,
+             flines:[],lss,nl:0,p,nfirst,optL,q],   
+      
+      fname : part (u,1),      
+    
+      if not stringp (fname) 
+         then ( disp (" file name must be a Maxima string "),
+              return (false)),
+      
+      if not file_search (fname) then return (false),
+         
+      ss : part (u,2),
+      
+      if not stringp (ss) then (
+        disp (" second arg must be a string "),
+        return (false)),        
+                
+      if length (u) > 2 then
+        ( optL : apply ('getopts,rest (u,2)),        
+          if not optL then return(false),
+        
+        for q in optL do
+          if part (q,1) = w then
+             wmode : part (q,2)
+          else cmode : part (q,2)),               
+    
+      lines : read_text (fname),
+      
+      if lines = false then return (false),
+      if length (lines) = 0 then return(false),      
+            
+      for lss in lines do
+        
+       (nl : nl + 1,      
+       if lss # "" then 
+          ( if wmode = word then
+               nfirst : wsearch(ss,lss,cmode)
+             else if cmode = ic then
+                nfirst : ssearch(ss,lss,sequalignore,1)
+             else
+                nfirst : ssearch(ss,lss,sequal,1),
+             
+             if integerp (nfirst) then
+               flines : cons ([nl,lss],flines))),
+             
+      if length (flines) = 0 then return (false),
+        
+      flines : reverse (flines),      
+      
+      print (fname),
+      
+      for p in flines do 
+        printf(true," ~d  ~a ~%",part (p,1),part (p,2)),
+        
+      print(""),
+        
+      fname)$ 
+   
+   /********* end 7-2-11 search_file  ****************/
+   
+
+   
+   
+   
+   /************ search_mfiles **********************/
+   /* calls ls, getopts, search_file  */
+   /*
+   The most general syntax is search_mfiles ( path,string,options...)
+        in which the options recognised are word, all, cs, ic.
+The simplest syntax is search_mfiles ( path,string) which 
+   defaults to case sensitive (cs) and isolated  word (word) as options.
+An example of over-riding the default behavior (cs and word) would be
+    search_mfiles ( path, string,ic, all) and the
+       options args can be in either order.
+  
+  */
+
+  search_mfiles([u]) := 
+    block ([ss,wmd : word,cmd:cs,optL,v1,
+                fL,v2],      
+  
+      fL : ls (part (u,1)),
+      
+      /* display (fL), */
+      
+      if fL = false then
+        (disp("fL = false"), return (false)),
+        
+      if length (fL) = 0 then 
+        ( disp ("no files found"), return (false)),
+         
+      ss : part (u,2),
+      
+      /* display (ss), */
+      
+      if not stringp (ss) then (
+        disp (" second arg must be a string "),
+        return (false)),        
+                
+      if length (u) > 2 then
+        ( optL : apply ('getopts,rest (u,2)),        
+          if optL = false then return(false),
+        
+        for v1 in optL do
+          if part (v1,1) = w then
+             wmd : part (v1,2)
+          else cmd : part (v1,2)),
+  
+       for v2 in fL do
+         (  /* display (v2), */
+            search_file (v2,ss,wmd,cmd)  ))$
+            
+     /****** end search_mfiles  ****************/
+     
+       
+
+
+/**************** ssource **************************/
+
+ssource (mystring) := (apply ('search_mfiles,["c:/maxsource/",mystring]))$
+
+
+/***********  sloc  *********************/
+    
+    /* sloc (string, substring, n) returns the
+       string position of the n'th appearance of
+           the substring, ignoring distinctness.
+          Returns false if  no n'th appearance.
+          
+         called by text_replace
+    */
+      
+      
+      
+    sloc(bs,bo,bn) := 
+     block ([lbs,lbo,nbs,nsearch:0  ],
+     
+      lbs : slength (bs),
+      lbo : slength (bo),
+      
+      /* search for first substring location */
+      nbs : ssearch (bo,bs,sequal,1),
+      nsearch : nsearch + 1,
+      if not nbs then return (false),
+      if nsearch = bn then return (nbs),
+      if nbs + lbo -1 = lbs then return(false),
+      
+      do 
+       (nsearch : nsearch + 1,
+        nbs : ssearch (bo,bs,sequal,nbs+1),
+        if not nbs then return(),
+        if nsearch = bn then return(),
+        if nbs + lbo -1 = lbs then
+          ( nbs:false, return())),
+        
+      nbs)$
+      
+   /************* end sloc *****************/
+      
+      
+  /*************  text_replace acts on a string  7-16-11  ****************/
+      
+      /* the simplest version:
+               text_replace(snew,sold,astring)
+          replaces all *distinct* substrings 
+          sold of astring by snew and returns
+           a new string.
+        
+        the version:
+                text_replace(snew,sold,astring,word)
+        does exactly the same thing.
+        
+        the version:
+                 text_replace(snew,sold,astring,all)
+           replaces *all* substrings sold,
+           whether or not they are separate words.
+        
+        the version:
+                text_replace(snew,sold,astring, 2) 
+          replaces the  *2nd* substring sold
+          found in astring using the 'all'  mode.
+        
+         text_replace calls sloc and sword.
+        
+    */
+        
+     text_replace ([ww]) :=    
+     
+       block ([sn,so,as,trmode:word,lso,lsn,nloc,n1,as1],
+         sn : part (ww,1),
+         so : part (ww,2),
+         as : part (ww,3),
+         if length (ww) > 3 then
+            trmode : part (ww,4),
+            
+         if listp (trmode) then 
+           (disp (" fourth arg cannot be a list "),
+             return (as)),
+            
+         if integerp (trmode) then 
+           (nloc : sloc (as,so,trmode),            
+           
+           if not nloc then (
+               disp (" string does not contain that many substrings"),
+               return (as)),             
+           
+           return (ssubstfirst (sn,so,as,nloc))),
+            
+         if trmode = all then
+           return (ssubst (sn,so,as)),
+           
+         /* case only subst for distinct separate 
+             words (the default case)  */
+             
+         lso : slength(so),
+         lsn : slength(sn),      
+         
+         n1 : sword (as,so,1),
+         if not n1 then return (as),
+         as1 : ssubstfirst(sn,so,as,sequal,n1,n1+lso),
+         /* is that the end of the string as1? */
+         if n1 + lsn -1 = slength (as1) then return (as1),
+         
+         
+         do (
+           n1 : sword (as1,so,n1+lsn),
+           if not n1 then return(),
+           as1 : ssubstfirst(sn,so,as1,sequal,n1,n1+lso),
+           if n1 + lsn -1 = slength(as1) then return()),
+           
+         as1)$
+         
+         
+     /************** end text_replace *************************/
+     
+
+
+  /******************  replace_file_text 7-16-11  **********************/
+     
+      
+     /* 
+     
+        1. replace_file_text(fsource,fdest,sold,snew) 
+         looks at one line l1s = string at a time. For each line,
+         
+         calls text_replace(snew,sold,astring) to
+         
+         replace distinct substring sold by snew for
+         all cases found in the single line astring.
+         
+        2. replace_file_text(fsource,fdest,sold,snew,word) does same
+          thing as syntax 1.
+          
+        3. replace_file_text(fsource,fdest,sold,snew,all)  
+           syntax replaces *all* instances of substring sold
+           (whether or not a distinct word) by snew.        
+           
+         In addition to text_replace,
+                  calls ftype, read_text, delete_file, file_convert.
+         
+         the file type (unix, windows, or mac) is preserved.                  
+      
+         the special case if fdest=fsource is included. 
+      
+          called by ftext_replace.
+      
+    */
+       
+       
+       
+       
+ 
+  replace_file_text([vv]) :=
+  
+    block ([fsource,fdest,sold,snew,ft,
+             textL,spart:word,l1s,sstemp],
+             
+      /* disp(" rft: replace_file_text"), */
+    
+       fsource : part(vv,1),
+       
+       if not stringp (fsource) then
+          (disp (" filename must be a string "),
+           return (false)),
+           
+       if not file_search (fsource) then
+        ( print ("  file ",fsource," not found."),
+          return (false)),
+           
+       fdest : part (vv,2),
+       if not stringp (fdest) then
+          (disp (" filename must be a string "),
+           return (false)),             
+           
+       sold : part (vv,3),
+       if not stringp (sold) then
+      (disp (" sold must be a string "),
+       return (false)),
+       
+       snew : part (vv,4),
+       if not stringp (snew) then
+          (disp (" snew must be a string "),
+           return (false)),
+       
+       if length (vv) > 4 then
+         ( spart : part (vv,5),
+           if lfreeof ([word,all],spart) then
+             (disp (" optional 5th arg  must be all or word "),
+              return (false))),
+         
+       ft : ftype (fsource),
+         
+       /* textL is a list of strings */
+         
+       textL : read_text (fsource),      
+       
+       /* printf creates a unix type file */
+ 
+       sstemp : openw("REPLACETEMP.TXT"),
+       for l1s in textL do
+          printf (sstemp,"~a~%",text_replace (snew,sold,l1s,spart)),
+       close (sstemp),
+       
+       if fdest = fsource then delete_file(fsource),
+       
+       if ft = unix then
+          rename_file ("REPLACETEMP.TXT",fdest)
+            
+       else 
+          file_convert("REPLACETEMP.TXT",fdest,ft))$
+          
+   /***********  end replace_file_text **********************/
+   
+
+
+
+ /********  ftext_replace 7-16-11  *****************/
+     /*  ftext_replace(f,sold,snew)
+         ftext_replace(f,sold,snew,word)
+         ftext_replace(f,sold,snew,all)  
+         
+         calls package functions replace_file_text    
+          delete_file, and rename_file
+      */
+      
+   
+   
+    ftext_replace ([uu]) := 
+      block ([fs,sso,ssn,sp ], 
+          
+        fs : part(uu,1),
+       /* display (fs), */
+       
+       if not stringp (fs) then
+          (disp (" filename must be a string "),
+           return (false)),
+           
+       if not file_search (fs) then
+        ( print ("  file ",fsource," not found."),
+          return (false)),    
+           
+       
+       sso : part (uu,2),
+       if not stringp (sso) then
+      (disp (" sold must be a string "),
+       return (false)),
+       
+       ssn : part (uu,3),
+       if not stringp (ssn) then
+          (disp (" snew must be a string "),
+           return (false)),
+           
+       if length (uu) = 3 then 
+         replace_file_text (fs,fs,sso,ssn)
+       
+       else
+         ( sp : part (uu,4),
+           if lfreeof ([word,all],sp) then
+             (disp (" optional 4th arg  must be all or word "),
+              return (false)),         
+           replace_file_text (fs,fs,sso,ssn,sp)))$
+           
+   /****** end  ftext_replace **************/ 
+       
+       

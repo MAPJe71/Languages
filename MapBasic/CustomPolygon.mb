@@ -1,0 +1,346 @@
+'************************************************************************************
+'**  Custom Polygon
+'**
+'**  Author:	Egge-Jan Pollé
+'**  Date:		4 January 2012
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+'**  DESCRIPTION:
+'**
+'**  This application demonstrates how to use a ToolButton with a custom DrawMode in your
+'**  MapBasic application:
+'**   - The ToolButton has the DrawMode DM_CUSTOM_POLYGON (35) assigned to it;
+'**   - The Polygon drawn by the user is stored in an Object variable using the CommandInfo() function:
+'**     oPolygon = CommandInfo(CMD_INFO_CUSTOM_OBJ);
+'**   - The Object oPolygon - together with some attribute data - is stored in a predefined table using
+'**     the Insert Statement.
+'**
+'**  This App is part of The MapBasic Code Samples Project
+'**
+'**  The goal of this project is to provide some examples of how to use certain MapBasic functionality
+'**  - not to offer full-blown applications. The applications below each focus on one 'trick'.
+'**  You can study the source, modify it to suit your needs and implement it in your own apps.
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub PolygonCreation
+Declare Sub CheckInputPolygon
+Declare Sub WinFocusChangedHandler
+Declare Sub WinClosedHandler
+Declare Sub WinChangedHandler
+Declare Sub About
+Declare Sub End_Program
+
+'Function to check whether a table is available as a layer in a Map window
+Declare Function TableInMapper(ByVal iWinID As Integer, ByVal sTabName As String) As Logical
+
+Define AppName "Custom Polygon Sample Code"
+Define AppNameMenu "&CustomPolygon"
+Define AppNameToolbar "CustomPolygon"
+Define AppVersion "0.51"
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Define PolygonTabFile ApplicationDirectory$() + "Tables\Polygons.TAB"
+Define PolygonTable "Polygons"
+
+Global sPolygonTypeArray(4), sPolygonType, sOfficer, sRemark As String
+Global iPolygonColourArray(4), iPolygonType As Integer
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+
+	Create ButtonPad AppName as
+		ToolButton
+		Icon 8001 File "CustDrawingTools.dll"
+		HelpMsg "Add a custom polygon to the table " + PolygonTable + "\nCustom Polygon (table: " + PolygonTable + ")"
+		DrawMode DM_CUSTOM_POLYGON
+		Cursor 8003 File "CustDrawingTools.dll"
+		Calling PolygonCreation
+		Disable
+	Show
+	
+	'The ToolButton should only be enabled when the active window is a Map Window containing the PolygonTable (see Define above).
+	'If the active window is not a Map Window or the active Map Window does not contain the layer PolygonTable, the ToolButton
+	'should be disabled. There are three Event Handlers - WinFocusChangedHandler, WinClosedHandler and WinChangedHandler - to check
+	'what window is the active window. Inside these Event Handlers the custom function TableInMapper is used to check whether
+	'the layer PolygonTable is there.
+
+	Open Table PolygonTabFile As PolygonTable Interactive
+	Map From PolygonTable 
+		Position (0,0) Units "in"
+		Width 3.65625 Units "in" Height 3.65625 Units "in"
+	Set Map Distance Units "m" Area Units "sq m" 
+	Set Map Distance Type Cartesian
+	Set Map Window FrontWindow() Zoom Entire
+
+	If NumWindows() > 0 then
+		If TableInMapper(FrontWindow(), PolygonTable) Then
+			Alter Button PolygonCreation Enable
+		Else
+			Alter Button PolygonCreation Disable
+		End If
+	End If
+
+End Sub Main
+
+'*********************************************************************************************
+Sub PolygonCreation
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+Dim sProjection As String
+Dim iNumPolygons As Integer
+Dim dtDateTime As DateTime
+Dim oPolygon As Object
+Dim pPolygonPen As Pen
+Dim bPolygonBrush As Brush
+Dim lBrowse as Logical
+
+sPolygonTypeArray(1) = "Please select a polygon"
+sPolygonTypeArray(2) = "Red Polygon"
+sPolygonTypeArray(3) = "Green Polygon"
+sPolygonTypeArray(4) = "Blue Polygon"
+
+iPolygonColourArray(1) = BLACK
+iPolygonColourArray(2) = RED
+iPolygonColourArray(3) = GREEN
+iPolygonColourArray(4) = BLUE
+
+sProjection	 = TableInfo(PolygonTable,TAB_INFO_COORDSYS_NAME)
+
+dtDateTime = CurDateTime()
+
+Set CoordSys Table PolygonTable
+
+oPolygon = CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+pPolygonPen		= MakePen(1,2,iPolygonColourArray(1))
+bPolygonBrush	= MakeBrush(49,iPolygonColourArray(1),-1)
+
+'Initially the polygon is black
+Alter Object oPolygon Info OBJ_INFO_PEN, pPolygonPen
+Alter Object oPolygon Info OBJ_INFO_BRUSH, bPolygonBrush
+
+'Insert the black polygon in the table to make it visible in the Map Window
+Insert Into PolygonTable(obj) Values(oPolygon)
+
+'Show a dialog to collect attribute data
+		Dialog
+		Title "Add polygon to table " + PolygonTable
+		Control GroupBox Title "Object created on:" Position 1dW,1dH Height 4.5dH Width 18dW
+		Control StaticText Title "Date: " + FormatDate$(dtDateTime) Position 2.5dW, 2.5dH
+		Control StaticText Title "Time: " + FormatTime$(dtDateTime, "HH:mm:ss") Position 2.5dW, 4dH
+		Control GroupBox Title "Area and Perimeter:" Position 20dW,1dH Height 4.5dH Width 40dW
+		Control StaticText Title "Area: " + Format$(CartesianArea(oPolygon, "sq m"), ",#.## sq m") Position 21.5dW, 2.5dH
+		Control StaticText Title "Perimeter: " + Format$(CartesianPerimeter(oPolygon, "m"), ",#.## m") Position 21.5dW, 4dH
+		Control GroupBox Title "Centroid:" Position 1dW,6dH Height 4.5dH Width 18dW
+		Control StaticText Title "X = " + FormatNumber$(Round(CentroidX(oPolygon), 0.01)) Position 2.5dW, 7.5dH
+		Control StaticText Title "Y = " + FormatNumber$(Round(CentroidY(oPolygon), 0.01)) Position 2.5dW, 9dH
+		Control GroupBox Title "Projection (" + PolygonTable + "):" Position 20dW,6dH Height 4.5dH Width 40dW
+		Control StaticText Title sProjection Position 21.5dW, 7.5dH
+		Control StaticText Title "Officer &Name:" Position 2.5dW, 11.5dH
+		Control EditText Width 40dW Value sOfficer Position 20dW, 11.5dH ID 1
+		Control StaticText Title "&Polygon Type:" Position 2.5dW, 13.5dH
+		Control PopupMenu Title from Variable sPolygonTypeArray into iPolygonType Value iPolygonType Position 20dW, 13.5dH ID 2
+		Control StaticText Title "&Remark (optional):" Position 2.5dW, 15.5dH
+		Control EditText Width 40dW Position 20dW, 15.5dH ID 3
+		Control CheckBox Title "&Browse table " + PolygonTable + " after adding polygon" Into lBrowse Value FALSE Position 2.5dW, 17.5dH
+		Control OKButton Title "&OK" Calling CheckInputPolygon
+		Control CancelButton Title "&Cancel"
+
+		If CommandInfo(CMD_INFO_DLG_OK) Then
+
+			'Remove the black polygon
+			Rollback Table Polygons
+
+			pPolygonPen		= MakePen(1,2,iPolygonColourArray(iPolygonType))
+			bPolygonBrush	= MakeBrush(49,iPolygonColourArray(iPolygonType), -1)
+
+			'Change the color of the polygon, according to the users choice
+			Alter Object oPolygon Info OBJ_INFO_PEN, pPolygonPen
+			Alter Object oPolygon Info OBJ_INFO_BRUSH, bPolygonBrush
+
+			'Insert the new polygon in the table
+			Insert Into PolygonTable(obj, PolygonType, DateAndTime, Officer, Remark) Values(oPolygon, sPolygonType, dtDateTime, sOfficer, sRemark)
+
+			Commit Table PolygonTable
+
+			If lBrowse Then
+				iNumPolygons = TableInfo(PolygonTable, TAB_INFO_NROWS)
+				Browse * From PolygonTable
+					Position (3.73958,0) Units "in"
+					Width 3.65625 Units "in" Height 3.65625 Units "in" 
+					Row iNumPolygons
+			End if
+
+		Else
+
+			'Remove the black polygon
+			Rollback Table Polygons
+
+		End If
+
+Exit Sub
+
+ErrorHandler:
+		Note Error$()
+
+End Sub PolygonCreation
+
+'*********************************************************************************************
+Sub CheckInputPolygon
+'*********************************************************************************************
+
+	sRemark = LTrim$(RTrim$(ReadControlValue(3)))
+	Alter Control 3 Value sRemark
+
+	If LTrim$(RTrim$(ReadControlValue(1))) = "" Then
+		Note "Please enter your name"
+		Alter Control 1 Active
+		Dialog Preserve
+		Exit Sub
+	Else
+		sOfficer = LTrim$(RTrim$(ReadControlValue(1)))
+		Alter Control 1 Value sOfficer
+	End If
+
+	If ReadControlValue(2) = 1 Then
+		Note sPolygonTypeArray(1)
+		Dialog Preserve
+		Exit Sub
+	Else
+		sPolygonType = sPolygonTypeArray(ReadControlValue(2))
+	End If
+
+End Sub CheckInputPolygon
+
+'*********************************************************************************************
+Sub WinFocusChangedHandler
+'*********************************************************************************************
+
+Dim iWinType As Integer
+
+	iWinType = WindowInfo(CommandInfo(CMD_INFO_WIN),WIN_INFO_TYPE)
+
+	If iWinType = WIN_MAPPER Then
+		If TableInMapper(FrontWindow(), PolygonTable) Then
+			Alter Button PolygonCreation Enable
+		Else
+			Alter Button PolygonCreation Disable
+		End If
+	Else
+		Alter Button PolygonCreation Disable
+	End If
+
+End Sub WinFocusChangedHandler
+
+'*********************************************************************************************
+Sub WinClosedHandler
+'*********************************************************************************************
+
+	Alter Button PolygonCreation Disable
+
+End Sub WinClosedHandler
+
+'*********************************************************************************************
+Sub WinChangedHandler
+'*********************************************************************************************
+
+Dim iWinType As Integer
+
+	iWinType = WindowInfo(CommandInfo(CMD_INFO_WIN),WIN_INFO_TYPE)
+
+	If iWinType = WIN_MAPPER Then
+		If TableInMapper(FrontWindow(), PolygonTable) Then
+			Alter Button PolygonCreation Enable
+		Else
+			Alter Button PolygonCreation Disable
+		End If
+	Else
+		Alter Button PolygonCreation Disable
+	End If
+
+End Sub WinChangedHandler
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog
+		Title "About " + AppName + " (Version " + AppVersion + ")"
+		Control StaticText title "This application demonstrates how to use a ToolButton with a custom DrawMode in your" Position 2.5dW, 1dH
+		Control StaticText title "MapBasic application:" Position 2.5dW, 2dH
+		Control StaticText title " - The ToolButton has the DrawMode DM_CUSTOM_POLYGON (35) assigned to it;" Position 2.5dW, 4dH
+		Control StaticText title " - The Polygon drawn by the user is stored in an Object variable using the CommandInfo() function:" Position 2.5dW, 6dH
+		Control StaticText title "   oPolygon = CommandInfo(CMD_INFO_CUSTOM_OBJ);" Position 2.5dW, 7dH
+		Control StaticText title " - The Object oPolygon - together with some attribute data - is stored in a predefined table" Position 2.5dW, 9dH
+		Control StaticText title "   using the Insert Statement." Position 2.5dW, 10dH
+		Control StaticText title Chr$(169) + " 2012 - Egge-Jan Pollé" Position 58dW, 13dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton Title "&Cancel"
+
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim lFinished as Logical
+
+	lFinished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+
+	If Not lFinished Then
+		Dialog Preserve
+	Else
+		End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************
+'*********************************************************************************************
+Function TableInMapper(
+	ByVal iWinID As Integer,
+	ByVal sTabName As String)
+As Logical
+
+	Dim iCounter, iNumLayers As Integer
+
+	If WindowInfo(iWinID, WIN_INFO_TYPE) <> WIN_MAPPER Then
+		Goto no_mapper
+	End If
+
+	iNumLayers = MapperInfo(iWinID, MAPPER_INFO_LAYERS)
+
+	For iCounter = 1 to iNumLayers
+		If LayerInfo(iWinID, iCounter, LAYER_INFO_NAME) = sTabName Then
+			TableInMapper = TRUE
+			Exit Function
+		End If
+	Next
+
+	no_mapper:
+	TableInMapper = FALSE
+
+End Function
+
+'*********************************************************************************************

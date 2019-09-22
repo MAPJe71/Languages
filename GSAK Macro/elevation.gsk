@@ -1,0 +1,480 @@
+#*******************************************
+# MacVersion = 2.3
+# MacDescription = Elevation technology test
+# MacAuthor = Lignumaqua
+# MacFileName = Elevation.gsk
+# MacUrl =
+#*******************************************
+
+# A technology test. This macro queries the geonames.org satellite and shuttle data
+# for elevation at the best resolution it can. If it can't find a result at the 90m resolution 
+# it tries again with the 1km resolution data. Any results over the ocean will return -9999
+#
+# The macro populates an SQLite database with the elevations of every waypoint in the current filter.
+# Intent is that this database would be permanent so that the geonames server is hit as little as possible.
+#
+# If you run this against a large database it will take a LONG time to run the first time through!
+#
+# After getting all the data the macro shows a simple summary of the highest and lowest 10 points and their 
+# elevations (in meters or feet as appropriate) along with the average elevation. All the data is available for further analysis.
+#
+# Further runs will only hit the geonames server for any missing data.
+#
+# Optionally for older versions of GSAK with no Elevation field you can choose to also have the elevation data posted to the UserData4 field
+
+# V0.7 1-21-09 - change url to ws5.geonames.org
+# V0.8 4-6-10 - Add Google as a last resort data source
+# V0.9 4-9-10 - Round metric elevation values to integers
+# v1.0 5-31-10 - Use internal field for GSAK 7.7.2.17 or later and copy all data across from old Elevation database.
+# v1.1 5-31-10 - Logical order error in update where clause.
+# v1.2 6-1-10 - Added NOERROR command for RESYNC, Added $_Where so that update respects current filter
+# v1.3 6-2-10 - Add Aster 30m resolution data as first choice
+# v1.4 6-30-10 - Add 10m resolution for USA - Thanks to Cairngorm for this code! (Note: Only in GSAK 7.7.2.17+ version)
+#                Option to use Aster 30m or not
+# v1.5 9-18-10 - Replaced BEGIN and COMMIT with TRANSACTION commands
+# V1.6 11-24-10 - change url back to ws.geonames.org
+# V1.7 1-5-11 - Trap geonames error page and set timeout
+# V1.8 10-1-11 - Add macro parameter options for silent running and Aster30 option
+# V1.9 12-20-11 - Remove cancelfilter and sort commands
+# V2.0 1-1-12 - Add Google Resolution 
+# V2.1 4-7-12 - Add option to force to use Google
+# V2.2 4-7-12 - Dynamic Google delay
+# V2.3 10-23-12 - Allow for filters on memo fields
+
+
+VERCHECK Version=7.7.2.56 (Note: this macro requires the latest 7.7 GSAK release)
+
+
+
+#**************************************************************************************
+#   Parameters
+#**************************************************************************************
+#
+# Silent     : Optional   : If TRUE disables form and final report dialogs - defaults to FALSE
+# Aster30    : Optional   : If TRUE uses Aster 30 data - defaults to FALSE
+# Google     : Optional   : If TRUE uses Google data - defaults to FALSE
+#
+#**************************************************************************************
+
+# Default values
+$Silent = FALSE
+$UseAster = FALSE
+$UseGoogle = FALSE
+
+IF $_MacroParms <> ""
+	$count = RegExCount("&",$_MacroParms) + 1
+	WHILE $count > 0
+		$Parameter = Extract($_MacroParms,"&",$count)
+		$ParamName = Upper(Extract($Parameter,"=",1))
+		$ParamValue = Extract($Parameter,"=",2)
+		BEGINCASE
+		CASE $ParamName="SILENT"
+			IF Upper($ParamValue) = "TRUE" OR Upper($ParamValue) = "T"
+				$Silent = TRUE
+			ENDIF
+		CASE $ParamName="ASTER30"
+			IF Upper($ParamValue) = "TRUE" OR Upper($ParamValue) = "T"
+				$UseAster = TRUE
+			ENDIF
+		CASE $ParamName="GOOGLE"
+			IF Upper($ParamValue) = "TRUE" OR Upper($ParamValue) = "T"
+				$UseGoogle = TRUE
+			ENDIF
+		ENDCASE
+		$count = $count - 1
+	ENDWHILE
+ENDIF
+
+IF $Silent
+	$RunOK = TRUE
+	GOSUB name=GetElevationInternal
+ELSE
+	$status = Form($RunForm,"")
+	IF $RunOK
+		# Use new Elevation field
+		GOSUB name=GetElevationInternal
+		GOSUB name=OutputDataInternal
+	ENDIF
+ENDIF
+
+RETURN
+
+###############
+
+###########################
+# Internal Database Version
+###########################
+
+BEGINSUB name=GetElevationInternal
+	# Units?
+	IF SysInfo("Distance") = "K"
+		$distunits = "m"
+	ELSE
+		$distunits = "ft"
+	ENDIF
+
+	$spaces = "     "
+	$conversion = 3.2808399
+	$outputhtml = $_Install + "\temp\elevationdata.html"
+	$database = Replace("'","''",$_CurrentDatabase)
+
+# Check if old table exists and do a one time conversion if so
+	# Set up the old SQL table address
+	$sqlfile = $_Install + "\macros\elevationdataSQL.db3"
+	$status = ""
+
+	IF FileExists($sqlfile)
+		$tmpS = SqlQuote($sqlfile)
+		$_sql = "ATTACH $tmpS AS elevationdataSQL"
+		$status = Sqlite("sql",$_sql)
+		
+		# Now copy them across if blank resolution
+		$_sql = "UPDATE main.caches SET elevation = (SELECT CASE WHEN units = 'ft' THEN elevation/$conversion ELSE elevation END FROM elevationdata WHERE main.caches.code = elevationdata.code AND elevationdata.database='$database'), resolution = (SELECT resolution FROM elevationdata WHERE main.caches.code = elevationdata.code AND elevationdata.database='$database') WHERE (main.caches.resolution = '' OR main.caches.resolution ISNULL) AND (SELECT elevation + resolution FROM elevationdata WHERE main.caches.code = elevationdata.code AND elevationdata.database='$database') NOTNULL"
+		$status = Sqlite("sql",$_sql)
+		RESYNC
+		$_sql = "DETACH elevationdataSQL"
+		$status = Sqlite("sql",$_sql)
+		
+		# Rename old elevation file
+		$tmpS = $_Install + "\macros\elevationdataSQL.db3"
+		$tmpS1 = $tmpS + ".old"
+		FILECOPY From=$tmpS To=$tmpS1
+		FILEERASE File=$tmpS OnError=Continue
+	ENDIF
+
+
+	# Filter down to the caches where we have no elevation data
+
+
+	$Timeout = FALSE
+	
+	$_sql = "SELECT count(*) FROM cachesall WHERE (Resolution = '' or Resolution ISNULL) AND $_Where"
+	$TotalCount = Val(Sqlite("sql",$_sql))
+	
+	IF $TotalCount > 2500
+		CANCEL Msg="$TotalCount caches need updating. You cannot use the Google option for more than 2,500 caches per day. Please run again with less caches, or with the Google option unchecked."
+	ENDIF
+
+	IF $TotalCount > 0
+#		$Sort = $_SortBy
+#		SORT by="Natural"
+
+		$count = 0
+		$delay = $TotalCount * 2
+		IF $delay < 200
+			$delay = 200
+		ENDIF
+		TIMER status=on
+		$nexttime = $_Timer
+
+		TRANSACTION Action=Begin
+
+		$_sql = "SELECT * FROM cachesall WHERE (Resolution = '' or Resolution ISNULL) AND $_Where"
+		$status = Sqlite("sql",$_sql, "sqlget=yes")
+
+		WHILE NOT($_SQLEol) AND ($TotalCount > 0)
+			$count = $count + 1
+			$data = ""
+			$namefield = SqlGet("name")
+			$codefield = Replace("'","''",SqlGet("Code"))
+
+			# First try USA 3m/10m - Thanks to Cairngorm for this code! :-)
+			IF SqlGet("Country") = "United States"
+				$url = "http://gisdata.usgs.net//xmlwebservices2/elevation_service.asmx/getElevation?X_Value=" + SqlGet("Longitude") + "&Y_Value=" + SqlGet("Latitude") + "&Elevation_Units=meters&Source_Layer=-1&Elevation_Only=1"
+				SHOWSTATUS msg="Getting US high resolution Elevation for $namefield" Width=400 Title="$count of $TotalCount"
+				$rawdata = GetUrl($url)
+				#FIRST GET ELEVATION
+				$data = RegExSub("<Elevation>(.*?)</Elevation>",$rawdata,1,1)
+
+				#NOW GET RESOLUTION
+				$datasource = RegExSub("<Data_ID>(.*?)</Data_ID>",$rawdata,1,1)
+
+				BEGINCASE
+				CASE Left($datasource,5) = "Elev_"
+					$resolution = "3m"
+				CASE  At("_13",$datasource) > 0
+					$resolution = "10m"
+				OTHERWISE
+					$resolution = "30m"
+				ENDCASE
+				
+				IF $data = "-1.79769313486231E+308" OR $data = ""
+					$data = ""
+					$resolution = ""
+				ENDIF
+				
+			ENDIF
+			
+
+			# Now try Geonames Aster 30m if we haven't timed out in this run or this is not the USA
+			IF Not($Timeout) AND $data = "" AND $UseAster AND Not($UseGoogle)
+				$url = "http://ws.geonames.org/astergdem?lat=" + SqlGet("Latitude") + "&lng=" + SqlGet("Longitude")
+				SHOWSTATUS msg="Getting 30m resolution Elevation for $namefield" Width=400 Title="$count of $TotalCount"
+				IF $_Version >= "7.7.1.20"
+					$data = GetUrl($url,"",10)
+				ELSE
+					$data = GetUrl($url,"")
+				ENDIF
+				$resolution = "30m"
+				IF Len($data) = 0 OR Len($data) > 20
+					$Timeout = TRUE
+				ENDIF
+			ENDIF
+
+
+			# If no 30m data then try Geonames 90m if we haven't timed out
+			IF (Val($data) = -9999 OR $data = "") AND Not($Timeout) AND Not($UseGoogle)
+				$url = "http://ws.geonames.org/srtm3?lat=" + SqlGet("Latitude") + "&lng=" + SqlGet("Longitude")
+				SHOWSTATUS msg="Getting 90m resolution Elevation for $namefield" Width=400 Title="$count of $TotalCount"
+				IF $_Version >= "7.7.1.20"
+					$data = GetUrl($url,"",10)
+				ELSE
+					$data = GetUrl($url,"")
+				ENDIF
+				$resolution = "90m"
+				IF Len($data) = 0 OR Len($data) > 20
+					$Timeout = TRUE
+				ENDIF
+			ENDIF
+
+
+			# If no 90m data and we haven't timed out then try Geonames 1km resolution
+			IF Val($data) = -32768 AND Not($Timeout) AND Not($UseGoogle)
+				$url = "http://ws.geonames.org/gtopo30?lat=" + SqlGet("Latitude") + "&lng=" + SqlGet("Longitude")
+				SHOWSTATUS msg="Getting 1km resolution Elevation for $namefield" Width=400 Title="$count of $TotalCount"
+				IF $_Version >= "7.7.1.20"
+					$data = GetUrl($url,"",10)
+				ELSE
+					$data = GetUrl($url,"")
+				ENDIF
+				$resolution = "1km"
+				IF Len($data) = 0 OR Len($data) > 20
+					$Timeout = TRUE
+				ENDIF
+			ENDIF
+
+
+			# If all else fails then try Google
+			IF Val($data) = -9999 OR $Timeout OR ($data="" AND $UseGoogle)
+				# Wait until end of delay loop
+				WHILE $_Timer < $nexttime
+					TIMER status=off msg=no
+					$TotalTime = Int(($Totalcount - $count) * $delay / 1000)
+					$message = "Waiting for delay of $delay ms. Total time left for run: $TotalTime sec. ( $_Timer )"
+					SHOWSTATUS msg=$message width=400   Title="$count of $TotalCount"
+				ENDWHILE
+					
+				WHILE TRUE
+					$url = "http://maps.google.com/maps/api/elevation/xml?locations=" + SqlGet("Latitude") + "," + SqlGet("Longitude") + "&sensor=false"
+					SHOWSTATUS msg="Getting Google Elevation for $namefield" Width=400 Title="$count of $TotalCount"
+					TIMER status=off msg=no
+					$nexttime = $_Timer + $delay/1000
+					$data = GetUrl($url,"")
+					$resolution = RegExSub("<resolution>(.*?)</resolution>",$data,1,1)
+					$data = RegExSub("<elevation>(.*?)</elevation>",$data,1,1)
+					$status = RegExSub("<status>(.*?)</status>",$data,1,1)
+					IF $status <> "OVER_QUERY_LIMIT"
+						BREAK
+					ELSE
+						$delay = 2*$delay
+						$nexttime = $nexttime + (2*$delay/1000)
+						SHOWSTATUS msg="Google throttle, retrying, please wait $delay ms" Width=400 Title="$count of $TotalCount"
+						DELAY ms=$delay
+					ENDIF
+					
+				ENDWHILE
+			ENDIF
+			
+			
+			
+			
+			IF $resolution = "" OR Val($resolution)=0
+				$resolution = "90m"
+			ENDIF
+			$resolution = NumToStr(Round(Val($resolution),0)) + "m"
+
+			IF Len($data) > 0
+				$elevation = Val($data)
+				IF $elevation = -9999
+					$elevation = 0
+				ENDIF
+				$elevation = Round($elevation,1)
+
+				$_sql = "UPDATE caches SET elevation = '$elevation', resolution = '$resolution' WHERE code='$codefield'"
+				$status = Sqlite("sql",$_sql)
+				SHOWSTATUS msg="Posting Elevation for $namefield: $elevation" Width=400  Title="$count of $TotalCount"
+
+			ENDIF
+			SQLNEXT
+		ENDWHILE
+		SHOWSTATUS msg="End" Width=400 Display=Off
+
+		TRANSACTION Action=end
+		RESYNC
+
+#		$SortData = Extract($Sort, "=",1)
+#		$Sequence = Extract($Sort, "=",2)
+#		SORT By=$SortData Sequence=$Sequence
+	ENDIF
+
+#	CANCELFILTER
+
+ENDSUB #GetElevation
+
+BEGINSUB name=OutputdataInternal
+	IF SysInfo("Distance") = "K"
+		$distunits = "m"
+		$conversion = 1
+	ELSE
+		$distunits = "ft"
+		$conversion = 3.2808399
+	ENDIF
+	
+	$spaces = "     "
+	
+	
+	$_sql = "SELECT code, name, country, state, resolution, CAST('$conversion' * elevation AS Integer) AS Elevation FROM caches ORDER BY elevation DESC LIMIT 10"
+	$status = Sqlite("sql",$_sql,"headings=yes")
+
+	$_sql = "SELECT count(*) from caches"
+	$rows = Val(Sqlite("sql",$_sql,""))
+
+	$_sql = "select code, name, country, state, resolution, CAST('$conversion' * elevation AS Integer) from caches order by elevation desc limit ($rows-10),10"
+	$status = $status + " $distunits <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr><tr><td>" + Sqlite("sql",$_sql,"")
+
+
+	$status = Replace(";","</td><td>",$status)
+	$status = Replace($_NewLine," $distunits </td></tr>" + $_NewLine + "<tr><td>",$status)
+	$status = $status + " $distunits"
+
+	$_sql = "select avg('$conversion' * elevation) from caches"
+	$status = $status + "</td></tr><tr><td colspan='5'>" + "Average of all caches in database:</td><td>" + NumToStr(Round(Val(Sqlite("sql",$_sql)),1)) + " $distunits" + "</td></tr>"
+
+	$status = "<center><table border='1' style='font-size:80%;font-family:verdana'><td>" + $status + "</table></center>"
+
+	$status = PutFile($outputhtml,$status)
+
+	$Form = Editform($Form,"Browser1","url",$outputhtml)
+
+	$result = Form($form,"")
+ENDSUB
+
+
+
+<Data> VarName=$Runform
+#********************************************************************
+# Form generated by GSAK form designer on Wed 30-Jun-2010 22:50:53
+#********************************************************************
+
+Name = Form2
+  Type = Form
+  Height = 170
+  Width = 290
+
+Name = Label1
+  Type = Label
+  Color = 16744448
+  Height = 20
+  Left = 64
+  Size = 12
+  Style = bold
+  Top = 10
+  Width = 153
+  Caption = Get Elevation Data
+
+Name = RunOK
+  Type = Button
+  Height = 25
+  Left = 28
+  Top = 100
+  Width = 75
+  Taborder = 8
+  Caption = OK
+
+Name = RunCancel
+  Type = Button
+  Height = 25
+  Left = 178
+  Top = 100
+  Width = 75
+  Taborder = 9
+  Caption = Cancel
+
+Name = UseGoogle
+  Type = Checkbox
+  Height = 17
+  Left = 187
+  Top = 45
+  Width = 15
+  Taborder = 10
+
+Name = Label2
+  Type = Label
+  Height = 13
+  Left = 73
+  Top = 47
+  Width = 92
+  Caption = Force Google Data:
+
+Name = Label3
+  Type = Label
+  Height = 13
+  Left = 73
+  Top = 70
+  Width = 98
+  Caption = Use Aster 30m Data:
+
+Name = UseAster
+  Type = Checkbox
+  Height = 17
+  Left = 187
+  Top = 70
+  Width = 15
+  Taborder = 11
+
+<enddata>
+
+
+
+
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Sat 20-Dec-2008 18:33:20
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Height = 700
+  Width = 700
+
+Name = Label1
+  Type = Label
+  Color = 16744448
+  Height = 20
+  Left = 220
+  Size = 12
+  Style = bold
+  Top = 10
+  Width = 143
+  Caption = Ten Highest && Lowest Elevations
+
+Name = Browser1
+  Type = Browser
+  Height = 570
+  Left = 21
+  Top = 39
+  Width = 650
+  Taborder = 8
+
+Name = Button1
+  Type = Button
+  Height = 25
+  Left = 308
+  Top = 620
+  Width = 75
+  Taborder = 9
+  Caption = OK
+
+<enddata>
+

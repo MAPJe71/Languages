@@ -1,0 +1,260 @@
+PROGRAM email NOHOLD, STACK = 10000
+
+CONST 
+    ki_email_cnfg  = 20
+    ki_email_send  = 21
+    ki_email_num   = 22
+    ki_email_recv  = 23
+    ki_email_del   = 24
+    ki_email_hdr   = 25
+    ki_email_close = 26
+    
+VAR 
+    ws_cfg          : ARRAY[6] OF STRING[63]
+    wi_cfg          : ARRAY[5] OF INTEGER
+    si_handle       : INTEGER
+    vs_insrv, 
+    vs_outsrv       : STRING[63]
+    vs_replyto, 
+    vs_login, 
+    vs_password     : STRING[63]
+    vs_inbox        : STRING[255]
+    vs_from         : STRING[63]
+    vs_subj, 
+    vs_body         : STRING[1023]
+    ws_attachments  : ARRAY[10] OF STRING[64]
+    vi_num, 
+    vi_date, 
+    vi_ans, 
+    vi_ext, 
+    vi_first        : INTEGER
+    vs_input        : STRING[1]
+    ws_to_cc        : ARRAY[2,8] OF STRING[63]
+
+ROUTINE pu_help
+BEGIN
+    WRITE LUN_CRT ('1. Get Number of mail on the server', NL)
+    WRITE LUN_CRT ('2. Send a new mail', NL, '3. Receive a mail', NL, '4. Get header only', NL)
+    WRITE LUN_CRT ('5. Delete a mail from server', NL, '6. This menu', NL, '7. Quit', NL)
+END pu_help
+
+ROUTINE pu_getmenu(as_input : STRING) : INTEGER
+BEGIN
+    IF as_input = '0' THEN
+        RETURN(0)
+    ENDIF
+    IF as_input = '1' THEN
+        RETURN(1)
+    ENDIF
+    IF as_input = '2' THEN
+        RETURN(2)
+    ENDIF
+    IF as_input = '3' THEN
+        RETURN(3)
+    ENDIF
+    IF as_input = '4' THEN
+        RETURN(4)
+    ENDIF
+    IF as_input = '5' THEN
+        RETURN(5)
+    ENDIF
+    IF as_input = '6' THEN
+        RETURN(6)
+    ENDIF
+    IF as_input = '7' THEN
+        RETURN(7)
+    ENDIF
+    IF as_input = '8' THEN
+        RETURN(8)
+    ENDIF
+    IF as_input = '9' THEN
+        RETURN(9)
+    ENDIF
+    RETURN(-1)
+END pu_getmenu
+
+ROUTINE pu_getstrarray( as_prompt : STRING; 
+                        aw_input  : ARRAY[*] OF STRING; 
+                        ai_n      : INTEGER )
+VAR vi_i    : INTEGER
+VAR vi_skip : INTEGER
+BEGIN
+    vi_i := 1
+    vi_skip := 0
+    WHILE vi_i <= ai_n DO
+        IF vi_skip = 0 THEN
+            WRITE LUN_CRT (as_prompt, '(', vi_i, ')', ': ')
+            READ LUN_CRT (aw_input[vi_i])
+            IF aw_input[vi_i] = '' THEN
+                vi_skip := 1
+            ENDIF
+        ELSE
+            aw_input[vi_i] := ''
+        ENDIF
+        vi_i += 1
+    ENDWHILE
+END pu_getstrarray
+
+ROUTINE pu_getstrmatrix2( as_prompt1 : STRING; 
+                          as_prompt2 : STRING; 
+                          aw_input   : ARRAY[*,*] OF STRING; 
+                          ai_n       : INTEGER )
+VAR vi_i    : INTEGER
+VAR vi_skip : INTEGER
+BEGIN
+    vi_i := 1
+    vi_skip := 0
+    WHILE vi_i <= ai_n DO
+        IF vi_skip = 0 THEN
+            WRITE LUN_CRT (as_prompt1, '(', vi_i, ')', ': ')
+            READ LUN_CRT (aw_input[1,vi_i])
+            IF aw_input[1,vi_i] = '' THEN
+                vi_skip := 1
+            ENDIF
+        ELSE
+            aw_input[1,vi_i] := ''
+        ENDIF
+        vi_i += 1
+    ENDWHILE
+    vi_i := 1
+    vi_skip := 0
+    WHILE vi_i <= ai_n DO
+        IF vi_skip = 0 THEN
+            WRITE LUN_CRT (as_prompt2, '(', vi_i, ')', ': ')
+            READ LUN_CRT (aw_input[2,vi_i])
+            IF aw_input[2,vi_i] = '' THEN
+                vi_skip := 1
+            ENDIF
+        ELSE
+            aw_input[2,vi_i] := ''
+        ENDIF
+        vi_i += 1
+    ENDWHILE
+END pu_getstrmatrix2
+
+ROUTINE pu_getstr( as_prompt, as_input : STRIN G)
+    VAR vi_i : INTEGER
+BEGIN
+    WRITE LUN_CRT (as_prompt, ': ')
+    READ LUN_CRT (as_input)
+END pu_getstr
+
+BEGIN
+    ERR_TRAP_ON(40024)
+    ERR_TRAP_ON(39990)
+    ERR_TRAP_ON(39995)
+    
+    vi_ext := 0
+    vi_first := 1
+    
+    DELAY 1000
+    
+    WRITE LUN_CRT ('TEST 2', NL)
+    
+    ws_cfg[1] := '192.168.9.244'
+    ws_cfg[2] := '192.168.9.244'
+    ws_cfg[3] := 'username@domainname.com'
+    ws_cfg[4] := 'proto1'
+    ws_cfg[5] := 'proto1'
+    ws_cfg[6] := 'pdl2'
+    wi_cfg[1] := 0
+    wi_cfg[2] := 0
+    wi_cfg[3] := 0
+    wi_cfg[4] := 0
+    wi_cfg[5] := 0
+    si_handle := 0
+    
+    DV_CNTRL(ki_email_cnfg, si_handle, ws_cfg, wi_cfg)
+    
+    WHILE vi_ext = 0 DO
+    
+        IF vi_first = 1 THEN
+            vi_first := 0
+            pu_help
+        ENDIF
+        
+        WRITE LUN_CRT (NL, 'Command > ')
+        READ LUN_CRT (vs_input)
+        
+        vi_ans := pu_getmenu(vs_input)
+        
+        IF NOT VAR_UNINIT(vi_ans) THEN
+            SELECT vi_ans OF
+            
+            CASE (1): -- Number of emails
+                DV_CNTRL(ki_email_num, (si_handle), vi_num)
+                
+                WRITE LUN_CRT (vi_num, ' E-mail waiting on server.', NL)
+                WRITE LUN_CRT ('*Mail num OK.', NL)
+                
+            CASE (2): -- Send
+                pu_getstrmatrix2('To ', 'Cc ', ws_to_cc, 8)
+                pu_getstr       ('Subj', vs_subj)
+                pu_getstrarray  ('Att ', ws_attachments, 10)
+                pu_getstr       ('Body', vs_body)
+                
+                DV_CNTRL(ki_email_send, (si_handle), ws_to_cc, (vs_subj), (vs_body), ws_attachments, 1)
+                
+                WRITE LUN_CRT ('*Mail send OK.', NL)
+                
+            CASE (3): -- Recv
+                DV_CNTRL(ki_email_recv, (si_handle), 1, vs_from, vs_subj, vs_body, vi_date, ws_to_cc, ws_attachments)
+                
+                WRITE LUN_CRT ('Received mail:', NL)
+                WRITE LUN_CRT (' Date:', vi_date, NL)
+                WRITE LUN_CRT (' From: ', vs_from, NL)
+                WRITE LUN_CRT (' To: ', ws_to_cc[1,1], ' ', ws_to_cc[1,2], ' ', 
+                                        ws_to_cc[1,3], ' ', ws_to_cc[1,4], ' ', 
+                                        ws_to_cc[1,5], ' ', ws_to_cc[1,6], ' ', 
+                                        ws_to_cc[1,7], ' ', ws_to_cc[1,8], NL)
+                WRITE LUN_CRT (' Cc: ', ws_to_cc[2,1], ' ', ws_to_cc[2,2], ' ', 
+                                        ws_to_cc[2,3], ' ', ws_to_cc[2,4], ' ', 
+                                        ws_to_cc[2,5], ' ', ws_to_cc[2,6], ' ', 
+                                        ws_to_cc[2,7], ' ', ws_to_cc[2,8], NL)
+                WRITE LUN_CRT (' Subj: ', vs_subj, NL)
+                WRITE LUN_CRT (' Att.: ', ws_attachments[1], ' ', ws_attachments[2], ' ', 
+                                          ws_attachments[3], ' ', ws_attachments[4], ' ', 
+                                          ws_attachments[5], ' ', ws_attachments[6], ' ', 
+                                          ws_attachments[7], ' ', ws_attachments[8], ' ', 
+                                          ws_attachments[9], ' ', ws_attachments[10], NL)
+                WRITE LUN_CRT (' Body: ', NL, vs_body, NL)
+                WRITE LUN_CRT ('*Mail recv OK.', NL)
+                
+            CASE (4): -- Header
+                DV_CNTRL(ki_email_hdr, (si_handle), 1, vs_from, vs_subj, vi_date, ws_to_cc)
+                
+                WRITE LUN_CRT ('Header:', NL)
+                WRITE LUN_CRT (' Date:', vi_date, NL)
+                WRITE LUN_CRT (' From: ', vs_from, NL)
+                WRITE LUN_CRT (' To: ', ws_to_cc[1,1], ' ', ws_to_cc[1,2], ' ', 
+                                        ws_to_cc[1,3], ' ', ws_to_cc[1,4], ' ', 
+                                        ws_to_cc[1,5], ' ', ws_to_cc[1,6], ' ', 
+                                        ws_to_cc[1,7], ' ', ws_to_cc[1,8], NL)
+                WRITE LUN_CRT (' Cc: ', ws_to_cc[2,1], ' ', ws_to_cc[2,2], ' ', 
+                                        ws_to_cc[2,3], ' ', ws_to_cc[2,4], ' ', 
+                                        ws_to_cc[2,5], ' ', ws_to_cc[2,6], ' ', 
+                                        ws_to_cc[2,7], ' ', ws_to_cc[2,8], NL)
+                WRITE LUN_CRT (' Subj: ', vs_subj, NL)
+                
+            CASE (5): -- Delete
+                DV_CNTRL(ki_email_del, (si_handle), 1)
+                
+                WRITE LUN_CRT ('*Delete OK.', NL)
+                
+            CASE (6): -- Help
+                pu_help
+                
+            CASE (7): -- Exit
+                DV_CNTRL(ki_email_close, si_handle)
+                
+                WRITE LUN_CRT ('*Program exit.', NL)
+                vi_ext := 1
+                
+            ELSE:
+                pu_help
+                
+            ENDSELECT
+        ELSE
+        ENDIF
+    ENDWHILE
+END email

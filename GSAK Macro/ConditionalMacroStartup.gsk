@@ -1,0 +1,1627 @@
+###########################################################
+#
+# GSAK Macro: ConditionalMacroStartup.gsk
+#
+# This macro is able to check different conditions and
+# to run macros depending on this
+#
+#
+# Change History:
+#       07. October 2008
+# - Started
+#
+# V1.0  15. October 2008
+# - First release
+#
+# V1.1  20. October 2008
+# - Fixed wrong version check
+# - Fixed Error when Database name contains spaces
+# - Fixed Error when Filter is set to "NONE"
+#
+# V1.2  22. October 2008
+# - Fixed wrong cache count for Filter "NONE"
+# - Added Option Explicit=No before calling a macro
+#
+# V1.3  28. October 2008 
+# - Added new condition "number of logs changed"
+# - Added new condition "AND/OR" for caches/logs
+# - Added new condition "Run if another macro already run"
+# - Added the possibility to set variables before running a macro
+# - Added new condition "boolean expression"
+#
+# V1.4  28. October 2008
+# - Fixed: First time call creates incorrect configuration
+###########################################################
+
+# MacVersion = 1.4
+# MacDescription = Start macros depending on different conditions
+# MacAuthor = Bronstein
+# MacFileName = ConditionalMacroStartup.gsk
+# MacURL = 
+
+VERCHECK Version=7.2.4.11 (Note: this macro requires the latest GSAK "patch" - please see the 7.2.4 Updates thread here: http://gsak.net/board/index.php?showtopic=9520)
+
+ShowStatus msg="Initializing ..."
+Gosub Name=CMS_DeclareVar
+Gosub Name=CMS_Init
+
+ShowStatus msg="Initializing ..." Display=Off
+If $CMS_GlobalTimeOut = "Off"
+	$CMS_FormStart = Editform($CMS_FormStart, "CMS_FormStart", "Delay", "0")
+Else
+	$CMS_FormStart = Editform($CMS_FormStart, "CMS_FormStart", "Delay", $CMS_GlobalTimeOut)
+EndIf
+#$CMS_FormStart = EditForm($CMS_FormStart, "CMS_DayTime", "Caption", DateFormat($_Today))
+While True
+	Gosub Name=CMS_BuildInfoList
+	$CMS_FormExit = Form($CMS_FormStart,"")
+	BeginCase
+		Case $CMS_FormExit = "CMS_ButtonRun"
+			Gosub Name=CMS_Run
+			Break
+		Case $CMS_FormExit = "CMS_ButtonSetup"
+			Gosub Name=CMS_Modify
+		Case $CMS_FormExit = "CMS_ButtonLog"
+			Gosub Name=CMS_ShowLog
+		Case $CMS_FormExit = "CMS_ButtonCancel"
+			Return
+		Case $CMS_FormExit = "DelayExit"
+			Gosub Name=CMS_Run
+			Break
+		Case $CMS_FormExit = "SystemExit"
+			Cancel
+	EndCase
+	# Avoid auto exit for the form in case it will be shown again
+	$CMS_FormStart = Editform($CMS_FormStart, "CMS_FormStart", "Delay", "0")
+EndWhile
+Return
+
+BeginSub Name=CMS_Run
+	$CMS_ListCounter=1
+	$CMS_logS = $CMS_Divider + $_NewLine
+	$CMS_MacroRun = ""
+	While True
+		$CMS_tempS = "ConditionalMacroStartup - Processing item #$CMS_ListCounter"
+		ShowStatus msg=$CMS_tempS
+		$_sql = "SELECT value FROM settings WHERE setting='"+NumToStr($CMS_ListCounter)+"'"
+		$CMS_status = SQLite("sql",$_sql)
+		If $CMS_status = ""
+			Break
+		EndIf
+		$CMS_logS = $CMS_logS + DateFormat($_Today) + " " + Time() + $_NewLine + NumToStr($CMS_ListCounter) + " " + Extract($CMS_Status,"|",1) + $_NewLine
+		$CMS_logS = $CMS_logS + "  Conditions setting: " + $CMS_Status + $_NewLine
+		$CMS_RunNow = True
+		$CMS_FilterCount = 0
+		If StrToBool(Extract($CMS_status,"|",2))
+			# item is enabled
+			$CMS_logS = $CMS_logS + "  Enabled" + $_NewLine
+			$CMS_tempS = Lower(Left(Extract($CMS_status,"|",4),1))
+			BeginCase
+				Case $CMS_tempS = "t"
+					# Should run only once a day
+					$CMS_logS = $CMS_logS + "  Should run once a day: "
+					# Extract($CMS_Status,"|",5) = day of last run
+					If Extract($CMS_Status,"|",5) = DateToString($_Today)
+						$CMS_RunNow = False
+						$CMS_logS = $CMS_logS + "  Not yet, run already." + $_NewLine
+					Else
+						$CMS_logS = $CMS_logS + "  OK to run now" + $_NewLine
+					EndIf
+				Case $CMS_tempS = "w"
+					# Should run only when another macro already run
+					If At(Extract($CMS_Status,"|",18),$CMS_MacroRun)>0
+						$CMS_logS = $CMS_logS + "  Required Macro '" + Extract($CMS_Status,"|",18) + "' run already, should run now." + $_NewLine
+					Else
+						$CMS_RunNow = False
+						$CMS_logS = $CMS_logS + "  Required Macro '" + Extract($CMS_Status,"|",18) + "' did not run, do not run now." + $_NewLine
+					EndIf
+				OtherWise
+					# Should run every time
+					$CMS_logS = $CMS_logS + "  Should run every day" + $_NewLine
+			EndCase
+			If $CMS_RunNow
+				If StrToBool(Extract($CMS_Status,"|",6))
+					# Should run only on selected days
+					$CMS_logS = $CMS_logS + "  Should run on selected days (" + Extract($CMS_Status,"|",7) + ") :"
+					# Extract($CMS_Status,"|",7) = allowed weekdays
+					GoSub Name=CMS_GetDay
+					If At($CMS_TheDay, Extract($CMS_Status,"|",7)) > 0
+						$CMS_logS = $CMS_logS + "  OK to run today (" + $CMS_TheDay + ")" + $_NewLine
+					Else
+						$CMS_RunNow = False
+						$CMS_logS = $CMS_logS + "  Not today (" + $CMS_TheDay + ")" + $_NewLine
+					EndIf
+				Else
+					# Should run every day
+					$CMS_logS = $CMS_logS + "  Should run every weekday" + $_NewLine
+				EndIf
+			EndIf
+			If $CMS_RunNow
+				$CMS_RunNow_Caches = True
+				$CMS_RunNow_Logs = True
+				If StrToBool(Extract($CMS_Status,"|",8))
+					# Should run only if count of caches has changed
+					$CMS_logS = $CMS_logS + "  Should run if count of caches > " + Extract($CMS_Status,"|",11) + " + " + Extract($CMS_Status,"|",12) + ": "
+					# Extract($CMS_Status,"|",9) = Database
+					# Extract($CMS_Status,"|",10) = Filter
+					# Extract($CMS_Status,"|",11) = Number
+					# Extract($CMS_Status,"|",12) = Diff
+					If Extract($CMS_Status,"|",9)<>$CMS_DB_dontcare
+						If Extract($CMS_Status,"|",9)<>$_CurrentDatabase
+							$CMS_tempS = Quote(Extract($CMS_Status,"|",9))
+							Database Name=$CMS_tempS
+						EndIf
+					EndIf
+					$CMS_TempS = Extract($CMS_Status,"|",10)
+					If $CMS_TempS = $CMS_FilterNone
+						CancelFilter
+						$CMS_FilterCount = $_Count
+					Else
+						Filter Name=$CMS_TempS
+						$CMS_FilterCount = $_FilterCount
+					EndIf
+					If $CMS_FilterCount > Val(Extract($CMS_Status,"|",11))+Val(Extract($CMS_Status,"|",12))
+						$CMS_logS = $CMS_logS + "  Fulfilled (" + NumToStr($CMS_FilterCount) + ")" + $_NewLine
+					Else
+						$CMS_RunNow_Caches = False
+						$CMS_logS = $CMS_logS + "  Not reached (" + NumToStr($CMS_FilterCount) + ")" + $_NewLine
+					EndIf
+				Else
+					# Should run regardless to any caches
+				EndIf
+				If StrToBool(Extract($CMS_Status,"|",13))
+					# Should run only if count of logs has changed
+					$CMS_logS = $CMS_logS + "  Should run if count of logs > " + Extract($CMS_Status,"|",16) + " + " + Extract($CMS_Status,"|",17) + ": "
+					# Extract($CMS_Status,"|",14) = Database
+					# Extract($CMS_Status,"|",15) = Filter
+					# Extract($CMS_Status,"|",16) = Number
+					# Extract($CMS_Status,"|",17) = Diff
+					If Extract($CMS_Status,"|",14)<>$CMS_DB_dontcare
+						If Extract($CMS_Status,"|",14)<>$_CurrentDatabase
+							$CMS_tempS = Quote(Extract($CMS_Status,"|",14))
+							Database Name=$CMS_tempS
+						EndIf
+					EndIf
+					$CMS_TempS = Extract($CMS_Status,"|",15)
+					If $CMS_TempS = $CMS_FilterNone
+						CancelFilter
+						$CMS_LogCount = $_Count
+					Else
+						Filter Name=$CMS_TempS
+						$CMS_LogCount = $_FilterCount
+					EndIf
+					If $CMS_LogCount > 0
+						$CMS_LogCount = 0
+						Goto Position=Top
+						While Not ( $_EOL )
+							$CMS_LogCount = $CMS_LogCount + $d_NumberOfLogs
+							Goto Position=Next
+						EndWhile
+					EndIf
+					If $CMS_LogCount > Val(Extract($CMS_Status,"|",16))+Val(Extract($CMS_Status,"|",17))
+						$CMS_logS = $CMS_logS + "  Fulfilled (" + NumToStr($CMS_LogCount) + ")" + $_NewLine
+					Else
+						$CMS_RunNow_Logs = False
+						$CMS_logS = $CMS_logS + "  Not reached (" + NumToStr($CMS_LogCount) + ")" + $_NewLine
+					EndIf
+				Else
+					# Should run regardless to any logs
+				EndIf
+				# Now check the and/or condition, but only if both are selected
+				If StrToBool(Extract($CMS_Status,"|",8)) And StrToBool(Extract($CMS_Status,"|",13))
+					If Extract($CMS_Status,"|",19) = "AND"
+						$CMS_RunNow = $CMS_RunNow And ($CMS_RunNow_Caches And $CMS_RunNow_Logs)
+						If ($CMS_RunNow_Caches And $CMS_RunNow_Logs)
+							$CMS_logS = $CMS_logS + "  Condition AND fullfiled, go ahead." + $_NewLine
+						Else
+							$CMS_logS = $CMS_logS + "  Condition AND not fullfiled, do not run now." + $_NewLine
+						EndIf
+					Else
+						$CMS_RunNow = $CMS_RunNow And ($CMS_RunNow_Caches Or $CMS_RunNow_Logs)
+						If ($CMS_RunNow_Caches Or $CMS_RunNow_Logs)
+							$CMS_logS = $CMS_logS + "  Condition OR fullfiled, go ahead." + $_NewLine
+						Else
+							$CMS_logS = $CMS_logS + "  Condition OR not fullfiled, do not run now." + $_NewLine
+						EndIf
+					EndIf
+				Else
+					$CMS_RunNow = $CMS_RunNow And ($CMS_RunNow_Caches And $CMS_RunNow_Logs)
+				EndIf
+			EndIf
+			If $CMS_RunNow
+				If StrToBool(Extract($CMS_Status,"|",21))
+					# Should run if boolean expression is true
+					$CMS_logS = $CMS_logS + "  Should run if boolean expression is true: " + Extract($CMS_Status,"|",22) + $_NewLine
+					If Left(Putfile($CMS_TempMacro,"$"+"CMS_5_BoolExprResult = "+Extract($CMS_Status,"|",22)),7) = "*Error*"
+						$CMS_logS = $CMS_logS + "  Boolean expression can't be evaluated, temp file error! Do not run." + $_NewLine
+						$CMS_RunNow = False
+					Else
+						Macro File=$CMS_TempMacro
+						$CMS_logS = $CMS_logS + "  Boolean expression evaluated, result: " + BoolToStr($CMS_5_BoolExprResult,"True","False") + $_NewLine
+						If $CMS_5_BoolExprResult
+#							$CMS_logS = $CMS_logS + "  OK to run now."
+						Else
+							$CMS_RunNow = False
+#							$CMS_logS = $CMS_logS + "  Not today (" + $CMS_TheDay + ")" + $_NewLine
+						EndIf
+					EndIf
+				Else
+					# Should run every day
+					$CMS_logS = $CMS_logS + "  No boolean expression required, run now." + $_NewLine
+				EndIf
+			EndIf
+		Else
+			$CMS_RunNow = False
+			$CMS_logS = $CMS_logS + "  Disabled" + $_NewLine
+		EndIf
+		If $CMS_RunNow
+			# Now update the configuration
+			$CMS_tempS = Extract($CMS_status,"|",1)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",2)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",3)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",4)
+			$CMS_tempS = $CMS_tempS + "|" + DateToString($_Today)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",6)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",7)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",8)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",9)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",10)
+			$CMS_tempS = $CMS_tempS + "|" + NumToStr($CMS_FilterCount)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",12)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",13)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",14)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",15)
+			$CMS_tempS = $CMS_tempS + "|" + NumToStr($CMS_LogCount)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",17)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",18)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",19)
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",20) # $CMS_FormSetVar
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",21) # $CMS_CheckBoolExpr
+			$CMS_tempS = $CMS_tempS + "|" + Extract($CMS_status,"|",22) # $CMS_BoolExpr
+			$CMS_tempS = Replace("'","''",$CMS_tempS,True)
+			$_sql = "UPDATE settings SET value='$CMS_tempS' WHERE setting='"+NumToStr($CMS_ListCounter)+"'"
+			$CMS_tempS = SQLite("sql",$_sql)
+			# Close the SQL database
+			$CMS_tempS = SQLite("close","")
+			# Now run the macro
+			$CMS_FormMacroDatabase = Extract($CMS_status,"|",3)
+			If $CMS_FormMacroDatabase <> $CMS_DB_dontcare
+				If $CMS_FormMacroDatabase <> $_CurrentDatabase
+					$CMS_tempS = Quote($CMS_FormMacroDatabase)
+					Database Name=$CMS_tempS
+				EndIf
+			EndIf
+			$CMS_tempS = Extract($CMS_status,"|",1)
+			If FileExists($CMS_tempS)
+				ShowStatus msg="" Display=Off
+				# Do not force the need of declared variables (for macros which do not have this on)
+				Option Explicit=No
+				# Check if variables have to be set upfront
+				If Extract($CMS_Status,"|",20) <> ""
+					If Left(Putfile($CMS_TempMacro,Replace("§",$_NewLine,Extract($CMS_Status,"|",20),True)),7) = "*Error*"
+						$CMS_logS = $CMS_logS + "  Setting of variables not possible, temp file error!" + $_NewLine
+					Else
+						Macro File=$CMS_TempMacro
+						$CMS_logS = $CMS_logS + "  Setting of variables done." + $_NewLine
+					EndIf
+				EndIf
+				$CMS_logS = $CMS_logS + "  Start Macro now!" + $_NewLine + $_NewLine
+				If Appendfile($CMS_LogFile, $CMS_logS) = ""
+				EndIf
+				Macro File=$CMS_tempS
+				Option Explicit=Yes
+				# Update the current view
+				SpeedMode Status=Off
+				SpeedMode Status=On
+				# Store Macro run
+				$CMS_MacroRun = $CMS_MacroRun + NumToStr($CMS_ListCounter) + ":" + RegExSub("\\([^\\]*?)\|",$CMS_tempS+"|",1,1)+"|"
+			Else
+				# Macro does not exist, do nothing
+				$CMS_logS = $CMS_logS + "  Macro does not exist, did not run!" + $_NewLine + $_NewLine
+				If Appendfile($CMS_LogFile, $CMS_logS) = ""
+				EndIf
+			EndIf
+			# Open the SQL database again
+			$CMS_status = Sqlite("open",$CMS_SQLfile)
+		Else
+			$CMS_logS = $CMS_logS + "  Macro not scheduled to run!" + $_NewLine + $_NewLine
+			If Appendfile($CMS_LogFile, $CMS_logS) = ""
+			EndIf
+		EndIf
+		$CMS_ListCounter = $CMS_ListCounter + 1
+		$CMS_logS = ""
+	EndWhile
+	# Close the SQL database
+	$CMS_tempS = SQLite("close","")
+	CancelFilter
+	If $_CurrentDatabase <> $CMS_PrevDatabase
+		Database Name=$CMS_PrevDatabase
+	EndIf
+	If RestoreFilter($CMS_PrevFilter,True) = 0
+	EndIf
+	ShowStatus msg="" Display=Off
+EndSub
+
+BeginSub Name=CMS_ShowLog
+	$CMS_tempS = GetFile($CMS_LogFile)
+	$CMS_count = RegExCount($CMS_Divider+$_NewLine,$CMS_tempS)
+	$CMS_lognum = $CMS_count + 1
+	While True
+		If $CMS_lognum > RegExCount($CMS_Divider+$_NewLine,$CMS_tempS)
+			$CMS_FormLog = Editform($CMS_FormLog,"CMS_ButtonNext","Enabled","No")
+		Else
+			$CMS_FormLog = Editform($CMS_FormLog,"CMS_ButtonNext","Enabled","Yes")
+		EndIf
+		If $CMS_lognum > 2
+			$CMS_FormLog = Editform($CMS_FormLog,"CMS_ButtonPrev","Enabled","Yes")
+		Else
+			$CMS_FormLog = Editform($CMS_FormLog,"CMS_ButtonPrev","Enabled","No")
+		EndIf
+		$CMS_LogData = Extract($CMS_tempS,$CMS_Divider+$_NewLine,$CMS_lognum)
+		$FormExit = Form($CMS_FormLog, "")
+		BeginCase
+			Case $FormExit = "CMS_ButtonExit"
+				Break
+			Case $FormExit = "CMS_ButtonPrev"
+				If $CMS_lognum>1
+					$CMS_lognum = $CMS_lognum - 1
+				EndIf
+			Case $FormExit = "CMS_ButtonNext"
+				If $CMS_lognum<$CMS_count + 1
+					$CMS_lognum = $CMS_lognum + 1
+				EndIf
+		EndCase
+	EndWhile
+EndSub
+
+BeginSub Name=CMS_Modify
+	$_sql = "DROP TABLE IF EXISTS temp_settings;"
+	$_sql = $_sql + "CREATE TEMP TABLE temp_settings as SELECT setting, value FROM Settings"
+	$CMS_Status = SQLite("sql",$_sql)
+	Gosub Name=CMS_ModifyBuildLists
+	Gosub Name=CMS_ModifyFill
+	$CMS_3_Old = Extract($CMS_Status,"|",9) + "|" + Extract($CMS_Status,"|",10)
+	$CMS_4_Old = Extract($CMS_Status,"|",14) + "|" + Extract($CMS_Status,"|",15)
+
+	While True
+		$CMS_item = $CMS_FormList
+		While True
+			$CMS_FormValid = True
+			$CMS_FormExit = Form($CMS_FormModify,"")
+			If $CMS_FormExit = "CMS_BtnM_Cancel"
+				Break
+			EndIf
+			If Not ( RegEx("^\d+$", $CMS_3_FormDiff) )
+				MsgOK msg="Please enter a valid number for the difference of caches!"
+				$CMS_FormValid = False
+			EndIf
+			If Not ( RegEx("^\d+$", $CMS_4_FormDiff) )
+				MsgOK msg="Please enter a valid number for the difference of logs!"
+				$CMS_FormValid = False
+			EndIf
+#			$CMS_counter = 1
+#			While $CMS_counter < $CMS_ListCounter
+#				$CMS_tempS = Extract($CMS_ListCombo,";",$CMS_counter)
+#				If Extract($CMS_ListCombo,";",$CMS_counter) = NumToStr($CMS_counter) + "-"
+#					If RegEx(Extract($CMS_ListCombo,";",$CMS_counter),$CMS_Enable_cb)
+#						$CMS_tempS = "Please assign a macro to item #$CMS_counter" + $_NewLine + "or deactivate this item!" + $_NewLine + $_NewLine + "Action aborted."
+#						MsgOK msg=$CMS_tempS
+#						$CMS_FormValid = False
+#					EndIf
+#				EndIf
+#				$CMS_counter = $CMS_counter + 1
+#			EndWhile
+			If $CMS_FormValid
+				Break
+			EndIf
+			$CMS_FormList = $CMS_item
+		EndWhile
+		# Reflect the changes in the temp setting
+		$CMS_tempS = $CMS_FormFile
+		$CMS_tempS = $CMS_tempS + "|" + "FalseDisabled" # Will be overwritten later for all items
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_FormMacroDatabase
+		BeginCase
+			Case $CMS_1_Once
+				$CMS_tempS = $CMS_tempS + "|True"
+			Case $CMS_1_With
+				$CMS_tempS = $CMS_tempS + "|With"
+			OtherWise
+				$CMS_tempS = $CMS_tempS + "|False"
+		EndCase
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_1_LastRun
+		$CMS_tempS = $CMS_tempS + "|" + BoolToStr($CMS_2_Weekday,"True","False")
+		$CMS_tempS = $CMS_tempS + "|" + Replace(";",":",$CMS_FormDays,True)
+		$CMS_tempS = $CMS_tempS + "|" + BoolToStr($CMS_3_changed,"True","False")
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_3_FormDatabase
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_3_FormFilter
+		If $CMS_3_FormDatabase + "|" + $CMS_3_FormFilter <> $CMS_3_Old
+			# Clear old count if condigtions have changed
+			$CMS_tempS = $CMS_tempS + "|0"
+		Else
+			$CMS_tempS = $CMS_tempS + "|" + $CMS_3_Caches
+		EndIf
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_3_FormDiff
+		$CMS_tempS = $CMS_tempS + "|" + BoolToStr($CMS_4_changed,"True","False")
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_4_FormDatabase
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_4_FormFilter
+		If $CMS_4_FormDatabase + "|" + $CMS_4_FormFilter <> $CMS_4_Old
+			# Clear old count if condigtions have changed
+			$CMS_tempS = $CMS_tempS + "|0"
+		Else
+			$CMS_tempS = $CMS_tempS + "|" + $CMS_4_Logs
+		EndIf
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_4_FormDiff
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_1_WithMacro
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_ANDOR
+		$CMS_tempS = $CMS_tempS + "|" + Replace("|","§",$CMS_FormSetVar,True)
+		$CMS_tempS = $CMS_tempS + "|" + BoolToStr($CMS_5_CheckBoolExpr,"True","False")
+		$CMS_tempS = $CMS_tempS + "|" + $CMS_5_BoolExpr
+		$CMS_tempS = Replace("'","''",$CMS_tempS,True)
+		$_sql = "UPDATE temp_settings SET value='$CMS_tempS' WHERE rowid="+NumToStr(Val($CMS_item))
+		$CMS_Status = SQLite("sql",$_sql)
+		# Now process $CMS_Enable_cb to set all the enable flags
+		$CMS_counter = 1
+		While True
+			$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr($CMS_counter)
+			$CMS_status = SQLite("sql",$_sql)
+			If $CMS_Status = ""
+				Break
+			EndIf
+			$CMS_Status = Replace("TrueEnabled","FalseDisabled",$CMS_Status,False)
+			If RegEx(NumToStr($CMS_counter) + ":" + RegExSub("\\([^\\]*?)\|",$CMS_status,1,1),$CMS_Enable_cb)
+				$CMS_Status = Replace("FalseDisabled","TrueEnabled",$CMS_Status,False)
+			EndIf
+			$CMS_Status = Replace("'","''",$CMS_Status,True)
+			$_sql = "UPDATE temp_settings SET value='$CMS_status' WHERE rowid="+NumToStr($CMS_counter)
+			$CMS_Status = SQLite("sql",$_sql)
+			$CMS_counter = $CMS_counter + 1
+		EndWhile
+		BeginCase
+			Case $CMS_FormExit = "CMS_BtnM_Add"
+				# Add another macro to the list
+				Gosub Name=CMS_AddItem
+			Case $CMS_FormExit = "CMS_BtnM_Del"
+				# Delete the current selected item from the list
+				Gosub Name=CMS_DelItem
+			Case $CMS_FormExit = "CMS_BtnM_Up"
+				# Move the selected item one up
+				If Val($CMS_FormList)>1
+					$CMS_temp = Val($CMS_FormList)
+					$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr($CMS_temp)
+					$CMS_status1 = SQLite("sql",$_sql)
+					$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr($CMS_temp-1)
+					$CMS_status2 = SQLite("sql",$_sql)
+					$CMS_Status2 = Replace("'","''",$CMS_Status2,True)
+					$_sql = "Update temp_settings SET value='$CMS_status2' WHERE rowid="+NumToStr($CMS_temp)
+					$CMS_status2 = SQLite("sql",$_sql)
+					$CMS_Status1 = Replace("'","''",$CMS_Status1,True)
+					$_sql = "Update temp_settings SET value='$CMS_status1' WHERE rowid="+NumToStr($CMS_temp-1)
+					$CMS_status2 = SQLite("sql",$_sql)
+					Gosub Name=CMS_ModifyBuildLists
+					$CMS_FormList = Extract($CMS_ListCombo,";",$CMS_temp-1)
+				EndIf
+			Case $CMS_FormExit = "CMS_BtnM_Down"
+				# Move the selected item one down
+				If Val($CMS_FormList)<$CMS_ListCounter
+					$CMS_temp = Val($CMS_FormList)
+					$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr($CMS_temp)
+					$CMS_status1 = SQLite("sql",$_sql)
+					$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr($CMS_temp+1)
+					$CMS_status2 = SQLite("sql",$_sql)
+					$CMS_Status2 = Replace("'","''",$CMS_Status2,True)
+					$_sql = "Update temp_settings SET value='$CMS_status2' WHERE rowid="+NumToStr($CMS_temp)
+					$CMS_status2 = SQLite("sql",$_sql)
+					$CMS_Status1 = Replace("'","''",$CMS_Status1,True)
+					$_sql = "Update temp_settings SET value='$CMS_status1' WHERE rowid="+NumToStr($CMS_temp+1)
+					$CMS_status2 = SQLite("sql",$_sql)
+					Gosub Name=CMS_ModifyBuildLists
+					$CMS_FormList = Extract($CMS_ListCombo,";",$CMS_temp+1)
+				EndIf
+			Case $CMS_FormExit = "CMS_BtnM_OK"
+				# All OK, done
+				Gosub Name=CMS_AcceptConfig
+				Break
+			Case $CMS_FormExit = "CMS_BtnM_Cancel"
+				# Reread the config data as changes were canceled
+				#Gosub Name=CMS_GetConfig
+				Break
+			Case $CMS_FormExit = "CMS_FormList"
+				# Change the view to the new selected item
+				$CMS_item = $CMS_FormList
+				Gosub Name=CMS_ModifyBuildLists
+				$CMS_FormList = $CMS_item
+				Gosub Name=CMS_ModifyFill
+		EndCase
+	EndWhile
+EndSub
+
+BeginSub Name=CMS_BuildInfoList
+	$CMS_InfoAll = ""
+	$CMS_InfoActive = ""
+	$CMS_InfoCounter=1
+	While True
+		$_sql = "SELECT value FROM settings WHERE setting='"+NumToStr($CMS_InfoCounter)+"'"
+		$CMS_status = SQLite("sql",$_sql)
+		If $CMS_status = ""
+			Break
+		EndIf
+		If Not ( IsEmpty($CMS_InfoAll) )
+			$CMS_InfoAll   = $CMS_InfoAll + ";"
+		EndIf
+		$CMS_tempS = NumToStr($CMS_InfoCounter) + ":" + RegExSub("\\([^\\]*?)\|",$CMS_status,1,1)
+		$CMS_InfoAll = $CMS_InfoAll + $CMS_tempS
+		If StrToBool(Extract($CMS_status,"|",2))
+			If Not ( IsEmpty($CMS_InfoActive))
+				$CMS_InfoActive = $CMS_InfoActive + ";"
+			EndIf
+			$CMS_InfoActive = $CMS_InfoActive + $CMS_tempS
+		EndIf
+		$CMS_InfoCounter = $CMS_InfoCounter + 1
+	EndWhile
+	$CMS_FormStart = Editform($CMS_FormStart, "CMS_MainInfo", "values", $CMS_InfoAll)
+	$CMS_MainInfo = $CMS_InfoActive
+EndSub
+
+BeginSub Name=CMS_ModifyBuildLists
+	$CMS_ListAll = ""
+	$CMS_ListActive = ""
+	$CMS_ListCombo = ""
+	$CMS_ListCounter=1
+	While True
+		$_sql = "SELECT value FROM temp_settings WHERE setting='"+NumToStr($CMS_ListCounter)+"'"
+		$CMS_status = SQLite("sql",$_sql)
+		If $CMS_status = ""
+			Break
+		EndIf
+		If Not ( IsEmpty($CMS_ListAll) )
+			$CMS_ListAll   = $CMS_ListAll + ";"
+			$CMS_ListCombo = $CMS_ListCombo + ";"
+		EndIf
+		$CMS_tempS = NumToStr($CMS_ListCounter) + ":" + RegExSub("\\([^\\]*?)\|",$CMS_status,1,1)
+		$CMS_ListAll = $CMS_ListAll + $CMS_tempS
+		$CMS_ListCombo = $CMS_ListCombo + $CMS_tempS
+		If StrToBool(Extract($CMS_status,"|",2))
+			If Not ( IsEmpty($CMS_ListActive))
+				$CMS_ListActive = $CMS_ListActive + ";"
+			EndIf
+			$CMS_ListActive = $CMS_ListActive + $CMS_tempS
+		EndIf
+		$CMS_ListCounter = $CMS_ListCounter + 1
+	EndWhile
+	$CMS_ListCounter = $CMS_ListCounter - 1
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_Enable_cb", "values", $CMS_ListAll)
+	$CMS_Enable_cb = $CMS_ListActive
+	$CMS_FormList = Extract($CMS_ListCombo,";",1)
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_FormList", "values", $CMS_ListCombo)
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_3_FormDatabase", "values", SysInfo("Databases"))
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_3_FormFilter", "values", $CMS_FilterNone+";"+Replace("...Last active filter;","",Replace("<macro>;","",SysInfo("Filters"),TRUE),True))
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_FormMacroDatabase", "values", $CMS_DB_dontcare+";"+SysInfo("Databases"))
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_4_FormDatabase", "values", SysInfo("Databases"))
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_4_FormFilter", "values", $CMS_FilterNone+";"+Replace("...Last active filter;","",Replace("<macro>;","",SysInfo("Filters"),TRUE),True))
+	$CMS_FormModify = Editform($CMS_FormModify, "CMS_1_WithMacro", "values", "NONE ;" + $CMS_ListAll)
+EndSub
+
+BeginSub Name=CMS_ModifyFill
+#	$_sql = "SELECT value FROM temp_settings WHERE rowid="+NumToStr(Val($CMS_FormList))
+	$_sql = "SELECT value FROM temp_settings WHERE setting='"+NumToStr(Val($CMS_FormList))+"'"
+	$CMS_status = SQLite("sql",$_sql)
+	$CMS_FormFile=Extract($CMS_Status,"|",1)
+	$CMS_Enable = StrToBool(Extract($CMS_Status,"|",2))
+	$CMS_FormMacroDatabase = Extract($CMS_Status,"|",3)
+	$CMS_tempS = Lower(Left(Extract($CMS_Status,"|",4),1))
+	$CMS_1_Always = False
+	$CMS_1_Once = False
+	$CMS_1_With = False
+	BeginCase
+		Case $CMS_tempS = "t"
+			$CMS_1_Once = True
+		Case $CMS_tempS = "w"
+			$CMS_1_With = True
+		OtherWise
+			$CMS_1_Always = True
+	EndCase
+	$CMS_1_WithMacro = Extract($CMS_Status,"|",18)
+	$CMS_1_LastRun = Extract($CMS_Status,"|",5)
+	If StrToBool(Extract($CMS_Status,"|",6))
+		$CMS_2_Always = False
+		$CMS_2_Weekday = True
+	Else
+		$CMS_2_Always = True
+		$CMS_2_Weekday = False
+	EndIf
+	$CMS_FormDays=Replace(":",";",Extract($CMS_Status,"|",7),True)
+	If StrToBool(Extract($CMS_Status,"|",8))
+		$CMS_3_ignore = False
+		$CMS_3_changed = True
+	Else
+		$CMS_3_ignore = True
+		$CMS_3_changed = False
+	EndIf
+	$CMS_3_FormDatabase = Extract($CMS_Status,"|",9)
+	$CMS_3_FormFilter = Extract($CMS_Status,"|",10)
+	$CMS_3_Caches = Extract($CMS_Status,"|",11)
+	$CMS_3_FormDiff = Extract($CMS_Status,"|",12)
+	If StrToBool(Extract($CMS_Status,"|",13))
+		$CMS_4_ignore = False
+		$CMS_4_changed = True
+	Else
+		$CMS_4_ignore = True
+		$CMS_4_changed = False
+	EndIf
+	$CMS_4_FormDatabase = Extract($CMS_Status,"|",14)
+	$CMS_4_FormFilter = Extract($CMS_Status,"|",15)
+	$CMS_4_Logs = Extract($CMS_Status,"|",16)
+	$CMS_4_FormDiff = Extract($CMS_Status,"|",17)
+	If $CMS_4_FormDiff = ""	# With this also an old settings file works
+		$CMS_4_FormDiff = "0"
+	EndIf
+	$CMS_ANDOR = Extract($CMS_Status,"|",19)
+	$CMS_FormSetVar = Replace("§","|",Extract($CMS_Status,"|",20),True)
+	$CMS_5_CheckBoolExpr = StrToBool(Extract($CMS_Status,"|",21))
+	$CMS_5_BoolExpr = Extract($CMS_Status,"|",22)
+EndSub
+
+BeginSub Name=CMS_Init
+	$CMS_DB_dontcare = "Don't care"
+	$CMS_NewItem = "Please select a macro"
+	$CMS_FilterNone = "NONE "
+	$CMS_SQLfile = SysInfo("MacroPath")+"\ConditionalMacroStartup.db3"
+	$CMS_LogFile = SysInfo("MacroPath")+"\ConditionalMacroStartup.log"
+	$CMS_TempMacro = $_Install + "\temp\CMS_TempMacro.gsk"
+	$CMS_Divider = "=============================="
+	$CMS_PrevDatabase = $_CurrentDatabase
+	$CMS_PrevFilter = SaveFilter()
+	IF NOT(FileExists($CMS_SQLfile))
+		# Create Default file
+		$CMS_status = Sqlite("create",$CMS_SQLfile)
+		$CMS_status = Sqlite("open",$CMS_SQLfile)
+		$_sql = "CREATE TABLE Global (setting TEXT, value TEXT);"
+		$_sql = $_sql + "CREATE TABLE Settings (setting TEXT, value TEXT)"
+		$CMS_status = SQLite("sql",$_sql)
+		$CMS_tempS = "Version;2" + $_NewLine + "TimeOut;10"
+		$CMS_status = SQLite("import",$CMS_tempS,"table=Global delim=;")
+		$CMS_tempS = $CMS_NewItem+"|FalseDisabled|Don't care|False||False||False|||0|0|False|||0|0||AND|||"
+		$CMS_tempS = Replace("'","''",$CMS_tempS,True)
+		$_sql = "INSERT INTO settings VALUES ('1','$CMS_tempS')"
+		$CMS_Status = SQLite("sql",$_sql)
+		# Call the settings screen
+		Gosub Name=CMS_Modify
+		# Avoid auto exit for the form in case it is the first run
+		$CMS_FormStart = Editform($CMS_FormStart, "CMS_FormStart", "Delay", "0")
+	Else
+		$CMS_status = Sqlite("open",$CMS_SQLfile)
+	EndIf
+	$_sql = "SELECT value FROM Global WHERE setting='Version'"
+	$CMS_Settings_Ver = SQLite("sql",$_sql)
+	$_sql = "SELECT value FROM Global WHERE setting='TimeOut'"
+	$CMS_GlobalTimeOut = SQLite("sql",$_sql)
+	If $CMS_Settings_Ver = "1"
+# Update to version 2 needed!!
+	EndIf
+EndSub
+
+BeginSub Name=CMS_GetConfig
+	#Read Settings
+	If False
+		$_sql = "SELECT value FROM Global WHERE setting='Version'"
+		$CMS_Settings_Ver = SQLite("sql",$_sql)
+		$_sql = "SELECT count(setting) FROM Settings WHERE setting LIKE 'Macro%'"
+		$CMS_Status = SQLite("sql",$_sql)
+		If Val($CMS_Status)<1
+			$CMS_Status="1"
+		EndIf
+		Array(1,0)=$CMS_Status
+		$CMS_counter=1
+		While True
+			$_sql = "SELECT value FROM Settings WHERE setting='Macro"+NumToStr($CMS_counter)+"'"
+			$CMS_status = SQLite("sql",$_sql)
+			If $CMS_status = ""
+				Break
+			EndIf
+			Array(1,$CMS_counter) = $CMS_status
+			$CMS_counter = $CMS_counter + 1
+		EndWhile
+	EndIf
+EndSub
+
+BeginSub Name=CMS_AcceptConfig
+	#Use the temporary settings
+	$_sql = "DROP TABLE IF EXISTS settings;"
+	$_sql = $_sql + "CREATE TABLE settings as SELECT setting, value FROM temp_settings;"
+	$_sql = $_sql + "UPDATE Global SET Value='$CMS_GlobalTimeOut' WHERE setting='TimeOut'"
+	$CMS_Status = SQLite("sql",$_sql)
+EndSub
+
+BeginSub Name=CMS_AddItem
+	$CMS_tempS = $CMS_NewItem+"|FalseDisabled|Don't care|False||False||False|||0|0|False"
+	$CMS_tempS = Replace("'","''",$CMS_tempS,True)
+	$CMS_ListCounter = $CMS_ListCounter + 1
+	$_sql = "INSERT INTO temp_settings VALUES ('"+NumToStr($CMS_ListCounter)+"','$CMS_tempS');"
+	$CMS_Status = SQLite("sql",$_sql)
+	Gosub Name=CMS_ModifyBuildLists
+	$CMS_FormList = Extract($CMS_ListCombo,";",$CMS_ListCounter)
+	Gosub Name=CMS_ModifyFill
+EndSub
+
+BeginSub Name=CMS_DelItem
+	$_sql = "DELETE FROM temp_settings WHERE setting='"+NumToStr(Val($CMS_item))+"'"
+	$CMS_Status = SQLite("sql",$_sql)
+	$_sql = "CREATE TEMP TABLE temp_settings2 as SELECT setting, value FROM temp_settings;"
+	$_sql = $_sql + "DROP TABLE IF EXISTS temp_settings;"
+	$_sql = $_sql + "ALTER TABLE temp_settings2 RENAME TO temp_settings;"
+	$_sql = $_sql + "UPDATE temp_settings SET setting=rowid"
+	$CMS_Status = SQLite("sql",$_sql)
+	$_sql = "SELECT count(setting) FROM temp_Settings"
+	$CMS_ListCounter = Val(SQLite("sql",$_sql))
+	If $CMS_ListCounter<1
+		GoSub Name=CMS_AddItem
+		$CMS_ListCounter = 1
+	EndIf
+	Gosub Name=CMS_ModifyBuildLists
+	# To make it consistent, the correct item has to be choosen.
+	# Not done yet, just use the old one. It will pick the one after or the first one
+	If val($CMS_item)>$CMS_ListCounter
+		$CMS_item = NumToStr($CMS_ListCounter)
+	EndIf
+	$CMS_FormList = Extract($CMS_ListCombo,";",Val($CMS_item))
+	Gosub Name=CMS_ModifyFill
+EndSub
+
+#################################################################
+#        IT'S EASY TO SEE WHAT IS BEING DONE - THE WHY IS FOUND ON:
+#        http://www.gregmiller.net/astro/dow.html
+# Strings used:
+# $MagicString  $temp $day  $month  $year $magicYear  $newYear
+# $Leap $MagicNumber $Formula
+#  AND the output   $TheDay
+#
+# Modified 28 Apr 2006 to work with GSAL ver 6.6.1
+#################################### by Tom Miller Oct 2, 2005
+BEGINSUB Name=CMS_GetDay
+	SET $CMS_MagicString="6,2,2,5,0,3,5,1,4,6,2,4"
+	SET $CMS_tempS = DateToString($_Today)
+
+	SET $CMS_day = VAL(SUBSTR($CMS_tempS, 7,2))
+	SET $CMS_month = VAL(SUBSTR($CMS_tempS, 5,2))
+	SET $CMS_year = VAL(SUBSTR($CMS_tempS,3,2))
+	SET $CMS_magicYear=$CMS_year
+	SET $CMS_newYear=$CMS_year
+
+	SET $CMS_i=0
+	WHILE $CMS_newYear>=4
+		$CMS_newYear=$CMS_newYear-4
+		$CMS_i=$CMS_i+1
+	ENDWHILE
+	SET $CMS_magicYear=$CMS_Year+$CMS_i
+
+	SET $CMS_y= 4*$CMS_i
+	IF $CMS_y=$CMS_year
+		$CMS_Leap="TRUE"
+	ELSE
+		$CMS_Leap="FALSE"
+	ENDIF
+
+	SET $CMS_MagicNumber= VAL(Extract($CMS_MagicString,",",$CMS_month))
+	SET $CMS_Formula=$CMS_magicYear+$CMS_MagicNumber+$CMS_day
+	IF $CMS_Leap="TRUE" AND $CMS_month < 3
+		SET $CMS_Formula=$CMS_Formula-1
+	ENDIF
+
+	WHILE $CMS_Formula>7
+		$CMS_Formula=$CMS_Formula-7
+	ENDWHILE
+	SET $CMS_TheDay=Extract("Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday",",",$CMS_Formula)
+ENDSUB
+
+BeginSub Name=CMS_DeclareVar
+	#*******************************************************
+	#   Variable declarations for
+	#   C:\Programme\gsak\Macros\ConditionalMacroStartup.gsk
+	#
+	#   Generated 15.10.2008 14:06:26 on GSAKVariables.gsk Rev V0.20 B15
+	#
+	#*******************************************************
+
+	Option Explicit=Yes
+
+	Declare Var=$CMS_1_Always Type=Boolean
+	Declare Var=$CMS_1_LastRun Type=String
+	Declare Var=$CMS_1_Once Type=Boolean
+	Declare Var=$CMS_1_With Type=Boolean
+	Declare Var=$CMS_1_WithMacro Type=String
+	Declare Var=$CMS_2_Always Type=Boolean
+	Declare Var=$CMS_2_Weekday Type=Boolean
+	Declare Var=$CMS_3_Caches Type=String
+	Declare Var=$CMS_3_changed Type=Boolean
+	Declare Var=$CMS_3_FormDatabase Type=String
+	Declare Var=$CMS_3_FormDiff Type=String
+	Declare Var=$CMS_3_FormFilter Type=String
+	Declare Var=$CMS_3_ignore Type=Boolean
+	Declare Var=$CMS_3_Old Type=String
+	Declare Var=$CMS_4_changed Type=Boolean
+	Declare Var=$CMS_4_FormDatabase Type=String
+	Declare Var=$CMS_4_FormDiff Type=String
+	Declare Var=$CMS_4_FormFilter Type=String
+	Declare Var=$CMS_4_ignore Type=Boolean
+	Declare Var=$CMS_4_Logs Type=String
+	Declare Var=$CMS_4_Old Type=String
+	Declare Var=$CMS_5_BoolExpr Type=String
+	Declare Var=$CMS_5_BoolExprResult Type=Boolean
+	Declare Var=$CMS_5_CheckBoolExpr Type=Boolean
+	Declare Var=$CMS_ANDOR Type=String
+	Declare Var=$CMS_CheckVar Type=Boolean
+	Declare Var=$CMS_count Type=Numeric
+	Declare Var=$CMS_counter Type=Numeric
+	Declare Var=$CMS_day Type=Numeric
+	Declare Var=$CMS_DB_dontcare Type=String
+	Declare Var=$CMS_Divider Type=String
+	Declare Var=$CMS_Enable Type=Boolean
+	Declare Var=$CMS_Enable_cb Type=String
+	Declare Var=$CMS_FilterCount Type=Numeric
+	Declare Var=$CMS_FilterNone Type=String
+	Declare Var=$CMS_FormDays Type=String
+	Declare Var=$CMS_FormExit Type=String
+	Declare Var=$CMS_FormFile Type=String
+	Declare Var=$CMS_FormList Type=String
+	Declare Var=$CMS_FormLog Type=String
+	Declare Var=$CMS_FormMacroDatabase Type=String
+	Declare Var=$CMS_FormModify Type=String
+	Declare Var=$CMS_FormSetVar Type=String
+	Declare Var=$CMS_FormStart Type=String
+	Declare Var=$CMS_Formula Type=Numeric
+	Declare Var=$CMS_FormValid Type=Boolean
+	Declare Var=$CMS_GlobalTimeOut Type=String
+	Declare Var=$CMS_i Type=Numeric
+	Declare Var=$CMS_InfoActive Type=String
+	Declare Var=$CMS_InfoAll Type=String
+	Declare Var=$CMS_InfoCounter Type=Numeric
+	Declare Var=$CMS_item Type=String
+	Declare Var=$CMS_Leap Type=String
+	Declare Var=$CMS_ListActive Type=String
+	Declare Var=$CMS_ListAll Type=String
+	Declare Var=$CMS_ListCombo Type=String
+	Declare Var=$CMS_ListCounter Type=Numeric
+	Declare Var=$CMS_LogCount Type=Numeric
+	Declare Var=$CMS_LogData Type=String
+	Declare Var=$CMS_LogFile Type=String
+	Declare Var=$CMS_lognum Type=Numeric
+	Declare Var=$CMS_logS Type=String
+	Declare Var=$CMS_MacroRun Type=String
+	Declare Var=$CMS_MagicNumber Type=Numeric
+	Declare Var=$CMS_MagicString Type=String
+	Declare Var=$CMS_magicYear Type=Numeric
+	Declare Var=$CMS_MainInfo Type=String
+	Declare Var=$CMS_month Type=Numeric
+	Declare Var=$CMS_NewItem Type=String
+	Declare Var=$CMS_newYear Type=Numeric
+	Declare Var=$CMS_PrevDatabase Type=String
+	Declare Var=$CMS_PrevFilter Type=String
+	Declare Var=$CMS_RunNow Type=Boolean
+	Declare Var=$CMS_RunNow_Caches Type=Boolean
+	Declare Var=$CMS_RunNow_Logs Type=Boolean
+	Declare Var=$CMS_Settings_Ver Type=String
+	Declare Var=$CMS_SQLfile Type=String
+	Declare Var=$CMS_Status Type=String
+	Declare Var=$CMS_Status1 Type=String
+	Declare Var=$CMS_Status2 Type=String
+	Declare Var=$CMS_temp Type=Numeric
+	Declare Var=$CMS_TempMacro Type=String
+	Declare Var=$CMS_tempS Type=String
+	Declare Var=$CMS_TheDay Type=String
+	Declare Var=$CMS_y Type=Numeric
+	Declare Var=$CMS_year Type=Numeric
+	Declare Var=$FormExit Type=String
+EndSub
+
+<Data> VarName=$CMS_FormStart
+#********************************************************************
+# Form generated by GSAK form designer on Mi 15-Okt-2008 13:59:55
+#********************************************************************
+
+Name = CMS_FormStart
+  Type = Form
+  Delay = 10
+  Height = 289
+  Width = 498
+
+Name = Label1
+  Type = Label
+  Height = 37
+  Left = 59
+  Size = 24
+  Top = 8
+  Width = 372
+  Caption = Conditional Macro Startup
+
+Name = CMS_ButtonRun
+  Type = Button
+  Enter = Yes
+  Height = 25
+  Left = 48
+  Top = 208
+  Width = 75
+  Taborder = 8
+  Caption = Run
+
+Name = CMS_ButtonSetup
+  Type = Button
+  Height = 25
+  Left = 154
+  Top = 208
+  Width = 75
+  Taborder = 9
+  Caption = Setup
+
+Name = CMS_ButtonCancel
+  Type = Button
+  Height = 25
+  Left = 366
+  Top = 208
+  Width = 75
+  Taborder = 10
+  Caption = Exit
+
+Name = CMS_MainInfo
+  Type = Checklistbox
+  Columns = 2
+  Enabled = No
+  Height = 127
+  Left = 48
+  Top = 56
+  Width = 393
+  Taborder = 11
+
+Name = CMS_ButtonLog
+  Type = Button
+  Height = 25
+  Left = 260
+  Top = 208
+  Width = 75
+  Taborder = 12
+  Caption = Open Log
+
+<enddata>
+
+<Data> VarName=$CMS_FormLog
+
+Name = CMS_FormLog
+  Type = Form
+  Caption = Show Log File
+  Height = 289
+  Width = 500
+
+Name = CMS_ButtonExit
+  Type = Button
+  Height = 25
+  Left = 208
+  Top = 216
+  Width = 75
+  Taborder = 8
+  Caption = Exit
+
+Name = CMS_LogData
+  Type = Memo
+  Height = 185
+  Left = 48
+  Scrollbars = Both
+  Top = 16
+  Width = 393
+  Taborder = 9
+
+Name = CMS_ButtonPrev
+  Type = Button
+  Height = 25
+  Left = 48
+  Top = 216
+  Width = 75
+  Taborder = 10
+  Caption = <
+
+Name = CMS_ButtonNext
+  Type = Button
+  Height = 25
+  Left = 368
+  Top = 216
+  Width = 75
+  Taborder = 11
+  Caption = >
+
+<enddata>
+
+<Data> VarName=$CMS_FormModify
+#********************************************************************
+# Form generated by GSAK form designer on So 26-Okt-2008 11:19:28
+#********************************************************************
+
+Name = CMS_FormModify
+  Type = Form
+  Caption = Modify
+  Height = 548
+  Width = 657
+
+Name = Groupbox5
+  Type = Groupbox
+  Caption = Configuration
+  Height = 441
+  Left = 272
+  Top = 16
+  Width = 361
+  Taborder = 13
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Run macro
+  Height = 77
+  Left = 280
+  Top = 176
+  Width = 169
+  Taborder = 6
+
+Name = Groupbox2
+  Type = Groupbox
+  Caption = Run macro
+  Height = 190
+  Left = 280
+  Top = 259
+  Width = 169
+  Taborder = 10
+
+Name = Groupbox9
+  Type = Groupbox
+  Height = 221
+  Left = 454
+  Top = 176
+  Width = 173
+  Taborder = 18
+
+Name = Groupbox3
+  Type = Groupbox
+  Caption = Cache quantity
+  Height = 97
+  Left = 456
+  Top = 176
+  Width = 169
+  Taborder = 11
+
+Name = Groupbox4
+  Type = Groupbox
+  Caption = Log quantity
+  Height = 101
+  Left = 456
+  Top = 296
+  Width = 169
+  Taborder = 12
+
+Name = Groupbox6
+  Type = Groupbox
+  Caption = List of macros (Enable/Disable)
+  Height = 377
+  Left = 24
+  Top = 16
+  Width = 233
+  Taborder = 14
+
+Name = Groupbox7
+  Type = Groupbox
+  Caption = Boolean expression
+  Height = 45
+  Left = 456
+  Top = 404
+  Visible = Yes
+  Width = 169
+  Taborder = 15
+
+Name = Groupbox8
+  Type = Groupbox
+  Caption = Global settings
+  Height = 51
+  Left = 24
+  Top = 408
+  Width = 233
+  Taborder = 16
+
+Name = CMS_Enable_cb
+  Type = Checklistbox
+  Container = Groupbox6
+  Height = 353
+  Left = 8
+  Top = 16
+  Width = 217
+  Taborder = 0
+
+Name = CMS_FormList
+  Type = Combobox
+  Display = 20
+  Exitonchange = Yes
+  Height = 21
+  Left = 364
+  Top = 32
+  Width = 178
+  Taborder = 0
+
+Name = CMS_BtnM_Add
+  Type = Button
+  Height = 25
+  Left = 280
+  Top = 30
+  Width = 75
+  Taborder = 3
+  Caption = New
+
+Name = CMS_BtnM_Del
+  Type = Button
+  Height = 25
+  Left = 550
+  Top = 30
+  Width = 75
+  Taborder = 4
+  Caption = Delete
+
+Name = CMS_BtnM_Up
+  Type = Button
+  Height = 25
+  Left = 280
+  Top = 64
+  Width = 33
+  Taborder = 1
+  Caption = Up
+
+Name = CMS_BtnM_Down
+  Type = Button
+  Height = 25
+  Left = 280
+  Top = 88
+  Width = 33
+  Taborder = 7
+  Caption = Down
+
+Name = CMS_1_Always
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 8
+  Top = 16
+  Width = 15
+  Taborder = 1
+
+Name = Label3
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 32
+  Top = 16
+  Width = 48
+  Caption = every time
+
+Name = CMS_1_Once
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 8
+  Top = 32
+  Width = 15
+  Taborder = 0
+
+Name = Label4
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 32
+  Top = 32
+  Width = 53
+  Caption = once a day
+
+Name = CMS_2_Always
+  Type = Radiobutton
+  Container = Groupbox2
+  Height = 17
+  Left = 8
+  Top = 16
+  Width = 15
+  Taborder = 0
+
+Name = Label1
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 32
+  Top = 16
+  Width = 46
+  Caption = every day
+
+Name = CMS_2_Weekday
+  Type = Radiobutton
+  Container = Groupbox2
+  Height = 17
+  Left = 8
+  Top = 32
+  Width = 15
+  Taborder = 1
+
+Name = Label2
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 32
+  Top = 32
+  Width = 108
+  Caption = on selected day(s) only
+
+Name = CMS_FormDays
+  Type = Checklistbox
+  Container = Groupbox2
+  Height = 116
+  Left = 32
+  Top = 48
+  Values = Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday
+  Width = 105
+  Taborder = 2
+
+Name = CMS_3_ignore
+  Type = Radiobutton
+  Container = Groupbox3
+  Height = 17
+  Left = 8
+  Top = 16
+  Width = 15
+  Taborder = 0
+
+Name = Label5
+  Type = Label
+  Container = Groupbox3
+  Height = 13
+  Left = 32
+  Top = 16
+  Width = 66
+  Caption = doesn't matter
+
+Name = CMS_3_changed
+  Type = Radiobutton
+  Container = Groupbox3
+  Height = 17
+  Left = 8
+  Top = 32
+  Width = 15
+  Taborder = 1
+
+Name = Label7
+  Type = Label
+  Container = Groupbox3
+  Height = 13
+  Left = 32
+  Top = 32
+  Width = 62
+  Caption = has changed
+
+Name = CMS_4_ignore
+  Type = Radiobutton
+  Container = Groupbox4
+  Height = 17
+  Left = 8
+  Top = 16
+  Width = 15
+  Taborder = 0
+
+Name = Label9
+  Type = Label
+  Container = Groupbox4
+  Height = 13
+  Left = 32
+  Top = 16
+  Width = 66
+  Caption = doesn't matter
+
+Name = CMS_4_changed
+  Type = Radiobutton
+  Container = Groupbox4
+  Height = 17
+  Left = 8
+  Top = 32
+  Width = 15
+  Taborder = 1
+
+Name = Label10
+  Type = Label
+  Container = Groupbox4
+  Height = 13
+  Left = 32
+  Top = 32
+  Width = 62
+  Caption = has changed
+
+Name = CMS_BtnM_OK
+  Type = Button
+  Enter = Yes
+  Height = 25
+  Left = 167
+  Top = 472
+  Width = 75
+  Taborder = 5
+  Caption = OK
+
+Name = CMS_BtnM_Cancel
+  Type = Button
+  Height = 25
+  Left = 407
+  Top = 472
+  Width = 75
+  Taborder = 8
+  Caption = Cancel
+
+Name = CMS_FormFile
+  Type = File
+  Height = 21
+  Left = 416
+  Top = 64
+  Width = 209
+  Taborder = 2
+
+Name = CMS_3_FormDatabase
+  Type = Combobox
+  Container = Groupbox3
+  Height = 21
+  Left = 32
+  Top = 48
+  Width = 129
+  Taborder = 2
+
+Name = CMS_3_FormFilter
+  Type = Combobox
+  Container = Groupbox3
+  Height = 21
+  Left = 32
+  Top = 72
+  Width = 129
+  Taborder = 3
+
+Name = Label6
+  Type = Label
+  Container = Groupbox3
+  Font = Arial
+  Height = 14
+  Left = 9
+  Top = 52
+  Width = 14
+  Caption = DB
+
+Name = Label8
+  Type = Label
+  Container = Groupbox3
+  Font = Arial Narrow
+  Height = 15
+  Left = 8
+  Top = 74
+  Width = 20
+  Caption = Filter
+
+Name = CMS_FormMacroDatabase
+  Type = Combobox
+  Height = 21
+  Left = 416
+  Top = 96
+  Width = 209
+  Taborder = 9
+
+Name = Label11
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 93
+  Size = 8
+  Top = 78
+  Width = 46
+  Caption = Database
+
+Name = Label12
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 93
+  Top = 90
+  Width = 29
+  Caption = to use
+
+Name = Label14
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 93
+  Top = 45
+  Width = 30
+  Caption = Macro
+
+Name = Label15
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 93
+  Top = 57
+  Width = 37
+  Caption = location
+
+Name = CMS_3_FormDiff
+  Type = Edit
+  Container = Groupbox3
+  Height = 21
+  Left = 128
+  Top = 24
+  Width = 33
+  Taborder = 4
+
+Name = Label16
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 152
+  Size = 8
+  Top = 144
+  Width = 49
+  Caption = Conditions
+
+Name = Label17
+  Type = Label
+  Container = Groupbox3
+  Height = 13
+  Left = 128
+  Top = 10
+  Width = 25
+  Caption = Diff >
+
+Name = Label18
+  Type = Label
+  Container = Groupbox8
+  Height = 13
+  Left = 8
+  Top = 20
+  Width = 30
+  Caption = Delay:
+
+Name = CMS_GlobalTimeOut
+  Type = Combobox
+  Container = Groupbox8
+  Height = 21
+  Left = 48
+  Top = 18
+  Values = 3;5;10;Off
+  Width = 57
+  Taborder = 0
+
+Name = CMS_1_with
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 8
+  Top = 50
+  Width = 15
+  Taborder = 2
+
+Name = Label13
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 32
+  Top = 52
+  Width = 19
+  Caption = with
+
+Name = CMS_1_withmacro
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 55
+  Top = 48
+  Width = 109
+  Taborder = 3
+
+Name = Label19
+  Type = Label
+  Container = Groupbox4
+  Height = 13
+  Left = 8
+  Top = 52
+  Width = 15
+  Caption = DB
+
+Name = CMS_4_FormDatabase
+  Type = Combobox
+  Container = Groupbox4
+  Height = 21
+  Left = 32
+  Top = 48
+  Width = 129
+  Taborder = 2
+
+Name = Label20
+  Type = Label
+  Container = Groupbox4
+  Font = Arial Narrow
+  Height = 15
+  Left = 8
+  Top = 74
+  Width = 20
+  Caption = Filter
+
+Name = CMS_4_FormFilter
+  Type = Combobox
+  Container = Groupbox4
+  Height = 21
+  Left = 32
+  Top = 72
+  Width = 129
+  Taborder = 3
+
+Name = CMS_4_FormDiff
+  Type = Edit
+  Container = Groupbox4
+  Height = 21
+  Left = 128
+  Top = 24
+  Width = 33
+  Taborder = 4
+
+Name = Label21
+  Type = Label
+  Container = Groupbox4
+  Height = 13
+  Left = 128
+  Top = 10
+  Width = 25
+  Caption = Diff >
+
+Name = CMS_FormSetVar
+  Type = Edit
+  Container = Groupbox5
+  Height = 21
+  Left = 144
+  Top = 112
+  Width = 209
+  Taborder = 0
+
+Name = Label22
+  Type = Label
+  Container = Groupbox5
+  Font = arial
+  Height = 14
+  Left = 93
+  Top = 110
+  Width = 35
+  Caption = Set var
+
+Name = Label23
+  Type = Label
+  Container = Groupbox5
+  Height = 13
+  Left = 93
+  Top = 122
+  Width = 48
+  Caption = before run
+
+Name = CMS_ANDOR
+  Type = Combobox
+  Height = 21
+  Left = 536
+  Top = 276
+  Values = AND;OR
+  Width = 81
+  Taborder = 17
+
+Name = CMS_5_CheckBoolExpr
+  Type = Checkbox
+  Container = Groupbox7
+  Height = 17
+  Left = 8
+  Top = 18
+  Width = 15
+  Taborder = 0
+
+Name = CMS_5_BoolExpr
+  Type = Edit
+  Container = Groupbox7
+  Height = 21
+  Left = 32
+  Top = 16
+  Width = 121
+  Taborder = 1
+
+<enddata>
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="gedcom_name" langID="57" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="GEDCOM Names"
+				id         ="gedcom_name"
+			>
+				<function
+					mainExpr="^\d+[\x20]+@[^\n\r]*?@[\x20]+INDI(\r|\n|\r\n)(\d+[\x20]+\w+.*?(\r|\n|\r\n))*?\d+[\x20]+NAME.*?(\r|\n|\r\n)"
+				>
+					<functionName>
+						<nameExpr expr="(?&lt;=(\d[\x20]NAME[\x20])).*?(\r|\n|\r\n)" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

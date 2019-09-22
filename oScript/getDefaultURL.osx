@@ -1,0 +1,25 @@
+
+function String getDefaultURL (DAPINode inNode)
+    // Load the Notification Configuration information
+    Dynamic config=$LLAgent.Utils.ConfigLoad( prgCtx.USession().fDbConnect.fConnection, 100 )
+ 
+    // Convert the Node into a WebNode
+    Object webNode=$WebNode.WebNodes.GetItem(inNode.pSubType)
+ 
+    // Get the Open action of the WebNode
+    Object open=webNode.Cmd("open")
+ 
+    // String to store the return value
+    String nodeURL
+ 
+    // if the Object in question is  a Document then point at the General Properties page
+    if (inNode.pSubType == $TypeDocument)
+        nodeURL=Str.Format("%1?func=ll&objid=%2&objaction=properties",config.URL,inNode.pID)
+ 
+    // Otherwise, use the default Open command URL
+    else
+        nodeURL=Str.Format("%1?%2",config.URL,Str.Format(open.fQueryString,inNode.pID))
+    end
+end
+
+nodeURL = Str.Format("%1/open/%2", config.URL, inNode.pID)

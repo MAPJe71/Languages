@@ -1,0 +1,204 @@
+InformationObjectClass DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+-- The ITEM class.
+ITEM ::= CLASS {
+    &id          INTEGER UNIQUE,
+    &Value,                       -- An open type member.
+    &comment     String
+}
+
+String ::= IA5String
+
+END
+
+
+InformationObject DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+IMPORTS
+    ITEM
+FROM InformationObjectClass;
+
+-- Should not be used. String in module InformationObjectClass should
+-- be used instead.
+String ::= NULL
+
+-- The object set containing two objects, 0 and 1.
+Items ITEM ::= {
+    { &id 0, &Value BOOLEAN, &comment "item 0" } |
+    -- The open type (Value) contains a sequence that contains an open
+    -- type.
+    { &id 1, &Value InnerSequence, &comment "item 1" }
+}
+
+-- Type with table constraints (only items in the union above
+-- allowed). Encodes and decodes the 'value' member as defined by
+-- 'id'. BOOLEAN if id is 0, and InnerSequence if id is 1.
+--
+-- Encoding:
+--
+-- 1. Encode 'value' based on 'id'.
+-- 2. Encode 'id'.
+-- 3. Encode 'value' open type container.
+-- 4. Encode 'comment'.
+-- 5. Encode 'extra'.
+--
+-- Decoding:
+--
+-- 1. Decode 'id'.
+-- 2. Decode 'value' open type container.
+-- 3. Decode 'comment'.
+-- 4. Decode 'extra'.
+-- 5. Decode 'value' based on 'id'.
+ItemWithConstraints ::= SEQUENCE {
+    id        ITEM.&id      ({Items}),
+    value     ITEM.&Value   ({Items}{@id}),
+    comment   ITEM.&comment ({Items}{@id}),
+    extra     INTEGER
+}
+
+-- Type without constraints. Encodes and decodes the 'value' member as
+-- an open type.
+--
+-- Encoding:
+--
+-- 1. Encode 'id'.
+-- 2. Encode 'value' open type container.
+-- 3. Encode 'comment'.
+-- 4. Encode 'extra'.
+--
+-- Decoding:
+--
+-- 1. Decode 'id'.
+-- 2. Decode 'value' open type container.
+-- 3. Decode 'comment'.
+-- 4. Decode 'extra'.
+ItemWithoutConstraints ::= SEQUENCE {
+    id        ITEM.&id,
+    value     ITEM.&Value,
+    comment   ITEM.&comment,
+    extra     INTEGER
+}
+
+-- The INNER-ITEM class, part of the OpenType in ITEM object 1.
+INNER-ITEM ::= CLASS {
+    &type          INTEGER,
+    &Value                        -- An OpenType member.
+}
+
+-- The object set containing two objects, 0 and 1, of the INNER-ITEM
+-- type.
+InnerItems INNER-ITEM ::= {
+    innerItem0 |
+    { &type 1, &Value IA5String }
+}
+
+innerItem0 INNER-ITEM ::= {
+    &type 0,
+    &Value INTEGER
+}
+
+-- myType is decoded after the open type, myValue, is found. The
+-- decoding of the open type cannot be done until after myType has
+-- been decoded.
+InnerSequence ::= SEQUENCE {
+    myValue     INNER-ITEM.&Value ({InnerItems}{@myType}),
+    myType      INNER-ITEM.&type  ({InnerItems})
+}
+
+ERROR-CLASS ::= CLASS {
+    &category PrintableString (SIZE(1)),
+    &code INTEGER,
+    &Type
+}
+
+ErrorSet ERROR-CLASS ::= {
+    { &category "A", &code 1, &Type INTEGER } |
+    { &category "A", &code 2, &Type BOOLEAN } |
+    { &category "B", &code 1, &Type IA5String } |
+    { &category "B", &code 2, &Type GeneralString }
+}
+
+-- Encoding:
+--
+-- 1. Encode 'errorInfo' based on 'errorCategory' and 'errorCode' for
+--    each element in the array.
+-- 2. Encode 'errorCategory'.
+-- 3. Encode the array 'errors'.
+--    1. Encode 'errorCode'.
+--    2. Encode 'errorInfo' open type container.
+--
+-- Decoding:
+--
+-- 1. Decode 'errorCategory'.
+-- 2. Decode the array 'errors'.
+--    1. Decode 'errorCode'.
+--    2. Decode 'errorInfo' open type container.
+-- 3. Decode 'errorInfo' based on 'errorCategory' and 'errorCode' for
+--    each element in the array.
+ErrorReturn ::= SEQUENCE {
+    errorCategory ERROR-CLASS.&category ({ErrorSet}),
+    errors SEQUENCE OF SEQUENCE {
+        errorCode ERROR-CLASS.&code     ({ErrorSet}{@errorCategory}),
+        errorInfo ERROR-CLASS.&Type     ({ErrorSet}{@errorCategory,@.errorCode})
+    }
+}
+
+-- Recursive type.
+A ::= CLASS {
+    &a INTEGER,
+    &B
+}
+
+As A ::= {
+    { &a 0, &B C }
+}
+
+C ::= SEQUENCE {
+    a A.&a ({As}),
+    b A.&B ({As}{@a}) OPTIONAL
+}
+
+-- Parameterized.
+
+GC ::= CLASS {
+    &id      INTEGER    UNIQUE,
+    &Value
+} WITH SYNTAX {
+    ID              &id
+    VALUE           &Value
+}
+
+GCs GC ::= {
+    { ID 0 VALUE INTEGER }
+    | { ID 1 VALUE BOOLEAN }
+}
+
+D1 ::= SEQUENCE {
+    id             GC.&id             ({GCs}),
+    value          GC.&Value          ({GCs}{@id}),
+    a E1 {{ GCs }}
+}
+
+E1 {GC : Param} ::= SEQUENCE {
+    id             GC.&id             ({Param}),
+    value          GC.&Value          ({Param}{@id})
+}
+
+-- The same as above, but with parameters expanded.
+
+D2 ::= SEQUENCE {
+    id             GC.&id             ({GCs}),
+    value          GC.&Value          ({GCs}{@id}),
+    a T1
+}
+
+T1 ::= SEQUENCE {
+    id             GC.&id             ({GCs}),
+    value          GC.&Value          ({GCs}{@id})
+}
+
+END

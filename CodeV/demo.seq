@@ -1,0 +1,44 @@
+! This is a demonstration for
+! CodeV macro syntax-highlighting and code management
+! AND auto-completion for functions
+! AND calltip function hints
+
+! Developed on Notepad++
+! Nice eye-easy color theme ported from Solarized
+
+250.00						! Numbers are red
+"Start new"					! Strings are cyan
+GBL NUM IF END IF 			! Variable definition and Control statements are yellow
+^fit_step					! User-defined variables are purple
+@COMA	@DIST				! User-defined functions and AUT variables are green
+ATANF UPCASE				! Pre-defined functions are blue
+GOTO 1						! GOTO and LABEL are magenta
+							! 
+
+! Openblock
+
+! IF and FOR statments are foldable
+FOR i, 1, ^nfield, 1								! For folding
+	WRI "WORKING ON FIELD" ^NFIELD
+    IF (^INPUT1 = 'Q') OR (^INPUT1 <> 'Y')	! IF folding
+		WRI ATANF(^OTHER)
+		WRI
+		GOTO L_QUIT
+	END IF
+END FOR
+
+! Comments are foldable
+! Create codeblocks with openblock, midblock, and endblock.
+
+! endBlock
+
+
+! Demonstration of autocomplete feature and calltip function hints
+! 	for predefined functions
+! test SAGF, SUBSTR
+
+
+! Do you like this? Try it!
+! Download from Github: https://github.com/huxinda/
+! also available for Zemax macros
+! Contact: Xinda xhu@optics.arizona.edu

@@ -1,0 +1,115 @@
+/* file moller0.mac
+    April 15, 2011
+   pi(+) pi(+) --> pi(+) pi(+)
+   in scalar electrodynamics, ie,
+   ignoring structure of pions */
+   
+   /* references:
+      Renton p.182
+      I/Z p. 286
+      Schwinger, pp. 285 - 289
+      */
+ " ======================================================"$
+ "  file moller0.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+ 
+ " ======================================================"$
+   
+ 
+ " ELASTIC SCATTERING OF SPIN 0 PARTICLES (SAME CHARGE)"$
+ " FOR EXAMPLE: "$
+"      PI(+,p1) PI(+,p2)  --->  PI(+,p3) PI(+,p4)       "$
+
+  " POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES, "$
+  " Using p1 + p2 = p3 + p4, s = (p1+p2)^2 = (p3+p4)^2 ,"$
+  "  t = (p1-p3)^2 = (p2-p4)^2,"$
+  "   and u = (p1-p4)^2 = (p2-p3)^2 "$
+  " ---------------------------------------------"$
+  invar (D(p1,p1) = m^2,
+         D(p1,p2) = s/2 - m^2,
+         D(p1,p3) = m^2 - t/2,
+         D(p1,p4) = m^2 - u/2,
+         D(p2,p2) = m^2,
+         D(p2,p3) = m^2 - u/2,
+         D(p2,p4) = m^2 - t/2,
+         D(p3,p3) = m^2,
+         D(p3,p4) = s/2 - m^2,
+         D(p4,p4) = m^2)$
+  "------------------------------------------------------"$
+  " factor out -e^2 from Mfi, leaving Mfi = M1 + M2 "$
+  
+  M1 : D(p1+p3,p2+p4)/D(p1-p3,p1-p3)$
+  
+  M2 :  D(p1+p4,p2+p3)/D(p1-p4,p1-p4)$
+  
+  M1 : ev_Ds (M1);
+  
+  M1 : pullfac (M1,1/t);
+  
+  M2 : ev_Ds (M2);
+  
+  M2 : pullfac (M2,1/u);
+  
+  Mfi : M1 + M2;
+  
+  " we get the result Mfi = (s-u)/t + (s-t)/u  "$
+  
+  "CM FRAME EVALUATION "$
+  
+  assume ( p > 0, th >= 0, th <= %pi )$
+   
+  comp_def ( p1( E,0,0,p),
+             p2( E,0,0,-p),
+             p3 (E,p*sin(th),0,p*cos(th)),
+             p4 (E,-p*sin(th),0,-p*cos(th)) )$
+             
+  s_th : noncov (D(p1+p2,p1+p2));
+  
+  t_th : factor (noncov (D(p1-p3,p1-p3)));
+  
+  u_th : factor (noncov (D(p1-p4,p1-p4)));
+  
+  /* display2d:true$ */
+  
+  Mfi : sub_stu(Mfi);
+  
+  " We want to combine the first two terms "$
+  " and replace p^2 by E^2 - m^2 in the numerator"$
+  
+  Mfi_12 : ratsimp (take_parts (Mfi,1,2));
+  
+  Mfi_12n : num (Mfi_12);
+  
+  Mfi_12n : factor (expand (subst (p^2 = E^2 - m^2, Mfi_12n)));
+  
+  Mfi_12 : Mfi_12n/denom(Mfi_12);
+  
+  " We now add in the third term and extract -2 "$
+  
+  Mfi : pullfac (Mfi_12 + part(Mfi,3),-2);
+  
+  " having absorbed e^4 into a factor A which multiplies"$
+  " |Mfi|^2, and using e^2 = 4*%pi*alpha,"$
+  " in general, A = alpha^2*(pf/pi)/(4*Ecm^2) "$
+  " but here, pf = pi, and Ecm = 2*E, so "$  
+  
+  A : alpha^2/(16*E^2)$
+  
+  " We can now write down the differential scattering cross section:"$
+  
+  dsigdo : A*Mfi^2$
+  
+  (display2d:true, display (dsigdo), display2d:false)$
+  " which agrees with Itzykson and Zuber, p. 286."$
+  " The factor 1/sin(th)^2 can be displayed in terms of th/2"$
+  " using: "$
+  
+  fr_ao2(1/sin(th/2)^2 + 1/cos(th/2)^2, th );
+  
+  " and, of course p^2 = E^2 - m^2 "$
+  
+  

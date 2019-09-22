@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+    <AutoComplete language="AngelScript">
+        <Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" />
+        <KeyWord name="#endif" />
+        <KeyWord name="#if" />
+        <KeyWord name="#include" />
+        <KeyWord name="abstract" />
+        <KeyWord name="and" />
+        <KeyWord name="auto" />
+        <KeyWord name="break" />
+        <KeyWord name="bool" />
+        <KeyWord name="case" />
+        <KeyWord name="cast" />
+        <KeyWord name="class" />
+        <KeyWord name="const" />
+        <KeyWord name="continue" />
+        <KeyWord name="default" />
+        <KeyWord name="do" />
+        <KeyWord name="double" />
+        <KeyWord name="else" />
+        <KeyWord name="enum" />
+        <KeyWord name="false" />
+        <KeyWord name="final" />
+        <KeyWord name="float" />
+        <KeyWord name="for" />
+        <KeyWord name="from" />
+        <KeyWord name="funcdef" />
+        <KeyWord name="function" />
+        <KeyWord name="get" />
+        <KeyWord name="if" />
+        <KeyWord name="import" />
+        <KeyWord name="in" />
+        <KeyWord name="inout" />
+        <KeyWord name="int" />
+        <KeyWord name="int8" />
+        <KeyWord name="int16" />
+        <KeyWord name="int32" />
+        <KeyWord name="int64" />
+        <KeyWord name="interface" />
+        <KeyWord name="is" />
+        <KeyWord name="mixin" />
+        <KeyWord name="namespace" />
+        <KeyWord name="not" />
+        <KeyWord name="null" />
+        <KeyWord name="opAdd" />
+        <KeyWord name="opAddAssign" />
+        <KeyWord name="opAnd" />
+        <KeyWord name="opAndAssign" />
+        <KeyWord name="opAssign" />
+        <KeyWord name="opCall" />
+        <KeyWord name="opCast" />
+        <KeyWord name="opCmp" />
+        <KeyWord name="opCom" />
+        <KeyWord name="opConv" />
+        <KeyWord name="opDiv" />
+        <KeyWord name="opDivAssign" />
+        <KeyWord name="opEquals" />
+        <KeyWord name="opImplCast" />
+        <KeyWord name="opImplConv" />
+        <KeyWord name="opIndex" />
+        <KeyWord name="opMod" />
+        <KeyWord name="opModAssign" />
+        <KeyWord name="opMul" />
+        <KeyWord name="opMulAssign" />
+        <KeyWord name="opNeg" />
+        <KeyWord name="opOr" />
+        <KeyWord name="opOrAssign" />
+        <KeyWord name="opPostDec" />
+        <KeyWord name="opPostInc" />
+        <KeyWord name="opPow" />
+        <KeyWord name="opPowAssign" />
+        <KeyWord name="opPreDec" />
+        <KeyWord name="opPreInc" />
+        <KeyWord name="opShl" />
+        <KeyWord name="opShlAssign" />
+        <KeyWord name="opShr" />
+        <KeyWord name="opShrAssign" />
+        <KeyWord name="opSub" />
+        <KeyWord name="opSubAssign" />
+        <KeyWord name="opUShr" />
+        <KeyWord name="opUShrAssign" />
+        <KeyWord name="opXor" />
+        <KeyWord name="opXorAssign" />
+        <KeyWord name="or" />
+        <KeyWord name="out" />
+        <KeyWord name="override" />
+        <KeyWord name="private" />
+        <KeyWord name="protected" />
+        <KeyWord name="return" />
+        <KeyWord name="set" />
+        <KeyWord name="shared" />
+        <KeyWord name="super" />
+        <KeyWord name="switch" />
+        <KeyWord name="this" />
+        <KeyWord name="true" />
+        <KeyWord name="typedef" />
+        <KeyWord name="uint" />
+        <KeyWord name="uint8" />
+        <KeyWord name="uint16" />
+        <KeyWord name="uint32" />
+        <KeyWord name="uint64" />
+        <KeyWord name="void" />
+        <KeyWord name="while" />
+        <KeyWord name="xor" />
+    </AutoComplete>
+    <UserLang name="AngelScript" ext="as" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="no" allowFoldOfComments="yes" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="yes" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00// 01 02 03/* 04*/</Keywords>
+            <Keywords name="Numbers, prefix1">0d 0o 0b</Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1">f .f</Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">- ! % ( ) * / , : ; ? @ [ ] | ~ + &lt; = &gt; &amp; ^</Keywords>
+            <Keywords name="Operators2">and is not or xor</Keywords>
+            <Keywords name="Folders in code1, open">{</Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close">}</Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open">/*</Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close">*/</Keywords>
+            <Keywords name="Keywords1">abstract bool const double final float get in inout int int8 int16 int32 int64 mixin out override private protected set shared uint uint8 uint16 uint32 uint64 void</Keywords>
+            <Keywords name="Keywords2">break case cast continue default do else for from function if import namespace return switch while</Keywords>
+            <Keywords name="Keywords3">class enum funcdef interface typedef</Keywords>
+            <Keywords name="Keywords4">false null super this true</Keywords>
+            <Keywords name="Keywords5">0x</Keywords>
+            <Keywords name="Keywords6">#endif #if #include</Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00&quot;&quot;&quot; 01 02&quot;&quot;&quot; 03&apos; 04\ 05&apos; 06&quot; 07\ 08&quot; 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="00A0F0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="FF8040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="004000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="101090" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

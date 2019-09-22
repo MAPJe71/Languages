@@ -1,0 +1,45 @@
+| Comment Between Function Header and Function Body
+
+function func_1of7(long var1)| Most Common practice 
+                            | for writing function
+{
+	| Do Something.
+}
+
+function func_2of7(long var1)| Most Common practice 
+							| for writing function
+{
+	| Do Something.
+}
+
+function func_3of7(long var1) | Most Common practice 
+                             | for writing function
+{
+	| Do Something.
+}
+
+function func_4of7(long var1)	| Most Common practice 
+								| for writing function
+{
+	| Do Something.
+}
+
+function func_5of7(long var1) | Most Common practice 
+							 | for writing function
+{
+	| Do Something.
+}
+
+function func_6of7(long var1)| Most Common practice 
+|                             for writing function
+{
+	| Do Something.
+}
+
+function func_7of7(long var1)	|	Most Common practice 
+|									for writing function
+{
+	| Do Something.
+}
+
+|-------------------------------------------------------------------------------

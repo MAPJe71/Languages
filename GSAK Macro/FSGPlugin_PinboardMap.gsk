@@ -1,0 +1,315 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Generates a heat map shaded pinboard map of your finds
+# MacAuthor = Astartus, Lignumaqua
+# MacFileName = FSGPlugin_PinboardMap.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=18496&view=findpost&p=131682
+#*******************************************
+
+# 5-11-11 Version 1.0 
+
+
+#**************************************************************************************
+#   Parameters
+#**************************************************************************************
+#
+# Country    : Optional   : If present restricts to waypoints in that country
+# State      : Optional   : If present restricts to waypoints in that state
+# Mapname    : Compulsory : Defines name for image file
+# CenterLat  : Optional   : Latitude of map center. Defaults to Home. Special value of 'home' returns latitude of current center point
+# CenterLon  : Optional   : Longitude of map center. Defaults to Home. Special value of 'home' returns longitude of current center point
+# Zoom       : Optional   : Zoom of Google map (defaults to 8)
+# Height     : Optional   : Height of map in pixels (defaults to 445)
+# Width      : Optional   : Width of map in pixels (defaults to 640)
+# Maptype    : Optional   : Google map type (defaults to roadmap) Options roadmap, terrain, satellite, hybrid
+# Dotsize    : Optional   : Size for each point on map in pixels
+# Lightness  : Optional   : Lightness of map. -100 to +100 (defaults to 0)
+# Saturation : Optional   : Saturation of map. -100 to +100 (defaults to 0)
+#
+#**************************************************************************************
+
+
+#TIMER Status=On Msg=No
+
+IF $_MacroLevel = 1
+	RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly.
+ENDIF
+
+# Default values
+$MapRegion = "%"
+$MapState = "%"
+$MapCenterLat = Val(SysInfo("gsakini;LastCenter;Lat"))
+$MapCenterLon = Val(SysInfo("gsakini;LastCenter;Lon"))
+$Zoom = 8
+$latmapsize = 445
+$lonmapsize = 640
+$maptype = "roadmap"
+$lightness=0
+$saturation=0
+$dotsize=1
+$MapName = "default"
+
+
+IF $_MacroParms <> ""
+	$count = RegExCount("&",$_MacroParms) + 1
+	WHILE $count > 0
+		$Parameter = Extract($_MacroParms,"&",$count)
+		$ParamName = Upper(Extract($Parameter,"=",1))
+		$ParamValue = Extract($Parameter,"=",2)
+		BEGINCASE
+		CASE $ParamName="COUNTRY"
+			$MapRegion = $ParamValue
+		CASE $ParamName="CENTERLAT"
+			IF Upper($ParamValue) = "HOME"
+				$MapCenterLat = Val(SysInfo("gsakini;LastCenter;Lat"))
+			ELSE
+				$MapCenterLat = Val($ParamValue)
+			ENDIF
+		CASE $ParamName="CENTERLON"
+			IF Upper($ParamValue) = "HOME"
+				$MapCenterLon = Val(SysInfo("gsakini;LastCenter;Lon"))
+			ELSE
+				$MapCenterLon = Val($ParamValue)
+			ENDIF
+		CASE $ParamName="ZOOM"
+			$Zoom = Abs(Int(Val($ParamValue)))
+		CASE $ParamName="HEIGHT"
+			$latmapsize = Abs(Int(Val($ParamValue)))
+			IF $latmapsize > 640
+				$latmapsize = 640
+			ENDIF
+		CASE $ParamName="WIDTH"
+			$lonmapsize = Abs(Int(Val($ParamValue)))
+			IF $lonmapsize > 640
+				$lonmapsize = 640
+			ENDIF
+		CASE $ParamName="MAPTYPE"
+			$MapType = $ParamValue
+		CASE $ParamName="LIGHTNESS"
+			$lightness = Int(Val($ParamValue))
+		CASE $ParamName="SATURATION"
+			$saturation = Int(Val($ParamValue))
+		CASE $ParamName="DOTSIZE"
+			$dotsize = Abs(Int(Val($ParamValue)))
+		CASE $ParamName="MAPNAME"
+			$MapName = $ParamValue
+		CASE $ParamName="STATE"
+			$MapState = $ParamValue
+		ENDCASE
+		$count = $count - 1
+	ENDWHILE
+ENDIF
+
+# Error detection and correction
+
+IF Upper($maptype) = "TERRAIN"
+	IF $zoom > 15
+		$zoom = 15
+	ENDIF
+ELSE
+	IF $zoom > 21
+		$zoom = 21
+	ENDIF
+ENDIF
+
+IF $lightness > 100
+	$lightness = 100
+ENDIF
+IF $saturation > 100
+	$saturation = 100
+ENDIF
+IF $lightness < -100
+	$lightness = -100
+ENDIF
+IF $saturation < -100
+	$saturation = -100
+ENDIF
+
+$text9 = SysInfo("gsakini;LastCenter;Lon")
+
+IF NOT(VarExists("Settings"))
+	$Settings = 1
+ENDIF
+
+
+# Calculate bounds of Google map
+
+# constants - total pixels in Google map of world
+$offset=268435456
+$radius=$offset/$_Pi
+
+$latpixels = $offset - $radius * Ln((1 + Sin($MapCenterLat*$_Pi/180))/(1 - Sin($MapCenterLat*$_Pi/180)))/2
+$coordSouth = ($_Pi/2 - 2*ArcTan(Exp(($latpixels-$offset+(2 ^ (21-$zoom))*($latmapsize/2))/$radius)))*180/$_Pi
+$coordNorth = ($_Pi/2 - 2*ArcTan(Exp(($latpixels-$offset-(2 ^ (21-$zoom))*($latmapsize/2))/$radius)))*180/$_Pi
+
+$lonpixels = $offset + $radius * $MapCenterLon * $_Pi/180
+$coordWest = (($lonpixels-$offset-(2 ^ (21-$zoom))*($lonmapsize/2))/$radius)*180/$_Pi
+$coordEast = (($lonpixels-$offset+(2 ^ (21-$zoom))*($lonmapsize/2))/$radius)*180/$_Pi
+
+
+$_sql = "http://maps.google.com/maps/api/staticmap?center=$MapCenterLat,$MapCenterLon&zoom=$zoom&size=$lonmapsize" + "x$latmapsize&format=png&maptype=$maptype&style=feature:all|saturation:$saturation|lightness:$lightness&sensor=false"
+$MapString = $_sql
+
+#CLIP data=$mapstring
+
+#DEBUG STATUS=on
+
+GOSUB Name=InitializeVariables
+GOSUB Name=MapGenerator
+
+#Sub for initializing variables
+BEGINSUB name=InitializeVariables
+
+	#Calculate scaling for longitude
+	$Lonscaling = $lonmapsize/($coordEast-$coordWest)
+
+	# Convert from Mercator projection to flat map for latitude and get scaling
+	$MapNorth = Ln(Tan($_Pi/180*$coordNorth) + (1/Cos($_Pi*$coordNorth/180)))
+	$MapSouth = Ln(Tan($_Pi/180*$coordSouth) + (1/Cos($_Pi*$coordSouth/180)))
+	$Latscaling = $latmapsize/($MapNorth-$MapSouth)
+
+	# Dot merging 0-1, 1-3, 2-5
+	$DotMerge = 1 + 2*$dotsize
+
+
+	$htmlfilepath = $_Install + "\html"
+	$CR = $_NewLine
+ENDSUB
+
+BEGINSUB name=MapGenerator
+
+	$_sql = "select count(*) from allfinds WHERE country like '$mapregion' and state like '$mapstate' group by floor((longitude-($coordWest))*$Lonscaling), floor(($Latscaling)*($MapNorth-ln(tan(pi()/180*latitude) + (1/cos(pi()*latitude/180))))) order by count(*) asc"
+	$status = Sqlite("sql",$_sql)
+	$rowCount = $_SqlRows
+	$countarray = Replace($_NewLine,",",$status)
+
+	$_sql = "select floor((longitude-($coordWest))*$Lonscaling) from allfinds WHERE country like '$mapregion' and state like '$mapstate' group by floor((longitude-($coordWest))*$Lonscaling), floor(($Latscaling)*($MapNorth-ln(tan(pi()/180*latitude) + (1/cos(pi()*latitude/180)))))  order by count(*) asc"
+	$status = Sqlite("sql",$_sql)
+	$xarray = Replace($_NewLine,",",$status)
+
+	$_sql = "select floor(($Latscaling)*($MapNorth-ln(tan(pi()/180*latitude) + (1/cos(pi()*latitude/180))))) as ymap from allfinds where country like '$mapregion' and state like '$mapstate' group by floor((longitude-($coordWest))*$Lonscaling), ymap  order by count(*) asc"
+	$status = Sqlite("sql",$_sql)
+	$yarray = Replace($_NewLine,",",$status)
+#
+#	$counter = 1
+#	$total = 0
+#	$out = "<table border='1'><tr><td>Entry<td width='10'></td><td>Count</td><td>x Value</td><td>y Value</td></tr>"
+#	WHILE ($counter <= $rowCount)
+#		$out = $out + "<tr>"
+#		$foundCount = extract($countarray,",",$counter)
+#		$xVal = extract($xarray,",",$counter)
+#		$yVal = extract($yarray,",",$counter)
+#		$total = $total + VAL($foundCount)
+#		$out = $out + "<td>$counter</td><td width='10'></td><td>$foundCount</td><td>$xVal</td><td>$yVal</td>"
+#		$counter = $counter + 1
+#	ENDWHILE
+#	$out = $out + "</table>" + $CR
+#	$out = $out + "Total = $total"
+#	
+	#Timer Status=Off
+	
+	#Make best guess at OwnerID
+	$_sql = "SELECT lOwnerid FROM (SELECT lOwnerid, Count(lOwnerID) AS c FROM Allfinds GROUP BY lownerid ORDER BY c DESC LIMIT 1)"
+	$OwnerID = Sqlite("sql",$_sql)
+
+	GOSUB Name=SendData
+
+	$tmpN=Random(0)
+	$tmpS = Remove("$tmpN",".0","C")
+	$MapUrl = "http://gsak.net/stats/pinboardmaps/usermaps/" + $OwnerID + "_" + $mapname + "_" + "$Settings" + ".png" + "?" + $tmpS
+	#WEB url=$MapUrl
+
+	GOSUB Name=Output
+ENDSUB
+
+#Subroutine for sending painting coordinates to PHP page
+BEGINSUB name=SendData
+	#Initialize URL to PHP page here
+	$url = "http://gsak.net/stats/pinboardmaps/pinboardmapmercatoroverlay.php"
+	$PostData = "'foundcount','$countarray','paintx','$xarray','painty','$yarray'"
+	$PostData = $PostData + ",'dotsize','$dotsize','mapurl','$MapString','name','$OwnerID','mapname','$mapname'"
+	$PostData = $PostData + ",'height','$latmapsize','width','$lonmapsize','settings','$settings'"
+	#WEB url=$GetData
+	$result = PostUrl($url,$PostData)
+	#MSGOK msg=$result
+ENDSUB
+
+BEGINSUB name=Output
+
+	$mapout = "<div style='font-size:0px;'><img height='$latmapsize' width='$lonmapsize' src='$MapString' />" + $_Newline
+	$mapout = $mapout + "<div style='margin-top: -$latmapsize" + "px; line-height: 0;'><img height='$latmapsize' width='$lonmapsize' src='$MapUrl' /></div></div>" + $_Newline
+
+	$p_FSGData = $mapout
+
+	#$out = UTF8($out,"e") + $mapout
+	#$FileName = $htmlfilepath + "\testoutput.html"
+	#$tmpS = PutFile($FileName,$mapout)
+	#WEB URL="$FileName"
+ENDSUB
+
+
+#*******************************************************
+#   Variable declarations for
+#   C:\Users\Mike\AppData\Roaming\gsak\Macros\FSGPlugin_PinboardMapMercator.gsk
+#
+#   Generated 2/17/2011 on GSAKVariables.gsk Rev V0.31
+#
+#*******************************************************
+
+
+Option Explicit=Yes
+
+Declare Var=$lightness Type=Numeric
+Declare Var=$saturation Type=Numeric
+DECLARE Var=$coordEast Type=Numeric
+Declare Var=$coordNorth Type=Numeric
+Declare Var=$coordSouth Type=Numeric
+DECLARE Var=$coordWest Type=Numeric
+Declare Var=$count Type=Numeric
+Declare Var=$countarray Type=String
+Declare Var=$counter Type=Numeric
+Declare Var=$CR Type=String
+Declare Var=$DotMerge Type=Numeric
+Declare Var=$dotsize Type=Numeric
+Declare Var=$foundCount Type=String
+Declare Var=$htmlfilepath Type=String
+Declare Var=$latmapsize Type=Numeric
+Declare Var=$latpixels Type=Numeric
+Declare Var=$Latscaling Type=Numeric
+Declare Var=$lonmapsize Type=Numeric
+Declare Var=$lonpixels Type=Numeric
+Declare Var=$Lonscaling Type=Numeric
+Declare Var=$MapCenterLat Type=Numeric
+Declare Var=$MapCenterLon Type=Numeric
+Declare Var=$MapNorth Type=Numeric
+Declare Var=$mapout Type=String
+Declare Var=$MapName Type=String
+Declare Var=$MapRegion Type=String
+Declare Var=$MapState Type=String
+Declare Var=$MapSouth Type=Numeric
+Declare Var=$MapString Type=String
+Declare Var=$maptype Type=String
+Declare Var=$MapUrl Type=String
+Declare Var=$offset Type=Numeric
+Declare Var=$out Type=String
+Declare Var=$OwnerID Type=String
+Declare Var=$p_FSGData Type=String
+Declare Var=$Parameter Type=String
+Declare Var=$ParamName Type=String
+Declare Var=$ParamValue Type=String
+Declare Var=$PostData Type=String
+Declare Var=$radius Type=Numeric
+Declare Var=$result Type=String
+Declare Var=$rowCount Type=Numeric
+Declare Var=$Settings Type=Numeric
+Declare Var=$sqlfile Type=String
+Declare Var=$status Type=String
+Declare Var=$total Type=Numeric
+Declare Var=$tmpN Type=Numeric
+Declare Var=$tmpS Type=String
+Declare Var=$url Type=String
+Declare Var=$xarray Type=String
+Declare Var=$xVal Type=String
+Declare Var=$yarray Type=String
+Declare Var=$yVal Type=String
+Declare Var=$Zoom Type=Numeric

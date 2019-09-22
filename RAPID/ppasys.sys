@@ -1,0 +1,598 @@
+%%%
+  VERSION:1
+  LANGUAGE:ENGLISH
+%%%
+
+MODULE PPASYS(SYSMODULE,NOSTEPIN)
+  !***********************************************************
+  !
+  ! Module: PPASYS
+  !
+  ! $Revision: 1.5 $
+  !
+  ! Description
+  !   This is the additional system module for a pick and 
+  !   place application. 
+  !
+  ! Copyright (c) ABB Automation Technology Products 2002.
+  ! All rights reserved
+  !
+  !***********************************************************
+  !
+  ! Record datatype to hold datas which is specific for one work area.
+  ! New data can be added to this record, but DO NOT delete any!
+  !
+  RECORD sourcedata
+    bool Used;
+    itmsrc ItemSource;
+    itmsrcinstdat SourceInstDat;
+    itmsrctype SourceType;
+    triggdata Ack;
+    triggdata Nack;
+    triggdata VacuumAct1;
+    triggdata VacuumAct2;
+    triggdata VacuumRev1;
+    triggdata VacuumRev2;
+    triggdata VacuumOff1;
+    triggdata VacuumOff2;
+    wobjdata Wobj;
+    num VacActDelay;
+    num VacRevDelay;
+    num VacOffDelay;
+    pos TunePos;
+    stoppointdata TrackPoint;
+    num OffsZ;
+  ENDRECORD
+  !
+  ! Record datatype to hold indexed or fixed workarea datas which is
+  ! specific for a work area.
+  ! This is used instead of the baseframe calibrations for conveyors,
+  ! which is stored in cfg, when a indexed or fixed workarea is used.
+  !
+  RECORD noncnvwobjdata
+    bool Used;
+    string NonCnvWobjName;
+    wobjdata Wobj;
+  ENDRECORD
+
+  CONST num MaxNoSources:=8;
+  VAR sourcedata ItmSrcData{MaxNoSources};
+  !
+  ! Array for holding the non conveyor workobject data i.e. this is
+  ! used instead of the baseframe configurations for the conveyors.
+  !
+  PERS noncnvwobjdata NonCnvWOData{MaxNoSources}:=[[FALSE,"IdxWobj1",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj2",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj3",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj4",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj5",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj6",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj7",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]],[FALSE,"IdxWobj8",[FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]]]];
+  ! Init and tuning variables  
+  PERS num TuneType:=0;
+  CONST num SPEED_TUNE:=1;
+  CONST num PICKPLACE_TUNE:=2;
+  CONST num POS_TUNE:=3;
+  PERS string RemoteIPNode:="";
+  PERS string ItmSrcName:="";
+  PERS string CnvName:="";
+  PERS string NonCnvWobjName:="";
+  PERS itmsrctype SourceType:=0;
+  PERS num SourceIndex:=0;
+  PERS num VacActDelay:=0.02;
+  PERS num VacRevDelay:=0.02;
+  PERS num VacOffDelay:=0;
+  PERS num TunePosX:=0;
+  PERS num TunePosY:=0;
+  PERS num TunePosZ:=0;
+  PERS num FollowTime:=0.035;
+  PERS num OffsZ:=60;
+  ! Return data to remote PC
+  PERS num ItmSrcId:=0;
+  PERS itmsrcinstdat SourceInstDat:=["",0];
+  ! Accumulated number of actual picks
+  CONST num PickRateTime:=10;
+  CONST num NumOfPickToCalc:=6;
+  PERS num PicksPerMin:=0;
+  PERS num Picks:=0;
+  VAR num OldPicks:=0;
+  VAR num PickRateCount:=0;
+  VAR num NumOfPicksArr{NumOfPickToCalc}:=[0,0,0,0,0,0];
+  VAR intnum PickRateInt;
+  VAR intnum PickTuneInt;
+  PERS string RoutineName:="";
+  PERS bool ClearAllExecuted:=FALSE;
+  PERS bool SafeStopExecuted:=FALSE;
+  PERS bool PickPlaceRunning:=FALSE;
+  PERS bool WaitForExeOrder:=FALSE;
+  PERS bool FirstTime:=TRUE;
+  PERS bool InCoordRout:=FALSE;
+  PERS bool StopProcess:=FALSE;
+  VAR intnum SafeStopSignal;
+  VAR errnum PPA_JUMP_MOVE:=-1;
+  ! AckDelay should be <= 0
+  VAR num AckDelay:=0;
+  PERS speeddata MaxSpeed:=[10000,10000,10000,10000];
+  PERS speeddata LowSpeed:=[3300,3500,10000,10000];
+  PERS speeddata VeryLowSpeed:=[250,3500,10000,10000];
+  PERS num Vtcp:=10000;
+  PERS num ITMSRC_QL0:=0;
+  PERS num ITMSRC_QL1:=0;
+  PERS num ITMSRC_QL2:=0;
+  PERS num ITMSRC_QL3:=0;
+  PERS num ITMSRC_QL4:=0;
+  PERS num ITMSRC_QL5:=0;
+  PERS num ITMSRC_QL6:=0;
+  PERS num ITMSRC_QL7:=0;
+  PERS num ITMSRC_QL8:=0;
+  PERS num ITMSRC_QL9:=0;
+  PERS num ITMSRC_QL10:=0;
+  PERS num ITMSRC_QL11:=0;
+  PERS num ITMSRC_QL12:=0;
+  PERS num ITMSRC_QL13:=0;
+  PERS num ITMSRC_QL14:=0;
+  PERS num ITMSRC_QL15:=0;
+  PERS num ITMSRC_QL16:=0;
+  PERS num ITMSRC_QL17:=0;
+  PERS num ITMSRC_QL18:=0;
+  PERS num ITMSRC_QL19:=0;
+  PERS num ITMSRC_QL20:=0;
+  PERS num ITMSRC_QL21:=0;
+  PERS num ITMSRC_QL22:=0;
+  PERS num ITMSRC_QL23:=0;
+  PERS num ITMSRC_QL24:=0;
+  PERS num ITMSRC_QL25:=0;
+  PERS num ITMSRC_QL26:=0;
+  PERS num ITMSRC_QL27:=0;
+  PERS num ITMSRC_QL28:=0;
+  PERS num ITMSRC_QL29:=0;
+  PERS num ITMSRC_QL30:=0;
+  PERS num ITMSRC_QL31:=0;
+  PERS num ITMSRC_QL32:=0;
+  PERS num ITMSRC_QL33:=0;
+  PERS num ITMSRC_QL34:=0;
+  PERS num ITMSRC_QL35:=0;
+  PERS num ITMSRC_QL36:=0;
+  PERS num ITMSRC_QL37:=0;
+  PERS num ITMSRC_QL38:=0;
+  PERS num ITMSRC_QL39:=0;
+  PERS num ITMSRC_QL40:=0;
+  PERS num ITMSRC_QL41:=0;
+  PERS num ITMSRC_QL42:=0;
+  PERS num ITMSRC_QL43:=0;
+  PERS num ITMSRC_QL44:=0;
+  PERS num ITMSRC_QL45:=0;
+  PERS num ITMSRC_QL46:=0;
+  PERS num ITMSRC_QL47:=0;
+  PERS num ITMSRC_QL48:=0;
+  PERS num ITMSRC_QL49:=0;
+  PERS num ITMSRC_QL50:=0;
+  PERS num ITMSRC_QW0:=0;
+  PERS num ITMSRC_QW1:=0;
+  PERS num ITMSRC_QW2:=0;
+  PERS num ITMSRC_QW3:=0;
+  PERS num ITMSRC_QW4:=0;
+  PERS num ITMSRC_QW5:=0;
+  PERS num ITMSRC_QW6:=0;
+  PERS num ITMSRC_QW7:=0;
+  PERS num ITMSRC_QW8:=0;
+  PERS num ITMSRC_QW9:=0;
+  PERS num ITMSRC_QW10:=0;
+  PERS num ITMSRC_QW11:=0;
+  PERS num ITMSRC_QW12:=0;
+  PERS num ITMSRC_QW13:=0;
+  PERS num ITMSRC_QW14:=0;
+  PERS num ITMSRC_QW15:=0;
+  PERS num ITMSRC_QW16:=0;
+  PERS num ITMSRC_QW17:=0;
+  PERS num ITMSRC_QW18:=0;
+  PERS num ITMSRC_QW19:=0;
+  PERS num ITMSRC_QW20:=0;
+  PERS num ITMSRC_QW21:=0;
+  PERS num ITMSRC_QW22:=0;
+  PERS num ITMSRC_QW23:=0;
+  PERS num ITMSRC_QW24:=0;
+  PERS num ITMSRC_QW25:=0;
+  PERS num ITMSRC_QW26:=0;
+  PERS num ITMSRC_QW27:=0;
+  PERS num ITMSRC_QW28:=0;
+  PERS num ITMSRC_QW29:=0;
+  PERS num ITMSRC_QW30:=0;
+  PERS num ITMSRC_QW31:=0;
+  PERS num ITMSRC_QW32:=0;
+  PERS num ITMSRC_QW33:=0;
+  PERS num ITMSRC_QW34:=0;
+  PERS num ITMSRC_QW35:=0;
+  PERS num ITMSRC_QW36:=0;
+  PERS num ITMSRC_QW37:=0;
+  PERS num ITMSRC_QW38:=0;
+  PERS num ITMSRC_QW39:=0;
+  PERS num ITMSRC_QW40:=0;
+  PERS num ITMSRC_QW41:=0;
+  PERS num ITMSRC_QW42:=0;
+  PERS num ITMSRC_QW43:=0;
+  PERS num ITMSRC_QW44:=0;
+  PERS num ITMSRC_QW45:=0;
+  PERS num ITMSRC_QW46:=0;
+  PERS num ITMSRC_QW47:=0;
+  PERS num ITMSRC_QW48:=0;
+  PERS num ITMSRC_QW49:=0;
+  PERS num ITMSRC_QW50:=0;
+
+  !***********************************************************
+  !
+  ! Procedure ResetEvent
+  !
+  !***********************************************************
+  PROC ResetEvent()
+    InCoordRout:=FALSE;
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure PowerOnEvent
+  !
+  !***********************************************************
+  PROC PowerOnEvent()
+    BookErrNo PPA_JUMP_MOVE;
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure StopEvent
+  !
+  !***********************************************************
+  PROC StopEvent()
+    IF InCoordRout=TRUE THEN
+      WaitTime 2;
+      ClearPath;
+    ENDIF
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure RestartEvent
+  !
+  !***********************************************************
+  PROC RestartEvent()
+    IF PPA_JUMP_MOVE=-1 THEN
+      BookErrNo PPA_JUMP_MOVE;
+    ENDIF
+    IF InCoordRout=TRUE THEN
+      RAISE PPA_JUMP_MOVE;
+    ENDIF
+  ERROR
+    IF InCoordRout=TRUE THEN
+      InCoordRout:=FALSE;
+      RAISE;
+    ENDIF
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure NewSource
+  !
+  ! This procedure is called from the routines 
+  ! picknew/placenew which is called by PickMaster.
+  ! Since RobCom does not support parameter passing when 
+  ! running a procedure the parameters are passed via PERS 
+  ! variables prior to call and possible results returned 
+  ! the same way. 
+  ! 0 or empty string indicates that parameter is not used
+  !
+  ! The following "call parameters" are used:
+  ! IN:
+  !  string CnvName
+  !  string NonCnvWobjName
+  !  string ItmSrcName
+  !  itmsrctype SourceType
+  !  num SourceIndex
+  ! OUT:
+  !  itmsrcinstdat InstDat
+  !
+  !
+  !***********************************************************
+  PROC NewSource()
+    VAR bool Found;
+    VAR mecunit CnvMecUnit;
+    VAR string CnvMecString;
+    VAR datapos block;
+    VAR itmsrc ItemSource;
+
+    ItmSrcData{SourceIndex}.Wobj:=wobj0;
+    TPWrite ItmSrcName;
+    ! Create an item source
+    NewItmSrc ItemSource,ItmSrcName;
+    IF CnvName<>"" THEN
+      SetDataSearch "mecunit"\Object:=CnvName;
+      IF GetNextSym(CnvMecString,block) THEN
+        GetDataVal CnvMecString\Block:=block,CnvMecUnit;
+        ActUnit CnvMecUnit;
+        ItmSrcData{SourceIndex}.Wobj.ufmec:=CnvName;
+        ItmSrcData{SourceIndex}.Wobj.ufprog:=FALSE;
+      ELSE
+        ErrWrite "Unknown conveyor ",CnvName\RL2:=" is an unknown conveyor name. Look in"\RL3:="the S4 MOC configuration file for"\RL4:="valid conveyor names (PPA/placenew).";
+        Stop;
+      ENDIF
+    ELSEIF NonCnvWobjName<>"" THEN
+      Found:=FALSE;
+      FOR i FROM 1 TO MaxNoSources DO
+        IF NonCnvWOData{i}.Used THEN
+          IF NonCnvWOData{i}.NonCnvWobjName=NonCnvWobjName THEN
+            Found:=TRUE;
+            ItmSrcData{SourceIndex}.Wobj:=NonCnvWOData{i}.Wobj;
+          ENDIF
+        ENDIF
+      ENDFOR
+      IF Found=FALSE THEN
+        ErrWrite "Unknown userframe ",NonCnvWobjName\RL2:=" is an unknown frame name";
+        Stop;
+      ENDIF
+    ENDIF
+    ItmSrcData{SourceIndex}.Used:=TRUE;
+    CreateInstDat ItemSource,SourceInstDat;
+    ItmSrcData{SourceIndex}.SourceInstDat:=SourceInstDat;
+    ItmSrcByName ItmSrcData{SourceIndex}.ItemSource,ItmSrcData{SourceIndex}.SourceInstDat.Name;
+    ItmSrcData{SourceIndex}.SourceType:=SourceType;
+    ItmSrcData{SourceIndex}.VacActDelay:=VacActDelay;
+    ItmSrcData{SourceIndex}.VacRevDelay:=VacRevDelay;
+    ItmSrcData{SourceIndex}.VacOffDelay:=VacOffDelay;
+    ItmSrcData{SourceIndex}.TunePos:=[TunePosX,TunePosY,TunePosZ];
+    ItmSrcData{SourceIndex}.OffsZ:=OffsZ;
+    IF CnvName<>"" THEN
+      ItmSrcData{SourceIndex}.TrackPoint:=[fllwtime,FALSE,[0,0,0,0],0,FollowTime,"",0,0];
+    ELSEIF NonCnvWobjName<>"" THEN
+      ItmSrcData{SourceIndex}.TrackPoint:=[stoptime,FALSE,[0,0,0,0],FollowTime,0,"",0,0];
+    ENDIF
+    TriggEquip ItmSrcData{SourceIndex}.Ack,0,AckDelay\ProcID:=ItmSrcData{SourceIndex}.SourceInstDat.Id,ITMSRC_ACKENTRY;
+    TriggEquip ItmSrcData{SourceIndex}.Nack,0,AckDelay\ProcID:=ItmSrcData{SourceIndex}.SourceInstDat.Id,ITMSRC_NACKENTRY;
+    ItmSrcId:=ItmSrcData{SourceIndex}.SourceInstDat.Id;
+    IF RemoteIPNode<>"" THEN
+      SCWrite\ToNode:=RemoteIPNode,ItmSrcId;
+    ENDIF
+    ExitCycle;
+  ERROR
+    IF ERRNO=ERR_ITMSRC_UNDEF THEN
+      TRYNEXT;
+    ELSEIF ERRNO=ERR_SC_WRITE THEN
+      TRYNEXT;
+    ELSE
+      RAISE;
+    ENDIF
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure ClearAll
+  ! 
+  ! Clean the environnement in order to restart the application
+  ! with a known status.
+  !
+  ! In order to achieve this, one has to reextract the associated
+  ! non-value date types because these are declared as variables
+  ! (i.e. their value will be lost if we move PP to execute the
+  ! present procedure). To be able to extract these non-value data
+  ! one associates PERS variables to keep track of the allocations.
+  !
+  !***********************************************************
+  PROC ClearAll()
+    VAR num Index;
+    VAR mecunit CnvMecUnit;
+    VAR string CnvMecString;
+    VAR datapos block;
+
+    TPWrite "ClearAll";
+    ! Reset variables
+    ClearAllExecuted:=FALSE;
+    SafeStopExecuted:=FALSE;
+    PickPlaceRunning:=FALSE;
+    WaitForExeOrder:=FALSE;
+    FirstTime:=TRUE;
+    InCoordRout:=FALSE;
+    StopProcess:=FALSE;
+    IDelete PickTuneInt;
+    PickRateReset;
+    ! Reset trap signal
+    Reset doSafeStop;
+    ! Free the item sources and the mechanical units.    
+    FreeAllItmSrc;
+    FOR Index FROM 1 TO MaxNoSources DO
+      IF (ItmSrcData{Index}.Wobj.ufmec<>"") THEN
+        SetDataSearch "mecunit"\Object:=ItmSrcData{Index}.Wobj.ufmec;
+        IF GetNextSym(CnvMecString,block) THEN
+          GetDataVal CnvMecString\Block:=block,CnvMecUnit;
+          DeactUnit CnvMecUnit;
+          ItmSrcData{Index}.Wobj:=wobj0;
+        ELSE
+          ErrWrite "Unknown conveyor ",ItmSrcData{Index}.Wobj.ufmec\RL2:=" is an unknown place conveyor"\RL3:="(PPA/ClearAll).";
+          Stop;
+        ENDIF
+      ELSE
+        ItmSrcData{Index}.Wobj:=wobj0;
+      ENDIF
+      ItmSrcData{Index}.Used:=FALSE;
+    ENDFOR
+    ClearAllExecuted:=TRUE;
+    IF RemoteIPNode<>"" THEN
+      SCWrite\ToNode:=RemoteIPNode,ClearAllExecuted;
+    ENDIF
+    TPWrite "ClearAll executed";
+    ExitCycle;
+  ERROR
+    IF ERRNO=ERR_ITMSRC_UNDEF THEN
+      TRYNEXT;
+    ELSEIF ERRNO=ERR_SC_WRITE THEN
+      TRYNEXT;
+    ELSE
+      RAISE;
+    ENDIF
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure PickRateInit
+  !
+  !***********************************************************
+  PROC PickRateInit()
+    PickRateReset;
+    CONNECT PickRateInt WITH PickRateTrap;
+    ITimer PickRateTime,PickRateInt;
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure PickRateReset
+  !
+  !***********************************************************
+  PROC PickRateReset()
+    Picks:=0;
+    PicksPerMin:=0;
+    PickRateCount:=0;
+    FOR i FROM 1 TO NumOfPickToCalc DO
+      NumOfPicksArr{i}:=0;
+    ENDFOR
+    IDelete PickRateInt;
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Procedure WalkTheData
+  !
+  !***********************************************************
+  PROC WalkTheData()
+    VAR iodev logfile;
+
+    Open "HOME:"\File:="TheData.log",logfile\Write;
+    Write logfile,"ItmSrcData";
+    FOR i FROM 1 TO MaxNoSources DO
+      Write logfile,"Index:       "\Num:=i;
+      Write logfile,"Used:        "\Bool:=ItmSrcData{i}.Used;
+      Write logfile,"ItmSrc Name: "+ItmSrcData{i}.SourceInstDat.Name;
+      Write logfile,"ItmSrc Id:   "\Num:=ItmSrcData{i}.SourceInstDat.Id;
+      Write logfile,"ItmSrcType:  "\Num:=ItmSrcData{i}.SourceType;
+      Write logfile,"ufmec:       "+ItmSrcData{i}.Wobj.ufmec;
+      Write logfile,"VacActDelay: "\Num:=ItmSrcData{i}.VacActDelay;
+      Write logfile,"VacRevDelay: "\Num:=ItmSrcData{i}.VacRevDelay;
+      Write logfile,"VacOffDelay: "\Num:=ItmSrcData{i}.VacOffDelay;
+      Write logfile,"TunePos x:   "\Num:=ItmSrcData{i}.TunePos.x;
+      Write logfile,"TunePos y:   "\Num:=ItmSrcData{i}.TunePos.y;
+      Write logfile,"TunePos z:   "\Num:=ItmSrcData{i}.TunePos.z;
+      IF ItmSrcData{i}.TrackPoint.type=fllwtime THEN
+        Write logfile,"Followtime:  "\Num:=ItmSrcData{i}.TrackPoint.followtime;
+      ELSEIF ItmSrcData{i}.TrackPoint.type=stoptime THEN
+        Write logfile,"Stoptime:  "\Num:=ItmSrcData{i}.TrackPoint.stoptime;
+      ENDIF
+      Write logfile,"OffsZ:       "\Num:=ItmSrcData{i}.OffsZ;
+      Write logfile," ";
+    ENDFOR
+    Write logfile,"NonCnvWOData";
+    FOR i FROM 1 TO MaxNoSources DO
+      Write logfile,"Index:          "\Num:=i;
+      Write logfile,"Used:           "\Bool:=NonCnvWOData{i}.Used;
+      Write logfile,"Name:           "+NonCnvWOData{i}.NonCnvWobjName;
+      Write logfile,"uframe.trans.x: "\Num:=NonCnvWOData{i}.Wobj.uframe.trans.x;
+      Write logfile,"uframe.trans.y: "\Num:=NonCnvWOData{i}.Wobj.uframe.trans.y;
+      Write logfile,"uframe.trans.z: "\Num:=NonCnvWOData{i}.Wobj.uframe.trans.z;
+      Write logfile," ";
+    ENDFOR
+    Close logfile;
+  ENDPROC
+
+  !***********************************************************
+  !
+  ! Function GetQueueLevel
+  !
+  ! This function return the current level of the item source.
+  ! The function will return -1 if the function fails.
+  !
+  ! The following "call parameters" are used:
+  ! IN:
+  !  num Index    
+  ! OUT:
+  !  num QueueLevel    
+  !
+  !***********************************************************
+  FUNC num GetQueueLevel(
+    num Index)
+
+    VAR datapos SearchBlock;
+    VAR string Name:="";
+    VAR string VarName:="";
+    VAR num QueueLevel:=-1;
+
+    VarName:="ITMSRC_QL"+ValToStr(ItmSrcData{Index}.SourceInstDat.Id);
+    SetDataSearch "num"\Object:=VarName\InMod:="PPASYS";
+    IF GetNextSym(Name,SearchBlock\Recursive) THEN
+      GetDataVal Name\Block:=SearchBlock,QueueLevel;
+    ENDIF
+    RETURN QueueLevel;
+  ENDFUNC
+
+  !***********************************************************
+  !
+  ! Function GetQueueTopLevel
+  !
+  ! This function return the highest level of the item source.
+  ! The function will return -1 if the function fails.
+  !
+  ! The following "call parameters" are used:
+  ! IN:
+  !  num Index    
+  ! OUT:
+  !  num QueueLevel    
+  !
+  !***********************************************************
+  FUNC num GetQueueTopLevel(
+    num Index)
+
+    VAR datapos SearchBlock;
+    VAR string Name:="";
+    VAR string VarName:="";
+    VAR num TopLevel:=-1;
+
+    VarName:="ITMSRC_QW"+ValToStr(ItmSrcData{Index}.SourceInstDat.Id);
+    SetDataSearch "num"\Object:=VarName\InMod:="PPASYS";
+    IF GetNextSym(Name,SearchBlock\Recursive) THEN
+      GetDataVal Name\Block:=SearchBlock,TopLevel;
+    ENDIF
+    RETURN TopLevel;
+  ENDFUNC
+
+  !**********************************************************
+  !
+  ! Trap PickRateTrap
+  !
+  !**********************************************************
+  TRAP PickRateTrap
+    VAR num NumOfValuesInArr;
+    VAR num PickSum;
+
+    IF (Picks>(8388608-1000)) OR (PickRateCount>=8388608) THEN
+      Picks:=0;
+      OldPicks:=0;
+      PicksPerMin:=0;
+      PickRateCount:=0;
+      FOR i FROM 1 TO NumOfPickToCalc DO
+        NumOfPicksArr{i}:=0;
+      ENDFOR
+    ELSE
+      Incr PickRateCount;
+      IF (PickRateCount<NumOfPickToCalc) THEN
+        NumOfValuesInArr:=PickRateCount;
+      ELSE
+        NumOfValuesInArr:=NumOfPickToCalc;
+      ENDIF
+      FOR i FROM (NumOfPickToCalc-1) TO 1 DO
+        NumOfPicksArr{i+1}:=NumOfPicksArr{i};
+      ENDFOR
+      NumOfPicksArr{1}:=Picks-OldPicks;
+      OldPicks:=Picks;
+      FOR i FROM 1 TO NumOfPickToCalc DO
+        PickSum:=PickSum+NumOfPicksArr{i};
+      ENDFOR
+      PicksPerMin:=Round((PickSum)/(NumOfValuesInArr*PickRateTime/60));
+    ENDIF
+    IF RemoteIPNode<>"" THEN
+      SCWrite\ToNode:=RemoteIPNode,Picks;
+      SCWrite\ToNode:=RemoteIPNode,PicksPerMin;
+    ENDIF
+  ERROR
+    IF ERRNO=ERR_SC_WRITE THEN
+      TRYNEXT;
+    ENDIF
+  ENDTRAP
+ENDMODULE

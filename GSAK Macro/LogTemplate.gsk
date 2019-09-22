@@ -1,0 +1,1125 @@
+#*******************************************
+# MacDescription = Create a template for the User Log
+# MacFileName = LogTemplate.gsk
+# MacAuthor = Kai Team
+# MacVersion=3.11
+# MacUrl=http://gsak.net/board/index.php?showtopic=10100&view=findpost&p=66148
+#*******************************************
+
+VERCHECK Version=7.5.0.0 (please update GSAK to the latest version to run this macro - see http://gsak.net)
+
+#Initialize variables
+
+$SettingsFile=SysInfo("MacroPath") + "\" + SysInfo("MacroFile")
+$SettingsFile=Left($Settingsfile,Len($Settingsfile)-4) + ".xml"
+$SelectedCache="Selected Cache (" + $d_Code + ")"
+$FoundTemplate=""
+$DNFTemplate=""
+$Time=""
+$TimeValue=0
+$TimeFormat=""
+$RunCount="1"
+$Edit3=""
+$CivilTime=TRUE
+$MilitaryTime=FALSE
+$Radiobutton3=FALSE
+$Radiobutton4=FALSE
+$Radiobutton5=FALSE
+$Radiobutton6=FALSE
+$Radiobutton7=FALSE
+$Radiobutton8=TRUE
+$Radiobutton9=TRUE
+$Radiobutton10=FALSE
+$ExistingNote=FALSE
+$ExistingLog=FALSE
+$Warn500Char=FALSE
+$SetUserFlag=TRUE
+$NoteText=Extract($d_UserNote,"$~",1)
+$LogText=Extract($d_UserNote,"$~",2)
+$String="     "
+$LogDate=$_Today
+$TotalFinds="0"
+$TodaysTotal="0"
+$NoteMemo=""
+#Create offline HTML path\file
+$File="file:///" + $_AppData + "\temp\splitscreen.htm"
+$Form2=EditForm($Form2, "Label8", "Caption", $SelectedCache)
+$Form2=EditForm($Form2,"Browser1","url",$File)
+
+#Retrieve Saved Settings if they exist, otherwise show configuration form.
+IF FileExists($SettingsFile)
+    MACSETTINGS Type=R Filecheck=N
+ELSE
+    GOSUB Name=Configform
+ENDIF
+
+GOSUB Name=CalcTime
+GOSUB Name=AddTemplate
+BEGINSUB Name=Run
+    IF $ExistingNote=FALSE
+        $d_UserNote = $NoteText + $_NewLine + $NoteMemo + "$~" + $LogMemo
+    ELSE
+        $d_UserNote = $NoteMemo + "$~" + $LogMemo
+    ENDIF
+
+    IF $LogType="Found"
+        $d_Found=TRUE
+        $d_FoundByMeDate=$LogDate
+        $RunCount=NumToStr(Val($RunCount) + 1)
+    ENDIF
+
+    IF $LogType="DNF"
+        $d_DNF=TRUE
+        $d_DNFDate=$LogDate
+    ENDIF
+
+    IF $RadioButton3 OR $RadioButton4 OR $RadioButton5 OR $RadioButton6 OR $Radiobutton7
+        BEGINCASE
+            CASE $RadioButton3
+                IF $Radiobutton9
+                    $d_UserData=Right($String + $TotalFinds,5)
+                ELSE
+                    $d_UserData=$Time
+                ENDIF
+            CASE $RadioButton4
+                IF $Radiobutton9
+                    $d_User2=Right($String + $TotalFinds,5)
+                ELSE
+                    $d_User2=$Time
+                ENDIF
+            CASE $RadioButton5
+                IF $Radiobutton9
+                    $d_User3=Right($String + $TotalFinds,5)
+                ELSE
+                    $d_User3=$Time
+                ENDIF
+            CASE $RadioButton6
+                IF $Radiobutton9
+                    $d_User4=Right($String + $TotalFinds,5)
+                ELSE
+                    $d_User4=$Time
+                ENDIF
+            CASE $Radiobutton7
+                IF $Radiobutton9
+                    $d_UserSort=Val($TotalFinds)
+                ELSE
+                    IF $CivilTime
+                        RETURN Msg=You cannot enter a 12 hour time format in the user sort.  Macro canceled.
+                    ELSE
+                        $TimeValue=Val(Replace(":","",$Time))
+                        $d_UserSort=$TimeValue
+                    ENDIF
+                ENDIF
+        ENDCASE
+    ENDIF
+
+    IF $SetUserFlag
+        $d_UserFlag=TRUE
+    ENDIF
+    GOSUB Name=SaveSettings
+ENDSUB
+
+BEGINSUB Name=SaveSettings
+    MACSETTINGS Type=S Vars=TotalFinds,TimeFormat,Edit3,CivilTime,MilitaryTime,Radiobutton3,Radiobutton4,Radiobutton5,Radiobutton6,Radiobutton7,Radiobutton8,Radiobutton9,Radiobutton10,ExistingNote,ExistingLog,Warn500Char,SetUserFlag,FoundTemplate,DNFTemplate,RunCount,LogDate,TodaysTotal,NoteMemo,Edit3
+ENDSUB
+
+#Add Log Template
+BEGINSUB Name=AddTemplate
+    WHILE TRUE
+        $FormExit = form($Form2,"")
+        BEGINCASE
+            CASE $FormExit = "SystemExit"
+            RETURN
+
+            CASE $FormExit= "LogType"
+                BEGINCASE
+                CASE $LogType="Found"
+                    GOSUB Name=UpdateNumbers
+                    GOSUB Name=BuildLog
+                    IF $ExistingNote AND Len($NoteText)>0
+                        $NoteMemo=$NoteText
+                    ELSE
+                        $NoteMemo=""
+                    ENDIF
+                    IF $ExistingLog AND Len($LogText)>0
+                        $LogMemo=$LogText + $_NewLine + $LogTemplate
+                    ELSE
+                        $LogMemo=$LogTemplate
+                    ENDIF
+                    $Form2=Editform($Form2,"NoteMemo", "Enabled", "Yes")
+                    $Form2=Editform($Form2,"LogMemo", "Enabled", "Yes")
+                    $Form2=Editform($Form2, "OK", "Enabled", "Yes")
+                    GOSUB Name=SaveSettings
+
+                CASE $LogType="DNF"
+                    GOSUB Name=UpdateNumbers
+                    GOSUB Name=BuildLog
+                    $TotalFinds=NumToStr(Val($TotalFinds)-1)
+                    IF $ExistingNote
+                        $NoteMemo=$NoteText
+                    ELSE
+                        $NoteMemo=""
+                    ENDIF
+                    IF $ExistingLog
+                        $LogMemo=$LogText + $_NewLine + $LogTemplate
+                    ELSE
+                        $LogMemo=$LogTemplate
+                    ENDIF
+                    $Form2=Editform($Form2, "NoteMemo", "Enabled", "Yes")
+                    $Form2=Editform($Form2, "LogMemo", "Enabled", "Yes")
+                    $Form2=Editform($Form2, "OK", "Enabled", "Yes")
+                CASE $LogType="Select Type"
+                    MSGOK Msg=You must select a log type.
+                ENDCASE
+
+            CASE $FormExit = "ResetBtn"
+                $RunCount="1"
+
+            CASE $FormExit = "Button1"
+                GOSUB Name=Configform
+
+            CASE $FormExit= "TodayBtn"
+                $LogDate=$_Today
+
+            CASE $FormExit = "OK"
+                IF $Warn500Char=TRUE
+                    GOSUB Name=CharacterCount
+                ENDIF
+                GOSUB Name=Run
+                BREAK
+
+            CASE $FormExit = "Cancel"
+                RETURN
+        ENDCASE
+    ENDWHILE
+ENDSUB
+
+#Configform
+BEGINSUB Name=Configform
+    WHILE TRUE
+        $FormExit = form($Form1,"")
+        BEGINCASE
+            CASE $FormExit = "SystemExit"
+            RETURN
+
+            CASE $FormExit = "HelpBtn"
+                GOSUB Name=Show Help
+
+            CASE $FormExit = "OK"
+            IF $CivilTime
+                $Timeformat="12"
+            ENDIF
+            IF $MilitaryTime
+                $TimeFormat="24"
+            ENDIF
+            GOSUB Name=CalcTime
+            GOSUB Name=SaveSettings
+            BREAK
+
+            CASE $FormExit = "Cancel"
+            RETURN
+        ENDCASE
+    ENDWHILE
+ENDSUB
+
+#Determine proper number suffix
+BEGINSUB name=NumSuffix
+BEGINCASE
+    CASE Right($NumberStr,2)="11"
+        $NumberStr=$NumberStr + "th"
+    CASE Right($NumberStr,2)="12"
+        $NumberStr=$NumberStr + "th"
+    CASE Right($NumberStr,2)="13"
+        $NumberStr=$NumberStr + "th"
+    CASE Right($NumberStr,1)="1"
+        $NumberStr=$NumberStr + "st"
+    CASE Right($NumberStr,1)="2"
+        $NumberStr=$NumberStr + "nd"
+    CASE Right($NumberStr,1)="3"
+        $NumberStr=$NumberStr + "rd"
+    OTHERWISE
+        $NumberStr=$NumberStr + "th"
+    ENDCASE
+ENDSUB
+
+#Calculate Time in correct format
+BEGINSUB Name=CalcTime
+$Time=Left(Time(),5)
+IF $TimeFormat="12"
+    BEGINCASE
+        CASE Val(Extract($Time,":",1))<12
+            $Time=$Time + " AM"
+            $Time=AllTrim($Time)
+        CASE Val(Extract($Time,":",1))=12
+            $Time=$Time + " PM"
+            $Time=AllTrim($Time)
+        CASE Val(Extract($Time,":",1))>12
+            $HourStr=Extract($Time,":",1)
+            $Hour=Val($HourStr)-12
+            $Time= Str($Hour,2,0) + ":" + Extract($Time,":",2)
+            $Time=$Time + " PM"
+            $Time=AllTrim($Time)
+    ENDCASE
+ELSE
+    $Time=Left(Time(),5)
+ENDIF
+ENDSUB
+
+#Build log components based on form data
+BEGINSUB Name=BuildLog
+
+    IF $LogType="DNF"
+    	$LogTemplate= Replace("%myname",$Edit3,$DNFTemplate)
+    	$LogTemplate= Replace("%countsuffix","$TotalSuffix",$LogTemplate)
+    	$LogTemplate= Replace("%count","$TotalFinds",$LogTemplate)
+    	$LogTemplate= Replace("%runsuffix","$RunSuffix",$LogTemplate)
+    	$LogTemplate= Replace("%runcount","$RunCount",$LogTemplate)
+    	$LogTemplate= Replace("%datefound",DateFormat($LogDate),$LogTemplate)
+    	$LogTemplate= Replace("%day",Substr(DateToString($LogDate),7,2),$LogTemplate)
+    	$LogTemplate= Replace("%month",Substr(DateToString($LogDate),5,2),$LogTemplate)
+    	$LogTemplate= Replace("%year",Substr(DateToString($LogDate),1,4),$LogTemplate)
+    	$LogTemplate= Replace("%time",$Time,$LogTemplate)
+    	$LogTemplate= Replace("%runtotalsuffix",$RunTotalSuffix,$LogTemplate)
+    	$LogTemplate= Replace("%runtotal",$TodaysTotal,$LogTemplate)
+    	VSUB Status=Off
+    	$LogTemplate= Eval($LogTemplate)
+    	VSUB Status=On
+    ELSE
+    	$LogTemplate= Replace("%myname",$Edit3,$FoundTemplate)
+    	$LogTemplate= Replace("%countsuffix","$TotalSuffix",$LogTemplate)
+    	$LogTemplate= Replace("%count","$TotalFinds",$LogTemplate)
+    	$LogTemplate= Replace("%runsuffix","$RunSuffix",$LogTemplate)
+    	$LogTemplate= Replace("%runcount","$RunCount",$LogTemplate)
+    	$LogTemplate= Replace("%datefound",DateFormat($LogDate),$LogTemplate)
+    	$LogTemplate= Replace("%day",Substr(DateToString($LogDate),7,2),$LogTemplate)
+    	$LogTemplate= Replace("%month",Substr(DateToString($LogDate),5,2),$LogTemplate)
+    	$LogTemplate= Replace("%year",Substr(DateToString($LogDate),1,4),$LogTemplate)
+    	$LogTemplate= Replace("%time",$Time,$LogTemplate)
+    	$LogTemplate= Replace("%runtotalsuffix",$RunTotalSuffix,$LogTemplate)
+    	$LogTemplate= Replace("%runtotal",$TodaysTotal,$LogTemplate)
+    	VSUB status=Off
+    	$LogTemplate= Eval($LogTemplate)
+    	VSUB Status=On
+    ENDIF
+    $LogMemo=$LogTemplate
+ENDSUB
+
+#Update find numbers and add suffix
+BEGINSUB Name=UpdateNumbers
+    $TotalFinds=NumToStr(Val($TotalFinds) + 1)
+    $NumberStr=$TotalFinds
+    $LastFind=$NumberStr
+    GOSUB name=NumSuffix
+    $TotalSuffix=$NumberStr
+
+    $NumberStr=$RunCount
+    GOSUB name=NumSuffix
+    $RunSuffix=$NumberStr
+
+    $NumberStr=$TodaysTotal
+    GOSUB Name=NumSuffix
+    $RunTotalSuffix=$NumberStr
+ENDSUB
+
+BEGINSUB Name=CharacterCount
+    IF Len($LogMemo)>500
+        $OverLength=Len($LogMemo)-500
+        $MsgMemo="Your log exceeds 500 characters ($OverLength characters too long)."  + $_NewLine + $_NewLine +  "Click OK to return to the log"
+        WHILE TRUE
+            $FormExit = form($Form3,"")
+            BEGINCASE
+                CASE $FormExit = "SystemExit"
+                    GOSUB Name=AddTemplate
+
+                CASE $FormExit = "MsgOK"
+                    GOSUB Name=AddTemplate
+                    RETURN
+            ENDCASE
+        ENDWHILE
+    ENDIF
+ENDSUB
+
+BEGINSUB Name=Show Help
+    $Instructions="Use the following %tags to insert data anywhere in the text: " + $_Newline + $_Newline
+    $Instructions=$Instructions + "%myname" + Chr(09) + Chr(09) + "Your Geocaching.com name" + $_Newline
+    $Instructions=$Instructions + "%count" + Chr(09) + Chr(09) + "Your overall total number of finds (e.g. 250, 251, 252)" + $_Newline
+    $Instructions=$Instructions + "%countsuffix" + Chr(09) + "Your overall total number of finds including suffix (e.g. 250th, 251st, 252nd) " + $_Newline
+    $Instructions=$Instructions + "%runcount" + Chr(09) + "Cache find count in this run/trip (i.e. 1, 2 ,3 etc)" + $_Newline
+    $Instructions=$Instructions + "%runsuffix" + Chr(09) + "Cache find count in this run/trip including suffix (i.e. 1st, 2nd, 3rd etc)" + $_Newline
+    $Instructions=$Instructions + "%runtotal" + Chr(09) + "Total finds in this run/trip (e.g. 10, 11, 12)" + $_NewLine
+    $Instructions=$Instructions + "%runtotalsuffix" + Chr(09) + "Total finds in this run/trip including suffix (e.g. 10th, 11th, 12th)" + $_NewLine
+    $Instructions=$Instructions + "%datefound" + Chr(09) + "Find or DNF Date" + $_Newline
+    $Instructions=$Instructions + "%time" + Chr(09) + Chr(09) + "Find Time" + $_Newline
+    $Instructions=$Instructions + "%day" + Chr(09) + Chr(09) + "Day of month" + $_Newline
+    $Instructions=$Instructions + "%month" + Chr(09) + Chr(09) + "Month" + $_Newline
+    $Instructions=$Instructions + "%year" + Chr(09) + Chr(09) + "Year" + $_Newline + $_Newline
+    $Instructions=$Instructions + "For example:" + $_Newline + $_Newline
+    $Instructions=$Instructions + "This was our %countsuffix overall find - Found on %date at %time." + $_Newline + $_Newline
+    $Instructions=$Instructions + "OR:" + $_Newline + $_Newline
+    $Instructions=$Instructions + "Find #%count @ %time on %date.  This was my %runcount find of %runtotal total finds in a caching spree in Antarctica!"
+    $HelpMemo=$Instructions
+
+    WHILE TRUE
+    $FormExit = form($Form4,"")
+    BEGINCASE
+        CASE $FormExit = "SystemExit"
+        RETURN Msg="Macro Cancelled"
+
+        CASE $FormExit = "OK"
+        BREAK
+    ENDCASE
+    ENDWHILE
+ENDSUB
+
+<Data> VarName=$form1
+#********************************************************************
+# Form generated by GSAK form designer on Sun 19-Jul-2009 19:57:07
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Configure Log Template
+  Height = 531
+  Width = 800
+
+Name = Groupbox1
+  Type = Groupbox
+  Color = 15395562
+  Height = 175
+  Left = 23
+  Top = 179
+  Width = 330
+  Taborder = 5
+
+Name = Groupbox2
+  Type = Groupbox
+  Color = 15395562
+  Height = 49
+  Left = 23
+  Top = 384
+  Width = 330
+  Taborder = 6
+
+Name = Groupbox3
+  Type = Groupbox
+  Height = 425
+  Left = 396
+  Top = 7
+  Width = 373
+  Taborder = 7
+
+Name = Groupbox4
+  Type = Groupbox
+  Container = Groupbox1
+  Height = 42
+  Left = 1
+  Top = 0
+  Width = 328
+  Taborder = 6
+
+Name = Label1
+  Type = Label
+  Height = 18
+  Left = 23
+  Size = 11
+  Top = 60
+  Width = 253
+  Caption = Enter the number of your last total find:
+
+Name = TotalFinds
+  Type = Edit
+  Height = 21
+  Left = 282
+  Top = 60
+  Width = 72
+  Taborder = 0
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 248
+  Top = 451
+  Width = 75
+  Taborder = 3
+  Caption = OK
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 469
+  Top = 451
+  Width = 75
+  Taborder = 4
+  Caption = Cancel
+
+Name = Label2
+  Type = Label
+  Height = 18
+  Left = 23
+  Size = 11
+  Top = 94
+  Width = 153
+  Caption = Choose a time Format:
+
+Name = Label3
+  Type = Label
+  Height = 18
+  Left = 203
+  Size = 11
+  Top = 94
+  Width = 53
+  Caption = 12 Hour
+
+Name = Label4
+  Type = Label
+  Height = 18
+  Left = 300
+  Size = 11
+  Top = 94
+  Width = 53
+  Caption = 24 Hour
+
+Name = Label5
+  Type = Label
+  Height = 18
+  Left = 23
+  Size = 11
+  Top = 18
+  Width = 197
+  Caption = Enter your Geocaching name:
+
+Name = Edit3
+  Type = Edit
+  Height = 21
+  Left = 228
+  Top = 18
+  Width = 125
+  Taborder = 1
+
+Name = Radiobutton3
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 12
+  Top = 80
+  Width = 15
+  Taborder = 0
+
+Name = Radiobutton4
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 12
+  Top = 110
+  Width = 15
+  Taborder = 1
+
+Name = Radiobutton5
+  Type = Radiobutton
+  Container = Groupbox1
+  Enabled = Yes
+  Height = 17
+  Left = 12
+  Top = 140
+  Width = 15
+  Taborder = 2
+
+Name = Radiobutton6
+  Type = Radiobutton
+  Container = Groupbox1
+  Enabled = Yes
+  Height = 17
+  Left = 185
+  Top = 80
+  Width = 15
+  Taborder = 3
+
+Name = Radiobutton7
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 185
+  Top = 110
+  Width = 15
+  Taborder = 4
+
+Name = Radiobutton8
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 185
+  Top = 140
+  Width = 15
+  Taborder = 5
+
+Name = Label7
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 31
+  Size = 11
+  Top = 79
+  Width = 67
+  Caption = User Data
+
+Name = Label8
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 31
+  Size = 11
+  Top = 109
+  Width = 79
+  Caption = User Data 2
+
+Name = Label9
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 31
+  Size = 11
+  Top = 139
+  Width = 79
+  Caption = User Data 3
+
+Name = Label10
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 204
+  Size = 11
+  Top = 79
+  Width = 79
+  Caption = User Data 4
+
+Name = Label11
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 204
+  Size = 11
+  Top = 109
+  Width = 64
+  Caption = User Sort
+
+Name = Label12
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 204
+  Size = 11
+  Top = 139
+  Width = 110
+  Caption = None (don't add)
+
+Name = Label13
+  Type = Label
+  Height = 18
+  Left = 23
+  Size = 11
+  Top = 362
+  Width = 164
+  Caption = Prefix Note and Log with:
+
+Name = ExistingNote
+  Type = Checkbox
+  Container = Groupbox2
+  Height = 17
+  Left = 16
+  Top = 16
+  Width = 15
+  Taborder = 0
+
+Name = ExistingLog
+  Type = Checkbox
+  Container = Groupbox2
+  Height = 17
+  Left = 188
+  Top = 16
+  Width = 15
+  Taborder = 1
+
+Name = Label14
+  Type = Label
+  Container = Groupbox2
+  Height = 18
+  Left = 33
+  Size = 11
+  Top = 15
+  Width = 123
+  Caption = Existing User Note
+
+Name = Label15
+  Type = Label
+  Container = Groupbox2
+  Height = 18
+  Left = 205
+  Size = 11
+  Top = 15
+  Width = 80
+  Caption = Existing Log
+
+Name = Label17
+  Type = Label
+  Container = Groupbox4
+  Height = 18
+  Left = 7
+  Size = 11
+  Top = 14
+  Width = 29
+  Caption = Add:
+
+Name = Label18
+  Type = Label
+  Container = Groupbox4
+  Height = 18
+  Left = 59
+  Size = 11
+  Top = 13
+  Width = 122
+  Caption = Total Find Number
+
+Name = Label19
+  Type = Label
+  Container = Groupbox4
+  Height = 18
+  Left = 208
+  Size = 11
+  Top = 13
+  Width = 79
+  Caption = Time Found
+
+Name = Label6
+  Type = Label
+  Container = Groupbox1
+  Height = 18
+  Left = 12
+  Size = 11
+  Top = 48
+  Width = 183
+  Caption = To the following GSAK field:
+
+Name = Label20
+  Type = Label
+  Container = Groupbox3
+  Height = 18
+  Left = 12
+  Size = 11
+  Top = 36
+  Width = 220
+  Caption = Create your Found template here:
+
+Name = SetUserFlag
+  Type = Checkbox
+  Height = 17
+  Left = 24
+  Top = 122
+  Width = 15
+  Taborder = 8
+
+Name = Label21
+  Type = Label
+  Height = 18
+  Left = 44
+  Size = 11
+  Top = 121
+  Width = 240
+  Caption = Set User Flag for each cache logged
+
+Name = FoundTemplate
+  Type = Memo
+  Container = Groupbox3
+  Height = 181
+  Left = 12
+  Scrollbars = Vertical
+  Size = 10
+  Top = 57
+  Width = 349
+  Taborder = 0
+
+Name = Radiobutton9
+  Type = Radiobutton
+  Container = Groupbox4
+  Height = 17
+  Left = 45
+  Top = 15
+  Width = 15
+  Taborder = 0
+
+Name = Radiobutton10
+  Type = Radiobutton
+  Container = Groupbox4
+  Height = 17
+  Left = 193
+  Top = 15
+  Width = 15
+  Taborder = 1
+
+Name = CivilTime
+  Type = Radiobutton
+  Height = 17
+  Left = 186
+  Top = 95
+  Width = 15
+  Taborder = 9
+
+Name = MilitaryTime
+  Type = Radiobutton
+  Height = 17
+  Left = 282
+  Top = 95
+  Width = 15
+  Taborder = 2
+
+Name = Label22
+  Type = Label
+  Height = 18
+  Left = 44
+  Size = 11
+  Top = 149
+  Width = 306
+  Caption = Warn me if my log is over 500 characters long.
+
+Name = Warn50Char
+  Type = Checkbox
+  Height = 17
+  Left = 24
+  Top = 150
+  Width = 15
+  Taborder = 10
+
+Name = HelpBtn
+  Type = Button
+  Container = Groupbox3
+  Height = 25
+  Left = 264
+  Top = 18
+  Width = 75
+  Taborder = 1
+  Caption = Help
+
+Name = Label16
+  Type = Label
+  Container = Groupbox3
+  Height = 16
+  Left = 12
+  Size = 10
+  Top = 258
+  Width = 273
+  Caption = Create your Did Not Find (DNF) template here:
+
+Name = DNFTemplate
+  Type = Memo
+  Container = Groupbox3
+  Height = 133
+  Left = 12
+  Scrollbars = Vertical
+  Size = 10
+  Top = 280
+  Width = 349
+  Taborder = 2
+
+<enddata>
+
+
+<Data> VarName=$form2
+#********************************************************************
+# Form generated by GSAK form designer on Sat 26-Dec-2009 13:27:04
+#********************************************************************
+
+Name = Form2
+  Type = Form
+  Caption = Log your Find or DNF:
+  Height = 560
+  Width = 800
+
+Name = Label1
+  Type = Label
+  Height = 18
+  Left = 220
+  Size = 11
+  Style = bold
+  Top = 259
+  Width = 229
+  Caption = User Note (not posted online):
+
+Name = NoteMemo
+  Type = Memo
+  Enabled = No
+  Height = 100
+  Left = 219
+  Scrollbars = Vertical
+  Size = 11
+  Top = 279
+  Width = 550
+  Wrap = Yes
+  Taborder = 1
+
+Name = Label2
+  Type = Label
+  Height = 18
+  Left = 220
+  Size = 11
+  Style = bold
+  Top = 386
+  Width = 158
+  Caption = Log (to post on line):
+
+Name = LogMemo
+  Type = Memo
+  Enabled = No
+  Height = 100
+  Left = 219
+  Scrollbars = Vertical
+  Size = 11
+  Top = 407
+  Width = 550
+  Wrap = Yes
+  Taborder = 2
+
+Name = OK
+  Type = Button
+  Enabled = No
+  Enter = Yes
+  Height = 25
+  Left = 20
+  Top = 482
+  Width = 75
+  Taborder = 3
+  Caption = Enter Log
+
+Name = Cancel
+  Type = Button
+  Height = 25
+  Left = 126
+  Top = 482
+  Width = 75
+  Taborder = 4
+  Caption = Cancel
+
+Name = Label3
+  Type = Label
+  Height = 18
+  Left = 20
+  Size = 11
+  Style = bold
+  Top = 314
+  Width = 121
+  Caption = Select Log Type
+
+Name = LogType
+  Type = Combobox
+  Exitonchange = Yes
+  Height = 21
+  Left = 20
+  Top = 335
+  Values = Select Type;Found;DNF
+  Width = 145
+  Taborder = 0
+
+Name = Label4
+  Type = Label
+  Height = 18
+  Left = 20
+  Size = 11
+  Style = bold
+  Top = 63
+  Width = 117
+  Caption = Last Total Find:
+
+Name = TotalFinds
+  Type = Edit
+  Height = 21
+  Left = 20
+  Top = 82
+  Width = 121
+  Taborder = 5
+
+Name = Label5
+  Type = Label
+  Height = 18
+  Left = 20
+  Size = 11
+  Style = bold
+  Top = 112
+  Width = 165
+  Caption = Today's Find Number:
+
+Name = Button1
+  Type = Button
+  Height = 35
+  Left = 20
+  Top = 20
+  Width = 120
+  Taborder = 14
+  Caption = Configure Template
+
+Name = RunCount
+  Type = Edit
+  Height = 21
+  Left = 20
+  Top = 134
+  Width = 73
+  Taborder = 15
+
+Name = ResetBtn
+  Type = Button
+  Height = 25
+  Left = 107
+  Top = 133
+  Width = 75
+  Taborder = 16
+  Caption = Reset
+
+Name = SpellCk
+  Type = Button
+  Height = 25
+  Left = 20
+  Spellcheck = LogMemo
+  Top = 375
+  Width = 100
+  Taborder = 17
+  Caption = Spell Check Log
+
+Name = LogDate
+  Type = Date
+  Height = 21
+  Left = 20
+  Top = 281
+  Visible = Yes
+  Width = 101
+  Taborder = 18
+
+Name = Label6
+  Type = Label
+  Height = 18
+  Left = 20
+  Size = 11
+  Style = bold
+  Top = 259
+  Width = 68
+  Caption = Log Date
+
+Name = TodayBtn
+  Type = Button
+  Height = 25
+  Left = 126
+  Top = 279
+  Width = 75
+  Taborder = 19
+  Caption = Set to Today
+
+Name = TodaysTotal
+  Type = Edit
+  Height = 21
+  Left = 20
+  Top = 191
+  Width = 73
+  Taborder = 20
+
+Name = Label7
+  Type = Label
+  Height = 18
+  Left = 18
+  Size = 11
+  Style = bold
+  Top = 170
+  Width = 141
+  Caption = Total Found Today
+
+Name = Browser1
+  Type = Browser
+  Height = 229
+  Left = 219
+  Top = 24
+  Url = www.geocaching.com
+  Width = 550
+  Taborder = 21
+
+Name = Label8
+  Type = Label
+  Height = 18
+  Left = 215
+  Size = 11
+  Style = bold
+  Top = 4
+  Width = 118
+  Caption = Selected Cache
+
+<enddata>
+
+
+
+<Data> VarName=$form3
+#********************************************************************
+# Form generated by GSAK form designer on Sun 11-Jan-2009 19:48:24
+#********************************************************************
+
+Name = Form3
+  Type = Form
+  Height = 206
+  Width = 234
+
+Name = MsgMemo
+  Type = Memo
+  Color = 15066597
+  Height = 89
+  Left = 20
+  Readonly = Yes
+  Textcolor = 255
+  Top = 18
+  Width = 185
+  Wrap = Yes
+  Taborder = 8
+
+Name = MsgOK
+  Type = Button
+  Height = 25
+  Left = 20
+  Top = 126
+  Width = 75
+  Taborder = 9
+  Caption = OK
+
+<enddata>
+
+<Data> VarName=$form4
+#********************************************************************
+# Form generated by GSAK form designer on Sun 19-Jul-2009 11:07:04
+#********************************************************************
+
+Name = Form4
+  Type = Form
+  Caption = Help
+  Color = 0
+  Height = 450
+  Width = 840
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 378
+  Top = 384
+  Width = 75
+  Taborder = 8
+  Caption = OK
+
+Name = HelpMemo
+  Type = Memo
+  Color = 15329769
+  Font = Courier New
+  Height = 361
+  Left = 6
+  Size = 10
+  Top = 12
+  Width = 820
+  Taborder = 9
+
+<enddata>
+
+
+
+
+
+
+

@@ -1,0 +1,32 @@
+'************************************************************************************
+'**  Project
+'**  
+'**  Definition file
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		21 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub ModuleOne
+Declare Sub ModuleTwo
+Declare Sub About
+Declare Sub End_Program
+
+Declare Function LongDate(ByVal dDate As Date) As String
+
+Define AppName "Modular Programming Sample Code"
+Define AppNameMenu "&Modules"
+Define AppVersion 0.8
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Global tTime as Time
+Global dDate as Date

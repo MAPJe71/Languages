@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="UniVerse BASIC" ext="">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">"'0"'0</Keywords>
+            <Keywords name="Folder+"></Keywords>
+            <Keywords name="Folder-"></Keywords>
+            <Keywords name="Operators">' - ! " # ( ) , / : ; [ ] ^ + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 1 2 2 0* 0!</Keywords>
+            <Keywords name="Words1">$CHAIN $COPYRIGHT $DEFINE $EJECT $IFDEF $IFNDEF $INCLUDE $INSERT $MAP $OPTIONS $PAGE $UNDEFINE ABORT ABORTM ACTIVATEKEY AND AUTHORIZATION AUXMAP BEFORE BEGIN CASE TRANSACTION BREAK BSCAN CLEAR CLEARDATA CLEARFILE CLEARPROMPTS CLEARSELECT CLOSE CLOSESEQ COMMIT COMMON CONTINUE CONVERT CREATE CRT DATA DEACTIVATEKEY DEBUG DEFFUN DEL DELETE DELETELIST DIMENSION DIM DISABLEDEC DISPLAY DO ECHO ENABLEDEC END EOF ELSE EQUATE EQU ERRMSG EXIT FILELOCK FILEUNLOCK FIND FINDSTR FLUSH FOOTING FOR FORMLIST FROM FUNCTION GET GETX GETLIST GOSUB GOTO GO GROUPSTORE HEADING HUSH IF INCLUDE INPUT INPUTCLEAR INPUTDISP INPUTDP INPUTERR INPUTIF INPUTNULL INPUTTRAP INS ISOLATION KEYEDIT KEYEXIT KEYTRAP LET LIT LOCATE LOCK LOCKED LOOP MAT MATBUILD MATCH MATCHES MATPARSE MATREAD MATREADL MATREADU MATWRITE MATWRITEU NAP NEXT NOBUF NULL ON OPEN OPENCHECK OPENDEV OPENSEQ OR PAGE PRECISION PRINT PRINTER PRINTERR PROCREAD PROCWRITE PROGRAM PROMPT RANDOMIZE READ READBLK READL READLIST READNEXT READSEQ READT READU READV READVL READVU RECORDLOCK RELEASE REMOVE REPEAT RETURN REVREMOVE REWIND ROLLBACK SEEK SELECT SELECTE SELECTINDEX SEND SETREM SETTING SLEEP SSELECT STOP STOPM STORAGE SUBROUTINE SWAP TABSTOP THEN TIMEOUT TO TPRINT TTYCTL TTYGET TTYSET UNLOCK UPRINT UNTIL WAITING WEOF WEOFSEQ WHILE WRITE WRITEBLK WRITELIST WRITESEQ WRITESEQF WRITET WRITEU WRITEV WRITEVU LT LE EQ GE GT NE</Keywords>
+            <Keywords name="Words2">$FALSE $TRUE CALL CAPTURING CHAIN ENTER EXECUTE PERFORM RETURNING</Keywords>
+            <Keywords name="Words3">ABS ABSS acceptConnection ACOS addAuthenticationRule addCertificate addRequestParameter ADDS ALPHA amInitialize amReceiveMsg amReceiveRequest amSendMsg amSendRequest amSendResponse amTerminate analyzeCertificate ANDS ASCII ASIN ASSIGNED ATAN BITAND BITNOT BITOR BITRESET BITSET BITTEST BITXOR BYTE BYTELEN BYTETYPE BYTEVAL CATS CENTURY.PIVOT CHANGE CHAR CHARS CHECKSUM closeSocket CloseXMLData COL1 COL2 COMPARE COS COSH COUNT COUNTS createCertification createCertRequest createRequest createSecureRequest createSecurityContext DATE DBTOXML DCOUNT DESCRINFO DIGEST DIV DIVS DOWNCASE DQUOTE DTX EBCDIC ENCODE ENCRYPT EQS EREPLACE EXCHANGE EXP EXTRACT FADD FDIV FFIX FFLT FIELD FIELDS FIELDSTORE FILEINFO FIX FMT FMTDP FMTS FMTSDP FMUL FOLD FOLDDP FSUB generateKey GES getCipherSuite getSocketErrorMessage getSocketErrorMessage getSocketOptions getHTTPDefault GETLOCALE GETREM getSocketInformation GROUP GTS ICHECK ICONV ICONVS IFS ILPROMPT INDEX INDEXS INDICES initSecureServerSocket initSecureSocket INMAT INSERT INT ISNULL ISNULLS ITYPE KEYIN LEFT LEN LENDP LENS LENSDP LN loadSecurityContext LOCALEINFO LOWER LTS MATCHFIELD MAXIMUM MINIMUM MOD MODS MULS NEG NEGS NES NOT NOTS NUM NUMS OCONV OCONVS openSecureSocket openSocket OpenXMLData ORS PrePareXML protocolLogging PWR QUOTE RAISE readSocket ReadXMLData REAL RECORDLOCKED ReleaseXML REM REPLACE REUSE RIGHT RND RPC.CALL RPC.CONNECT RPC.DISCONNECT saveSecurityContext SADD SCMP SDIV SELECTINFO SENTENCE SEQ SEQS setAuthenticationDepth setCipherSuite setClientAuthentication setPrivateKey setRandomSeed setHTTPDefault setRequestHeader SETLOCALE setSocketOptions showSecurityContext SIGNATURE SIN SINH SMUL SOAPCreateRequest SOAPGetDefault SOAPGetFault SOAPGetResponseHeader SOAPSetRequestBody SOAPSetRequestContent SOAPSetRequestHeader SOAPRequestWrite SOAPSetDefault SOAPSetParameters SOAPSubmitRequest SOUNDEX SPACE SPACES SPLICE SQRT SQUOTE SSUB STATUS STR STRS submitRequest SUBR SUBS SUBSTRS SUM SUMMATION SYSTEM TAN TANH TERMINFO TIME TIMEDATE TPARM TRANS TRIM TRIMB TRIMBS TRIMF TRIMFS TRIMS UNASSIGNED UNICHAR UNISEQ UNISEQS UPCASE XLATE XTD</Keywords>
+            <Keywords name="Words4">@ABORT.CODE @ACCOUNT @AM @ANS @AUTHORIZARTION @COMMAND @COMMAND.STACK @CONV @CRTHIGH @CRTWIDE @DATA.PENDING @DATE @DAY @DICT @FALSE @FILE.NAME @FILENAME @FM @FORMAT @HDBC @HEADER @HENV @HSTMT @ID @IM @ISOLATION @LEVEL @LOGNAME @LPTRHIGH @LPTRWIDE @MONTH @MV @NB @ND @NEW @NI @NS @NULL @NULL.STR @NV @OLD @OPTION @PARASETENCE @PATH @RECOUNT @RECORD @RECUR0 @RECUR1 @RECUR2 @RECUR3 @RECUR4 @SCHEMA @SELECTED @SM @SQL.CODE @SQL.DATE @SQL.ERROR @SQL.STATE @SQL.TIME @SQL.WARNING @SQLPROC.NAME @SQLPROC.TSLEVEL @STDFIL @SVM @SYS.BELL @SYSTEM.RETURN.CODE @SYSTEM.SET @TERM.TYPE @TIME @TM @TRANSACTION @TRANSACTION.LEVEL @TRUE @TTY @USER0 @USER1 @USER2 @USER3 @USER4 @USERNO @USER.NO @USER.RETURN.CODE @VM @WHO @YEAR @YEAR4</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="10" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF0080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="10" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008040" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

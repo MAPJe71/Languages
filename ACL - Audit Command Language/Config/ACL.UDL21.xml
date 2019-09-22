@@ -1,0 +1,65 @@
+<!-- https://sourceforge.net/projects/acludl/files/ -->
+<NotepadPlus>
+    <UserLang name="ACL" ext="acl ac acls wsp jacl aclscript log" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="yes" allowFoldOfComments="yes" foldCompact="yes" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="yes" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00COM 00*** 01 02 03COMMENT 04</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">- ( ) * , / + &lt; = &gt; &lt;&gt; % &amp;</Keywords>
+            <Keywords name="Operators2">AND OR NOT</Keywords>
+            <Keywords name="Folders in code1, open"></Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">ACCEPT&#x000D;&#x000A;ACCESSDATA&#x000D;&#x000A;ACTIVATE&#x000D;&#x000A;AGE&#x000D;&#x000A;APPEND&#x000D;&#x000A;ASSIGN&#x000D;&#x000A;BENFORD&#x000D;&#x000A;CALCULATE&#x000D;&#x000A;CLASSIFY&#x000D;&#x000A;CLUSTER&#x000D;&#x000A;COUNT&#x000D;&#x000A;CREATE LAYOUT&#x000D;&#x000A;CROSSTAB&#x000D;&#x000A;CVSEVALUATE&#x000D;&#x000A;CVSPREPARE&#x000D;&#x000A;CVSSAMPLE&#x000D;&#x000A;DEFINE COLUMN&#x000D;&#x000A;DEFINE FIELD&#x000D;&#x000A;DEFINE RELATION&#x000D;&#x000A;DEFINE REPORT&#x000D;&#x000A;DEFINE TABLE DB&#x000D;&#x000A;DEFINE VIEW&#x000D;&#x000A;DELETE&#x000D;&#x000A;DIALOG&#x000D;&#x000A;DIRECTORY&#x000D;&#x000A;DISPLAY&#x000D;&#x000A;DO REPORT&#x000D;&#x000A;DO SCRIPT&#x000D;&#x000A;DUMP&#x000D;&#x000A;DUPLICATES&#x000D;&#x000A;ESCAPE&#x000D;&#x000A;EVALUATE&#x000D;&#x000A;EXECUTE&#x000D;&#x000A;FIELDSHIFT&#x000D;&#x000A;FIND&#x000D;&#x000A;FUZZYDUP&#x000D;&#x000A;FUZZYJOIN&#x000D;&#x000A;GAPS&#x000D;&#x000A;GROUP&#x000D;&#x000A;HELP&#x000D;&#x000A;HISTOGRAM&#x000D;&#x000A;IF&#x000D;&#x000A;IMPORT ACCESS&#x000D;&#x000A;IMPORT DELIMITED&#x000D;&#x000A;IMPORT EXCEL&#x000D;&#x000A;IMPORT GRCPROJECT&#x000D;&#x000A;IMPORT GRCRESULTS&#x000D;&#x000A;IMPORT LAYOUT&#x000D;&#x000A;IMPORT MULTIEXCEL&#x000D;&#x000A;IMPORT ODBC&#x000D;&#x000A;IMPORT PDF&#x000D;&#x000A;IMPORT PRINT&#x000D;&#x000A;IMPORT SAP&#x000D;&#x000A;IMPORT XBRL&#x000D;&#x000A;IMPORT XML&#x000D;&#x000A;INDEX&#x000D;&#x000A;JOIN&#x000D;&#x000A;LIST&#x000D;&#x000A;LOCATE&#x000D;&#x000A;LOOP&#x000D;&#x000A;MERGE&#x000D;&#x000A;NOTES&#x000D;&#x000A;NOTIFY&#x000D;&#x000A;OUTLIERS&#x000D;&#x000A;PASSWORD&#x000D;&#x000A;PAUSE&#x000D;&#x000A;PRESORT&#x000D;&#x000A;PRINT&#x000D;&#x000A;PROFILE&#x000D;&#x000A;QUIT&#x000D;&#x000A;RANDOM&#x000D;&#x000A;REFRESH&#x000D;&#x000A;RENAME&#x000D;&#x000A;REPORT&#x000D;&#x000A;RETRIEVE&#x000D;&#x000A;SAMPLE&#x000D;&#x000A;SAVE&#x000D;&#x000A;SAVE LAYOUT&#x000D;&#x000A;SAVE LOG&#x000D;&#x000A;SAVE TABLELIST&#x000D;&#x000A;SAVE WORKSPACE&#x000D;&#x000A;SECSORT&#x000D;&#x000A;SEEK&#x000D;&#x000A;SEQUENCE&#x000D;&#x000A;SIZE&#x000D;&#x000A;SORT&#x000D;&#x000A;STATISTICS&#x000D;&#x000A;STRATIFY&#x000D;&#x000A;SUMMARIZE&#x000D;&#x000A;TOP&#x000D;&#x000A;TOTAL&#x000D;&#x000A;VERIFY</Keywords>
+            <Keywords name="Keywords2">ABS&#x000D;&#x000A;AGE&#x000D;&#x000A;ALLTRIM&#x000D;&#x000A;ASCII&#x000D;&#x000A;AT&#x000D;&#x000A;BETWEEN&#x000D;&#x000A;BINTOSTR&#x000D;&#x000A;BIT&#x000D;&#x000A;BLANKS&#x000D;&#x000A;BYTE&#x000D;&#x000A;CDOW&#x000D;&#x000A;CHR&#x000D;&#x000A;CLEAN&#x000D;&#x000A;CMOY&#x000D;&#x000A;COS&#x000D;&#x000A;CTOD&#x000D;&#x000A;CTODT&#x000D;&#x000A;CTOT&#x000D;&#x000A;CUMIPMT&#x000D;&#x000A;CUMPRINC&#x000D;&#x000A;DATETIME&#x000D;&#x000A;DAY&#x000D;&#x000A;DBYTE&#x000D;&#x000A;DEC&#x000D;&#x000A;DHEX&#x000D;&#x000A;DICECOEFFICIENT&#x000D;&#x000A;DIGIT&#x000D;&#x000A;DOW&#x000D;&#x000A;DTOU&#x000D;&#x000A;EBCDIC&#x000D;&#x000A;EFFECTIVE&#x000D;&#x000A;EOMONTH&#x000D;&#x000A;EXCLUDE&#x000D;&#x000A;EXP&#x000D;&#x000A;FILESIZE&#x000D;&#x000A;FIND&#x000D;&#x000A;FINDMULTI&#x000D;&#x000A;FREQUENCY&#x000D;&#x000A;FTYPE&#x000D;&#x000A;FVANNUITY&#x000D;&#x000A;FVLUMPSUM&#x000D;&#x000A;FVSCHEDULE&#x000D;&#x000A;GETOPTIONS&#x000D;&#x000A;GOMONTH&#x000D;&#x000A;HASH&#x000D;&#x000A;HEX&#x000D;&#x000A;HOUR&#x000D;&#x000A;HTOU&#x000D;&#x000A;INCLUDE&#x000D;&#x000A;INSERT&#x000D;&#x000A;INT&#x000D;&#x000A;IPMT&#x000D;&#x000A;ISBLANK&#x000D;&#x000A;ISDEFINED&#x000D;&#x000A;ISFUZZYDUP&#x000D;&#x000A;LAST&#x000D;&#x000A;LEADING&#x000D;&#x000A;LENGTH&#x000D;&#x000A;LEVDIST&#x000D;&#x000A;LOG&#x000D;&#x000A;LOWER&#x000D;&#x000A;LTRIM&#x000D;&#x000A;MAP&#x000D;&#x000A;MASK&#x000D;&#x000A;MATCH&#x000D;&#x000A;MAXIMUM&#x000D;&#x000A;MINIMUM&#x000D;&#x000A;MINUTE&#x000D;&#x000A;MOD&#x000D;&#x000A;MONTH&#x000D;&#x000A;NOMINAL&#x000D;&#x000A;NORMDIST&#x000D;&#x000A;NORMSINV&#x000D;&#x000A;NOW&#x000D;&#x000A;NPER&#x000D;&#x000A;OCCURS&#x000D;&#x000A;OFFSET&#x000D;&#x000A;OMIT&#x000D;&#x000A;PACKED&#x000D;&#x000A;PI&#x000D;&#x000A;PMT&#x000D;&#x000A;PPMT&#x000D;&#x000A;PROPER&#x000D;&#x000A;PROPERTIES&#x000D;&#x000A;PVANNUITY&#x000D;&#x000A;PVLUMPSUM&#x000D;&#x000A;PYDATE&#x000D;&#x000A;PYDATETIME&#x000D;&#x000A;PYLOGICAL&#x000D;&#x000A;PYNUMERIC&#x000D;&#x000A;PYSTRING&#x000D;&#x000A;PYTIME&#x000D;&#x000A;RAND&#x000D;&#x000A;RATE&#x000D;&#x000A;RDATE&#x000D;&#x000A;RDATETIME&#x000D;&#x000A;RECLEN&#x000D;&#x000A;RECNO&#x000D;&#x000A;RECOFFSET&#x000D;&#x000A;REGEXFIND&#x000D;&#x000A;REGEXREPLACE&#x000D;&#x000A;REMOVE&#x000D;&#x000A;REPEAT&#x000D;&#x000A;REPLACE&#x000D;&#x000A;REVERSE&#x000D;&#x000A;RJUSTIFY&#x000D;&#x000A;RLOGICAL&#x000D;&#x000A;RNUMERIC&#x000D;&#x000A;ROOT&#x000D;&#x000A;ROUND&#x000D;&#x000A;RSTRING&#x000D;&#x000A;RTIME&#x000D;&#x000A;SECOND&#x000D;&#x000A;SHIFT&#x000D;&#x000A;SIN&#x000D;&#x000A;SOUNDEX&#x000D;&#x000A;SOUNDSLIKE&#x000D;&#x000A;SPLIT&#x000D;&#x000A;STOD&#x000D;&#x000A;STODT&#x000D;&#x000A;STOT&#x000D;&#x000A;STRING&#x000D;&#x000A;SUBSTR&#x000D;&#x000A;TAN&#x000D;&#x000A;TEST&#x000D;&#x000A;TIME&#x000D;&#x000A;TODAY&#x000D;&#x000A;TRANSFORM&#x000D;&#x000A;TRIM&#x000D;&#x000A;UNSIGNED&#x000D;&#x000A;UPPER&#x000D;&#x000A;UTOD&#x000D;&#x000A;VALUE&#x000D;&#x000A;VERIFY&#x000D;&#x000A;WORKDAY&#x000D;&#x000A;YEAR&#x000D;&#x000A;ZONED&#x000D;&#x000A;ZSTAT</Keywords>
+            <Keywords name="Keywords3">ANALYTIC&#x000D;&#x000A;DATA&#x000D;&#x000A;FILE&#x000D;&#x000A;TABLE&#x000D;&#x000A;LOG&#x000D;&#x000A;RESULT&#x000D;&#x000A;&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords4">T&#x000D;&#x000A;F&#x000D;&#x000A;OK&#x000D;&#x000A;FROM&#x000D;&#x000A;COMPUTE&#x000D;&#x000A;COMPUTED&#x000D;&#x000A;NONE&#x000D;&#x000A;ABS1&#x000D;&#x000A;ACL_Ver_Major&#x000D;&#x000A;ACL_Ver_Minor&#x000D;&#x000A;ACL_Ver_Patch&#x000D;&#x000A;ACL_Ver_Type&#x000D;&#x000A;AVERAGE1&#x000D;&#x000A;COUNT1&#x000D;&#x000A;GAPDUP1&#x000D;&#x000A;HIGH1&#x000D;&#x000A;LOW1&#x000D;&#x000A;MAX1&#x000D;&#x000A;MIN1&#x000D;&#x000A;MLE1&#x000D;&#x000A;OUTPUTFOLDER&#x000D;&#x000A;RANGE1&#x000D;&#x000A;RETURN_CODE&#x000D;&#x000A;SAMPINT1&#x000D;&#x000A;SAMPSIZE1&#x000D;&#x000A;STDDEV1&#x000D;&#x000A;TOTAL1&#x000D;&#x000A;UEL1&#x000D;&#x000A;WRITE1&#x000D;&#x000A;VER&#x000D;&#x000A;APPEND&#x000D;&#x000A;CANCEL&#x000D;&#x000A;D&#x000D;&#x000A;EOF&#x000D;&#x000A;FIRST&#x000D;&#x000A;FOOTER&#x000D;&#x000A;GRAPH&#x000D;&#x000A;HEADER&#x000D;&#x000A;IF&#x000D;&#x000A;KEY&#x000D;&#x000A;LINE&#x000D;&#x000A;LOCAL&#x000D;&#x000A;NEXT&#x000D;&#x000A;NODUPS&#x000D;&#x000A;NOZEROS&#x000D;&#x000A;OTHER&#x000D;&#x000A;PAGE&#x000D;&#x000A;PIC&#x000D;&#x000A;PRINT&#x000D;&#x000A;RECORD&#x000D;&#x000A;RECORD_LENGTH&#x000D;&#x000A;SCREEN&#x000D;&#x000A;SPPRESS&#x000D;&#x000A;TO&#x000D;&#x000A;UNICODE&#x000D;&#x000A;WHILE&#x000D;&#x000A;WIDTH&#x000D;&#x000A;WORKSHEET&#x000D;&#x000A;ELSE&#x000D;&#x000A;SUBTOTAL&#x000D;&#x000A;UNMATCHED&#x000D;&#x000A;MANY&#x000D;&#x000A;COLUMNS&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords5">^BATCH&#x000D;&#x000A;^FOLDER&#x000D;&#x000A;^FORMAT&#x000D;&#x000A;^LAYOUT &#x000D;&#x000A;^LOGFILE&#x000D;&#x000A;^OPEN&#x000D;&#x000A;^REPORT&#x000D;&#x000A;^WKSPACE&#x000D;&#x000A;^^ATCH&#x000D;&#x000A;^^OLDER&#x000D;&#x000A;^^ORMAT&#x000D;&#x000A;^^AYOUT &#x000D;&#x000A;^^OGFILE&#x000D;&#x000A;^^PEN&#x000D;&#x000A;^^EPORT&#x000D;&#x000A;^^KSPACE&#x000D;&#x000A;[PARENT_FOLDER_ID]&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords6">DATE&#x000D;&#x000A;EXACT&#x000D;&#x000A;FOLDER&#x000D;&#x000A;OFF&#x000D;&#x000A;ON&#x000D;&#x000A;PICTURE&#x000D;&#x000A;PRIMARY&#x000D;&#x000A;SYSTEM&#x000D;&#x000A;DATE&#x000D;&#x000A;SAFETY&#x000D;&#x000A;SECONDARY&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords7">FIELDS&#x000D;&#x000A;FILTER&#x000D;&#x000A;TO&#x000D;&#x000A;ALL&#x000D;&#x000A;XLSX&#x000D;&#x000A;PKEY&#x000D;&#x000A;SKEY&#x000D;&#x000A;WITH&#x000D;&#x000A;AS&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords8">ASSIGN&#x000D;&#x000A;CLOSE&#x000D;&#x000A;EXPORT&#x000D;&#x000A;EXTRACT&#x000D;&#x000A;SET&#x000D;&#x000A;OPEN&#x000D;&#x000A;JOIN&#x000D;&#x000A;PARAM&#x000D;&#x000A;PASSWORD&#x000D;&#x000A;PUBLISH&#x000D;&#x000A;RESULT&#x000D;&#x000A;PASSWORD&#x000D;&#x000A;</Keywords>
+            <Keywords name="Delimiters">00&apos; 01 02&apos; 03&quot; 04 05&quot; 06` 07 08` 09 10 11 12// 13 14END 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="389683" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="389683" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="2B91AF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="D9264A" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="008040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

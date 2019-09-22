@@ -1,0 +1,21 @@
+;
+;  Sample script demonstrating enumeration of objects in LDAP root.
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+
+$root = GetObject("LDAP:")
+
+For Each $object In $root
+   ? "ADSPath: " + $object.ADSPath
+   ? "Class  : " + $object.Class
+   ? "GUID   : " + $object.GUID
+   ? "Name   : " + $object.Name
+   ? "Parent : " + $object.Parent
+   ? "Schema : " + $object.Schema
+Next

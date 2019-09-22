@@ -1,0 +1,184 @@
+' =========================================================================
+'
+'   File....... SW21-EX33-DS1307-AmPm.BSP
+'   Purpose.... Real-time-clock interfacing
+'   Author..... (C) 2000 - 2005, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 16 AUG 2006
+'
+'   {$STAMP BS2p}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' This program demonstrates the access and control of an external real-
+' time-clock chip, the DS1307. In this version, the time values (hours
+' and minutes) are combined into a single value for simplified
+' manipulation of time.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+SDA             PIN     0                       ' I2C serial data line
+SCL             PIN     1                       ' I2C serial clock line
+
+BtnBus          VAR     INB                     ' four inputs, pins 4 - 7
+
+
+' -----[ Constants ]-------------------------------------------------------
+
+Ack             CON     0                       ' acknowledge bit
+Nak             CON     1                       ' no ack bit
+
+DS1307          CON     %1101 << 4
+
+
+#DEFINE _TimeMode = 0                           ' 0 = 12 hr, 1 = 24 hr
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+secs            VAR     Byte                    ' DS1307 time registers
+mins            VAR     Byte
+hrs             VAR     Byte
+day             VAR     Byte                    ' weekday
+date            VAR     Byte                    ' day in month, 1 - 31
+month           VAR     Byte
+year            VAR     Byte
+control         VAR     Byte                    ' SQW I/O control
+
+btns            VAR     Nib                     ' debounced button inputs
+btnBack         VAR     btns.BIT3               ' roll back
+btnDay          VAR     btns.BIT2               ' +/- day
+btnHr           VAR     btns.BIT1               ' +/- hours
+btnMn           VAR     btns.BIT0               ' +/- minutes
+
+idx             VAR     Nib                     ' loop control
+pntr            VAR     Byte                    ' ee pointer
+char            VAR     Byte                    ' character for display
+rawTime         VAR     Word                    ' 0 - 1439
+
+
+' -----[ EEPROM Data ]-----------------------------------------------------
+
+DayNames        DATA    "SunMonTueWedThuFriSat"
+
+
+' -----[ Initialization ]--------------------------------------------------
+
+Reset:
+  #IF ($STAMP < BS2P) #THEN
+    #ERROR "Please use BS2 version: SW21-EX33-DS1307-AmPm.BS2"
+  #ENDIF
+
+Setup:
+  DEBUG CLS,
+        "DS1307 Demo", CR,
+        "-----------"
+
+Reset_Clock:
+  GOSUB Get_Buttons                             ' scan buttons
+  idx = btns & %0011                            ' isolate hrs & mins
+  IF (idx = %11) THEN                           ' if both pressed, reset
+    secs = $00
+    mins = $00
+    hrs = $06                                   ' 6:00 AM
+    day = $07                                   ' Saturday
+    date = $01                                  ' 1st
+    month = $01                                 ' January
+    year = $05                                  ' 2005
+    control = 0                                 ' disable SQW output
+    GOSUB Set_Clock                             ' block write clock regs
+  ENDIF
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  GOSUB Get_Clock                               ' read DS1307
+  hrs = hrs & $3F
+  hrs = hrs.NIB1 * 10 + hrs.NIB0                ' BCD to decimal
+  mins = mins.NIB1 * 10 + mins.NIB0
+  rawTime = hrs * 60 + mins
+
+  #IF _TimeMode = 1 #THEN                       ' 24-hr mode?
+    hrs = rawTime / 60
+    mins = rawTime // 60
+    DEBUG CRSRXY, 0, 2,
+          DEC2 hrs, ":", DEC2 mins, ":", HEX2 secs
+  #ELSE
+    hrs = 12 - (24 - (rawTime / 60) // 12)
+    mins = rawTime // 60
+    DEBUG CRSRXY, 0, 2,
+          DEC2 hrs, ":", DEC2 mins, ":", HEX2 secs
+    IF (rawTime < 720) THEN
+      DEBUG " AM"
+    ELSE
+      DEBUG " PM"
+    ENDIF
+  #ENDIF
+
+  DEBUG CRSRXY, 0, 3
+  GOSUB Print_Day
+  PAUSE 100
+
+  GOSUB Get_Buttons
+  IF (btns > %0000) THEN                        ' button pressed?
+    IF (btns <> %1000) THEN                     ' ignore back only
+      IF (btnBack = 0) THEN                     ' increment values
+        day = ((day - 1) + btnDay // 7) + 1     ' keep 1 - 7
+        rawTime = rawTime + (btnHr * 60) // 1440
+        rawTime = rawTime + btnMn // 1440
+      ELSE
+        day = ((day - 1) + (btnDay * 6) // 7) + 1
+        rawTime = rawTime + (btnHr * 1380) // 1440
+        rawTime = rawTime + (btnMn * 1439) // 1440
+      ENDIF
+      hrs = rawTime / 60                        ' extract hrs & mins
+      mins = rawTime // 60
+      hrs  = (hrs / 10 << 4) + (hrs // 10)      ' decimal to BCD
+      mins = (mins / 10 << 4) + (mins // 10)
+      secs = $00
+      GOSUB Set_Clock                           ' update DS1307
+    ENDIF
+  ENDIF
+
+  GOTO Main
+
+
+' -----[ Subroutines ]-----------------------------------------------------
+
+Get_Buttons:
+  btns = %1111                                  ' enable all four inputs
+  FOR idx = 1 TO 5
+    btns = btns & ~BtnBus                       ' test inputs
+    PAUSE 5                                     ' delay between tests
+  NEXT
+  RETURN
+
+
+Print_Day:
+  pntr = DayNames + ((day - 1) * 3)             ' point to 1st char
+  FOR idx = 0 TO 2                              ' print 3 letters
+    READ (pntr + idx), char                     ' read letter
+    DEBUG char                                  ' print it
+  NEXT
+  RETURN
+
+
+' Do a block write to clock registers
+
+Set_Clock:
+  I2COUT SDA, DS1307, 0, [STR secs\8]           ' update clock registers
+  RETURN
+
+
+' Do a block read from clock registers
+
+Get_Clock:
+  I2CIN SDA, DS1307, 0, [STR secs\8]            ' retrieve clock registers
+  RETURN

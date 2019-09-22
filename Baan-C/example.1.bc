@@ -1,0 +1,54 @@
+| This is a BaanC comment.
+| A comment starts with a pipe and ends at any EOL (Unix/Win/Mac)
+| Comments can be placed anywhere.
+|
+| BaanC is case insensitive and space insensitive.
+|
+| Any number of SPACE and TAB can be used everywhere.
+|
+| Function definition:
+| * Should start with the keyword "function" (preceding spaces/TABs allowed)
+| * followed by simple return type (if any) and function name.
+| * Simple returns are [string|boolean|long|double|void]. void is optional.
+| * for complex return types keyword "domain <domainName>" is used.
+| * '()' are used for function parameters
+| * '{}' are used to indicate function open/close.
+| * External functions are defined with two keywords "function extern" + all above conditions.
+|
+| Examples:
+
+function func1of6(long var1)| Most Common practice for writing function
+{
+	| Do Something 1.
+}
+
+function string func2of6( | Next preferred method to write functions, when multiple incoming params
+			double var2,
+			string var2_1
+			)
+{
+	| Do Something 2.
+}
+
+function domain tcyesno func3of6 | Less used method, but both function and comments are valid.
+				(long var3,
+				 long var3_1)
+{
+	| Do Something 3.
+}
+
+function 
+	extern 	|This kind of comment and function are valid, but not a common practice.
+		func4of6
+			(boolean var4){ 
+	| Do Something 4.
+}
+
+function extern void func5of6(long var5){ |This comment and function are valid. Common practice.
+	| Do Something 5.
+}
+
+function extern domain tcbool func6of6 |This comment and function are valid, but not a common practice.
+(boolean var6){
+	| Do Something 6.
+}

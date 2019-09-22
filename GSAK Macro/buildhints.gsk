@@ -1,0 +1,34 @@
+#*******************************************
+# MacDescription = Create Hints for export
+# MacFileName = BuildHints.gsk
+# MacAuthor = javapgmr  
+# MacVersion=1.0
+#*******************************************
+
+GOSUB Name=Declare
+
+$hints=Trim($d_Hints)
+
+#Assign the hint to $_Special for export using the %macro Special Tag
+IF (Len($hints)>30)
+  $_Special=SMARTNAME($d_Hints,30)
+ELSE
+  $_Special=$hints
+ENDIF
+
+#*******************************************************
+#   Variable declarations for
+#   buildhints.gsk
+#
+#   Generated 11/30/2007 6:14:52 PM on GSAKVariables.gsk Rev V0.20 B11
+#
+#*******************************************************
+
+
+BEGINSUB Name=Declare
+Option Explicit=Yes
+
+Declare Var=$hints Type=String
+Declare Var=$_Special Type=String
+ENDSUB
+

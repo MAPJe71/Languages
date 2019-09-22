@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="Erlang" ext="erl hrl htp">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="no" commentLine="no" />
+            <Prefix words1="no" words2="yes" words3="yes" words4="yes" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;00&quot;00</Keywords>
+            <Keywords name="Folder+">case if</Keywords>
+            <Keywords name="Folder-">end</Keywords>
+            <Keywords name="Operators">- ! ( ) , . / ; [ \ ] { | } + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 2 0% 0%%</Keywords>
+            <Keywords name="Words1">after and andalso begin case catch cond end fun if let not of or orelse query receive try when xor throw catch try module export bnot bor div rem band bxor bsl bsr</Keywords>
+            <Keywords name="Words2">array: base64: beam_lib: c: calendar: dets: dict: digraph: digraph_utils: epp: erl_eval: erl_expand_records: erl_id_trans: erl_internal: erl_lint: erl_parse: erl_pp: erl_scan: erl_tar: ets: file_sorter: filelib: filename: gb_sets: gb_trees: gen_event: gen_fsm: gen_server: io: io_lib: lib: lists: log_mf_h: math: ms_transform: orddict: ordsets: pg: pool: proc_lib: proplists: qlc: queue: random: re: regexp: sets: shell: shell_default: slave: sofs: string: supervisor: supervisor_bridge: sys: timer: unicode: win32reg: zip: kernel: application: auth: code: disk_log: erl_boot_server: erl_ddll: erl_prim_loader: erlang: error_handler: error_logger: file: gen_tcp: gen_udp: gen_sctp: global: global_group: heart: inet: init: net_adm: net_kernel: os: pg2: rpc: seq_trace: user: wrap_log_reader: zlib: app: config: packages: sasl: alarm_handler: overload: rb: release_handler: systools: appup: rel: relup: script: compile: mnesia: mnesia_frag_hash: mnesia_registry: odbc: os_mon: cpu_sup: disksup: memsup: os_mon_mib: os_sup: nteventlog: otp_mib:</Keywords>
+            <Keywords name="Words3">A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _</Keywords>
+            <Keywords name="Words4">a b c d e f g h i j k l m n o p q r s t u v w x y z</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="400000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="400000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="800040" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

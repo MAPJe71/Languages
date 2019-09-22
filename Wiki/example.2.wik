@@ -1,0 +1,32 @@
+= Header 1 =
+Line 1
+Line 2
+Line 3
+== sub header 002 ==
+Line 4
+Line 5
+Line 6
+=== sub header_3 ===
+Line 7
+Line 8
+Line 9
+==== sub header     4 ====
+Line 10
+line 11
+line 12
+===== TEST =====
+Line 13
+Line 14
+Line 15
+====== sub header 6 ======
+Line 16
+Line 17
+Line 18
+=           Last test  ab___c     d            ==
+Line 19
+Line 20
+Line 21
+======= Should NOT be displayed =======
+Line 22
+Line 23
+Line 24

@@ -1,0 +1,22 @@
+// declare a cache id - in real life we would have this from somewhere else
+Integer cacheID=1234
+// load the data from the cache to begin with into the Assoc
+Assoc myDataFromCache = $LLIAPI.CacheUtil.Load (prgCtx,cacheID).ObjectValue
+ 
+// update the values
+myDataFromCache.newValue="abc"
+ 
+// Save the updated Assoc back to the cache
+Assoc updateCacheResult=$LLIApi.CacheUtil.Update(prgCtx, cacheID, myDataFromCache )
+ 
+// if the cache update failed
+if (!updateCacheResult.OK)
+    // write out to the log the value of errMsg if provided, otherwise apiError if provided, otherwise a default error message
+    (isDefined(updateCacheResult.errMsg))
+        echo(updateCacheResult.errMsg)
+    elseif ((isDefined(updateCacheResult.apiError)))
+        echo(updateCacheResult.apiError)
+    else
+        echo("error deleting cache"))
+    end
+end

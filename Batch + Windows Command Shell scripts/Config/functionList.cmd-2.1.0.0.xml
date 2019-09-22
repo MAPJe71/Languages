@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="12" id="batch_label" />
+    </associationMap>
+    <parsers>
+      <!-- Version: 2.1.0.0                                    [batch_label] -->
+      <parser 
+          id="batch_label" 
+          displayName="BAT Label" 
+          commentExpr="(?m-s:(?::{2}.*?$)|(?:(?i:REM)([\t ].*?)?$))" >
+        <function
+            mainExpr="(?m-s:^[\t ]*:[\w.]+\b)"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="[^\t :]*" />
+          </functionName>
+        </function>
+      </parser>
+      <!--                                                                [] -->
+    </parsers>
+  </functionList>
+</NotepadPlus>

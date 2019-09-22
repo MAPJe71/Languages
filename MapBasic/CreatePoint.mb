@@ -1,0 +1,185 @@
+'************************************************************************************
+'**  CreatePoint
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		1 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub TXTtoMappableTable
+Declare Sub ImportTXT
+Declare Sub CreationOfPointObjects
+Declare Sub About
+Declare Sub End_Program
+
+Define AppName "CreatePoint Sample Code"
+Define AppNameMenu "&CreatePoint"
+Define AppVersion 0.81
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Global sTable as String
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&" + AppName
+		HelpMsg AppName
+		Calling TXTtoMappableTable,
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+
+End Sub Main
+
+'*********************************************************************************************
+Sub TXTtoMappableTable
+'*********************************************************************************************
+
+	Close All Interactive
+
+'Step 1:
+	Call ImportTXT
+	
+'Step 2:
+	Call CreationOfPointObjects
+
+End Sub TXTtoMappableTable
+
+'*********************************************************************************************
+Sub ImportTXT
+'*********************************************************************************************
+
+	OnError Goto ErrorHandler
+
+	Dim sInputFile, sTmpTabFile, sTmpTable, sTabFile as String
+
+'Ask user which file to import	
+	sInputFile = FileOpenDlg(ApplicationDirectory$() + "Input\", "", "TXT", "Please select input file")
+
+	sTmpTabFile = PathToDirectory$(sInputFile) + "Temporary.TAB"
+
+'Register and open the file with a temporary name
+	Register Table sInputFile TYPE ASCII Delimiter 9 Titles Charset "WindowsLatin1" Into sTmpTabFile
+	Open Table sTmpTabFile Interactive
+
+	sTmpTable = PathToTableName$(sTmpTabFile)
+	sTabFile = Left$(sInputFile, Len(sInputFile)-3) & "TAB"
+
+'Save the table with the same name as the inputfile
+'This would be the same as checking the option "Create copy in MapInfo format for read/write"
+'in the File > Open dialog box; now the data from the TXT file are stored in a native
+'MapInfo DAT File (i.e. the data are editable now in MapInfo)  
+	Commit Table sTmpTable As sTabFile TYPE NATIVE Charset "WindowsLatin1"
+
+'Close the temporary table
+	Close Table sTmpTable
+
+'Delete the temporary TAB file
+	Kill sTmpTabFile
+
+'Open the final TAB file
+	Open Table sTabFile Interactive
+
+	sTable = PathToTableName$(sTabFile)
+
+'Browse the final table
+	Browse * From sTable
+		Position (3.59375,0) Units "in"
+		Width 6.52083 Units "in" Height 3.54167 Units "in" 
+
+	Exit Sub
+
+	ErrorHandler:
+		Note Error$()
+
+End Sub ImportTXT
+
+'*********************************************************************************************
+Sub CreationOfPointObjects
+'*********************************************************************************************
+
+	OnError Goto ErrorHandler
+
+'Create map, i.e. create the obj column - this column will be empty to start with
+'Use the correct projection/coordinate system - in this case:
+'Longitude / Latitude (WGS 84) [EPSG: 4326]
+	Create Map For sTable CoordSys Earth Projection 1, 104
+
+'Select a nice symbol
+	Set Style Symbol (69,32768,14,"MapInfo Real Estate",256,0)
+
+'Populate the obj column with point objects;
+'use the Longitude and Latitude columns to create the points
+	Update sTable Set Obj = CreatePoint(Longitude,Latitude)
+
+'Save the table	
+	Commit Table Castles
+
+'Show the table in a Map Window
+	Map From sTable
+		Position (0,0) Units "in"
+		Width 3.51042 Units "in" Height 3.54167 Units "in" 
+	Set Map Window FrontWindow() Zoom Entire
+
+	Exit Sub
+
+	ErrorHandler:
+		Note Error$()
+
+End Sub CreationOfPointObjects
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "With this application you can import a txt file and create points" Position 3dW, 1dH
+		Control StaticText title "in one step" Position 3dW, 2dH
+		Control StaticText title "The input file should meet the following conditions:" Position 3dW, 4dH
+		Control StaticText title "  - it shoul be a Delimited ASCII file (*.txt)" Position 3dW, 5dH
+		Control StaticText title "  - the delimiter should be Tab" Position 3dW, 6dH
+		Control StaticText title "  - the first line in the file should contain column titles" Position 3dW, 7dH
+		Control StaticText title "  - There should be a column named Longitude (containing X coordinate information)" Position 3dW, 8dH
+		Control StaticText title "  - There should be a column named Latitude (containing Y coordinate information)" Position 3dW, 9dH
+		Control StaticText title "  - the projection/coordinate system of the coordinates should be:" Position 3dW, 10dH
+		Control StaticText title "    Longitude / Latitude (WGS 84) [EPSG: 4326]" Position 3dW, 11dH
+		Control StaticText title "A sample file - Castles.TXT - is included" Position 3dW, 13dH
+		Control StaticText title "If necessary, you can change the code to test it with your own files" Position 3dW, 15dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 50dW, 18dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************

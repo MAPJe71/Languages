@@ -1,0 +1,64 @@
+<NotepadPlus>
+<UserLang name="FreeBASIC" ext="bas bi" udlVersion="2.1">
+<Settings>
+<Global caseIgnored="yes" allowFoldOfComments="yes" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+<Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+</Settings>
+<KeywordLists>
+<Keywords name="Comments">03/&apos; 04&apos;/ 00&apos; 01 02</Keywords>
+<Keywords name="Numbers, prefix1"></Keywords>
+<Keywords name="Numbers, prefix2"></Keywords>
+<Keywords name="Numbers, extras1"></Keywords>
+<Keywords name="Numbers, extras2"></Keywords>
+<Keywords name="Numbers, suffix1"></Keywords>
+<Keywords name="Numbers, suffix2"></Keywords>
+<Keywords name="Numbers, range"></Keywords>
+<Keywords name="Operators1">-&gt; = &amp;= += -= *= /= \= ^= MOD= AND= EQV= IMP= OR= XOR= SHL= SHR= + - * / \ ^ MOD SHL SHR @ .-&gt; &amp; &lt;= =&gt; &lt; &gt; ( ) [ ]</Keywords>
+<Keywords name="Operators2"></Keywords>
+<Keywords name="Folders in code1, open"></Keywords>
+<Keywords name="Folders in code1, middle"></Keywords>
+<Keywords name="Folders in code1, close"></Keywords>
+<Keywords name="Folders in code2, open">enum type function sub property</Keywords>
+<Keywords name="Folders in code2, middle">&quot;declare function&quot; &quot;declare sub&quot;</Keywords>
+<Keywords name="Folders in code2, close">&quot;end enum&quot; &quot;end type&quot; &quot;end function&quot; &quot;end sub&quot; &quot;end property&quot;</Keywords>
+<Keywords name="Folders in comment, open"></Keywords>
+<Keywords name="Folders in comment, middle"></Keywords>
+<Keywords name="Folders in comment, close"></Keywords>
+<Keywords name="Keywords1">erase lbound preserve redim ubound&#x000D;&#x000A;bit bitreset bitset hibyte hiword lobyte loword&#x000D;&#x000A;and andalso eqv imp not or orelse xor&#x000D;&#x000A;rem&#x000D;&#x000A;defbyte defdbl defint deflng deflongint defshort defsng defstr defubyte defuint defulongint defushort&#x000D;&#x000A;option base byval dynamic explicit gosub nogosub nokeyword private static&#x000D;&#x000A;beep csrlin locate open cons err pipe scrn pos print using spc tab width write&#x000D;&#x000A;asc bin chr cvd cvi cvl cvlongint cvs cvshort format hex mkd mki mkl mklongint mks mkshort oct str val valint vallng valuint valulng wbin wchr whex woct wstr&#x000D;&#x000A;as class dim enum extends implements object private: protected: public: scope shared type union var with&#x000D;&#x000A;date dateadd datediff datepart dateserial datevalue day hour isdate&#x000D;&#x000A;minute month monthname now second setdate settime time timer timeserial timevalue weekday weekdayname year&#x000D;&#x000A;access append binary bload bsave close encoding eof freefile get input input$ &quot;line input&quot; loc lock lof open output &quot;print #&quot; &quot;put #&quot; random read&#x000D;&#x000A;&quot;read write&quot; reset seek unlock &quot;write #&quot;&#x000D;&#x000A;case continue do else elseif &quot;end if&quot; endif exit for gosub goto if iif is loop next on return select sleep step then until wend while&#x000D;&#x000A;add alpha circle cls color custom draw &quot;draw string&quot; flip get imageconvertrow imagecreate imagecreate imagedestroy imageinfo line paint palette pcopy pmap point pointcoord preset pset put rgb rgba screen screencontrol screencopy screenevent screenglproc screeninfo screenlist screenlock screenptr screenres screenset screensync screenunlock trans view window&#x000D;&#x000A;inp lpos lprint lpt open com out wait&#x000D;&#x000A;abs acos asin atan2 atn cos exp fix frac int log randomize rnd sgn shl shr sin sqr tan&#x000D;&#x000A;peek poke allocate callocate clear deallocate delete field fre new reallocate&#x000D;&#x000A;asm data let offsetof option restore sizeof swap to typeof&#x000D;&#x000A;common dylibfree dylibload dylibsymbol end exterrn export extern import namespace private public using&#x000D;&#x000A;procptr strptr varptr&#x000D;&#x000A;abstract alias base byref byval call cdecl constructor declare destructor function lib naked operator overload override pascal property protected static stdcall sub this va_arg va_first va_next virtual&#x000D;&#x000A;sadd instr instrrev lcase left len lset ltrim mid right rset rtrim space trim ucase wspace&#x000D;&#x000A;condbroadcast condcreate conddestroy condsignal condwait mutexcreate mutexdestroy mutexlock mutexunlock threadcall&#x000D;&#x000A;threadcreate threaddetach threadwait&#x000D;&#x000A;cast cbyte cdbl cint clng clngint cptr cshort csign csng cubyte cuint culng culngint cunsg cushort &#x000D;&#x000A;getjoystick getkey getmouse inkey multikey setmouse stick strig winput&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
+<Keywords name="Keywords2">any&#x000D;&#x000A;byte&#x000D;&#x000A;const&#x000D;&#x000A;double&#x000D;&#x000A;integer&#x000D;&#x000A;long&#x000D;&#x000A;longint&#x000D;&#x000A;pointer&#x000D;&#x000A;ptr&#x000D;&#x000A;short&#x000D;&#x000A;single&#x000D;&#x000A;string&#x000D;&#x000A;ubyte&#x000D;&#x000A;uinteger&#x000D;&#x000A;ulong&#x000D;&#x000A;ulongint&#x000D;&#x000A;unsigned&#x000D;&#x000A;ushort&#x000D;&#x000A;wstring&#x000D;&#x000A;zstring</Keywords>
+<Keywords name="Keywords3">#assert&#x000D;&#x000A;#define&#x000D;&#x000A;#else&#x000D;&#x000A;#elseif&#x000D;&#x000A;#endif&#x000D;&#x000A;#endmacro&#x000D;&#x000A;#error&#x000D;&#x000A;#if&#x000D;&#x000A;#ifdef&#x000D;&#x000A;#ifndef&#x000D;&#x000A;#inclib&#x000D;&#x000A;#include&#x000D;&#x000A;#lang&#x000D;&#x000A;#libpath&#x000D;&#x000A;#line&#x000D;&#x000A;#macro&#x000D;&#x000A;#pragma&#x000D;&#x000A;#print&#x000D;&#x000A;#undef&#x000D;&#x000A;defined&#x000D;&#x000A;once&#x000D;&#x000A;</Keywords>
+<Keywords name="Keywords4">null true false</Keywords>
+<Keywords name="Keywords5">__FB_VERSION__&#x000D;&#x000A;__FB_BUILD_DATE__&#x000D;&#x000A;__FB_VER_MAJOR__&#x000D;&#x000A;__FB_VER_MINOR__&#x000D;&#x000A;__FB_VER_PATCH__&#x000D;&#x000A;__FB_SIGNATURE__&#x000D;&#x000A;__FB_MT__&#x000D;&#x000A;__FILE__&#x000D;&#x000A;__FILE_NQ__&#x000D;&#x000A;__FUNCTION__&#x000D;&#x000A;__FUNCTION_NQ__&#x000D;&#x000A;__LINE__&#x000D;&#x000A;__DATE__&#x000D;&#x000A;__DATE_ISO__&#x000D;&#x000A;__TIME__&#x000D;&#x000A;__PATH__&#x000D;&#x000A;__FB_OPTION_BYVAL__&#x000D;&#x000A;__FB_OPTION_DYNAMIC__&#x000D;&#x000A;__FB_OPTION_ESCAPE__&#x000D;&#x000A;__FB_OPTION_EXPLICIT__&#x000D;&#x000A;__FB_OPTION_PRIVATE__&#x000D;&#x000A;__FB_OPTION_GOSUB__&#x000D;&#x000A;__FB_OUT_EXE__&#x000D;&#x000A;__FB_OUT_LIB__&#x000D;&#x000A;__FB_OUT_DLL__&#x000D;&#x000A;__FB_OUT_OBJ__&#x000D;&#x000A;__FB_DEBUG__&#x000D;&#x000A;__FB_ERR__&#x000D;&#x000A;__FB_LANG__&#x000D;&#x000A;__FB_BACKEND__&#x000D;&#x000A;__FB_FPU__&#x000D;&#x000A;__FB_FPMODE__&#x000D;&#x000A;__FB_GCC__&#x000D;&#x000A;__FB_ARGC__&#x000D;&#x000A;__FB_ARGV__&#x000D;&#x000A;__FB_BIGENDIAN__&#x000D;&#x000A;__FB_CYGWIN__&#x000D;&#x000A;__FB_DARWIN__&#x000D;&#x000A;__FB_DOS__&#x000D;&#x000A;__FB_FREEBSD__&#x000D;&#x000A;__FB_LINUX__&#x000D;&#x000A;__FB_MAIN__&#x000D;&#x000A;__FB_NETBSD__&#x000D;&#x000A;__FB_OPENBSD__&#x000D;&#x000A;__FB_PCOS__&#x000D;&#x000A;__FB_SSE__&#x000D;&#x000A;__FB_UNIX__&#x000D;&#x000A;__FB_VECTORIZE__&#x000D;&#x000A;__FB_WIN32__&#x000D;&#x000A;__FB_XBOX__</Keywords>
+<Keywords name="Keywords6">assert assertwarn stop &#x000D;&#x000A;erfn err error local &quot;on error&quot; resume &quot;resume next&quot;</Keywords>
+<Keywords name="Keywords7">chain chdir command curdir dir end environ exec exepath fileattr filecopy filedatetime fileexists filelen&#x000D;&#x000A;isredirected kill mkdir name rmdir run setenviron shell system windowtitle</Keywords>
+<Keywords name="Keywords8"></Keywords>
+<Keywords name="Delimiters">00 01 02 03[ 04 05] 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+</KeywordLists>
+<Styles>
+<WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+<WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="2" nesting="0" />
+<WordsStyle name="NUMBERS" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS2" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS3" fgColor="808040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS4" fgColor="8080FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS5" fgColor="FF0080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS6" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+<WordsStyle name="KEYWORDS7" fgColor="B03022" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="OPERATORS" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="FOLDER IN CODE2" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS1" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS2" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS4" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+<WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+</Styles>
+</UserLang>
+</NotepadPlus>

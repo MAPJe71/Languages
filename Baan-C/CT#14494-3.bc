@@ -1,0 +1,14 @@
+choice.test.123:
+before.choice:
+    funct1(10)
+on.choice:
+    funct1(10)
+
+before.program:
+    set.synchronized.dialog("fxinh0123s000")
+
+functions:
+function func1(long var1)
+{
+    | Do Something 1.
+}

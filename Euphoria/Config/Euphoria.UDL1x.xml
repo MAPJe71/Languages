@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="Euphoria" ext="exw">
+        <Settings>
+            <Global caseIgnored="no" escapeChar="\" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;&apos;0&quot;&apos;0</Keywords>
+            <Keywords name="Folder+"></Keywords>
+            <Keywords name="Folder-"></Keywords>
+            <Keywords name="Operators">$ &amp; ( ) , [ ] { }</Keywords>
+            <Keywords name="Comment">1 1/* 2 2*/ 0--</Keywords>
+            <Keywords name="Words1">and as break by case constant continue do else elsedef elsif elsifdef end entry enum exit export fallthru for function global goto if ifdef include label loop namespace not or override procedure public retry return routine switch then to type until while with without xor</Keywords>
+            <Keywords name="Words2">? abort and_bits append arctan atom c_func c_proc call call_func call_proc clear_screen close command_line compare cos date delete delete_routine equal find floor get_key getc getenv gets hash head include_paths insert integer length log machine_func machine_proc match mem_copy mem_set not_bits object open option_switches or_bits peek peek2s peek2u peek4s peek4u peek_string peeks pixel platform poke poke2 poke4 position power prepend print printf puts rand remainder remove repeat replace routine_id sequence sin splice sprintf sqrt system system_exec tail tan task_clock_start task_clock_stop task_create task_list task_schedule task_self task_status task_suspend task_yield time trace xor_bits</Keywords>
+            <Keywords name="Words3"></Keywords>
+            <Keywords name="Words4"></Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

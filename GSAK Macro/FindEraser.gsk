@@ -1,0 +1,1042 @@
+##                                 FIND ERASER
+#                             For GSAK 7.6 and later
+#                               Written by DocDiTTo
+#
+#
+#  Macro Overview:
+#
+#  This macro prepares data in a GSAK database to be shared with others.
+#  Pocket Query data is designed to be very user-specific.  When downloaded, it
+#  contains all child waypoints for all caches owned by the person who ran it --
+#  including hidden ones which are not supposed to be shared with others.
+# 
+#  In many cases, when people are caching with friends they want to load their
+#  GPS's with the same data -- although they've almost never found exactly the
+#  same caches.  GSAK will mark all caches found by the person who ran the pocket
+#  query as "found".  To do this, it interrogates the logs of each cache looking
+#  for a "Found" log by the person who ran the query.  When sharing data or loading
+#  data into another person's GPS, they won't want caches flagged as "found" if they
+#  haven't found them yet.  However, getting GSAK to "forget" that a cache is 
+#  found isn't as easy as many people think.  That's where this macro come in.
+#  
+# 
+# What this macro does:
+#
+# -- Optionally deletes all child waypoints on your own caches that are not 
+#   parking or trailhead waypoints.  You can also flag specific child waypoints 
+#   and they won't be deleted.  Because pocket queries from Geocaching.com 
+#   include ALL child waypoints for your own caches (including those you've set
+#   as "hidden") you could inadvertantly share secret child waypoints if you use
+#   your pocket query to load up someone else's GPS.  Check the box to wipe out
+#   those waypoints if this is a concern (especially important if you've hidden 
+#   multicaches or puzzle caches!)  
+#
+#
+# -- Changes all your FOUND logs to NOTEs.  Because GSAK interrogates the logs
+#   of a cache to determine whether you've found it or not, we need to change
+#   all your FOUND logs on caches in the database to NOTES.  If we didn't do 
+#   this, GSAK would end up re-flagging all the caches you've found as FOUND.
+#   We could also delete your FOUND logs, but it's preferable to leave them
+#   in as notes.  A one-line note that the cache was found by you is added
+#   to the beginning of all Found logs that are changed to notes.
+#
+# -- Optionally erases all DNFs by changing DNF logs to notes.  This option
+#    also clears all DNF flags.
+#
+# -- Clears FOUND flag, changes DATE FOUND to 01/01/1999, and sets the icon
+#   to Geocache if it's set to Geocache Found.   
+#
+# -- Provides the option of clearing FTF Flags from all caches, and clearing
+#    User Notes and Corrected Coordinates from all or just found caches.
+#
+# -- Provides a fast, easy way to make a backup of the current database before
+#   any permanent changes are made. 
+#
+# -- Incorporates some "smarts" in an attempt to make the process as easy 
+#    for the user as possible.
+#    
+#
+# MacDescription = Sets all caches in a database to "Not Found"
+# MacFileName = FindEraser.gsk
+# MacAuthor = DocDiTTo
+# MacVersion=1.3
+# MacUrl=http://gsak.net/board/index.php?showtopic=12396
+#
+# REVISION HISTORY
+#
+# Version 1.3
+# - Added Transaction statements for faster processing of database updates
+# - Corrected format in "$d_FoundByMe" date 
+#
+# Version 1.2
+# - Fixed a bug that caused an error the first time the macro ran because 
+#   saved settings weren't loaded.  
+#
+# Version 1.1
+# - Added options to clear the FTF/DNF flag on all caches
+# - Added option to erase user notes on found or all caches
+# - Added option to erase corrected coordinates on found or all caches
+# - Added automatic Save/Restore for macro settings
+
+
+VERCHECK version=7.6.0.0
+$FormCaption = "Find Eraser "+ AllTrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1))
+$Form = EditForm($Form,"Form1","Caption",$FormCaption)
+
+$memo1 = "This macro will set the status of all caches in the current database "
+$memo1 = $memo1 + "to Not Found.  This should be done before loading data into "
+$memo1 = $memo1 + "another person's GPS, or before sharing cache data with "
+$memo1 = $memo1 + "someone else.  If this database contains caches you've "
+$memo1 = $memo1 + "hidden, you should check the box to clear child waypoints "
+$memo1 = $memo1 + "from your hides; otherwise you could reveal secret puzzle "
+$memo1 = $memo1 + "cache locations or multi-cache stages to others."+$_CrLf +$_CrLf
+$memo1 = $memo1 + "WARNING:  Changes made by this macro can only be undone by "
+$memo1 = $memo1 + "reloading the original data from a pocket query or a "
+$memo1 = $memo1 + "database backup.  This macro CANNOT reverse the changes it "
+$memo1 = $memo1 + "makes.  Please back up this database before erasing your finds."
+
+# Do our best to locate the GC.Com user ID number
+GOSUB Name=GetOwnerID
+
+# Get some numbers for the form
+GOSUB name=GetCounts
+
+#Set default values
+IF $ChildCount > 0
+	$cbPurgeOwnerChildren = TRUE
+ELSE
+	$cbPurgeOwnerChildren = FALSE
+ENDIF
+$cbClearFTF = TRUE
+$rbClearNotesOnFound = TRUE
+
+$comboValues = "all caches;found caches only"
+$form = EditForm($form,"cmbClearNotesScope","values",$comboValues)
+$form = EditForm($form,"cmbClearCorrectedScope","values",$comboValues)
+
+# Set defaults if no saved settings found
+$cbclearnotes = FALSE
+$cbclearcorrected = FALSE
+
+# Load in saved form settings
+GOSUB Name=RestoreSettings
+GOSUB Name=UpdateForm
+
+WHILE TRUE
+ $FormExit = form($form,"")
+  BEGINCASE
+  	CASE $FormExit = "DelayExit"
+      BREAK
+    CASE $FormExit = "SystemExit"
+    	GOSUB Name=SaveSettings # save settings on exit
+      BREAK
+    CASE $FormExit = "btnIDHelp"
+     RUNPGM pgm="iexplore.exe" parms="http://forums.groundspeak.com/GC/index.php?s=&showtopic=96012&view=findpost&p=1432885" Wait=No Hide=No
+     GOSUB Name=GetOwnerID
+    CASE $formexit = "btnTest"
+    	GOSUB Name=AddCorrected   # Used for testing only
+    CASE $Formexit = "btnBackup"
+    	IF AllTrim($edtBackupFile) <> ""
+    			BACKUP File=$edtBackupFile DATABASE=$_CurrentDatabase Settings=No GrabbedImages=Yes  
+    	ELSE
+    			MSGOK msg="You need to enter a backup file name.  The filename should have a .ZIP extension." 
+    	ENDIF		
+    CASE $Formexit = "cbClearNotes"
+    	GOSUB Name=UpdateForm
+    CASE $Formexit = "cbClearCorrected"
+    	GOSUB Name=UpdateForm
+    CASE $FormExit = "btnStart"
+    	IF AllTrim($edtGCIdNum) = ""
+    		 MSGOK msg=You must provide your numeric Geocaching.com ID number for this macro to work correctly.	 
+    	ELSE
+    		IF YesNo("WARNING!  You are about to make irreversible changes to the current database!"+$_Newline+"All caches will be marked as not found.  Are you sure?")
+    			CANCELFILTER	
+        	macroflag type=clear range=all
+        	IF $cbPurgeOwnerChildren
+        		GOSUB Name=CleanOwnedCaches
+        	ENDIF
+        	IF $cbClearCorrected
+        		BEGINCASE
+        			CASE $cmbClearCorrectedScope = Extract($combovalues,";",1) # all caches
+        				GOSUB Name=DeleteCorrectedForAllCaches
+        			CASE $cmbClearCorrectedScope = Extract($combovalues,";",2) # found only 
+        					GOSUB name=DeleteCorrectedForFindsOnly
+        		ENDCASE	
+      		ENDIF
+      		IF $cbClearNotes
+            CANCELFILTER 
+      			TABLE Active=Caches
+        		BEGINCASE
+        			CASE $cmbClearNotesScope = Extract($combovalues,";",1) # all caches
+        				#GOSUB name=ClearUserNotesForFilter
+        				GOSUB Name=ClearUserNotesForAll
+        			CASE $cmbClearNotesScope = Extract($combovalues,";",2) # found only
+  							MFILTER expression=$d_Found
+  							IF $_FilterCount > 0
+        					GOSUB name=ClearUserNotesForFilter
+        				ENDIF	
+        		ENDCASE	      		
+      		ENDIF	
+      		IF $cbClearDNF
+        		GOSUB Name=PurgeDNFLogs
+        	ENDIF
+        	GOSUB name=PurgeFoundLogs
+        	GOSUB Name=MakeNotFound
+        	SPEEDMODE status=off
+        	SPEEDMODE status=on
+        	GOSUB name=GetCounts
+        	MSGOK msg=Processing complete.
+      	ENDIF  
+    ENDIF
+  ENDCASE
+ENDWHILE
+
+###############################################################################
+#
+# Savesettings  -  Saves the form data settings for next time
+#
+###############################################################################
+BEGINSUB Name=SaveSettings
+	MacSettings Type=S Vars=cbPurgeOwnerChildren,cbClearNotes,cmbClearNotesScope,cbClearCorrected,cmbClearCorrectedScope,cbClearFTF,cbClearDNF,edtBackupFile File=FindEraser.xml FileCheck=N	
+ENDSUB
+
+###############################################################################
+#
+# RestoreSettings  -  Restores the form data settings from saved data
+#
+###############################################################################
+BEGINSUB Name=RestoreSettings
+	MacSettings Type=R File=FindEraser.xml FileCheck=N
+ENDSUB
+
+
+###############################################################################
+#
+# UpdateForm - this updates some Form controls based on whether others are 
+# checked.  Called when certain controls change status and when saved settings
+# are loaded.
+###############################################################################
+BEGINSUB Name=UpdateForm
+	IF $cbclearnotes
+     $form = EditForm($form,"cmbClearNotesScope","enabled","YES")
+  ELSE
+     $form = EditForm($form,"cmbClearNotesScope","enabled","NO")
+  ENDIF
+  IF $cbclearcorrected
+     $form = EditForm($form,"cmbClearCorrectedScope","enabled","YES")
+  ELSE
+     $form = EditForm($form,"cmbClearCorrectedScope","enabled","NO")
+  ENDIF
+ENDSUB
+
+###############################################################################
+# GetOwnerID - Retrieves the numeric Geocaching.com ID number from the
+# GSAK INI file if it exists, but if not it prompts the user to allow
+# a scan of all Found Caches in an attempt to locate the ID. If the ID
+# cannot be located the user will be told so and will be able to enter
+# it manually on the form. If the ID is found it will be displayed and
+# added into the form automatically.
+###############################################################################
+BEGINSUB Name=GetOwnerID
+	IF StrToBool(Sysinfo("gsakini;TfmConfig;rbtId.Checked"))
+     $IniOwnerID = Sysinfo("gsakini;TfmConfig;EdtGeoName.Text")
+     $edtGCIdNum = AllTrim($IniOwnerID)
+  ELSE
+  	IF YesNo("Your numeric Geocaching.com ID isn't configured in GSAK. Shall I scan Found logs to try to find it?")
+  		$IDFound = FALSE
+  	  MFilter expression= $d_Found
+  		Table Active=Caches
+  		Transaction Action=Begin
+			Goto Position=Top
+  		while not ($_eol)
+    		SHOWSTATUS msg=Scanning $d_Code 
+   		  Table Active=Logs Scope=Parent
+    		Goto Position=Top
+      	while not ($_eol) 
+       		if ($d_lIsowner)
+       			showstatus display=off
+            $edtGCIdNum = NumToStr($d_lOwnerId)  
+            MSGOK Msg="Got it! It's $edtGCIdNum. You may want to enter it in GSAK under Tools -> Options -> General."
+            $IDFound = true  
+            BREAK   
+          endif
+       Goto Position=Next
+      endwhile
+      if $IDFound
+        Break
+      endif
+      Table Active=Caches
+    	Goto Position=Next
+  	 endwhile
+  	 Transaction Action=End
+     showstatus display=off
+     if not($IDFound)
+      msgok msg="Sorry, but I could not locate a matching User ID Number for you in this database."
+     endif
+   ELSE
+   	 MSGOK msg="You will need to provide your numeric Geocaching.com User ID for this macro to work properly."
+   ENDIF  		
+ ENDIF
+ENDSUB
+
+###############################################################################
+#
+#  Sets a filter on owned caches (uses GC Owner ID number) and erases all
+#  child waypoints that aren't parking areas or trailheads.  This is necessary
+#  because a PQ will contain all hidden waypoints for all the owners caches.
+#  You probably don't want to share that info with others, especially in the
+#  case of a multi-cache or a puzzle cache.  In some cases you may want to keep
+#  child waypoints that aren't parking or trailheads.  To do so, set the flag 
+#  on them and they won't be deleted.
+#
+###############################################################################
+BEGINSUB Name=CleanOwnedCaches
+  # Filter only owned caches
+  TABLE Active=Caches
+  MFILTER expression= $d_OwnerID = $edtGCIdNum
+  IF ($_FilterCount > 0)
+    Transaction Action=Begin
+		Goto Position=Top
+  	WHILE not ($_eol)
+    	showstatus msg=Cleaning child waypoints: $d_Code
+    	Table Active=Waypoints Scope=Parent
+    	Goto Position=Top
+      WHILE not ($_eol)
+     	  if (($d_cType <> "Parking Area") and ($d_cType <> "Trailhead")) and not($d_cFlag)
+      	   MacroDelete action=DelCurrent
+      	 endif
+       	Goto Position=Next
+      ENDWHILE
+      MacroDelete action=commit
+      Table Active=Caches
+    	Goto Position=Next
+  	ENDWHILE
+  	Transaction Action=End
+    showstatus display=off
+	ENDIF
+ENDSUB
+
+###############################################################################
+#
+#   PurgeFoundLogs
+#
+#   GSAK interrogates the logs database in order to determine whether you found
+#   a cache or not.  By changing all found & attended logs to notes we can 
+#   prevent GSAK from re-flagging those caches as found.  This routine uses the
+#   numeric GC number to identify the owner's logs and changes them from
+#   "Found it" or "Attended" to "Other".  It also changes the Found Status of 
+#   the parent cache to false and clears the "Found By Me Date"
+#
+###############################################################################
+Beginsub Name=PurgeFoundLogs
+  # Filter only found caches
+	GOSUB Name=SetMacroFlagOnFound
+	MFILTER expression=$d_MacroFlag
+  IF ($_FilterCount > 0) 
+    Transaction Action=Begin
+		Goto Position=Top
+  	while not ($_eol)
+   	 	SHOWSTATUS msg=Clearing found log on $d_Code 
+    	Table Active=Logs Scope=Parent
+    	Goto Position=Top
+      while not ($_eol) 
+       	IF ($d_lIsowner)
+         IF (($d_lType = "Found it") or ($d_lType = "Attended"))
+           $d_ltype = "Note"
+           $d_lText = "This cache was FOUND by "+$d_lby + $_NewLine + $d_lText
+         ENDIF        
+       	ENDIF
+       	Goto Position=Next
+      endwhile
+      Table Active=Caches
+     Goto Position=Next
+    endwhile
+    Transaction Action=End
+    showstatus display=off
+  ENDIF 
+Endsub
+
+###############################################################################
+#
+#   PurgeDNFLogs
+#
+#   GSAK interrogates the logs database in order to determine whether you found
+#   a cache or not.  By changing all DNF logs to notes we can 
+#   prevent GSAK from re-flagging those caches as DNFs.  This routine uses the
+#   numeric GC number to identify the owner's logs and changes them from
+#   "Did Not Find" to "Other".  It also changes the DNF Status of 
+#   the parent cache to false and sets the "DNF Date" to 01/01/1900
+#   This routine changes the settings of the MACRO flag
+###############################################################################
+Beginsub Name=PurgeDNFLogs
+  # Filter only DNF'd caches
+	GOSUB Name=SetMacroFlagOnDNF
+	MFILTER expression=$d_MacroFlag
+  IF ($FlaggedCount > 0)  
+    Transaction Action=Begin	
+		Goto Position=Top
+  	while not ($_eol)
+   	 	SHOWSTATUS msg=Clearing DNF log on $d_Code 
+    	Table Active=Logs Scope=Parent
+    	Goto Position=Top
+      while not ($_eol) 
+       	IF ($d_lIsowner)
+         IF ($d_ltype = "Didn't find it")
+           $d_ltype = "Note"
+           $d_lText = "This cache logged DID NOT FIND by "+$d_lby + $_NewLine + $d_lText
+         ENDIF        
+       	ENDIF
+       	Goto Position=Next
+      endwhile
+      Table Active=Caches
+     Goto Position=Next
+    endwhile
+    Transaction Action=End
+    showstatus display=off
+  ENDIF 
+Endsub
+
+###############################################################################
+#  SetMacroFlagOnFound
+#  
+# This routine clears all macro flags, sets a filter
+# on found caches and sets the macro flag for all those
+# caches.  It then sets a filter on just those flagged
+# caches.  Macro Flags are changed by this routine.
+# $FlaggedCount returns the number of caches with the macro flag set
+# At the end of this routine MFILTER is set on $d_Found, NOT $d_MacroFlag
+###############################################################################
+BEGINSUB Name=SetMacroFlagOnFound
+	$FlaggedCount = 0 
+	TABLE Active=Caches
+  MACROFLAG type=Clear Range=All
+  MFILTER expression= $d_Found
+  IF $_FilterActive 
+  	$FlaggedCount = $_FilterCount
+  	MACROFLAG type=SET range=FILTER
+  ENDIF
+ENDSUB
+
+
+###############################################################################
+#  SetMacroFlagOnDNF
+#  
+# This routine clears all macro flags, sets a filter
+# on DNF'ed caches and sets the macro flag for all those
+# caches.  It then sets a filter on just those flagged
+# caches.  Macro Flags are changed by this routine.
+# $FlaggedCount returns the number of caches with the macro flag set
+# At the end of this routine MFILTER is set on $d_DNF, NOT $d_MacroFlag
+###############################################################################
+BEGINSUB Name=SetMacroFlagOnDNF
+	$FlaggedCount = 0 
+	TABLE Active=Caches
+  MACROFLAG type=Clear Range=All
+  MFILTER expression= $d_DNF
+  IF $_FilterActive 
+  	$FlaggedCount = $_FilterCount
+  	MACROFLAG type=SET range=FILTER
+  ENDIF
+ENDSUB
+
+
+
+###############################################################################
+#
+# MakeNotFound
+#
+# Clears Found flag for each found cache, sets found date to 01/01/1900, and
+# changes symbol from "Geocache Found" to "Geocache".  
+###############################################################################
+BEGINSUB Name=MakeNotFound
+  GOSUB Name=SetMacroFlagOnFound
+  MFILTER expression=$d_MacroFlag
+  IF ($_FilterCount > 0)
+  	SORT by=natural
+  	Transaction Action=Begin
+	  GOTO Position=Top
+    WHILE Not ($_eol)
+      SHOWSTATUS msg=Purging "Found" data from $d_Code
+      $d_FoundByMeDate=[00000000]
+      $d_Found = false
+      IF $d_Symbol = "Geocache Found"
+       $d_Symbol = "Geocache"
+      ENDIF
+      IF $cbClearFTF
+      	$d_FTF = FALSE
+   		ENDIF
+      GOTO Position=Next
+    ENDWHILE
+    Transaction Action=End
+  ENDIF  
+  SHOWSTATUS display=off
+ENDSUB
+
+###############################################################################
+# GetCounts
+#
+# Retrieves a count of child, owned, and found caches and updates the edit
+# boxes on the form with those numbers
+###############################################################################
+BEGINSUB name=GetCounts
+	TABLE Active=Caches
+	MFILTER expression=$d_Found
+	$Foundcount = $_FilterCount
+	MFILTER expression= $d_OwnerID = $edtGCIdNum
+	$OwnedCount = $_FilterCount
+	IF $_FilterCount > 0   #Need to check otherwise we could get data for ALL caches
+	   $ChildCount = TotChild("FILTER")
+	ELSE
+		 $ChildCount = 0
+	ENDIF
+	MFILTER expression= $d_HasUserNote
+	$NotesCount = $_FilterCount
+	MFILTER expression=$d_HasCorrected
+	$CorrectedCount = $_FilterCount
+	MFILTER expression=$d_DNF
+	$DNFCount = $_FilterCount
+	MFILTER expression= $d_FTF
+	$FTFCount = $_FilterCount
+	
+	$edtFound = NumToStr($Foundcount)
+  $edtOwned  = NumToStr($OwnedCount)
+  $edtChildren = NumToStr($ChildCount)
+  $edtFTF = NumToStr($FTFCount)
+  $edtDNF = NumToStr($DNFCount)
+  $edtCorrected = NumToStr($CorrectedCount)
+  $edtNotes = NumToStr($NotesCount)
+  
+  CANCELFILTER
+ENDSUB	
+
+###############################################################################
+#
+# ClearUserNotesForFilter
+# Delete User Notes for all caches in the current filter
+# (You should at least set a filter on $d_HasUserNote before calling this)
+# NOTE: Macroflag will be changed in this routine
+##############################################################################
+BEGINSUB name=ClearUserNotesForFilter
+	$loopcount = 0
+	MACROFLAG type=clear range=all 
+	MFILTER expression=$d_HasUserNote Join=AND
+	MACROFLAG type=SET range=FILTER
+	MFILTER expression=$d_MacroFlag
+	SORT by="natural"
+	#SPEEDMODE status=off
+	#SPEEDMODE status=on
+  IF ($_FilterCount > 0) 	
+    Transaction Action=Begin
+		Goto Position=Top
+  	while not ($_eol)
+  		$loopcount = $loopcount + 1
+   	 	SHOWSTATUS msg=Clearing user note on $loopcount $d_Code 
+			$d_UserNote = ""
+     Goto Position=Next
+    endwhile
+    Transaction Action=End
+    showstatus display=off
+  #ELSE
+  #	PAUSE msg=Got filtercount of 0 in ClearUserNotesForFilter
+  ENDIF 
+ENDSUB
+
+
+###############################################################################
+#
+# DeleteCorrectedForFindsOnly
+# Delete Corrected Coordinates for found caches only
+# NOTE: Macroflag will be changed in this routine
+##############################################################################
+BEGINSUB name=DeleteCorrectedForFindsOnly
+  # Filter only found caches with corrected coords
+  MACROFLAG type=Clear range=All #clears all macro flags
+  MFILTER expression=$d_HasCorrected AND $d_Found 
+  IF $_FilterCount = 0
+		EXITSUB
+	ELSE
+		MACROFLAG Type=SET Range=FILTER # Updates macro flag for our current filter
+		MFILTER expression=$d_MacroFlag #set
+		Transaction Action=Begin	
+		Goto Position=Top
+  	while not ($_eol)
+   	 	SHOWSTATUS msg=Clearing corrected coordinates on $d_Code 
+    	Table Active=Corrected Scope=Parent
+				MacroDelete Action=DelScope
+				MACRODELETE Action=Commit
+		 Table Active=Caches	
+     Goto Position=Next
+    endwhile
+    Transaction Action=End
+    showstatus display=off
+  # ELSE
+  #	PAUSE msg= Got filtercount of 0 in DeleteCorrectedForFindsOnly
+  ENDIF 
+ENDSUB
+
+###############################################################################
+#
+# DeleteCorrectedForAllCaches
+# Delete Corrected Coordinates for all caches in database
+#
+##############################################################################
+BEGINSUB Name=DeleteCorrectedForAllCaches
+   TABLE Active=Corrected Scope=All
+   MACRODELETE Action=Delscope
+   MACRODELETE Action=Commit	
+ENDSUB
+
+	
+##############################################################################	
+#	
+# ClearUserNotesForAll - Quickly wipe out user notes on all caches
+# 	
+##############################################################################
+BEGINSUB Name=ClearUserNotesForAll
+	MACROSET  Dialog=Replace VarName=$ClearUserNotes
+	Replace settings=<MACRO>
+ENDSUB
+	<data> VarName=$ClearUserNotes
+	[TfmReplace]
+	cbxFields.Text=User Notes
+	cbxWith.Text=
+	edtDate.Text=-/  /
+	edtString.Text=
+	rbtAdd.Checked=False
+	rbtRemove.Checked=False
+	rbtReplace.Checked=True
+	rbtSwap.Checked=False
+	chkClose.Checked=True
+	rbtAddBefore.Checked=False
+	<enddata>	
+	
+	
+	
+	
+##############################################################################
+#  Adds corrected coords to all caches in database for testing purposes
+##############################################################################
+BEGINSUB Name=AddCorrected
+	CANCELFILTER
+	$loopcount = 0
+	TABLE Active=Caches
+	#MACROFLAG <type=set|clear|swap> <range=all|filter|nn>
+	# Work around a DB indexing glitch by setting macroflag
+	MACROFLAG type=clear range=all
+	MFILTER expression=Not($d_HasCorrected)
+	#MSGOK msg= hascorrected -> $_FilterCount
+	IF $_FilterCount > 0
+	  MACROFLAG type=SET range=FILTER
+	  MFILTER expression=$d_MacroFlag
+	ENDIF	   	
+	IF $_FilterCount > 0
+		#MSGOK msg=filtercount=$_FilterCount
+		Transaction Action=Begin
+		GOTO Position=Top
+		WHILE Not($_EOL)
+			$loopcount = $loopcount + 1
+		  #IF Not($d_HasCorrected)  	
+		  	SHOWSTATUS msg=Adding corrected coords $loopcount $d_Name
+				TABLE Active=Corrected Scope=Parent
+				 ADDNEW
+				 $d_kAfterLat = "40.1345"
+				 $d_kAfterLon = "77.7246"	
+				 TABLE Active=Caches			
+			#ENDIF
+			$d_Found = TRUE
+			$d_UserNote = "This user note added for testing purposes"
+	    GOTO Position=Next
+  	ENDWHILE
+  	Transaction Action=End
+  	MSGOK msg=$loopcount caches updated
+	ENDIF 
+	ELSE 
+		MSGOK msg=filtercount=0 adding coords
+ENDSUB
+
+
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Thu 16-Jul-2009 10:49:01
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Find Eraser
+  Height = 600
+  Width = 524
+
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Find Eraser Configuration
+  Height = 145
+  Left = 8
+  Top = 160
+  Width = 497
+  Taborder = 2
+
+Name = Groupbox2
+  Type = Groupbox
+  Caption = Database Backup
+  Height = 81
+  Left = 8
+  Top = 312
+  Width = 497
+  Taborder = 3
+
+Name = Groupbox3
+  Type = Groupbox
+  Height = 121
+  Left = 8
+  Top = 400
+  Width = 497
+  Taborder = 4
+
+Name = btnStart
+  Type = Button
+  Height = 31
+  Left = 168
+  Top = 530
+  Width = 177
+  Taborder = 0
+  Caption = Erase Find Data
+
+Name = Label2
+  Type = Label
+  Color = 255
+  Font = Impact
+  Height = 34
+  Left = 192
+  Size = 20
+  Top = 0
+  Width = 123
+  Caption = Find Eraser
+
+Name = Memo1
+  Type = Memo
+  Height = 113
+  Left = 8
+  Readonly = Yes
+  Top = 40
+  Width = 497
+  Wrap = Yes
+  Taborder = 1
+
+Name = btnIDHelp
+  Type = Button
+  Container = Groupbox1
+  Height = 22
+  Left = 306
+  Top = 15
+  Width = 121
+  Taborder = 0
+  Caption = How do I get this?
+
+Name = edtGCIdNum
+  Type = Edit
+  Container = Groupbox1
+  Height = 21
+  Left = 234
+  Top = 15
+  Width = 63
+  Taborder = 1
+
+Name = Label1
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 10
+  Top = 18
+  Width = 212
+  Caption = Enter your Geocaching.com User ID number:
+
+Name = cbPurgeOwnerChildren
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 10
+  Top = 42
+  Width = 433
+  Taborder = 2
+  Caption = Clear child waypoints on caches you own (except flagged, parking, or trailhead)
+
+Name = btnBackup
+  Type = Button
+  Container = Groupbox2
+  Height = 25
+  Left = 336
+  Top = 44
+  Width = 145
+  Taborder = 0
+  Caption = Backup Current Database
+
+Name = edtBackupFile
+  Type = File
+  Container = Groupbox2
+  Height = 21
+  Left = 72
+  Top = 44
+  Width = 257
+  Taborder = 1
+
+Name = Label3
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 48
+  Style = bold
+  Top = 24
+  Width = 398
+  Caption = Backing up your database before erasing data is highly recommended.
+
+Name = Label4
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 8
+  Top = 48
+  Width = 56
+  Caption = Backup file:
+
+Name = Label6
+  Type = Label
+  Container = Groupbox3
+  Font = MS Sans Serif
+  Height = 13
+  Left = 12
+  Size = 9
+  Top = 62
+  Width = 69
+  Caption = Caches Found
+
+Name = Label5
+  Type = Label
+  Container = Groupbox3
+  Font = MS Sans Serif
+  Height = 13
+  Left = 12
+  Size = 9
+  Top = 11
+  Width = 72
+  Caption = Owned caches
+
+Name = edtOwned
+  Type = Edit
+  Color = 14607588
+  Container = Groupbox3
+  Height = 21
+  Left = 152
+  Top = 11
+  Width = 49
+  Taborder = 0
+
+Name = edtFound
+  Type = Edit
+  Color = 14737632
+  Container = Groupbox3
+  Height = 21
+  Left = 152
+  Top = 59
+  Width = 49
+  Taborder = 1
+
+Name = edtChildren
+  Type = Edit
+  Color = 14737632
+  Container = Groupbox3
+  Height = 21
+  Left = 152
+  Top = 35
+  Width = 49
+  Taborder = 2
+
+Name = Label7
+  Type = Label
+  Container = Groupbox3
+  Font = MS Sans Serif
+  Height = 13
+  Left = 12
+  Size = 9
+  Top = 36
+  Width = 123
+  Caption = Child waypoints on owned
+
+Name = cbClearFTF
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 10
+  Top = 60
+  Width = 215
+  Taborder = 3
+  Caption = Clear FTF flags from all caches
+
+Name = cbClearNotes
+  Type = Checkbox
+  Container = Groupbox1
+  Exitonchange = Yes
+  Height = 17
+  Left = 10
+  Top = 120
+  Width = 132
+  Taborder = 4
+  Caption = Erase User Notes on
+
+Name = cbClearCorrected
+  Type = Checkbox
+  Container = Groupbox1
+  Exitonchange = Yes
+  Height = 17
+  Left = 10
+  Top = 95
+  Width = 175
+  Taborder = 5
+  Caption = Erase corrected coordinates on
+
+Name = cmbClearCorrectedScope
+  Type = Combobox
+  Container = Groupbox1
+  Enabled = No
+  Height = 21
+  Left = 184
+  Top = 93
+  Values = all caches;found caches only
+  Width = 145
+  Taborder = 6
+
+Name = cmbClearNotesScope
+  Type = Combobox
+  Container = Groupbox1
+  Enabled = No
+  Height = 21
+  Left = 136
+  Top = 119
+  Values = all caches;found caches only
+  Width = 145
+  Taborder = 7
+
+Name = btnTest
+  Type = Button
+  Height = 33
+  Left = 392
+  Top = 528
+  Width = 75
+  Taborder = 5
+  Caption = For Testing
+  Visible = No
+
+Name = edtFTF
+  Type = Edit
+  Color = 14607588
+  Container = Groupbox3
+  Height = 21
+  Left = 432
+  Top = 11
+  Width = 49
+  Taborder = 3
+
+Name = edtDNF
+  Type = Edit
+  Color = 14607588
+  Container = Groupbox3
+  Height = 21
+  Left = 432
+  Top = 35
+  Width = 49
+  Taborder = 4
+
+Name = edtCorrected
+  Type = Edit
+  Color = 14607588
+  Container = Groupbox3
+  Height = 21
+  Left = 432
+  Top = 59
+  Width = 49
+  Taborder = 5
+
+Name = Label8
+  Type = Label
+  Container = Groupbox3
+  Height = 15
+  Left = 280
+  Size = 9
+  Top = 11
+  Width = 136
+  Caption = Caches with FTF Flag set
+
+Name = Label9
+  Type = Label
+  Container = Groupbox3
+  Height = 15
+  Left = 278
+  Size = 9
+  Top = 36
+  Width = 140
+  Caption = Caches with DNF Flag set
+
+Name = Label10
+  Type = Label
+  Container = Groupbox3
+  Height = 15
+  Left = 232
+  Size = 9
+  Top = 61
+  Width = 187
+  Caption = Caches with corrected coordinates
+
+Name = edtNotes
+  Type = Edit
+  Color = 14607588
+  Container = Groupbox3
+  Height = 21
+  Left = 432
+  Top = 83
+  Width = 49
+  Taborder = 6
+
+Name = Label11
+  Type = Label
+  Container = Groupbox3
+  Height = 15
+  Left = 294
+  Size = 9
+  Top = 84
+  Width = 126
+  Caption = Caches with user notes
+
+Name = cbClearDNF
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 10
+  Top = 76
+  Width = 193
+  Taborder = 8
+  Caption = Clear DNF flags from all caches
+
+<enddata>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

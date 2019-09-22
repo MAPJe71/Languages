@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Author: Julien Marrec
+Email: julien.marrec@gmail.com
+Github: https://github.com/jmarrec
+-->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="energyplus_class" userDefinedLangName="EnergyPlus-JM" />
+		</associationMap>
+		<parsers>
+			<!-- Just add this to the 'parsers' section of your own fucntionList.xml -->
+			<!-- E+ Full Nesting of E+ objects within their classes -->
+			<parser
+				displayName="EnergyPlus IDF Classes"
+				id         ="energyplus_class"
+				commentExpr="![^-][\w\x20]+$"
+			>
+				<!-- Find The entire Class (from one "!- == ALL OBJECTS..." to another.
+				We look until we find another !- = and exclude it with (?=) -->
+				<classRange
+					mainExpr    ="^!-\x20{3}=.*?(?=^!-\x20{3}=)"
+				>
+					<!-- Here we return just the Class name, here an E+ Object Class -->
+					<className>
+						<nameExpr expr="^(!-\x20{3}===========\x20\x20ALL\x20OBJECTS\x20IN\x20CLASS:\x20)[\w:]+\x20(===========)" />
+						<nameExpr expr=":\x20[\w:]+\x20" />
+						<nameExpr expr="\x20[\w:]+" />
+						<nameExpr expr="[\w:]+" />
+					</className>
+					<!-- Here we find the "function" - here it's an E+ object - Name -->
+					<function
+						mainExpr="(^\w[^!]+.*?Name)"
+					>
+						<functionName>
+							<!-- We only want to return the "Name" of the object, which is on the second line -->
+							<funcNameExpr expr="^[\t\x20]+[\w\x20]+," />
+							<funcNameExpr expr="\w[\w\x20]+" />
+						</functionName>
+					</function>
+				</classRange>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

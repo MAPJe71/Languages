@@ -1,0 +1,482 @@
+-------------------------------------------------------------------------------
+----  DYN_DISP.Kl
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about DYN_DISP.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----            FROM                        Sec 3-C
+----            IN CMOS                     Sec 2
+----            WHEN                        Sec 4
+----    Conditions:
+----            ABORT                       Sec 4
+----    Data types:
+----            BOOLEAN                     Sec 2
+----            INTEGER                     Sec 2
+----            REAL                        Sec 2
+----            STRING                      Sec 2
+----    Directives:
+----            ALPHABETIZE                 Sec 1
+----            COMMENT                     Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            ABORT_TASK                  Sec 4-C
+----            CNC_DYN_DISI                Sec 4-C
+----            CNC_DYN_DISR                Sec 4-C
+----            CNC_DYN_DISB                Sec 4-C
+----            CNC_DYN_DISE                Sec 4-C
+----            CNC_DYN_DISP                Sec 4-C
+----            CNC_DYN_DISS                Sec 4-C
+----            INI_DYN_DISI                Sec 3-A, 4-A
+----            INI_DYN_DISR                Sec 3-B, 4-A
+----            INI_DYN_DISB                Sec 3-C, 4-A
+----            INI_DYN_DISE                Sec 3-D, 4-A
+----            INI_DYN_DISP                Sec 3-E, 4-A
+----            INI_DYN_DISS                Sec 3-F, 4-A
+----            LOAD_STATUS                 Sec 4-B
+----            LOAD                        Sec 4-B
+----            RUN_TASK                    Sec 4-B
+----    Statements:
+----            CONDITION...ENDCONDITION    Sec 4
+----            IF...THEN...ENDIF           Sec 4-A,B,C
+----            READ                        Sec 4-C
+----            ROUTINE                     Sec 3-A,B,C
+----            WRITE                       Sec 4-A,B,C
+----    Reserve Words:
+----            BEGIN                       Sec 3-A,B; 4
+----            CR                          Sec 4-A
+----            CONST                       Sec 2
+----            END                         Sec 3-A,B; 4-C
+----            PROGRAM                     Sec 4
+----            VAR                         Sec 2
+----    Predefined File Variables:
+----            TPPROMPT                    Sec 4-B,C
+----    Predefined Windows:
+----            T_FU                        Sec 3-A,B
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM DYN_DISP
+    %nolockgroup
+    %comment = 'Dynamic Disp'
+    %alphabetize
+    %INCLUDE KLIOTYPS
+
+-------------------------------------------------------------------------------
+----  Section 2:  Variable Declaration
+-------------------------------------------------------------------------------
+CONST
+    cc_success   = 0   -- Success status
+    cc_clear_win = 128 -- Clear window
+    cc_clear_eol = 129 -- Clear to end of line
+    cc_clear_eow = 130 -- Clear to end of window
+    CH_ABORT     = 1   -- Condition Handler to detect when program aborts
+VAR
+    Int_wind      : STRING[10]
+    Rel_wind      : STRING[10]
+    Field_Width   : INTEGER
+    Attr_Mask     : INTEGER
+    Char_Size     : INTEGER
+    Row           : INTEGER
+    Col           : INTEGER
+    Interval      : INTEGER
+    Buffer_Size   : INTEGER
+    Format        : STRING[7]
+    bool_names    : ARRAY[2] OF STRING[10]
+    enum_names    : ARRAY[4] OF STRING[10]
+    pval_names    : ARRAY[2] OF STRING[10]
+    bool1 IN CMOS : BOOLEAN
+    enum1 IN CMOS : INTEGER
+    port_type     : INTEGER
+    port_no       : INTEGER
+    Str1 IN CMOS  : STRING[10]
+    Int1 IN CMOS  : INTEGER -- Using IN CMOS will create the variables
+    Real1 IN CMOS : REAL    -- in CMOS RAM, which is permanent memory.
+    status        : INTEGER
+    loaded,
+    initialized   : BOOLEAN
+    dynd_abrt     : BOOLEAN -- Set to true when program aborts.
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 3-A:  SET_INT Declaration
+----                Set all the input parameters for the INI_DYN_DISI call.
+-------------------------------------------------------------------------------
+ROUTINE Set_Int
+BEGIN
+    -- Valid predefined windows are described in
+    -- Chapter 7.9.1, "USER MENU on the Teach Pendant
+    -- Error Line     --> 'ERR'   1 line
+    -- Status Line    --> 'T_ST'  3 lines
+    -- Display Window --> 'T_FU' 10 lines
+    -- Prompt Line    --> 'T_PR'  1 line
+    -- Function Key   --> 'T_FK'  1 line
+    Int_Wind    = 'T_FU' -- Use the predefined display window
+    Field_Width = 0      -- Use the minimum width necessary
+    Attr_Mask   = 1 OR 4 -- BOLD and UNDERLINED
+    Char_Size   = 0      -- Normal
+    Row         = 1      -- Specify the location within 'T_FU'
+    Col         = 16     -- to dynamically displayed
+    Interval    = 250    -- 250ms between updates
+    Buffer_Size = 10     -- Minimum value required.
+    Format      = '%-8d' -- 8 character minimum field width
+
+    --- With this specification the INTEGER will be displayed as follows:
+    ---  --------
+    --- |xxxxxxxx|
+    ---  --------
+    --- Where the integer value will be left justified.
+    --- The x's will be the integer value unless the integer value is
+    --- less then 8 characters, then the right side will be blanks up to
+    --- a total 8 characters. If the integer value is greater than the 8
+    --- characters the width is dynamically increased to display the whole
+    --- integer value. The INTEGER value will also be bold and underlined.
+END Set_Int
+
+-------------------------------------------------------------------------------
+----  Section 3-B:  SET_REAL Declaration
+----                Set all the input parameters for the INI_DYN_DISR call.
+-------------------------------------------------------------------------------
+ROUTINE Set_Real
+BEGIN
+    Rel_Wind    = 'T_FU'  -- Use the predefined display window
+    Field_Width = 10      -- Maximum width of display.
+    Attr_Mask   = 2 OR 8  -- blinking and reverse video
+    Char_Size   = 0       -- Normal
+    Row         = 2       -- Specify the location within 'TFU'
+    Col         = 16      -- to dynamically display
+    Interval    = 200     -- 200ms between update
+    Buffer_Size = 10      -- Minimum value required.
+    Format      = '%2.2f'
+
+    --- With the format and field_width specification the REAL will be
+    --- displayed as follows:
+    --- ----------
+    --- |xxxx.xx |
+    --- ----------
+    --- Where the real value will be left justified.
+    --- There will always be two digits after the decimal point.
+    --- A maximum width of 10 will be used.
+    --- If the real value is less then 10 characters the right side will be
+    --- padded with blanks up to 10 character width.
+    --- If the real value exceeds 10 characters, the display width will not
+    --- expand but will display a ">" as the last character, indicating the
+    --- entire value is not displayed.
+    --- The value will also be blinking and in reverse video.
+END Set_Real
+
+-------------------------------------------------------------------------------
+----  Section 3-C:  SET_BOOL Declaration
+----                Set all the input parameters for the INI_DYN_DISB call
+-------------------------------------------------------------------------------
+ROUTINE Set_Bool
+BEGIN
+    -- Valid predefined windows are described in
+    -- Chapter 7.9.1, "USER MENU on the Teach Pendant
+    -- Error Line     --> 'ERR'   1 line
+    -- Status Line    --> 'T_ST'  3 lines
+    -- Display Window --> 'T_FU' 10 lines
+    -- Prompt Line    --> 'T_PR'  1 line
+    -- Function Key   --> 'T_FK'  1 line
+    Int_Wind      = 'T_FU' -- Use the predefined display window
+    Field_Width   = 10     -- Display 10 chars
+    Attr_Mask     = 2      -- Blinking
+    Char_Size     = 0      -- Normal
+    Row           = 3      -- Specify the location within 'T_FU'
+    Col           = 16     -- to dynamically displayed
+    Interval      = 250    -- 250ms between updates
+    Buffer_Size   = 10     -- Minimum value required
+    bool_names[1] = 'YES'  -- string display in bool_var is FALSE
+    bool_names[2] = 'NO'   -- string display in bool_var is TRUE
+
+    --- With this specification the BOOLEAN will be displayed as follows:
+    ---  --------
+    --- |xxxxxxxx|
+    ---  --------
+    --- Where the boolean value will be left justified.
+    --- The x's will be one of the strings 'YES' or 'NO', depending on
+    --- the value of bool1. The string will be blinking.
+END Set_Bool
+
+-------------------------------------------------------------------------------
+----  Section 3-D:  SET_ENUM Declaration
+----                Set all the input parameters for the INI_DYN_DISE call.
+-------------------------------------------------------------------------------
+ROUTINE Set_Enum
+BEGIN
+    -- Valid predefined windows are described in
+    -- Chapter 7.9.1, "USER MENU on the Teach Pendant
+    -- Error Line     --> 'ERR'   1 line
+    -- Status Line    --> 'T_ST'  3 lines
+    -- Display Window --> 'T_FU' 10 lines
+    -- Prompt Line    --> 'T_PR'  1 line
+    -- Function Key   --> 'T_FK'  1 line
+    Int_Wind      = 'T_FU'   -- Use thE predefined display window
+    Attr_Mask     = 8        -- REVERSED
+    Field_Width   = 10       -- Display to characters
+    Char_Size     = 0        -- Normal
+    Row           = 4        -- Specify the location within 'T_FU'
+    Col           = 16       -- to dynamically displayed
+    Interval      = 250      -- 250ms between updates
+    Buffer_Size   = 10       -- Minimum value required
+    enum_names[1] = 'Enum-0' -- value displayed if enum_var = 0
+    enum_names[2] = 'Enum-1' -- value displayed if enum_var = 1
+    enum_names[3] = 'Enum-2' -- value displayed if enum_var = 2
+    enum_names[4] = 'Enum-3' -- value displayed if enum_var = 3
+
+    --- With this specification enum_var will be displayed as follows:
+    ---  --------
+    --- |xxxxxxxx|
+    ---  --------
+    --- Where one of the strings enum_names will be displayed,
+    --- depending on the integer value enum1. If enum1 is outside
+    --- the range 0-3, a string of 10 '?'s will be displayed.
+    --- The string will be displayed in reversed video.
+END Set_Enum
+
+-------------------------------------------------------------------------------
+----  Section 3-E:  SET_PORT Declaration
+----                Set all the input parameters for the INI_DYN_DISP call.
+-------------------------------------------------------------------------------
+ROUTINE Set_Port
+BEGIN
+    -- Valid predefined windows are described in
+    -- Chapter 7.9.1, "USER MENU on the Teach Pendant
+    -- Error Line     --> 'ERR'   1 line
+    -- Status Line    --> 'T_ST'  3 lines
+    -- Display Window --> 'T_FU' 10 lines
+    -- Prompt Line    --> 'T_PR'  1 line
+    -- Function Key   --> 'T_FK'  1 line
+    Int_Wind      = 'T_FU'     -- Use the predefined display window
+    Field_Width   = 10         -- Display to characters
+    Attr_Mask     = 1          -- BOLD
+    Char_Size     = 0          -- Normal
+    Row           = 5          -- Specify the location within 'T_FU'
+    Col           = 16         -- to dynamically displayed
+    Interval      = 250        -- 250ms between updates
+    Buffer_Size   = 10         -- Minimum value required.
+    pval_names[1] = 'RELEASED' -- text displayed if key is not pressed
+    pval_names[2] = 'PRESSED'  -- text displayed if key is pressed
+    port_type     = io_tpin    -- port type = TP key
+    port_no       = 175        -- user-key 3
+
+    --- With this specification PRESSED or RELEASED will be displayed as follows:
+    ---  --------
+    --- |xxxxxxxx|
+    ---  --------
+    --- Where the string will be left justified.
+    --- The x's will be either 'RELEASED' or 'PRESSED'.
+    --- The string will also be normal video.
+    --- (Bold is not supported on the teach pendant.)
+END Set_Port
+
+-------------------------------------------------------------------------------
+----  Section 3-F:  SET_STR Declaration
+----                Set all the input parameters for the INI_DYN_DISS call.
+-------------------------------------------------------------------------------
+ROUTINE Set_Str
+BEGIN
+    -- Valid predefined windows are described in
+    -- Chapter 7.9.1, "USER MENU on the Teach Pendant
+    -- Error Line     --> 'ERR'   1 line
+    -- Status Line    --> 'T_ST'  3 lines
+    -- Display Window --> 'T_FU' 10 lines
+    -- Prompt Line    --> 'T_PR'  1 line
+    -- Function Key   --> 'T_FK'  1 line
+    Int_Wind    = 'T_FU' -- Use th predefined display window
+    Field_Width = 10     -- Use the minimum width neccessary
+    Attr_Mask   = 1 OR 4 -- BOLD and UNDERLINED
+    Char_Size   = 0      -- Normal
+    Row         = 6      -- Specify the location within 'T_FU'
+    Col         = 16     -- to dynamically displayed
+    Interval    = 250    -- 250ms between updates
+    Buffer_Size = 10     -- Minimum value required.
+    Format      = '%10s' -- 10 character minimum field width
+
+    --- With this specification the STRING will be displayed as follows:
+    ---  --------
+    --- |xxxxxxxx|
+    ---  --------
+    --- Where the string value will be left justified.
+    --- The x's will be the string value.
+    --- The STRING will also be underlined.
+END Set_Str
+
+-------------------------------------------------------------------------------
+----  Section 3-G:  TP_CLS Declaration
+----                Clear the TP USER menus screen and force it to be visible.
+-------------------------------------------------------------------------------
+ROUTINE tp_cls FROM rout_ex
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main program
+-------------------------------------------------------------------------------
+BEGIN --- DYN_DISP
+
+    dynd_abrt = FALSE
+    CONDITION[CH_ABORT]:
+        WHEN ABORT DO -- When the program is aborting set dynd_abrt flag.
+                      -- This will be triggered if this program aborts itself
+                      -- or if an external mechanism aborts this program.
+            dynd_abrt = TRUE -- CHG_DATA will detect this and complete execution.
+    ENDCONDITION
+
+    ENABLE CONDITION [CH_ABORT]
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Setup variables, initiate dynamic display
+-------------------------------------------------------------------------------
+    TP_CLS -- Clear the TP USER screen
+
+    -- Force display of the TP USER screen
+    STATUS = cc_success -- Initialize the status variable
+
+    -- Initialize the dynamically displayed variables
+    Int1 = 1
+    Real1 = 1.0
+    Bool1 = FALSE
+    Enum1 = 0
+    Strl = ''
+
+    -- Display messages to the TP USER screen
+    WRITE ('Current INT1 =',CR)
+    WRITE ('Current REAL1=',CR)
+    WRITE ('Current BOOL1=',CR)
+    WRITE ('Current ENUM1=',CR)
+    WRITE ('Current PORT =',CR)
+    WRITE ('Current STR1 =',CR)
+
+    Set_Int -- Set parameter values for INTEGER DYNAMIC DISPLAY
+    INI_DYN_DISI(Int1,Int_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, Buffer_Size, Format ,Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISI failed, Status=',status,CR)
+    ENDIF
+
+    Set_Bool -- Set parameter values for BOOLEAN DYNAMIC
+    DISPLAY
+
+    INI_DYN_DISB(Bool1,Int_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, bool_names,Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISB failed, Status=',status,CR)
+    ENDIF
+
+    Set_Enum -- Set parameter values for Enumerated Integer
+
+    -- DYNAMIC DISPLAY
+    INI_DYN_DISE(Enum1,Int_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, enum_names,Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISE failed, Status=',status,CR)
+    ENDIF
+
+    Set_Port -- Set parameter values for Port DYNAMIC DISPLAY
+
+    INI_DYN_DISP(port_type, port_no ,Int_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, pval_names, Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISP failed, Status=',status,CR)
+    ENDIF
+
+    Set_Real -- Set parameter values for REAL DYNAMIC DISPLAY
+
+    INI_DYN_DISR(Real1,Rel_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, Buffer_Size, Format ,Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISR failed, Status=',status,CR)
+    ENDIF
+
+    Set_Str -- Set parameter values for STRING DYNAMIC
+    DISPLAY
+
+    INI_DYN_DISS(Str1,Int_Wind,Field_Width,Attr_Mask,Char_Size,
+                 Row,Col, Interval, Buffer_Size, Format ,Status)
+    IF Status <> cc_success THEN -- Check the status
+        WRITE(' INI_DYN_DISS failed, Status=',status,CR)
+    ENDIF
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Check on subordinate program and execute it.
+-------------------------------------------------------------------------------
+    -- Check the status of the other program which will change the value
+    -- of the variables.
+    LOAD_STATUS('chg_data', loaded, initialized)
+    IF (loaded = FALSE ) THEN
+        WRITE TPPROMPT(CHR(cc_clear_win)) -- Clear the prompt line
+        WRITE TPPROMPT('CHG_DATA is not loaded. Loading now...')
+        LOAD('chg_data.pc',0,status)
+        IF (status = cc_success) THEN -- Check the status
+            RUN_TASK('CHG_DATA',1,false,false,1,status)
+            IF (Status <> cc_success) THEN -- Check the status
+                WRITE ('Changing the value of the variables',CR)
+                WRITE ('by another program failed',CR)
+                WRITE ('BUT you can try changing the values',CR)
+                WRITE ('from KCL',CR)
+            ENDIF
+        ELSE
+            WRITE ('LOAD Failed, status = ',status,CR)
+        ENDIF
+    ELSE
+        RUN_TASK('CHG_DATA',1,false,false,1,status)
+        IF (Status <> cc_success) THEN -- Check the status
+            WRITE ('Changing the value of the variables',CR)
+            WRITE ('by another program failed',CR)
+            WRITE ('BUT you can try changing the values',CR)
+            WRITE ('from KCL',CR)
+        ENDIF
+    ENDIF
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  Wait for user response, and cancel dynamic displays
+-------------------------------------------------------------------------------
+    WRITE TPPROMPT(CHR(cc_clear_win)) -- Clear the prompt line
+    WRITE TPPROMPT('Enter a number to cancel DYNAMIC display: ')
+
+    READ (CR) -- Read only one character
+              -- See Chapter 7.7.1,
+
+    -- "Formatting INTEGER Data Items"
+    ABORT_TASK('CHG_DATA',TRUE, TRUE,status) -- Abort CHG_DATA
+    IF (status <> cc_success) THEN -- Check the status
+        WRITE(' ABORT_TASK failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISI(Int1, Int_Wind,Status) -- Cancel display of Intl
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISI failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISR(Real1,Rel_Wind,Status) -- Cancel display of Real1
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISR failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISB(Bool1, Int_Wind,Status) -- Cancel display of Bool1
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISB failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISE(Enum1, Int_Wind,Status) -- Cancel display of Enum1
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISE failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISP(port_type, Port_no, Int_Wind,Status) -- Cancel display of Port
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISP failed, Status=',status,CR)
+    ENDIF
+
+    CNC_DYN_DISS(Str1, Int_Wind,Status) -- Cancel display of String
+    IF Status <> 0 THEN -- Check the status
+        WRITE(' CND_DYN_DISS failed, Status=',status,CR)
+    ENDIF
+
+END DYN_DISP

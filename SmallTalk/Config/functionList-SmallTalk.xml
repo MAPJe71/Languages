@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=   "smalltalk_syntax"        langID="37"                             />
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ SmallTalk ] -->
+
+			<parser
+				displayName="[TBD] SmallTalk"
+				id         ="smalltalk_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,16 @@
+?NOLIST,SOURCE $SYSTEM.SYSTEM.EXTDECS (CLOSE, INITIALIZER
+  OPEN,WRITE,MYTERM)
+?LIST
+
+PROC myproc MAIN;
+ BEGIN
+ INT termname[0:11];
+ INT filename;
+ STRING buffer [0:79]; 
+ 
+ CALL INITIALIZER;
+ CALL MYTERM (termname);
+ CALL OPEN (termname,filenum); 
+ CALL WRITE(filenum,"Hello World",12);
+ CALL CLOSE(out_file_number); 
+END;

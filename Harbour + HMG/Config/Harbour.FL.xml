@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="harbour_syntax" userDefinedLangName="Harbour" />
+			<association id="harbour_syntax" ext=".prg" />
+			<association id="harbour_syntax" ext=".ch"  />
+			<association id="harbour_syntax" ext=".hb"  />
+			<association id="harbour_syntax" ext=".hbp" />
+		</associationMap>
+		<parsers>
+			<parser
+				id         ="harbour_syntax"
+				displayName="Harbour / HMG (Harbour Mini Graphics)"
+				commentExpr=""
+			>
+				<function
+					mainExpr="^\h*(?:static\h+)?(?i:CLASS|FUNC(?:TION)?|PROC(?:EDURE)?)[\t\x20]+[^\r\n]*$"
+				>
+					<functionName>
+						<nameExpr expr="(?(?=[\t\x20]*)[\t\x20]*[\t\x20]+[^\s]+|[^\r\n]*)" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>
+

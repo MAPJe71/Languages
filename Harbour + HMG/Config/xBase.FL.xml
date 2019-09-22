@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="prg_function" langID="15" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="xBase"
+				id         ="prg_function"
+			>
+				<function
+					mainExpr="^[\t\x20]*((function|procedure|func|proc)\s+)?\w+(\s+|\*\s+|\s+\*|\s+\*\s+)(\w+\s*::)?(?!(if|while|for))\w+\s*\([^\)\(]*\)(\s*static\s*)?[\n\s]"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_]\w*\s*=|[A-Za-z_]?\w*\s*\(" />
+						<nameExpr expr="[A-Za-z_]?\w*" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

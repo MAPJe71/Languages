@@ -1,0 +1,54 @@
+;  DEMO2.SCR
+;
+;  KiXtart demonstration script of registry functions.
+;
+;  24-Aug-1995
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+
+cls                                   ; clear the screen
+color b+/n
+
+? "START" ?
+
+:start
+
+color g+/n
+? "Please enter the name of the key of which you want to display a value : "
+color w+/n
+? gets $key
+
+if $key = ""
+   goto end
+else
+   color g+/n
+   ? "Please enter the name of the value you want to display : "
+   color w+/n
+   ? gets $value
+
+   $result = readvalue( $key , $value )
+   if @error = 0
+      color g+/n
+      ? "OK, here's the result :"
+
+      ? "["
+      color r+/n
+      "$result"
+      color g+/n
+      "]"
+   else
+      color r+/n
+      ? "Hmmm, key or value not found ?."
+   endif
+endif
+
+:end
+
+color b+/n
+
+? ? "END"
+
+color w/n

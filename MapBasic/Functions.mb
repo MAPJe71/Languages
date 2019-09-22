@@ -1,0 +1,43 @@
+'************************************************************************************
+'**  Project
+'**  
+'**  Custom Functions Module
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		21 October 2010
+'************************************************************************************
+Include "Project.def"
+
+'************************************************************************************
+Function LongDate(
+	ByVal dDate As Date)
+As String
+
+Dim sWeekdayArray(7) as String
+Dim sMonthArray(12) as String
+
+sWeekdayArray(1) = "Sunday"
+sWeekdayArray(2) = "Monday"
+sWeekdayArray(3) = "Tuesday"
+sWeekdayArray(4) = "Wednesday"
+sWeekdayArray(5) = "Thursday"
+sWeekdayArray(6) = "Friday"
+sWeekdayArray(7) = "Saturday"
+
+sMonthArray(1) = "January"
+sMonthArray(2) = "February"
+sMonthArray(3) = "March"
+sMonthArray(4) = "April"
+sMonthArray(5) = "May"
+sMonthArray(6) = "June"
+sMonthArray(7) = "July"
+sMonthArray(8) = "August"
+sMonthArray(9) = "September"
+sMonthArray(10) = "October"
+sMonthArray(11) = "November"
+sMonthArray(12) = "December"
+
+LongDate = sWeekdayArray(Weekday(dDate)) + Chr$(32) + Day(dDate) + Chr$(32) + sMonthArray(Month(dDate)) + Chr$(32) + Year(dDate)
+
+End Function
+'************************************************************************************

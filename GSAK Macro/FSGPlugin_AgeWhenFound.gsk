@@ -1,0 +1,1109 @@
+#-------------------------------------------------------------------------------
+# MacVersion = 1.09
+# MacDescription = FSG Plugin - Evaluate age of cache when found
+# MacAuthor = sbeelis
+# MacFileName = FSGPlugin_AgeWhenFound.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=20465&view=findpost&p=147321
+#-------------------------------------------------------------------------------
+#
+# Changes:
+#  V1.00  2011-11-28  First version
+#  V1.01  2011-12-01  Bugfix: wrong error message when run outside fsg
+#                     Bugfix: fixed fence post error on array size
+#  V1.02  2011-12-02  New parameter "limit"
+#                     Added interval and name for finding a cache before it
+#                     was placed (usually repeating event caches)
+#  V1.03  2011-12-05  added parameter "before=false" to suppress caches found
+#                     before they were placed
+#                     added parameter "wrapFirstColumn=true"
+#  V1.04  2011-12-06  added new value "right" to existing parameter "summary"
+#  V1.05  2012-05-07  added german (thanks to hulmgulm) and czech (thanks to marram.cz) support
+#  V1.06  2012-05-08  added swedish support (thanks to stejor)
+#                     actually making Czech work
+#  V1.07  2012-06-18  added parameter "events=false"
+#  V1.08  2012-06-20  added different interval spacing at TWT's request
+#  V1.09  2012-11-28  fixed centering issue
+#
+# todo:
+# - NLS support
+# - bar colour depends on size
+# - support IgnoreAgeWhenFound in user note
+# - add param to show summary in right hand side column
+#
+# Usage:
+#   <plugin>FSGPlugin_AgeWhenFound</plugin>
+#   <plugin>FSGPlugin_AgeWhenFound?param=value</plugin>
+#   <plugin>FSGPlugin_AgeWhenFound?param=value&param=value[&...]</plugin>
+#
+# Parameters:
+#   secondColumn=false
+#       Default value is "true"
+#       Disables the second column (sorted by find count per interval)
+#   wrapFirstColumn=true
+#       Default value is "false"
+#       Automatically sets "secondColumn=false" and splits the output of the
+#       first column onto two columns to save vertical space
+#   summary=false
+#       Default value is "left"
+#       Suppress the output of "Total" count and "Average age" output at the
+#       end of the listing
+#   summary=right
+#       Default value is "left"
+#       Show the "Total" count and "Average age" output on the right hand side
+#       if two columns are being shown. If only one column is shown, this setting
+#       will be ignored (i.e. treated like "summary=left")
+#   before=false
+#       Default value is "true"
+#       Suppress output for any caches that were found before being placed
+#       (something that happens with repeating event caches are caches that
+#       are re-enabled after having been archived etc).
+#       NOTE: if this option is set to "false" the summary total will not
+#       match the sum of the single intervals, as the summary will always
+#       include all caches found, even those in the "before" interval
+#   barWidth=<n>
+#       Default value is "150"
+#       Change the value of the widest (maximum value) bar
+#   limit=<n>
+#       Default value is "0" (no limit)
+#       Limit the output to the <n> first lines in both columns. This will
+#       add an extra line summarising the unlisted "older" and "fewer" counts.
+#   events=false
+#       Default value is "true"
+#       If this setting is set to false, any event cache will be excluded from
+#       the statistics created
+#   intervals=standard|yearly|compact
+#       Sets the granularity of the intervals used to group the ages
+
+
+#-------------------------------------------------------------------------------
+# MAIN
+#-------------------------------------------------------------------------------
+
+IF $_MacroLevel = 1
+  RETURN msg="This macro is a FindStatGen PlugIn and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_AgeWhenFound</plugin>"
+ENDIF
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitVariables
+GOSUB Name=GetParameters
+GOSUB Name=AgeWhenFound
+
+# return data to FSG
+$p_FSGData = $MyOut
+
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=AgeWhenFound
+#-------------------------------------------------------------------------------
+  SHOWSTATUS msg="Macro FSGPlugin_AgeWhenFound determining cache age at time of find" Width=400
+
+  IF $noEvents
+    $limitWhere = "cachetype not in ('C', 'E', 'Z')"
+  ELSE
+    $limitWhere = "1"
+  ENDIF
+
+  $colWidth = $barWidth + 5
+  $list = list("LL_FP","create",$_CrLf)
+
+  # count number of finds
+  $sql = "select * from allfinds where " + $limitWhere
+  $work = Sqlite("sql",$sql)
+  $num_finds = $_SqlRows
+  IF $num_finds = 0
+    $p_FSGData = ""
+    RETURN msg="There are no found caches.$_CrLf PlugIn will terminate."
+  ENDIF
+  
+  # count number of excludes
+  $sql = "select * from allfinds where not " + $limitWhere
+  $work = Sqlite("sql",$sql)
+  $num_exclude = $_SqlRows
+
+  # get cache data
+  $sql = "select count(*) as count, (julianday(foundbymedate)-julianday(placeddate)) as age from allfinds where $limitWhere group by age order by age asc"
+  $work = Sqlite("sql",$sql)
+  $num_entries = $_SqlRows
+  $tempS = list("LL_FP","replace",$work)
+
+  # force interval init on first entry
+  $intMax = -20000
+  $Interval = -1
+
+  # getting entries
+  $countc = 0
+  $sumAge = 0
+  $sumInterval = 0
+
+  # initialise arrays for secondary statistics
+  array(1,0) = NumToStr($maxInterval+1) # age string
+  array(2,0) = NumToStr($maxInterval+1) # finds
+  array(3,0) = NumToStr($maxInterval+1) # percentage
+  array(4,0) = NumToStr($maxInterval+1) # finds used to find max
+  array(1, -1) = "-"
+  array(2, -1) = "0"
+  array(3, -1) = "0"
+  array(4, -1) = "0"
+  $counta = 1
+  $maxa = 0
+  $maxWrap = 0
+
+  while $countc < $num_entries
+    $countc = $countc+1
+    $entry = list("LL_FP","item","$countc")
+    $Finds = Extract($entry,";",1)
+    $Age = Extract($entry,";",2)
+    $Age = Replace(".0","",$Age)
+    $sumAge = $sumAge+Val($Finds)*Val($Age) # weighted age
+
+    IF (Val($Age) > $intMax)
+      # entering next interval -> store current data
+      IF ($sumInterval > 0) AND (($intMax >=0) OR $showBefore)
+        $fpercent = $sumInterval/$num_finds*100
+        IF Round($fpercent, 0) > 0
+          $fpercent = Round($fpercent, 0)
+        ELSE
+          IF Round($fpercent, 1) > 0
+            $fpercent = Round($fpercent, 1)
+          ELSE
+            $fpercent = Round($fpercent, 2)
+          ENDIF
+        ENDIF
+        array(1, $counta) = $intName
+        array(2, $counta) = NumToStr($sumInterval)
+        array(3, $counta) = NumToStr($fpercent)
+        array(4, $counta) = NumToStr($sumInterval)
+        $counta = $counta + 1
+        IF $sumInterval > $maxValue
+          $maxValue = $sumInterval
+        ENDIF
+      ENDIF
+      $sumInterval = 0
+      WHILE (Val($Age) > $intMax)
+        GOSUB name=GetNextInterval
+      ENDWHILE
+    ENDIF
+    $sumInterval = $sumInterval + Val($Finds)
+  ENDWHILE
+
+  # store last interval
+  IF ($sumInterval > 0) AND (($intMax >=0) OR $showBefore)
+    $fpercent = $sumInterval/$num_finds*100
+    IF Round($fpercent, 0) > 0
+      $fpercent = Round($fpercent, 0)
+    ELSE
+      IF Round($fpercent, 1) > 0
+        $fpercent = Round($fpercent, 1)
+      ELSE
+        $fpercent = Round($fpercent, 2)
+      ENDIF
+    ENDIF
+    array(1, $counta) = $intName
+    array(2, $counta) = NumToStr($sumInterval)
+    array(3, $counta) = NumToStr($fpercent)
+    array(4, $counta) = NumToStr($sumInterval)
+    $counta = $counta + 1
+  ENDIF
+  $maxa = $counta
+  $maxWrap = $maxa
+  
+  # output header (macro comment string)
+  $MyOut = $MyOut+"$_CrLf<!-- Macro FSGPlugin_AgeWhenFound - Version $MacroVersion - run date: $datestamp -->$_CrLf"
+
+  $MyOut = $MyOut+"<center><div style='width:740px; font-family: Verdana, Arial, sans-serif; font-size: 12px;'>$_CrLf"
+  $MyOut = $MyOut+"<table width='100%'><tr>"+$_CrLf
+  $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangAge</td>$_CrLf"
+  $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang92</td>$_CrLf"
+  $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang06</td>$_CrLf"
+  $MyOut = $MyOut+"<td style='$stTab2cHead' width='$colWidth'>&nbsp;</td>$_CrLf"
+  IF ($wrapFirstColumn AND ($maxa > 1))
+    $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangAge</td>$_CrLf"
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang92</td>$_CrLf"
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang06</td>$_CrLf"
+    $MyOut = $MyOut+"<td style='$stTab2cHead' width='$colWidth'>&nbsp;</td>$_CrLf"
+  ELSE
+    IF $showSecondColumn
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang92</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangAge</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$Lang06</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$stTab2cHead' width='$colWidth'>&nbsp;</td>$_CrLf"
+    ENDIF
+  ENDIF
+  $MyOut = $MyOut+"</tr>$_CrLf"
+
+  # iterate over arrays to produce output
+  $counta = 1
+  $restOlder = 0
+  $restFewer = 0
+  IF ($wrapFirstColumn AND ($maxa > 1) AND (($limit=0) OR ($limit>1)))
+    $maxWrap = Int(($maxa)/2) + 1
+    IF (($limit>0) AND ($limit < $maxWrap))
+      $maxWrap = Int(($limit + 1)/2) + 1
+      # count $restOlder in advance, as we won't iterate over all entries
+      $counta = $limit + 1
+      WHILE $counta < $maxa
+        $sumInterval = Val(array(2, $counta))
+        $restOlder = $restOlder + $sumInterval
+        $counta = $counta + 1
+      ENDWHILE
+      $counta = 1
+    ENDIF
+  ENDIF
+  WHILE $counta < $maxWrap
+    $intName = array(1, $counta)
+    $sumInterval = Val(array(2, $counta))
+    $fpercent = Val(array(3, $counta))
+    #$fwidth = Round($sumInterval/$num_finds*$barWidth,0)
+    $fwidth = Round($sumInterval/$maxValue*$barWidth,0)
+    IF $sumInterval = $maxValue
+      $image = "http://gsak.net/stats/red-h.png"
+    ELSE
+      $image = "http://gsak.net/stats/blue-h.png"
+    ENDIF
+    IF ($limit>0) AND ($counta>$limit)
+      IF (($limit=1) OR NOT ($wrapFirstColumn))
+        $restOlder = $restOlder + $sumInterval
+      ENDIF
+    ELSE
+      $debugCount = ""
+      IF $showDebug
+        $debugCount = NumToStr($counta)
+      ENDIF
+      $MyOut = $MyOut+"<tr>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$intName</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$sumInterval</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2'><img src='$image' style='float:left;' height='15' width='$fwidth'>$debugCount</td>$_CrLf"
+    ENDIF
+
+    IF $wrapFirstColumn
+      # calculate index of second column
+      $countm = $maxWrap + $counta - 1
+      IF (($countm < $maxa) AND (($countm <= $limit) OR ($limit=0)))
+        $intName = array(1, $countm)
+        $sumInterval = Val(array(2, $countm))
+        $fpercent = Val(array(3, $countm))
+        $fwidth = Round($sumInterval/$maxValue*$barWidth,0)
+        IF $sumInterval = $maxValue
+          $image = "http://gsak.net/stats/red-h.png"
+        ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        ENDIF
+        IF ($limit=0) OR ($countm<=$limit)
+          $debugCount = ""
+          IF $showDebug
+            $debugCount = NumToStr($countm)
+          ENDIF
+          $MyOut = $MyOut+"<td>&nbsp</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$intName</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$sumInterval</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2'><img src='$image' style='float:left;' height='15' width='$fwidth'>$debugCount</td>$_CrLf"
+        ENDIF
+      ELSE
+        # show "older" if there are some
+        IF ($restOlder>0)
+          $fpercent = $restOlder/$num_finds*100
+          IF Round($fpercent, 0) > 0
+            $fpercent = Round($fpercent, 0)
+          ELSE
+            IF Round($fpercent, 1) > 0
+              $fpercent = Round($fpercent, 1)
+            ELSE
+              $fpercent = Round($fpercent, 2)
+            ENDIF
+          ENDIF
+          $MyOut = $MyOut+"<td>&nbsp</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$LangOlder</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$restOlder</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2'>&nbsp;</td>$_CrLf"
+          # no need to show it again below
+          $restOlder = 0
+        ENDIF
+      ENDIF
+    ELSE
+      # find out if there is a count entry to show
+      $countm = 1
+      $indexm = 0
+      $maxm = 0
+      WHILE $countm < $maxa
+        IF Val(array(4, $countm)) > $maxm
+          $maxm = Val(array(4, $countm))
+          $indexm = $countm
+        ENDIF
+        $countm = $countm + 1
+      ENDWHILE
+      IF $indexm > 0
+        # clear out array4 value, as we now "consumed" this maximum value
+        array(4, $indexm) = "0"
+      ENDIF
+  
+      IF $showSecondColumn AND $indexm > 0
+        $intName = array(1, $indexm)
+        $sumInterval = Val(array(2, $indexm))
+        $fpercent = Val(array(3, $indexm))
+        #$fwidth = Round($sumInterval/$num_finds*$barWidth,0)
+        $fwidth = Round($sumInterval/$maxValue*$barWidth,0)
+        IF $sumInterval = $maxValue
+          $image = "http://gsak.net/stats/red-h.png"
+        ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        ENDIF
+        IF ($limit>0) AND ($counta>$limit)
+          $restFewer = $restFewer + $sumInterval
+        ELSE
+          $debugCount = ""
+          IF $showDebug
+            $debugCount = NumToStr($indexm)
+          ENDIF
+          $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$sumInterval</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$intName</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+          $MyOut = $MyOut+"<td style='$st2c2'><img src='$image' style='float:left;' height='15' width='$fwidth'>$debugCount</td>$_CrLf"
+        ENDIF
+      ENDIF
+    ENDIF
+    $MyOut = $MyOut+"</tr>$_CrLf"
+    $counta = $counta + 1
+  ENDWHILE
+
+  IF ($restOlder > 0) OR ($restFewer > 0)
+    $MyOut = $MyOut+"<tr>$_CrLf"
+    IF ($restOlder > 0)
+      $fpercent = $restOlder/$num_finds*100
+      IF Round($fpercent, 0) > 0
+        $fpercent = Round($fpercent, 0)
+      ELSE
+        IF Round($fpercent, 1) > 0
+          $fpercent = Round($fpercent, 1)
+        ELSE
+          $fpercent = Round($fpercent, 2)
+        ENDIF
+      ENDIF
+      $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$LangOlder</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$restOlder</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2'>&nbsp;</td>$_CrLf"
+    ELSE
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+    ENDIF
+    IF ($restFewer > 0)
+      $fpercent = $restFewer/$num_finds*100
+      IF Round($fpercent, 0) > 0
+        $fpercent = Round($fpercent, 0)
+      ELSE
+        IF Round($fpercent, 1) > 0
+          $fpercent = Round($fpercent, 1)
+        ELSE
+          $fpercent = Round($fpercent, 2)
+        ENDIF
+      ENDIF
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$restFewer</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$LangOther</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>$fpercent %</td>$_CrLf"
+      $MyOut = $MyOut+"<td style='$st2c2'>&nbsp;</td>$_CrLf"
+    ENDIF
+    $MyOut = $MyOut+"</tr>$_CrLf"
+  ENDIF
+  IF $showSummary
+    # find average interval
+    $aveAge = Int($sumAge / $num_finds)
+    $Interval = -1
+    $intMax = -1
+    WHILE ($aveAge > $intMax)
+      GOSUB name=GetNextInterval
+    ENDWHILE
+    $colspan1 = 1
+    $colspan2 = 3
+
+    # output total
+    $MyOut = $MyOut+"<tr>$_CrLf"
+    IF ($summaryOnRight AND (($wrapFirstColumn AND $maxa>1) OR $showSecondColumn))
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      IF $showSecondColumn
+        $colspan1 = 2
+        $colspan2 = 2
+      ENDIF
+    ENDIF
+    $MyOut = $MyOut+"<td colspan='$colspan1' style='$stTab2cHead font-weight: bold; text-align: left'>$LangTotal:</td>$_CrLf"
+    $MyOut = $MyOut+"<td colspan='$colspan2' style='$stTab2cHead font-weight: bold; text-align: left'>$num_finds</td>$_CrLf"
+    $MyOut = $MyOut+"</tr>$_CrLf"
+
+    # output average
+    $MyOut = $MyOut+"<tr>$_CrLf"
+    IF ($summaryOnRight AND (($wrapFirstColumn AND $maxa>1) OR $showSecondColumn))
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+    ENDIF
+    $MyOut = $MyOut+"<td colspan='$colspan1' style='$stTab2cHead font-weight: bold; text-align: left'>$LangAveAge:</td>$_CrLf"
+    $MyOut = $MyOut+"<td colspan='$colspan2' style='$stTab2cHead font-weight: bold; text-align: left'>$aveAge $LangDays ($intName)</td>$_CrLf"
+    $MyOut = $MyOut+"</tr>$_CrLf"
+    
+    # output number of excluded events
+    IF $noEvents and $num_exclude > 0
+      $MyOut = $MyOut+"<tr>$_CrLf"
+      IF ($summaryOnRight AND (($wrapFirstColumn AND $maxa>1) OR $showSecondColumn))
+        $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+        $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+        $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+        $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+        $MyOut = $MyOut+"<td>&nbsp;</td>$_CrLf"
+      ENDIF
+      $MyOut = $MyOut+"<td colspan='$colspan1' style='$stTab2cHead font-weight: bold; text-align: left'>$LangExclude:</td>$_CrLf"
+      IF $num_exclude = 1
+        $MyOut = $MyOut+"<td colspan='$colspan2' style='$stTab2cHead font-weight: bold; text-align: left'>$num_exclude $LangEvent</td>$_CrLf"
+      ELSE
+        $MyOut = $MyOut+"<td colspan='$colspan2' style='$stTab2cHead font-weight: bold; text-align: left'>$num_exclude $LangEvents</td>$_CrLf"
+      ENDIF
+      $MyOut = $MyOut+"</tr>$_CrLf"
+    ENDIF
+    
+    # output debug information
+    IF $showDebug
+    IF (($wrapFirstColumn AND $maxa>1) OR $showSecondColumn)
+      $MyOut = $MyOut+"<tr><td colspan='9'>"
+    ELSE
+      $MyOut = $MyOut+"<tr><td colspan='3'>"
+    ENDIF
+    $MyOut = $MyOut+"<b>Debug:</b> maxa=$maxa, maxWrap=$maxWrap, limit=$limit, showHeader=$showHeader, showSummary=$showSummary, summaryOnRight=$summaryOnRight, showBefore=$showBefore, barWidth=$barWidth, showSecondColumn=$showSecondColumn, wrapFirstColumn=$wrapFirstColumn$_CrLf"
+    $MyOut = $MyOut+"<td></tr>$_CrLf"
+    ENDIF
+  ENDIF
+
+  $MyOut = $MyOut+"</table>$_CrLf"
+
+  # output trailer
+  #$MyOut = $MyOut+"<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/index.php?showtopic=20115&view=findpost&p=144229'>"+$_CrLf
+  $MyOut = $MyOut+"<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/index.php?showtopic=20465&st=0&#entry147321'>$_CrLf"
+  $MyOut = $MyOut+"FSGPlugin_AgeWhenFound $MacroVersion - $date</a>$_CrLf"
+  $MyOut = $MyOut+"</div></center>$_CrLf"
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetNextInterval
+#-------------------------------------------------------------------------------
+  BEGINCASE
+    CASE $granularity = "Yearly"
+      GOSUB Name=GetNextIntervalYearly
+    CASE $granularity = "Compact"
+      GOSUB Name=GetNextIntervalCompact
+    CASE $granularity = "Standard"
+      GOSUB Name=GetNextIntervalStandard
+    OTHERWISE
+      GOSUB Name=GetNextIntervalStandard
+  ENDCASE
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetNextIntervalStandard
+#-------------------------------------------------------------------------------
+  BEGINCASE
+    # caches found before they were placed (usually repeating event caches)
+    CASE $Interval=-1
+      $intMin = -20000
+      $intMax = -1
+      $intName = $LangBefore
+      $Interval = $Interval + 1
+    # same day
+    CASE $Interval=0
+      $intMin = 0
+      $intMax = 0
+      $intName = $LangSameDay
+      $Interval = $Interval + 1
+    # first week
+    CASE $Interval=1
+      $intMin = 1
+      $intMax = 1
+      $intName = "1 " + $LangDay
+      $Interval = $Interval + 1
+    CASE $Interval=2
+      $intMin = 2
+      $intMax = 2
+      $intName = "2 " + $LangDays
+      $Interval = $Interval + 1
+    CASE $Interval=3
+      $intMin = 3
+      $intMax = 3
+      $intName = "3 " + $LangDays
+      $Interval = $Interval + 1
+    CASE $Interval=4
+      $intMin = 4
+      $intMax = 4
+      $intName = "4 " + $LangDays
+      $Interval = $Interval + 1
+    CASE $Interval=5
+      $intMin = 5
+      $intMax = 5
+      $intName = "5 " + $LangDays
+      $Interval = $Interval + 1
+    CASE $Interval=6
+      $intMin = 6
+      $intMax = 6
+      $intName = "6 " + $LangDays
+      $Interval = $Interval + 1
+    # first month
+    CASE $Interval=7
+      $intMin = 7
+      $intMax = 13
+      $intName = "1-2 " + $LangWeeks
+      $Interval = $Interval + 1
+    CASE $Interval=8
+      $intMin = 14
+      $intMax = 20
+      $intName = "2-3 " + $LangWeeks
+      $Interval = $Interval + 1
+    CASE $Interval=9
+      $intMin = 21
+      $intMax = 27
+      $intName = "3-4 " + $LangWeeks
+      $Interval = $Interval + 1
+    # first year
+    CASE $Interval=10
+      $intMin = 28
+      $intMax = 60
+      $intName = "1-2 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=11
+      $intMin = 61
+      $intMax = 90
+      $intName = "2-3 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=12
+      $intMin = 91
+      $intMax = 120
+      $intName = "3-4 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=13
+      $intMin = 121
+      $intMax = 150
+      $intName = "4-5 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=14
+      $intMin = 151
+      $intMax = 180
+      $intName = "5-6 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=15
+      $intMin = 181
+      $intMax = 210
+      $intName = "6-7 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=16
+      $intMin = 211
+      $intMax = 240
+      $intName = "7-8 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=17
+      $intMin = 241
+      $intMax = 270
+      $intName = "8-9 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=18
+      $intMin = 271
+      $intMax = 300
+      $intName = "9-10 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=19
+      $intMin = 301
+      $intMax = 330
+      $intName = "10-11 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=20
+      $intMin = 331
+      $intMax = 365
+      $intName = "11-12 " + $LangMonths
+      $Interval = $Interval + 1
+    # following years
+    CASE $Interval=21
+      $intMin = 366
+      $intMax = 730
+      $intName = "1-2 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=22
+      $intMin = 731
+      $intMax = 1095
+      $intName = "2-3 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=23
+      $intMin = 1096
+      $intMax = 1460
+      $intName = "3-4 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=24
+      $intMin = 1461
+      $intMax = 1825
+      $intName = "4-5 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=25
+      $intMin = 1826
+      $intMax = 2190
+      $intName = "5-6 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=26
+      $intMin = 2191
+      $intMax = 2555
+      $intName = "6-7 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=27
+      $intMin = 2556
+      $intMax = 2920
+      $intName = "7-8 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=28
+      $intMin = 2921
+      $intMax = 3285
+      $intName = "8-9 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=29
+      $intMin = 3286
+      $intMax = 3650
+      $intName = "9-10 " + $LangYears
+      $Interval = $Interval + 1
+    #CASE $Interval=30
+    #  $intMin = 3651
+    #  $intMax = 20000 # 50 years is 18250 days
+    #  $intName = ">10 " + $LangYears
+    #  $Interval = $Interval + 1
+    OTHERWISE
+      $intMin = 3651
+      $intMax = 20000 # 50 years is 18250 days
+      $intName = ">10 " + $LangYears
+      $Interval = $maxInterval
+  ENDCASE
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetNextIntervalYearly
+#-------------------------------------------------------------------------------
+  BEGINCASE
+    # caches found before they were placed (usually repeating event caches)
+    CASE $Interval=-1
+      $intMin = -20000
+      $intMax = -1
+      $intName = $LangBefore
+      $Interval = $Interval + 1
+    # first year
+    CASE $Interval=0
+      $intMin = 0
+      $intMax = 365
+      $intName = "1 " + $LangYear
+      $Interval = $Interval + 1
+    # following years
+    CASE $Interval=1
+      $intMin = 366
+      $intMax = 730
+      $intName = "1-2 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=2
+      $intMin = 731
+      $intMax = 1095
+      $intName = "2-3 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=3
+      $intMin = 1096
+      $intMax = 1460
+      $intName = "3-4 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=4
+      $intMin = 1461
+      $intMax = 1825
+      $intName = "4-5 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=5
+      $intMin = 1826
+      $intMax = 2190
+      $intName = "5-6 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=6
+      $intMin = 2191
+      $intMax = 2555
+      $intName = "6-7 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=7
+      $intMin = 2556
+      $intMax = 2920
+      $intName = "7-8 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=8
+      $intMin = 2921
+      $intMax = 3285
+      $intName = "8-9 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=9
+      $intMin = 3286
+      $intMax = 3650
+      $intName = "9-10 " + $LangYears
+      $Interval = $Interval + 1
+    OTHERWISE
+      $intMin = 3651
+      $intMax = 20000 # 50 years is 18250 days
+      $intName = ">10 " + $LangYears
+      $Interval = $maxInterval
+  ENDCASE
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetNextIntervalCompact
+#-------------------------------------------------------------------------------
+  BEGINCASE
+    # caches found before they were placed (usually repeating event caches)
+    CASE $Interval=-1
+      $intMin = -20000
+      $intMax = -1
+      $intName = $LangBefore
+      $Interval = $Interval + 1
+    # same day
+    CASE $Interval=0
+      $intMin = 0
+      $intMax = 0
+      $intName = $LangSameDay
+      $Interval = $Interval + 1
+    # first week
+    CASE $Interval=1
+      $intMin = 1
+      $intMax = 7
+      $intName = "1-7 " + $LangDays
+      $Interval = $Interval + 1
+    # first month
+    CASE $Interval=2
+      $intMin = 8
+      $intMax = 27
+      $intName = "1-4 " + $LangWeeks
+      $Interval = $Interval + 1
+    # first year
+    CASE $Interval=3
+      $intMin = 28
+      $intMax = 180
+      $intName = "1-6 " + $LangMonths
+      $Interval = $Interval + 1
+    CASE $Interval=4
+      $intMin = 181
+      $intMax = 365
+      $intName = "6-12 " + $LangMonths
+      $Interval = $Interval + 1
+    # following years
+    CASE $Interval=5
+      $intMin = 366
+      $intMax = 730
+      $intName = "1-2 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=6
+      $intMin = 731
+      $intMax = 1095
+      $intName = "2-3 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=7
+      $intMin = 1096
+      $intMax = 1460
+      $intName = "3-4 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=8
+      $intMin = 1461
+      $intMax = 1825
+      $intName = "4-5 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=9
+      $intMin = 1826
+      $intMax = 2190
+      $intName = "5-6 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=10
+      $intMin = 2191
+      $intMax = 2555
+      $intName = "6-7 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=11
+      $intMin = 2556
+      $intMax = 2920
+      $intName = "7-8 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=12
+      $intMin = 2921
+      $intMax = 3285
+      $intName = "8-9 " + $LangYears
+      $Interval = $Interval + 1
+    CASE $Interval=13
+      $intMin = 3286
+      $intMax = 3650
+      $intName = "9-10 " + $LangYears
+      $Interval = $Interval + 1
+    OTHERWISE
+      $intMin = 3651
+      $intMax = 20000 # 50 years is 18250 days
+      $intName = ">10 " + $LangYears
+      $Interval = $maxInterval
+  ENDCASE
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetParameters
+#-------------------------------------------------------------------------------
+  IF $_MacroParms <> ""
+    $count = RegExCount("&",$_MacroParms)+1
+    WHILE $count > 0
+      $Parameter = Extract($_MacroParms,"&",$count)
+      $ParamName = Upper(Extract($Parameter,"=",1))
+      $ParamValue = Upper(Extract($Parameter,"=",2))
+      #msgok msg="ParamName: *$ParamName* ParamValue: *$ParamValue*"
+      BEGINCASE
+        CASE $ParamName="SECTIONHEADING"
+          IF $ParamValue="FALSE"
+            $showHeader = FALSE
+          ENDIF
+        CASE $ParamName="SECONDCOLUMN"
+          IF $ParamValue="FALSE"
+            $showSecondColumn = FALSE
+          ENDIF
+        CASE $ParamName="WRAPFIRSTCOLUMN"
+          IF $ParamValue="TRUE"
+            $wrapFirstColumn = TRUE
+            $showSecondColumn = FALSE # this implies that the second column cannot be shown
+          ENDIF
+        CASE $ParamName="SUMMARY"
+          IF $ParamValue="FALSE"
+            $showSummary = FALSE
+          ELSE
+            IF $ParamValue="RIGHT"
+              $summaryOnRight = TRUE
+            ENDIF
+          ENDIF
+        CASE $ParamName="BEFORE"
+          IF $ParamValue="FALSE"
+            $showBefore = FALSE
+          ENDIF
+        CASE $ParamName="DEBUG"
+          $showDebug = TRUE
+        CASE $ParamName="BARWIDTH"
+          IF Val($ParamValue)>0
+            $barWidth = Val($ParamValue)
+          ENDIF
+        CASE $ParamName="LIMIT"
+          IF Val($ParamValue)>0
+            $limit = Val($ParamValue)
+          ENDIF
+        CASE $ParamName="EVENTS"
+          IF $ParamValue="FALSE"
+            $noEvents = TRUE
+          ENDIF
+        CASE $ParamName="INTERVAL"
+          BEGINCASE
+            CASE $ParamValue="STANDARD"
+              $granularity = "Standard"
+            CASE $ParamValue="YEARLY"
+              $granularity = "Yearly"
+            CASE $ParamValue="COMPACT"
+              $granularity = "Compact"
+            OTHERWISE
+              RETURN msg="Unknown value '$ParamValue' for parameter '$ParamName', macro will terminate"
+          ENDCASE
+        OTHERWISE
+          RETURN msg=Unknown parameter '$ParamName', macro will terminate
+      ENDCASE
+      $count = $count - 1
+    ENDWHILE
+  ENDIF
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=DeclareVariables
+#-------------------------------------------------------------------------------
+Option Explicit=Yes
+
+Declare Var=$Age Type=String
+Declare Var=$aveAge Type=Numeric
+Declare Var=$barWidth Type=Numeric
+Declare Var=$colspan1 Type=Numeric
+Declare Var=$colspan2 Type=Numeric
+Declare Var=$colWidth Type=Numeric
+Declare Var=$count Type=Numeric
+Declare Var=$counta Type=Numeric
+Declare Var=$countc Type=Numeric
+Declare Var=$countm Type=Numeric
+Declare Var=$date Type=String
+Declare Var=$datestamp Type=String
+Declare Var=$debugCount Type=String
+Declare Var=$entry Type=String
+Declare Var=$Finds Type=String
+Declare Var=$fpercent Type=Numeric
+Declare Var=$fwidth Type=Numeric
+Declare Var=$granularity Type=String
+Declare Var=$image Type=String
+Declare Var=$indexm Type=Numeric
+Declare Var=$Interval Type=Numeric
+Declare Var=$intMax Type=Numeric
+Declare Var=$intMin Type=Numeric
+Declare Var=$intName Type=String
+Declare Var=$LangAge Type=String
+Declare Var=$LangAveAge Type=String
+Declare Var=$LangBefore Type=String
+Declare Var=$LangDay Type=String
+Declare Var=$LangDays Type=String
+Declare Var=$LangEvent Type=String
+Declare Var=$LangEvents Type=String
+Declare Var=$LangExclude Type=String
+Declare Var=$LangMonths Type=String
+Declare Var=$LangOlder Type=String
+Declare Var=$LangOther Type=String
+Declare Var=$LangSameDay Type=String
+Declare Var=$LangTotal Type=String
+Declare Var=$LangWeeks Type=String
+Declare Var=$LangYear Type=String
+Declare Var=$LangYears Type=String
+Declare Var=$limit Type=Numeric
+Declare Var=$limitWhere Type=String
+Declare Var=$list Type=String
+Declare Var=$MacroVersion Type=String
+Declare Var=$maxa Type=Numeric
+Declare Var=$maxInterval Type=Numeric
+Declare Var=$maxm Type=Numeric
+Declare Var=$maxValue Type=Numeric
+Declare Var=$maxWrap Type=Numeric
+Declare Var=$MyOut Type=String
+Declare Var=$noEvents Type=Boolean
+Declare Var=$num_entries Type=Numeric
+Declare Var=$num_exclude Type=Numeric
+Declare Var=$num_finds Type=Numeric
+Declare Var=$p_FSGData Type=String
+Declare Var=$Parameter Type=String
+Declare Var=$ParamName Type=String
+Declare Var=$ParamValue Type=String
+Declare Var=$restFewer Type=Numeric
+Declare Var=$restOlder Type=Numeric
+Declare Var=$showBefore Type=Boolean
+Declare Var=$showDebug Type=Boolean
+Declare Var=$showHeader Type=Boolean
+Declare Var=$showSecondColumn Type=Boolean
+Declare Var=$showSummary Type=Boolean
+Declare Var=$summaryOnRight Type=Boolean
+Declare Var=$sql Type=String
+Declare Var=$sumAge Type=Numeric
+Declare Var=$sumInterval Type=Numeric
+Declare Var=$tempS Type=String
+Declare Var=$work Type=String
+Declare Var=$wrapFirstColumn Type=Boolean
+
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=InitVariables
+#-------------------------------------------------------------------------------
+  $MacroVersion = MacHeader("MacVersion")
+  $date = DateFormat($_Today)
+  $datestamp = "$date"
+  $MyOut = ""
+  $showHeader = TRUE
+  $showSecondColumn = TRUE
+  $showSummary = TRUE
+  $summaryOnRight = FALSE
+  $showBefore = TRUE
+  $noEvents = FALSE
+  $wrapFirstColumn = FALSE
+  $showDebug = FALSE
+  $barWidth = 150
+  $maxInterval = 31
+  $maxValue = 0
+  $limit=0
+  $granularity = "Standard"
+
+  $LangAge = "Age"
+  $LangBefore = "Before"
+  $LangDay = "day"
+  $LangDays = "days"
+  $LangSameDay = "Same day"
+  $LangWeeks = "weeks"
+  $LangMonths = "months"
+  $LangYear = "year"
+  $LangYears = "years"
+  $LangAveAge = "Average age"
+  $LangTotal = "Total"
+  $LangOlder = "Older"
+  $LangOther = "Other"
+  $LangExclude = "Excluded"
+  $LangEvent = "Event"
+  $LangEvents = "Events"
+
+  # translated by hulmgulm
+  IF $Language = "Deutsch"
+    $LangAge = "Alter"
+    $LangBefore = "Davor"
+    $LangDay = "Tag"
+    $LangDays = "Tage"
+    $LangSameDay = "Am gleichen Tag"
+    $LangWeeks = "Wochen"
+    $LangMonths = "Monate"
+    $LangYears = "Jahr"
+    $LangYears = "Jahre"
+    $LangAveAge = "Durchschnittsalter"
+    $LangTotal = "Summe"
+    $LangOlder = "älter"
+    $LangOther = "andere"
+    $LangExclude = "Ausgenommen"
+    $LangEvent = "Event"
+    $LangEvents = "Events"
+  ENDIF
+  
+  # translated by marram.cz
+  IF $Language = "Czech" OR $Language = "Èesky"
+    $LangAge = "Stárí"
+    $LangBefore = "Pred publikací"
+    $LangDay = "den"
+    $LangDays = "dnu"
+    $LangSameDay = "Ten samý den"
+    $LangWeeks = "týdnu"
+    $LangMonths = "mesícu"
+    $LangYears = "let"
+    $LangAveAge = "Prumerné stárí"
+    $LangTotal = "Celkem"
+    $LangOlder = "starší"
+    $LangOther = "jiný"
+    # translation needed
+    $LangExclude = "Excluded"
+    $LangEvent = "Event"
+    $LangEvents = "Events"
+    $LangYear = "year"
+  ENDIF
+  
+  # translated by stejor
+  IF $Language = "Swedish" OR $Language = "Svenska"
+    $LangAge = "Ålder"
+    $LangBefore = "Före"
+    $LangDay = "dag"
+    $LangDays = "dagar"
+    $LangSameDay = "Samma dag"
+    $LangWeeks = "veckor"
+    $LangMonths = "månader"
+    $LangYear = "år"
+    $LangYears = "år"
+    $LangAveAge = "Medelålder"
+    $LangTotal = "Totalt"
+    $LangOlder = "Äldre"
+    $LangOther = "Annat"
+    
+    $Lang92 = "Hittade"
+    $Lang06 = "Procent"
+
+    # translation needed
+    $LangExclude = "Excluded"
+    $LangEvent = "Event"
+    $LangEvents = "Events"
+  ENDIF
+  
+  # todo: handle more translations
+ENDSUB
+
+

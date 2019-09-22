@@ -1,0 +1,68 @@
+-- hello.kl
+PROGRAM hello
+  -- this is a comment
+
+  -- translator directive
+  %COMMENT = 'Hello'
+
+  -- const declarations
+  CONST
+    LANG_EN = 1
+    LANG_ES = 2
+    LANG_FR = 3
+
+  -- custom type
+  TYPE
+    person_t = STRUCTURE
+      name     : STRING[16]
+      lang_id  : INTEGER
+    ENDSTRUCTURE
+
+  -- program vars
+  VAR
+    people : ARRAY[3] OF person_t
+
+  -- custom routines
+  -- Returns the proper greeting for a given language
+  ROUTINE greeting(lang_id : INTEGER) : STRING
+    BEGIN
+      SELECT lang_id OF
+        CASE(LANG_EN):
+          RETURN('Hello')
+        CASE(LANG_ES):
+          RETURN('Hola')
+        CASE(LANG_FR):
+          RETURN('Bonjour')
+      ENDSELECT
+    END greeting
+
+  -- Greets a person in their language
+  --
+  -- Example:
+  --   person.name = 'John'
+  --   person.lang_id = LANG_EN
+  --
+  --   greet(person)
+  --   # => Hello, John
+  ROUTINE greet(person : person_t)
+    BEGIN
+      WRITE(greeting(person.lang_id),', ',person.name,CR)
+    END greet
+BEGIN
+  -- setup people[] array
+  -- notice KAREL arrays are 1-based, not 0-based.
+  people[1].name = 'John'
+  people[1].lang_id = LANG_EN
+
+  people[2].name = 'Jose'
+  people[2].lang_id = LANG_ES
+
+  people[3].name = 'Jaques'
+  people[3].lang_id = LANG_FR
+
+  -- greet each person
+  greet(people[1])
+  greet(people[2])
+  greet(people[3])
+END hello
+  -- you could also put your routines here

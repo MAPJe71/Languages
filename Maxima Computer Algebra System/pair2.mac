@@ -1,0 +1,465 @@
+/* pair2.mac 
+     polarized pair annihilation
+   E. L. Woollett
+   woollett@charter.net 
+   April 15, 2011
+ */
+
+   
+  " ======================================================"$
+ "  file pair2.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+" --------------------------------------------"$
+"   POLARIZED PAIR ANNIHILATION in CM Frame    "$
+" ---------------------------------------------"$
+"  e(-,p1) + e(+,p2) --> gamma(k1) + gamma(k2) "$
+" ----------------------------------------------"$
+"   AMPLITUDES USING EXPLICIT DIRAC SPINORS    "$
+" ----------------------------------------------"$
+" Define the needed Dirac spinors and barred spinors. "$
+                                      
+ " For example, RR --> RR amplitude without the factor e^2, and"$
+ " either t-m^2 or u-m^2 in the denominator . The photon 3-momenta"$
+ " magnitudes are equal to M/2, where M = 2*E = CM frame energy."$
+ " M >= 2*m, and 'low energy' corresponds to M at its lower limit,"$
+ " for which v is close to value 0, and 'high energy' corresponds"$
+ " to M >> m, for which v approaches its maximum value 1 "$
+ " The lepton 3-momentum magnitudes are each equal to E*v = M*v/2 "$
+ " where v is the dimensionless velocity with "$
+ " v^2 = p^2/E^2 = (E^2-m^2)/E^2 = 1- 4*m^2/M^2 "$
+ "  All particle energies are equal to M/2."$
+ " ----------------------------------------------------"$
+  " CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,+1)  gamma(k2,+1) "$
+  " ----------------------------------------------------"$
+  " Both the electron and positron have helicity +1. "$
+  " Each of the final gammas have helicity +1. "$
+    "For a given set of helicity quantum numbers,  the amplitude is the"$
+ " sum of two terms:  Mtn/(t-m^2) + Mun/(u-m^2) , where  "$
+ " Mtd = t-m^2 = -2*D(k1,p1), Mud = u-m^2 = -2*D(k2,p1). "$
+  " --------------------------------------------------"$
+  " To simplify the photon helicity 3-vectors, let k1_3vec be "$
+  " along the positive z axis, and k2_3vec be along the "$
+  " minus z axis, p1_3vec in the z-x plane at an angle of "$
+  " th radians to k1_3vec."$
+                                            
+  (up1 : UU(M/2,M*v/2,th,0,1), 
+   vp2b : sbar( VV (M/2,M*v/2,%pi-th,%pi,1)) )$
+ " ------------------------------------------------------"$
+ " We need to define the components of the four vectors "$
+ " p1, k1, k2, e1_cc, and e2_cc relative to the CM frame"$
+ " For the photon polarization 4-vectors, we use the phase"$
+ " conventions of Franz Gross, Rel. Q. Mech. and Fld. Theory"$
+ " pages 54, 218, and 230. e1_cc means complex conjugate of e1. "$
+ " Without the 'cc', e1 means here e (z_hat,+1) "$
+ " and e2 means here e (-z_hat,+1) "$
+ 
+ comp_def (p1(M/2,M*v*sin(th)/2,0,M*v*cos(th)/2),
+           k1(M/2,0,0,M/2),
+           k2(M/2,0,0,-M/2),
+           e1_cc(0,-1/sqrt(2),%i/sqrt(2),0),
+           e2_cc(0,1/sqrt(2),%i/sqrt(2),0) )$
+           
+  " denominators "$
+           
+  Mtd : -2*pullfac (noncov (D(k1,p1)),M^2/4); 
+  
+    
+  Mud : -2*pullfac (noncov (D(k2,p1)),M^2/4);   
+   
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));
+  
+  expand (ratsubst(2*m/M,sqrt(1-v^2),rootscontract (%)));
+  
+    
+  pullfac(%,2*m*M*cos(th/2)^2);
+  
+  expand (ratsubst ((1+cos(th))/2,cos(th/2)^2,%));
+  
+  Mtn : pullfac(%,m*M); 
+  
+  M1 : Mtn/Mtd;
+  
+  " M2 = Mun/Mud "$
+  
+  Mun : vp2b.g2.up1;
+  
+  expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  pullfac(%,2*m*M*sin(th/2)^2);
+  
+  Mun : expand (ratsubst ((1-cos(th))/2,sin(th/2)^2,%));
+  
+  Mun : pullfac (%,m*M); 
+  
+  M2 : Mun/Mud;
+  
+  " Add amplitudes and simplify trig functions "$
+  
+  Mfi : trigsimp (M1+M2);
+  
+  " factor numerator and pull out minus sign in denom "$
+  
+  Mfi_n : factor (num (Mfi));
+  
+  Mfi_d : pullfac (expand (denom (Mfi)),-M);
+  
+  Mfi : Mfi_n/Mfi_d;
+  
+(display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,+1)  gamma(k2,+1) "),
+    display(Mfi),display2d:false)$
+  " which agrees with Schwinger, PSF I, (3-13-98)"$
+  "----------------------------------------------"$
+"CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,-1)  gamma(k2,-1) "$
+" -------------------------------------------------"$
+
+  comp_def ( e1_cc(0,1/sqrt(2),%i/sqrt(2),0),
+             e2_cc(0,-1/sqrt(2),%i/sqrt(2),0) )$
+             
+  listarray (e1_cc);
+  listarray (e2_cc);
+  
+ " the spinors and denominators are the same "$
+ " recompute the g1 and g2 matrices "$
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " ------------------------------------"$
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  pullfac(%,2*m*M*sin(th/2)^2);
+  
+  expand (ratsubst ((1-cos(th))/2,sin(th/2)^2,%));
+  
+  Mtn : pullfac (%,m*M);
+  
+  M1 : Mtn/Mtd;
+  
+  "------------------------------"$
+  
+  " M2 = Mun/Mud "$
+  
+  Mun : vp2b.g2.up1;
+  
+  expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));
+  
+  expand (ratsubst(2*m/M,sqrt(1-v^2),rootscontract (%)));
+  
+    
+  pullfac(%,2*m*M*cos(th/2)^2);
+  
+  expand (ratsubst ((1+cos(th))/2,cos(th/2)^2,%));
+  
+  Mun : pullfac(%,m*M);
+  
+  M2 : Mun/Mud;
+  
+  " Add amplitudes and simplify trig functions "$
+  
+  Mfi : trigsimp (M1+M2);
+  
+  " factor numerator and pull out minus sign in denom "$
+  
+  /* Mfi_n : factor (num (Mfi)); */
+  
+  Mfi_n : pullfac (num (Mfi),-4*m);
+  
+  Mfi_d : pullfac (expand (denom (Mfi)),-M);
+  
+  Mfi : Mfi_n/Mfi_d;
+  
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,-1)  gamma(k2,-1) "),
+    display(Mfi),display2d:false)$
+  " which agrees with Schwinger, PSF I, (3-13-98)"$
+  "----------------------------------------------"$
+"CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,1)  gamma(k2,-1) "$
+" -------------------------------------------------"$
+
+  comp_def ( e1_cc(0,-1/sqrt(2),%i/sqrt(2),0))$
+  
+  listarray (e1_cc);
+  
+  " the spinors and denominators are the same "$
+ " recompute the g1 and g2 matrices "$
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " ------------------------------------"$  
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  Mtn : ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%);
+  
+  
+  
+  M1 : Mtn/Mtd;
+  
+  
+  "------------------------------"$
+  
+  " M2 = Mun/Mud "$
+  
+  Mun : vp2b.g2.up1;
+  
+  expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  Mun : ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%);
+  
+  M2 : Mun/Mud;
+  
+  " ----------------------------------------"$
+  
+  " Add amplitudes and simplify trig functions "$
+  
+  Mfi : trigsimp (M1+M2);
+  
+  Mfi : num(Mfi)/pullfac (expand (denom (Mfi)),-M);
+  
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,+1)  gamma(k2,-1) "),
+    display(Mfi),display2d:false)$
+    
+  " ------------------------------------------------"$
+  
+    "----------------------------------------------"$
+"CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,-1)  gamma(k2,+1) "$
+" -------------------------------------------------"$
+
+ comp_def ( e1_cc(0,1/sqrt(2),%i/sqrt(2),0),
+             e2_cc(0,1/sqrt(2),%i/sqrt(2),0) )$
+             
+  listarray (e1_cc);
+  listarray (e2_cc);
+  
+ " the spinors and denominators are the same "$
+ " recompute the g1 and g2 matrices "$
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " ------------------------------------"$
+  " ------------------------------------"$
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  Mtn : ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%);
+  
+  M1 : Mtn/Mtd;
+  
+  "------------------------------"$
+  
+  " M2 = Mun/Mud "$
+  
+  Mun : vp2b.g2.up1;
+  
+  expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));
+  
+  expand(ratsubst(2*m/M,sqrt(1-v^2),rootscontract(%)));
+  
+  Mun : ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%);
+  
+  M2 : Mun/Mud;
+  
+  " --------------------------------"$
+  
+  Mfi : trigsimp (M1+M2);
+  
+  Mfi : num(Mfi)/pullfac (expand (denom (Mfi)),-M);
+  
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,+1) --> gamma(k1,-1)  gamma(k2,+1) "),
+    display(Mfi),display2d:false)$
+    
+  " ------------------------------------------------"$
+  " Schwinger's amplitude for these last two cases differs by a minus sign "$
+  " ----------------------------------------------- "$
+  " CASES LEPTONS HAVE OPPOSITE HELICITIES: see Schwinger (3-13-97). "$
+     "----------------------------------------------"$
+"CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,+1)  gamma(k2,-1) "$
+" -------------------------------------------------"$
+
+  " recompute vp2b "$
+  
+  vp2b : sbar( VV (M/2,M*v/2,%pi-th,%pi,-1))$
+  
+  " denominators Mtd, Mud remain the same "$
+  " recompute g1 and g2 "$
+  
+  
+
+ comp_def ( e1_cc(0,-1/sqrt(2),%i/sqrt(2),0),
+             e2_cc(0,-1/sqrt(2),%i/sqrt(2),0) )$
+             
+  listarray (e1_cc);
+  listarray (e2_cc);
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " ------------------------------------"$
+  " ------------------------------------"$
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  Mtn : expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));    
+  
+   M1 : Mtn/Mtd;
+  
+  "------------------------------"$
+  
+  " M2 = Mun/Mud "$
+  
+  Mun : vp2b.g2.up1;
+  
+  Mun : expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));    
+  
+  M2 : Mun/Mud;
+  
+  " -----------------------------"$
+  trigsimp (M1+M2);
+  
+  Mfi : -(num(%))/(-denom(%));
+  
+  
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,+1)  gamma(k2,-1) "),
+    display(Mfi),display2d:false)$
+  " -------------------------------------------------"$
+  " This differs by a sign compared to Schwinger. "$
+  " -----------------------------------------------"$
+    
+  "CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,-1)  gamma(k2,+1) "$
+  " -------------------------------------------------"$
+  
+  " spinors and denominators are the same , recompute g1 and g2"$
+  
+  
+  comp_def ( e1_cc(0,1/sqrt(2),%i/sqrt(2),0),
+             e2_cc(0,1/sqrt(2),%i/sqrt(2),0) )$
+             
+  listarray (e1_cc);
+  listarray (e2_cc);
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  Mtn : expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  M1 : Mtn/Mtd;
+  
+  Mun : vp2b.g2.up1;
+  
+  Mun : expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  M2 : Mun/Mud;
+  
+  " -----------------------------"$
+  trigsimp (M1+M2);
+  
+  Mfi : -(num(%))/(-denom(%));
+  
+    
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,-1)  gamma(k2,+1) "),
+    display(Mfi),display2d:false)$
+  " -------------------------------------------------"$
+  " This differs by a sign compared to Schwinger. "$
+  
+  " -------------------------------------------------"$
+    
+  "CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,+1)  gamma(k2,+1) "$
+  " -------------------------------------------------"$
+  
+  comp_def ( e1_cc(0,-1/sqrt(2),%i/sqrt(2),0),
+             e2_cc(0,1/sqrt(2),%i/sqrt(2),0) )$
+             
+  listarray (e1_cc);
+  listarray (e2_cc);
+  
+  g1 : sL(e2_cc).(sL(p1) - sL(k1) + m*I4).sL(e1_cc);
+  
+  g2 : sL(e1_cc).(sL(p1) - sL(k2) + m*I4).sL(e2_cc);
+  
+  " M1 = Mtn/Mtd "$
+  
+  Mtn : vp2b.g1.up1;
+  
+  expand (ratsubst (sin(th/2),cos ((%pi-th)/2),%));
+  
+  expand (ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%));
+  
+  Mtn : pullfac (%,sin(th)*M^2/2);
+  
+  M1 : Mtn/Mtd;   
+  
+  Mun : vp2b.g2.up1;
+  
+  expand (ratsubst(cos(th/2),sin((%pi-th)/2),%));
+  
+  expand (ratsubst (sin(th)/2,cos(th/2)*sin(th/2),%));
+  
+  Mun : factor (%);
+  
+  M2 : Mun/Mud;
+  
+  Mfi : M1 + M2;
+  
+  (display2d:true,
+    disp("CASE: e(-,p1,+1)  e(+,p2,-1) --> gamma(k1,+1)  gamma(k2,+1) "),
+    display(Mfi),display2d:false)$
+    
+  " The amplitude is zero for this case. "$
+    
+    
+    
+  

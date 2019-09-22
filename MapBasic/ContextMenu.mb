@@ -1,0 +1,113 @@
+'************************************************************************************
+'**  Context Menu
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		21 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub SaveTableAs
+Declare Sub About
+Declare Sub End_Program
+
+Define AppName "Context Menu Sample Code"
+Define AppNameMenu "&ContextMenu"
+Define AppVersion 0.8
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID M_HELP
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID M_HELP
+
+	Alter Menu ID M_SHORTCUT_TLV_TABLES Add
+		"(-",
+		"Save Table As..."
+		HelpMsg "Save and reopen a table with a new name."
+		Calling SaveTableAs
+	
+End Sub Main
+
+'*********************************************************************************************
+Sub SaveTableAs
+'*********************************************************************************************
+
+OnError Goto ErrorHandler
+
+Dim	sTable, sTabFile As String
+
+	If TableListInfo(TL_INFO_SEL_COUNT) <> 1 Then
+		Note "Please select a single table in the Table List"
+		Exit Sub
+	End If
+
+	sTable = TableListSelectionInfo (1, TL_SEL_INFO_NAME)
+	sTabFile	= TableInfo(sTable, TAB_INFO_TABFILE)
+	sTabFile = FileSaveAsDlg (PathToDirectory$(sTabFile), sTable, "TAB", "Save Table As")
+	If sTabFile = "" Then
+		Exit Sub
+	End If
+
+	Commit Table sTable As sTabFile
+	Close Table sTable
+	Open Table sTabFile
+
+Exit Sub
+
+ErrorHandler:
+	Note Error$()
+	
+End Sub SaveTableAs
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to add a new menu item to a context menu." Position 3dW, 1dH
+		Control StaticText title "To see how it works:" Position 3dW, 3dH
+		Control StaticText title "- Right-click on a table in the Table List to view a pop-up menu with the" Position 3dW, 4dH
+		Control StaticText title "  new menu item: Save Table As..." Position 3dW, 5dH
+		Control StaticText title "(If you select 'Save Table As...' you can save the table with a new name and" Position 3dW, 7dH
+		Control StaticText title "location. After saving the new table, the original table will be closed and the" Position 3dW, 8dH
+		Control StaticText title "new table will be opened.)" Position 3dW, 9dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 50dW, 14dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+		End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************

@@ -1,0 +1,744 @@
+#*******************************************
+# MacDescription = FSG Plugin - Display the most Northern, Southern, Eastern & Western and the furthest Cache found in a Country, State or County
+# MacFileName = FSGPlugin_MostNSEWCache.gsk
+# MacAuthor = The CEO
+# MacVersion = 1.14
+# MacUrl=
+#*******************************************
+
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_MostNSEWCache?Country=...</plugin>
+ENDIF
+
+	SHOWSTATUS msg="FSGPlugin_MostNSEWCache starting" Width=350 Title=""
+
+	$out=""	
+
+	Declare Var=$ShowHeading Type=Boolean
+	Declare Var=$ShowMap Type=String
+	Declare Var=$WhereClause Type=String	
+	Declare Var=$Country Type=String	
+	Declare Var=$State Type=String	
+	Declare Var=$County Type=String	
+	Declare Var=$DB Type=String
+	Declare Var=$GoogleMapString Type=String
+	Declare Var=$Marker Type=String	
+	Declare Var=$MapType Type=String	
+	
+	Declare Var=$RandomPlusMin1 Type=String
+	Declare Var=$TmpLong Type=String
+	Declare Var=$TmpLat Type=String	
+	Declare Var=$MapId Type=String
+	
+	$DB="Allfinds"
+	$GoogleMapString=""
+	
+	# Set the default Google MapType
+	$MapType="terrain"
+	
+# GOSUB Name=InitLanguage
+
+$MapId="MostNSEW_" + NumToStr(Random(100000))
+	
+$Country=""
+$State=""
+$County=""
+$ShowHeading=TRUE
+$ShowMap="none"
+
+$DB="Allfinds"
+
+	$Text=MacHeader("MacFileName")+" v"+MacHeader("MacVersion")
+	$out = $out + $_CrLf + "<!-- $Text Param:$_MacroParms -->" + $_CrLf
+	$Text=""	
+	
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = lower($Text1)
+		# MSGOK msg="parameter $i: '$Text1' '$Text2'"
+		
+		if (AT("sectionheading=false", $Text2) <> 0)
+			$ShowHeading=FALSE
+		endif
+
+		if (AT("showmap=true", $Text2) <> 0)
+			$ShowMap="block"
+		endif
+		
+		if (AT("maptype=", $Text2) <> 0)
+			$MapType = extract($Text2,"=",2)
+		endif
+		
+		if (AT("placed", $Text2) <> 0)
+			$_sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='PlacedStatsdata' "
+			$work = Sqlite("sql",$_sql)
+			$count = $_SqlRows
+			if $count<>0
+				$DB="PlacedStatsdata"
+				$Text="Most Northern, Southern, Eastern & Western Placed cache"
+			else
+				MSGOK msg="Please add '<placed>' (without ' ') to any notes section, in order to enable a Placed statistic"	
+				$DB="NotAvailable"
+			endif
+				# Needs the Placed Stats routine if it is in the current report anywhere
+				# Or <placed> is in any Notes section
+		endif
+
+		if (AT("county=", $Text2) <> 0)
+			$County = extract($Text1,"=",2)
+			$Text="Most N, S, E, W and furthest finds in $County"
+#			$Text="Most Northern, Southern, Eastern & Western, and furthest finds in $County"
+			$County=Replace(";","','",$County)
+			$County = lower($County)
+		endif
+		
+		if (AT("state=", $Text2) <> 0)
+			$State = extract($Text1,"=",2)
+			if $Text=""
+				$Text="Most N, S, E, W and furthest finds in $State"
+#				$Text="Most Northern, Southern, Eastern & Western, and furthest finds in $State"
+			else
+				$Text = $Text + " [$State]"
+			endif
+			$State=Replace(";","','",$State)	
+			$State = lower($State)
+		endif
+		
+		if (AT("country=", $Text2) <> 0)
+			$Country = extract($Text1,"=",2)
+			if $Text=""
+				$Text="Most N, S, E, W and furthest finds in $Country"
+#				$Text="Most Northern, Southern, Eastern, Western, and furthest finds in $Country"
+			else
+				$Text = $Text + " [$Country]"
+			endif
+			$Country=Replace(";","','",$Country)	
+			$Country = lower($Country)
+		endif
+
+
+		
+		$i = $i+1
+	endwhile
+
+	If $Text=""
+		$Text="Most N, S, E, W and furthest finds in the world"
+#		$Text="Most Northern, Southern, Eastern, Western, and furthest finds in the world"
+	endif
+	
+# Msgok msg=$DB
+
+if $DB<>"NotAvailable"
+
+	$colspan = 1
+
+	$WhereClause="1 "
+
+	If $Country<>"" AND lower($Country)<>"europe"  
+		$WhereClause=$WhereClause+"AND Lower(Country) IN ('$Country') "
+	endif
+	
+	If $Country<>"" AND lower($Country)="europe"  
+		$WhereClause=$WhereClause+"AND ( Latitude+0>38 AND Longitude+0>-12 AND Longitude+0<34 AND Lower(Country) NOT IN  ('turkey') ) OR (Lower(Country) IN  ('spain','portugal','iceland','belarus','cyprus','gibraltar','latvia','lithuania','malta','ukraine','greece') ) "
+	endif
+
+	If $State<>"" 
+		$WhereClause=$WhereClause+"AND Lower(State) IN ('$State') "
+	endif
+	
+	If $County<>"" 
+		$WhereClause=$WhereClause+"AND Lower(County) IN ('$County') "
+	endif
+
+	$tmpS = "    <a href ='#' onclick=" + Quote("document.getElementById('$MapId').style.display = (getElementById('$MapId').style.display != 'none' ? 'none' : '');return false;") + "> <img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>" + $CR
+
+	# Now verify that there are indeed > 0 caches for the given country/state/county
+	$_sql = "SELECT Code FROM $DB WHERE $WhereClause"
+	$work = Sqlite("sql",$_sql)
+	$count = $_SqlRows
+	if $count > 0  # OK, at least 1 cache found
+		If $ShowHeading
+			# define maximum table width
+			if $maxtablewidth=0
+				$maxtablewidth = 750
+			endif
+			$text=$text+$_CrLf+$tmpS
+			GOSUB Name=SectionHead
+		endif
+		
+		# Msgok msg=$WhereClause
+		GOSUB Name=Numbers
+		GOSUB Name=GenerateGoogleMap
+		
+		$out = $out + "</table>" + $CR
+		$out=$out + "<br>"
+	ELSE # NOK, zero caches for given $WhereClause
+		MsgOk msg=Sorry, you don't have any caches found in $_CrLF $_CrLF Country=$Country $_CrLF State=$State $_CrLF County=$County $_CrLF $_CrLf Please check that the given country, state and/or county $_CrLF are spelled exactly as in the GSAK grid. 
+		$out = $out + $_CrLf + "<!-- NOK, zero caches for given $WhereClause -->" + $_CrLf
+	ENDIF
+endif #$DB<>"NotAvailable"
+
+SHOWSTATUS msg="FSGPlugin_MostNSEWCache finished" Width=350 Title=""
+
+$p_FSGData = $out
+
+##########################################
+# END of main, start of subroutines
+##########################################
+
+BEGINSUB Name=FlagImage
+	# Enter with $FullName containing the country name
+	# Exits with $text7 containing the html to the flag Image
+	$text7 = ""
+	$tmpS1 = $FullName
+	$FullName = "=" + $FullName + ","
+	IF At($FullName,$world)>0
+		$text7 = SubStr($world,At($FullName,$world)-2,2)
+		IF $tmpS1 = "Hong Kong"
+			$text7 = "HK"
+		ENDIF
+		$text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+	ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+	#Enters with $Stripcode containing code
+	# and $tmpB where TRUE = Placed table and FALSE = finds table
+	#Exits with $TypeImage containing image of cache type
+	$Types = "ABCEGLMRTUVWZXIY1HFO"
+	$Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774,other"
+	# If $tmpB is true then use the placed table instead
+	IF $tmpB
+		$_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+	ELSE
+		$_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+	ENDIF
+	$tmpS = Sqlite("sql",$_sql)
+	$tmpN = At($tmpS,$Types)
+	$thistype	= Extract($Typenums, "," , $tmpN)
+	BEGINCASE
+		CASE $tmpS = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $tmpS = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $tmpS = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB #StripCodeType
+
+BEGINSUB Name=SectionHead
+	# This subroutine is called by all the stats generating routines.
+	# It writes the section header and also handles the half width sections
+	# intelligently .
+	# Add a couple of blank lines to the output variable
+#	$out = $out + "<br /><br />" + $CR
+	$out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column -->" + $CR
+	IF $colspan = 1
+		# This is a full width section
+		# If the last section was a half width close the previous table off
+		IF $lastcolspan = 2
+			GOSUB Name=Close2col
+		ENDIF
+		$lastcolspan = 1
+		$column = 1
+		$width = $maxtablewidth
+	ELSE
+		# This is a half width section
+		IF $column = 1
+			# First Column
+			# If we're following another half width block, close the table off
+			IF $lastcolspan = 2
+				GOSUB Name=Close2col
+			ENDIF
+			GOSUB Name=Open2Col
+			$column = 2
+		ELSE
+			# Second Column
+			GOSUB Name=Mid2Col
+			$column = 1
+		ENDIF
+		$lastcolspan = 2
+		$width = $maxtablewidth/2
+	ENDIF
+	$tmpS = ""
+	IF $Placed
+		$tmpS = $stYearDataTit
+	ENDIF
+	# And add the header to the output variable
+	$out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+	$out = $out + "<a name='$Srun'></a>"
+#	$out = $out + "    $text" + $CR + "</div><br />" + $CR
+	$out = $out + "    $text" + $CR + "</div>" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB Name=InitLanguage
+
+ENDSUB
+
+BEGINSUB name=numLatitude
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, Latitude, URL, Country from $DB WHERE ($WhereClause) AND CacheType <>'L' and Exclude <> '1' ORDER BY cast(Latitude as real) DESC"
+	ELSE
+		$_sql = "SELECT Code, Name, Latitude, URL, Country from $DB WHERE ($WhereClause) ORDER BY cast(Latitude as real) DESC"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	$text1 = $Lang112
+	if $DB="PlacedStatsdata"
+		$text1 = "Most Northerly cache placed"
+	endif
+	
+	$tmpN = 1
+	$Marker="N"
+	GOSUB name=numLatitudeLine
+	$tmpN = $count
+	$text1 = $Lang113
+	if $DB="PlacedStatsdata"
+		$text1 = "Most Southerly cache placed"
+	endif	
+	$Marker="S"
+	GOSUB name=numLatitudeLine
+ENDSUB #numExtremes
+
+BEGINSUB name=numLatitudeLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$latitude = Extract($tmpS,";",3)
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = GCalc("$latitude 0","FormatMinutes")
+	$tmpS = Extract($tmpS,";",1)
+	$text2 = "<b>$tmpS</b>, $ShrunkName <a href='$Url'>$StripCode</a>"
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numLatitudeLine
+
+BEGINSUB name=numLongitude
+	
+	# From home option
+	# SELECT Code, Name,  case when (Longitude+97) < 180 then (longitude+97) else (longitude+97)-360 end as l , URL, Country from $DB WHERE CacheType <>'L' and Exclude <> '1' ORDER BY l DESC
+	
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, Longitude, URL, Country from $DB WHERE ($WhereClause) AND CacheType <>'L' and Exclude <> '1' ORDER BY cast(Longitude as real) DESC"
+	ELSE
+		$_sql = "SELECT Code, Name, Longitude, URL, Country from $DB WHERE ($WhereClause) ORDER BY cast(Longitude as real) DESC"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	$text1 = $Lang115
+	if $DB="PlacedStatsdata"
+		$text1 = "Most Easterly cache placed"
+	endif 
+	$tmpN = 1
+	$Marker="E"
+	GOSUB name=numLongitudeLine
+	
+	$tmpN = $count
+	$text1 = $Lang114
+	if $DB="PlacedStatsdata"
+		$text1 = "Most Westerly cache placed"
+	endif
+	$Marker="W"
+	GOSUB name=numLongitudeLine
+ENDSUB #numExtremes
+
+BEGINSUB name=numLongitudeLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$longitude = Extract($tmpS,";",3)
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = GCalc("0 $longitude","FormatMinutes")
+	$tmpS = Extract($tmpS,";",2)
+	$text2 = "<b>$tmpS</b>, $ShrunkName <a href='$Url'>$StripCode</a>"
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numLongitudeLine
+
+BEGINSUB Name=NumbersLine
+	# Add a line to the 'Some Number section, inputs are:
+	# $text1 : Description of the data
+	# $text2 : The data itself
+	# $text7 : Flag Image if used
+	$out = $out + "<tr>" + "$CR" + "<td style='$st2c1'>" + $CR
+	$out = $out + "$text1: </td>" + $CR
+#	IF $FlagIcons
+#		$out = $out + "<td style='$st2c2'>$text7</td>" + $CR
+#	ENDIF
+	IF $FlagIcons
+		$out = $out + "<td style='$st2c2'>$text2 $text7</td>" + $CR + "</tr>" + $CR
+	ELSE
+		$out = $out + "<td style='$st2c2'>$text2</td>" + $CR + "</tr>" + $CR
+	ENDIF
+	# Clear out flag Image
+	$text7 = ""
+	GOSUB Name=AddMarkerToGoogleMap
+ENDSUB #NumbersLine
+
+BEGINSUB Name=Numbers
+	# Initialise Section variables
+	$colspan = 1
+	$text="$Lang52"
+#	GOSUB Name=SectionHead
+	$out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $CR
+	$out = $out + "<col width='250px' />" + $CR
+
+
+	$text7 = ""
+	GOSUB name=numLatitude
+	$text7 = ""
+	GOSUB name=numLongitude
+	$text7 = ""
+	if $DB<>"PlacedStatsdata" #only enable furthest cache in case of found caches
+		GOSUB name=numClosest
+	endif
+	$text7 = ""
+	GOSUB name=numCenterOfMass		
+
+ENDSUB #Numbers
+
+BEGINSUB name=numClosest
+	IF $ExcludeLocationLess
+		$note = "<i>excluding locationless</i>"
+		$_sql = "SELECT Code, Name, Distance, URL, Country from Allfinds WHERE ($WhereClause) AND CacheType <>'L' and Exclude <> '1' ORDER BY Distance"
+	ELSE
+		$_sql = "SELECT Code, Name, Distance, URL, Country from Allfinds WHERE ($WhereClause) ORDER BY Distance"
+		$note = "<i>including locationless</i>"
+	ENDIF
+	$work = Sqlite("sql",$_sql)
+	$list = list("sql","replace",$work)
+	$count = $_SqlRows
+	$tmpN = $count
+	$text1 = "$Lang54"
+	$Marker="F"
+	GOSUB name=numClosestLine
+ENDSUB #numClosest
+
+BEGINSUB name=numClosestLine
+	$tmpS = list("sql","item","$tmpN")
+	$Code = Extract($tmpS,";",1)
+	$Name = Extract($tmpS,";",2)
+	$Distance = NumToStr(Val(Extract($tmpS,";",3)))
+	$URL = Extract($tmpS,";",4)
+	$FullName = Extract($tmpS,";",5)
+
+	# Strip off the suffix code if necessary
+	$StripCode = Extract($Code,"_",1)
+	IF Len($Name) > 40
+		$ShrunkName = Left($Name,38) + "..."
+	ELSE
+		$ShrunkName = $Name
+	ENDIF
+	$tmpS = $distunits
+	IF Val($Distance) < $Closest
+		$text2 = "$ShrunkName <a href='$Url'>$StripCode</a>"
+	ELSE
+		IF Val($Distance) < 0.1 AND $distunits = "Miles"
+			$Distance = NumToStr(Int(5280 * Val($distance)))
+			$tmpS = "feet"
+		ENDIF
+		IF Val($Distance) < 1 AND $distunits <> "Miles"
+			$Distance = NumToStr(Int(1000 * Val($distance)))
+			$tmpS = "metres"
+		ENDIF
+		$text2 = "<b>$Distance</b> $tmpS, $ShrunkName <a href='$Url'>$StripCode</a>"
+	ENDIF
+	IF $FlagIcons
+		# Country flag into $text7
+		GOSUB Name=FlagImage
+	ENDIF
+	GOSUB Name=NumbersLine
+ENDSUB #numClosestLine
+
+BEGINSUB Name=GenerateGoogleMap
+
+#	if $ShowConnectingLines=TRUE
+#		# Build the Google map parameters
+#		$GoogleMapString = "&markers=color:green|" + $text3 +"&markers=color:red|" +$text2 + "&markers=color:blue|" + $status 
+#		$tmpS=$tmpS+ "&path=color:0xff0000ff|weight:3|" + $text3 + "|" + $status + "|" + $text2
+#	else
+#		# Build the Google map parameters
+#		$tmpS = "&markers=color:blue|" + $text3 +"&markers=color:blue|" +$text2 + "&markers=color:blue|" + $status 
+#	endif
+
+	$out = $out + "<tr><td colspan='2' ><center><div style='width:600px; border:2px outset blue; display:$ShowMap' id='$MapId' ><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?maptype=$MapType&size=600x400&$GoogleMapString&sensor=false'></div></center></td></tr>" + $CR
+	
+#	$out = $out + "<tr><td colspan='2' id='$MapId' style='display:$ShowMap'><center><div style='width:600px; border:2px outset blue'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?maptype=$MapType&size=600x400&$GoogleMapString&sensor=false'></div></center></td></tr>" + $CR
+#	$out = $out + "<center><div style='width:600px; border:2px outset blue'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?size=600x400&$GoogleMapString&sensor=false'></div></center>" + $_CrLf 
+#	$out=$out+"<br><br>"
+	
+ENDSUB
+
+BEGINSUB Name=AddMarkerToGoogleMap
+
+IF $Marker<>""
+	# SQL clause to filter for all caches to be plotted on the graph (both markers and path)
+	# add random component to both longitude and latitude
+	# N/S: 65 +/- 35 meters
+	# E/W: 65 +/- 35 meters at 45 deg North or South, more when above 45 deg, less when below 45 deg.
+	$RandomPlusMin1="(2*round(0.5+random()/9223372036854775808/2)-1)"
+	$TmpLat="round(latitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001)),5)"
+	$TmpLong="round(longitude+($RandomPlusMin1*((65.+(35.*random()/9223372036854775808))/111*0.001/0.707)),5)"
+
+	If $Marker<>"C"
+		$text1= "Code='$Code' "
+		$_sql = "SELECT CASE WHEN (Latitude=latoriginal AND Longitude=lonoriginal) THEN ( round(Latitude,4) || ',' || round(Longitude,4) ) ELSE ($TmpLat || ',' || $TmpLong) END FROM AllFinds WHERE " + $text1 + " LIMIT 1"
+		$status = Sqlite("sql",$_sql)
+	ELSE
+		$LatitudeN=Round($LatitudeN,4)
+		$LongitudeN=Round($LongitudeN,4)
+		$latitude = NumToStr($latitudeN)
+		$longitude = NumToStr($longitudeN)
+
+		# Deal with commas as decimal separator
+		$latitude = Replace(",",".",$latitude,TRUE)
+		$longitude = Replace(",",".",$longitude,TRUE)
+		
+		$status = "$latitude"+","+"$longitude"
+	ENDIF
+	# $status = Replace($_CrLf,"|",$status)
+	If $Marker="F"
+		$GoogleMapString = $GoogleMapString + "&markers=color:yellow|label:" + $Marker + "|" + $status
+	else
+		$GoogleMapString = $GoogleMapString + "&markers=color:blue|label:" + $Marker + "|" + $status	
+	ENDIF
+#	Msgok msg=$GoogleMapString
+	$Marker=""
+ENDIF
+ENDSUB
+
+BEGINSUB name=numCenterOfMass
+	
+#	# Set up the Elevation SQL table
+#	$tmpS = $_Install + "\macros\elevationdataSQL.db3"
+#	$tmpS = SqlQuote($tmpS)
+#		
+#	$_sql = "ATTACH $tmpS AS elevationdataSQL"
+#	$status = Sqlite("sql",$_sql)
+#	
+#	$dbs = SqlQuote($db)
+	
+	# Exclude locationless?
+	IF $Excludelocationless
+		$note = "<i>$Lang38a</i>"
+		# $Locationless = " WHERE database = '$db' AND Cachetype <>'L' AND Exclude <> '1'"
+		$Locationless = " WHERE ($WhereClause) AND Cachetype <>'L' AND Exclude <> '1'"
+	ELSE
+		$note = ""
+		# $Locationless = "WHERE database = '$db'"
+		$Locationless = " WHERE ($WhereClause)"
+	ENDIF
+	
+	# Parameters for WGS84 ellipsoid
+	# $ecc is eccentricity squared
+	$axis = 6378137
+	$ecc = 0.00669438038
+	
+	$x = 0
+	$y = 0
+	$z = 0
+	$pi = 3.14159265359
+	
+	IF $_Version >= "7.5.3.12"
+		# x
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (COS(RADIANS(latitude + 0)) * SIN(RADIANS(longitude + 0)))) FROM $DB $Locationless"
+		# $_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (COS(RADIANS(latitude + 0)) * SIN(RADIANS(longitude + 0)))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $locationless"
+		$x = Val(Sqlite("sql",$_sql))
+		
+		# y
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (-1 * COS(RADIANS(latitude + 0)) * COS(RADIANS(longitude + 0)))) FROM $DB $Locationless"
+		# $_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (-1 * COS(RADIANS(latitude + 0)) * COS(RADIANS(longitude + 0)))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $Locationless"
+		$y = Val(Sqlite("sql",$_sql))
+
+		# z
+		$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0))))) * (1 - $ecc) * SIN(RADIANS(latitude + 0))) FROM $DB $Locationless"
+		#$_sql = "SELECT AVG(($axis / (SQRT(1-($ecc * SIN(RADIANS(Latitude + 0))) * SIN(RADIANS(Latitude + 0)))) + elevation) * (1 - $ecc) * SIN(RADIANS(latitude + 0))) FROM allfinds LEFT JOIN elevationdata ON allfinds.code = elevationdata.code $Locationless"
+		$z = Val(Sqlite("sql",$_sql))
+
+	ELSE
+		
+		$_sql = "SELECT Latitude, Longitude from $DB $Locationless"
+		$work = Sqlite("sql",$_sql)
+		$list = List("sql","replace",$work)
+		$ThisRecord = 1
+		$count = $_SqlRows
+		
+		WHILE $ThisRecord <= $count
+			IF Frac($ThisRecord/10) = 0
+				SHOWSTATUS msg="$Lang120, $ThisRecord" Width=350
+			ENDIF
+
+			$tmpS = List("sql","item","$ThisRecord")
+			$Latitude = Extract($tmpS,";",1)
+			$Longitude = Extract($tmpS,";",2)
+
+			# Convert to Decimal degrees then to Radians
+			#  	$tmpS = $Latitude + " " + $Longitude
+			#  	$tmpS = GCalc($tmpS,"FormatDegrees")
+			#  	$LatitudeN = Val(Extract($tmpS,";",1))
+			#  	$LongitudeN = Val(Extract($tmpS,";",2))
+			$LatitudeN = Val($Latitude) * $pi / 180
+			$LongitudeN = Val($Longitude) * $pi / 180
+
+			# Calculate 3D cartesian coordinates and average them
+			$v = $axis / (Sqrt(1-($ecc * Sin($LatitudeN) * Sin($LatitudeN))))
+			$x = $x + $v * (Cos($LatitudeN) * Sin($LongitudeN))
+			$y = $y + $v * ( -1 * Cos($LatitudeN) * Cos($LongitudeN))
+			$z = $z + $v * (1 - $ecc) * Sin($LatitudeN)
+
+			$ThisRecord = $ThisRecord + 1
+		ENDWHILE
+		$x = $x/$count
+		$y = $y/$count
+		$z = $z/$count
+
+	ENDIF
+
+
+	# Project the average point back up to the surface of the WGS84 Ellipsoid
+	# Note this requires iteration
+
+	# Longitude = ArcTan2(x, -y)
+	$y = -$y
+
+	$longitudeN = ArcTan2($x,$y)
+
+	# Latitude = ArcTan2(z, sqrt(x*x + y*y))
+
+	$y = Sqrt(Sqr($x) + Sqr($y))
+
+	$latitudeN = ArcTan2($z,($y * (1 - $ecc)))
+	$v = $axis / (Sqrt(1-($ecc * Sin($LatitudeN) * Sin($LatitudeN))))
+	$errvalue = 1
+	$tmpN = 0
+
+	$tmpM = 0
+	WHILE $errvalue > 0.000001 AND $tmpM <5
+		$tmpM = $tmpM + 1
+		$x = ($ecc * $v * Sin($LatitudeN))
+		$tmpN = ArcTan2($z + $x, $y)
+		$errvalue = Abs($tmpN - $LatitudeN)
+		$LatitudeN = $tmpN
+	ENDWHILE
+
+	# Convert from radians to degrees and format as decimal minutes
+
+	$latitudeN = 180 * $latitudeN / $pi
+	$longitudeN = 180 * $longitudeN / $pi
+
+	$latitude = NumToStr($latitudeN)
+	$longitude = NumToStr($longitudeN)
+
+	# Deal with commas as decimal separator
+	$latitude = Replace(",",".",$latitude,TRUE)
+	$longitude = Replace(",",".",$longitude,TRUE)
+
+	$last_lat = $latitude
+	$last_lon = $longitude
+
+	$tmpS = $Latitude + " " + $Longitude
+	$tmpS = GCalc($tmpS,"FormatMinutes")
+	$Latitude = Extract($tmpS,";",1)
+	$Longitude = Extract($tmpS,";",2)
+	
+	# Calculate distance from current home position
+	$text8 = SysInfo("gsakini;LastCenter;Lat")
+	$text9 = SysInfo("gsakini;LastCenter;Lon")
+	
+	$tmpS1 = $text8 + " " + $text9 + ";" + $last_lat + " " + $last_lon
+	$tmpS1 = GCalc($tmpS1,"CalcDistance")
+	$tmpN = Val($tmpS1)
+	IF $tmpN < 10
+		$tmpN = Round($tmpN,1)
+	ELSE
+		$tmpN = Int($tmpN)
+	ENDIF
+	
+	# Get country or ocean
+	$url = "http://ws.geonames.org/extendedFindNearby?lat=" + $last_lat + "&lng=" + $last_lon	
+#	$url = "http://ws.geonames.org/findNearbyPlaceName?lat=" + $last_lat + "&lng=" + $last_lon	
+#	$url = "http://ws.geonames.org/countrySubdivision?lat=" + $last_lat + "&lng=" + $last_lon
+	
+	SHOWSTATUS msg="Getting country information for centroid" Width=350 Title=""
+	$data = GetUrl($url,"")
+	$text3 = UTF8(RegExSub("<countryName>(.*?)</countryName>",$data,1,1),"d")
+	$text4 = UTF8(RegExSub("<toponymName>(.*?)</toponymName>",$data,5,1),"d") # + ", " +UTF8(RegExSub("<toponymName>(.*?)</toponymName>",$data,4,1),"d")
+#	$text4 = UTF8(RegExSub("<name>(.*?)</name>",$data,1,1),"d") 
+#	$text4 = UTF8(RegExSub("<adminName1>(.*?)</adminName1>",$data,1,1),"d")
+	$text5 = UTF8(RegExSub("<countryCode>(.*?)</countryCode>",$data,1,1),"d")
+	$text7 = ""
+	
+	# no result, try an ocean
+	IF Len($text3) = 0
+		$url = "http://ws.geonames.org/ocean?lat=" + $last_lat + "&lng=" + $last_lon
+		SHOWSTATUS msg="Getting ocean information for centroid" Width=350 Title=""
+		$data = GetUrl($url,"")
+		$text3 = UTF8(RegExSub("<name>(.*?)</name>",$data,1,1),"d")
+		$text4 = ""
+	ENDIF
+	
+	IF Len($text4) >0
+		$text4 = "Centroid $Lang185 $tmpN $distunits $Lang186: $text4,"
+	ELSE
+		IF Len($Text3) > 0
+			$text4 = "Centroid $Lang185 $tmpN $distunits $Lang186:"
+		ENDIF
+	ENDIF
+	
+	IF Len($text5) > 0
+		$text7 = " <img align ='top' vspace='1'  alt='$text3' title='$text3' src='" + $ImageURL + "flags/" + $text5 + ".gif'/>"
+	ENDIF
+
+#	$tmpS = " <a target='_blank' href='http://maps.google.com/maps?q=Centroid@" + $last_lat + "," + $last_lon + "&z=8'><img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>"
+	
+#	$tmpS = " <a href ='#' onclick=" + Quote("document.getElementById('centmap').style.display = (getElementById('centmap').style.display != 'none' ? 'none' : '');return false;") + "><img align ='top' vspace='1' border = 'none' src='http://gsak.net/stats/mapbutton.png'/></a>" + $CR
+	$tmpS = ""
+	$text2 = "<b>$Latitude $Longitude</b> $note " + $tmpS + "<br />$text4 $text3" + $CR
+	
+#	$text2 = "<b>$Latitude $Longitude</b> $note<br />" + $tmpS + " $text4 $text3"
+
+	$text1 = "<a target='_blank' href='http://en.wikipedia.org/wiki/Centroid'>" + $Lang120 + "</a>"
+	$Marker="C"
+	GOSUB Name=NumbersLine
+	
+#	$out = $out + "<tr id='centmap' style='display:none'><td colspan='2'><center><div style='width:600px; border:2px outset blue'><a target='_blank' href='http://maps.google.com/maps?q=Centroid@" + $last_lat + "," + $last_lon + "&z=8'><img style='border-style: none' src='http://maps.google.com/maps/api/staticmap?center=$last_lat,$last_lon&zoom=8&size=600x400&markers=color:yellow|label:C|$last_lat,$last_lon&sensor=false'></a></div></center></td></tr>" + $CR
+
+#	$_sql = "DETACH elevationdataSQL"
+#	$status = Sqlite("sql",$_sql)
+
+ENDSUB  #CenterOfMass

@@ -1,0 +1,8 @@
+* Ceci est un commentaire
+C1 1 0 1n
+* résistance utilisant un modèle modifié 
+* et un paramètre (température)
+R1 1 2 1k ResModel TEMP=27
+
+* générateur sinusoïdal
+VIN 2 0 SIN(0 1 1k)

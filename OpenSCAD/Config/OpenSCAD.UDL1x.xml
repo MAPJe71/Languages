@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<NotepadPlus>
+    <UserLang name="openscad" ext="scad">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="yes" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">000000</Keywords>
+            <Keywords name="Folder+">{</Keywords>
+            <Keywords name="Folder-">}</Keywords>
+            <Keywords name="Operators">- ! &quot; # % ( ) * , / [ ] ^ | + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1/* 2*/ 0//</Keywords>
+            <Keywords name="Words1">cube cylinder square circle sphere polyhedron square circle polygon import_dxf import_stl</Keywords>
+            <Keywords name="Words2">translate rotate scale mirror  hull multimatrix color minkowski $fn $fs $fa linear_extrude rotate_extrude</Keywords>
+            <Keywords name="Words3">difference union intersection render include use projection</Keywords>
+            <Keywords name="Words4">if else for abs acos asin atan atan2 ceil cos exp floor ln log lookup sqrt tan sin sign round rands pow min max str height center convexity twist slices origin</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF80FF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="FF80FF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="FF0000" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="00FFFF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="00FF40" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="8080FF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="C0C0C0" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="C0C0C0" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="000000" fontName="" fontStyle="3" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="FFFF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

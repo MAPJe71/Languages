@@ -1,0 +1,203 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"><title>ANSI C grammar (Lex)</title>
+<link rel="made" rev="made" href="mailto:jutta@pobox.com">
+</head><body data-pinterest-extension-installed="ff1.37.9">
+<h1>ANSI C grammar, Lex specification</h1>
+
+In 1985, Jeff Lee published this Lex specification together with
+a <a href="https://www.lysator.liu.se/c/ANSI-C-grammar-y.html">Yacc grammar</a>
+for the April 30, 1985
+ANSI C draft.&nbsp;<tt> </tt>
+Tom Stockfisch reposted
+both to net.sources in 1987; that original, as mentioned in 
+the answer to <a href="https://www.lysator.liu.se/c/c-faq/c-17.html#17-25">question 17.25</a>
+of the comp.lang.c FAQ, can be ftp'ed from ftp.uu.net, file
+<a href="ftp://ftp.uu.net/usenet/net.sources/ansi.c.grammar.Z">usenet/net.sources/ansi.c.grammar.Z</a>.
+<p>
+I intend to keep this version as close to the current C Standard grammar
+as possible; please let me know if you discover
+discrepancies.
+</p><p>
+<a href="mailto:jutta@pobox.com">Jutta Degener</a>, 1995
+</p><p>
+</p><hr>
+<pre>
+D			[0-9]
+L			[a-zA-Z_]
+H			[a-fA-F0-9]
+E			[Ee][+-]?{D}+
+FS			(f|F|l|L)
+IS			(u|U|l|L)*
+
+%{
+#include &lt;stdio.h&gt;
+#include "y.tab.h"
+
+void <a href="#count">count()</a>;
+%}
+
+%%
+"/*"			{ <a href="#comment">comment()</a>; }
+
+"auto"			{ count(); return(<a name="AUTO">AUTO</a>); }
+"break"			{ count(); return(<a name="BREAK">BREAK</a>); }
+"case"			{ count(); return(<a name="CASE">CASE</a>); }
+"char"			{ count(); return(<a name="CHAR">CHAR</a>); }
+"const"			{ count(); return(<a name="CONST">CONST</a>); }
+"continue"		{ count(); return(<a name="CONTINUE">CONTINUE</a>); }
+"default"		{ count(); return(<a name="DEFAULT">DEFAULT</a>); }
+"do"			{ count(); return(<a name="DO">DO</a>); }
+"double"		{ count(); return(<a name="DOUBLE">DOUBLE</a>); }
+"else"			{ count(); return(<a name="ELSE">ELSE</a>); }
+"enum"			{ count(); return(<a name="ENUM">ENUM</a>); }
+"extern"		{ count(); return(<a name="EXTERN">EXTERN</a>); }
+"float"			{ count(); return(<a name="FLOAT">FLOAT</a>); }
+"for"			{ count(); return(<a name="FOR">FOR</a>); }
+"goto"			{ count(); return(<a name="GOTO">GOTO</a>); }
+"if"			{ count(); return(<a name="IF">IF</a>); }
+"int"			{ count(); return(<a name="INT">INT</a>); }
+"long"			{ count(); return(<a name="LONG">LONG</a>); }
+"register"		{ count(); return(<a name="REGISTER">REGISTER</a>); }
+"return"		{ count(); return(<a name="RETURN">RETURN</a>); }
+"short"			{ count(); return(<a name="SHORT">SHORT</a>); }
+"signed"		{ count(); return(<a name="SIGNED">SIGNED</a>); }
+"sizeof"		{ count(); return(<a name="SIZEOF">SIZEOF</a>); }
+"static"		{ count(); return(<a name="STATIC">STATIC</a>); }
+"struct"		{ count(); return(<a name="STRUCT">STRUCT</a>); }
+"switch"		{ count(); return(<a name="SWITCH">SWITCH</a>); }
+"typedef"		{ count(); return(<a name="TYPEDEF">TYPEDEF</a>); }
+"union"			{ count(); return(<a name="UNION">UNION</a>); }
+"unsigned"		{ count(); return(<a name="UNSIGNED">UNSIGNED</a>); }
+"void"			{ count(); return(<a name="VOID">VOID</a>); }
+"volatile"		{ count(); return(<a name="VOLATILE">VOLATILE</a>); }
+"while"			{ count(); return(<a name="WHILE">WHILE</a>); }
+
+{L}({L}|{D})*		{ count(); return(<a href="#check-type">check_type()</a>); }
+
+0[xX]{H}+{IS}?		{ count(); return(<a name="CONSTANT">CONSTANT</a>); }
+0{D}+{IS}?		{ count(); return(CONSTANT); }
+{D}+{IS}?		{ count(); return(CONSTANT); }
+L?'(\\.|[^\\'])+'	{ count(); return(CONSTANT); }
+
+{D}+{E}{FS}?		{ count(); return(CONSTANT); }
+{D}*"."{D}+({E})?{FS}?	{ count(); return(CONSTANT); }
+{D}+"."{D}*({E})?{FS}?	{ count(); return(CONSTANT); }
+
+L?\"(\\.|[^\\"])*\"	{ count(); return(<a name="STRING-LITERAL">STRING_LITERAL</a>); }
+
+"..."			{ count(); return(<a name="ELLIPSIS">ELLIPSIS</a>); }
+"&gt;&gt;="			{ count(); return(<a name="RIGHT-ASSIGN">RIGHT_ASSIGN</a>); }
+"&lt;&lt;="			{ count(); return(<a name="LEFT-ASSIGN">LEFT_ASSIGN</a>); }
+"+="			{ count(); return(<a name="ADD-ASSIGN">ADD_ASSIGN</a>); }
+"-="			{ count(); return(<a name="SUB-ASSIGN">SUB_ASSIGN</a>); }
+"*="			{ count(); return(<a name="MUL-ASSIGN">MUL_ASSIGN</a>); }
+"/="			{ count(); return(<a name="DIV-ASSIGN">DIV_ASSIGN</a>); }
+"%="			{ count(); return(<a name="MOD-ASSIGN">MOD_ASSIGN</a>); }
+"&amp;="			{ count(); return(<a name="AND-ASSIGN">AND_ASSIGN</a>); }
+"^="			{ count(); return(<a name="XOR-ASSIGN">XOR_ASSIGN</a>); }
+"|="			{ count(); return(<a name="OR-ASSIGN">OR_ASSIGN</a>); }
+"&gt;&gt;"			{ count(); return(<a name="RIGHT-OP">RIGHT_OP</a>); }
+"&lt;&lt;"			{ count(); return(<a name="LEFT-OP">LEFT_OP</a>); }
+"++"			{ count(); return(<a name="INC-OP">INC_OP</a>); }
+"--"			{ count(); return(<a name="DEC-OP">DEC_OP</a>); }
+"-&gt;"			{ count(); return(<a name="PTR-OP">PTR_OP</a>); }
+"&amp;&amp;"			{ count(); return(<a name="AND-OP">AND_OP</a>); }
+"||"			{ count(); return(<a name="OR-OP">OR_OP</a>); }
+"&lt;="			{ count(); return(<a name="LE-OP">LE_OP</a>); }
+"&gt;="			{ count(); return(<a name="GE-OP">GE_OP</a>); }
+"=="			{ count(); return(<a name="EQ-OP">EQ_OP</a>); }
+"!="			{ count(); return(<a name="NE-OP">NE_OP</a>); }
+";"			{ count(); return(';'); }
+("{"|"&lt;%")		{ count(); return('{'); }
+("}"|"%&gt;")		{ count(); return('}'); }
+","			{ count(); return(','); }
+":"			{ count(); return(':'); }
+"="			{ count(); return('='); }
+"("			{ count(); return('('); }
+")"			{ count(); return(')'); }
+("["|"&lt;:")		{ count(); return('['); }
+("]"|":&gt;")		{ count(); return(']'); }
+"."			{ count(); return('.'); }
+"&amp;"			{ count(); return('&amp;'); }
+"!"			{ count(); return('!'); }
+"~"			{ count(); return('~'); }
+"-"			{ count(); return('-'); }
+"+"			{ count(); return('+'); }
+"*"			{ count(); return('*'); }
+"/"			{ count(); return('/'); }
+"%"			{ count(); return('%'); }
+"&lt;"			{ count(); return('&lt;'); }
+"&gt;"			{ count(); return('&gt;'); }
+"^"			{ count(); return('^'); }
+"|"			{ count(); return('|'); }
+"?"			{ count(); return('?'); }
+
+[ \t\v\n\f]		{ count(); }
+.			{ /* ignore bad characters */ }
+
+%%
+
+yywrap()
+{
+	return(1);
+}
+
+<a name="comment">
+comment()
+{
+	char c, c1;
+
+loop:
+	while ((c = input()) != '*' &amp;&amp; c != 0)
+		putchar(c);
+
+	if ((c1 = input()) != '/' &amp;&amp; c != 0)
+	{
+		unput(c1);
+		goto loop;
+	}
+
+	if (c != 0)
+		putchar(c1);
+}
+</a>
+
+int column = 0;
+
+<a name="count">void count()
+{
+	int i;
+
+	for (i = 0; yytext[i] != '\0'; i++)
+		if (yytext[i] == '\n')
+			column = 0;
+		else if (yytext[i] == '\t')
+			column += 8 - (column % 8);
+		else
+			column++;
+
+	ECHO;
+}
+</a>
+
+<a name="check-type">int check_type()
+{
+/*
+* pseudo code --- this is what it should check
+*
+*	if (yytext == type_name)
+*		return(TYPE_NAME);
+*
+*	return(IDENTIFIER);
+*/
+
+/*
+*	it actually will only return IDENTIFIER
+*/
+
+	return(IDENTIFIER);
+}</a>
+</pre>
+
+
+</body></html>

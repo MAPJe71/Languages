@@ -1,0 +1,42 @@
+;
+; EXCEL.KIX
+;
+; Sample script demonstrating the use of COM automation to drive Excel
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+
+break on
+
+$oXL = CreateObject("EXCEL.application")
+
+if @error = 0
+   $oXL.Visible = 1
+
+   $rc = $oXL.Workbooks.Add
+
+   $array = "Order #", "Amount", "Tax"
+
+   $oXL.Range("A1:C1").Value = $array
+
+   For $i = 0 To 19
+      $oXL.Cells(($i+2),1).Value = "ORD" + ($i + 1000)
+      $oXL.Cells(($i+2),2).Value = rnd() / 100
+   Next
+
+   ;Fill the last column with a formula to compute the sales tax.
+   $oXL.Range("C2").Resize(20, 1).Formula = "=B2*0.07"
+
+   ;Format the worksheet
+   $oXL.Range("A1:C1").Font.Bold = 1
+   $rc = $oXL.Range("A1:C1").EntireColumn.AutoFit
+
+   $oXL.UserControl = 1
+else
+   ? @error + " / " @serror
+endif

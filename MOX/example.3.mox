@@ -1,0 +1,25 @@
+Method Blah()
+    [New] dynamicVar = "string"
+    [New] dynamicVar2 = 4
+    [New] result = Blah.Bar(dynamicVar, dynamicVar2)
+End Method
+
+Function Blah.Bar(pParam3, pParam2)
+    Blah.Bar.Foo1
+    Return pParam3 && pParam2
+End Function
+
+Method Blah.Bar.Foo1()
+End Method
+
+Method Blah.Bar.Foo2()
+End Method
+
+Macro Blah.Bar.Foo3()
+End Macro
+
+Method Blah.Bar.Foo3.Test1()
+End Method
+
+Method Blah.Bar.Foo3.Test2()
+End Method

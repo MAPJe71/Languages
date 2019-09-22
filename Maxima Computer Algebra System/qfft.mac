@@ -1,0 +1,193 @@
+
+    
+/* file qfft.mac */
+
+
+/************************************************************************
+    qfft.mac is a software file which accompanies Chapter 11 of
+    Maxima by Example, Fast Fourier Transform Tools.
+    This package has been rewritten to allow easy use with
+    the Maxima package fft.lisp effective with
+    Maxima version 5.19.0.  Last edit: Aug. 13, 2009.
+    
+    Copyright (C) 2009  Edwin L Woollett
+    woollett@charter.net
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License (http://www.fsf.org/licensing/) for more details. 
+     
+************************************************************************/
+    
+/* package functions are:
+    
+nyquist(ns,fs) returns the list
+  [dt,knyq, fnyq,df]
+  
+  
+*/
+
+
+  
+ nyquist(ns,fs) :=
+  block([knyq, dt,fnyq, df ], 
+    knyq : ns/2,    
+    df : float(fs/ns),
+    fnyq : float(fs/2),
+    dt : float(1/fs),
+    print("sampling interval dt = ",dt),
+    print("Nyquist integer knyq = ",knyq),
+    print("Nyquist freq fnyq = ",fnyq),
+    print("freq resolution df = ",df ),
+    [dt,knyq, fnyq,df] )$ 
+    
+
+        
+sample(expr,var,ns,dvar) :=
+    makelist(float( rectform( subst(var=(j-1)*dvar,expr) )),j,1,ns  )$
+    
+    
+vf(flist,dvar) :=
+  block([ns,varlist,j,r ],  
+    ns:length(flist),
+    varlist: dvar*makelist(j-1,j,1,ns),
+    makelist( [varlist[r],flist[r]],r,1,ns ) )$
+       
+         
+fpprintprec:5$
+
+/* =====chop functions used here====== */
+
+_small% : 1.0e-13$
+
+current_small() := 
+         (print("     current default small chop value = ",_small%," 
+         ") )$
+         
+setsmall(val) := ( _small% : val )$
+         
+
+_chop%(ex) := block([eex],
+          if numberp(ex) then (eex:float(ex),
+             if ( abs(eex) < _small% ) then 0.0
+             else eex )
+           else ex )$
+
+fchop(expr) := if mapatom(expr) then _chop%(expr) else scanmap(_chop%,expr)$
+
+fchop1(expr,small ) :=
+  block([oldsmall,r],
+    oldsmall: _small%,
+    setsmall(small),
+    r:fchop(expr),
+    setsmall(oldsmall),
+    r)$
+/* ======end chop functions======== */
+
+/* function to get magnitudes of the fourier transform values */
+
+_fabs%(e):= abs( float( rectform(e) ) )$
+
+    
+kg (glist) := 
+ block ([nl,r],
+   nl : length (glist),
+   makelist ([ r, fchop( abs(glist[r+1]) ) ],r,0, ceiling(nl/2) ))$
+   
+   
+spectrum1 (glist, nlw, ymax ) :=
+  block ( [kkglist, vvbars],
+    kkglist : kg (glist),
+    vvbars : makelist ( [discrete,
+                  [[kkglist[i][1],0],[kkglist[i][1],kkglist[i][2]]]] ,
+                      i,1,length (kkglist) ),
+    plot2d ( vbars, [y, 0, ymax], [style, [lines, nlw, 1]],
+               [ylabel, " "], [xlabel, " k "], [legend, false],
+                [gnuplot_preamble, "set grid;"] ) )$
+                
+spectrum (glist, nlw, ymax, [klim] ) :=
+   block( [kglist,nv,vvbars,r,n1,n2,
+          xval,yval,small ], 
+   small: 1.0e-6, 
+   
+   kglist : kg (glist),
+   nv:length(kglist),
+   
+   /* knyq : nv-1, */
+   
+   if length(klim) = 0 then (  
+     n1:1,
+     n2:nv)
+     
+   elseif length(klim) = 2 then (
+      
+      n1: first(klim)+1,      
+      n2:second(klim)+1,
+      
+      if n2 > nv then n2:nv,
+      if n1 > n2 then return(" spectrum (glist,nlw,ymax,k1,k2), with k1 < k2 <= knyquist ") )
+      
+    else return("syntax: spectrum (glist,nlw,ymax) or spectrum (glist,nlw,ymax,k1,k2) "),
+    
+    vvbars:[],
+    
+    for r: n1 thru n2 do 
+      ( yval :  kglist[r][2],
+        if yval > small then ( 
+          xval : kglist[r][1],
+          vvbars : cons([discrete,[[xval,0], [xval, yval]]], vvbars ) )),    
+       
+                          
+    plot2d ( vvbars, [x, n1-1, n2-1], [y, 0, ymax],
+              [style, [lines, nlw, 1]],
+               [ylabel, " "], [xlabel, " k "], [legend, false],
+                [gnuplot_preamble, "set grid;"] ) )$                
+                
+                
+spectrum_eps (glist, nlw, ymax, fname, [klim] ) :=
+   block( [kglist,nv,vvbars,r,n1,n2,
+          xval,yval,small ], 
+   small: 1.0e-6, 
+   
+   kglist : kg (glist),
+   nv:length(kglist),
+   
+   /* knyq : nv-1, */
+   
+   if length(klim) = 0 then (  
+     n1:1,
+     n2:nv)
+     
+   elseif length(klim) = 2 then (
+      
+      n1: first(klim)+1,      
+      n2:second(klim)+1,
+      
+      if n2 > nv then n2:nv,
+      if n1 > n2 then return(" spectrum (glist,nlw,ymax,k1,k2), with k1 < k2 <= knyquist ") )
+      
+    else return("syntax: spectrum (glist,nlw,ymax) or spectrum (glist,nlw,ymax,k1,k2) "),
+    
+    vvbars:[],
+    
+    for r: n1 thru n2 do 
+      ( yval :  kglist[r][2],
+        if yval > small then ( 
+          xval : kglist[r][1],
+          vvbars : cons([discrete,[[xval,0], [xval, yval]]], vvbars ) )),    
+       
+                          
+    plot2d ( vvbars, [x, n1-1, n2-1], [y, 0, ymax],
+              [style, [lines, nlw, 1]],
+               [ylabel, " "], [xlabel, " k "], [legend, false],
+                [gnuplot_preamble, "set grid;"],
+                [psfile, fname] ) )$
+                
+                
+

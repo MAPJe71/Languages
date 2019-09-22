@@ -1,0 +1,33 @@
+			<parser
+				displayName="[#4 TODO] JavaScript (w/o class) [SF#331753]"
+				id         ="javascript_function_SF#331753"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?s:\x2F\x2A.*?\x2A\x2F)                        # Multi Line Comment
+							|	(?m-s:\x2F{2}.*$)                               # Single Line Comment
+							|	(?s:\x22(?:[^\x22\x5C]|\x5C.)*\x22)             # String Literal - Double Quoted
+							|	(?s:\x27(?:[^\x27\x5C]|\x5C.)*\x27)             # String Literal - Single Quoted
+							"
+			>
+				<function
+					mainExpr   ="(?x)                                           # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?:
+								(?:^  |  \s+  |  [;}.]  )  (?:[A-Za-z_]\w*  \.  )*  [A-Za-z_]\w*  \s*  [=:]
+							|	   ^
+							|	        [\s;}]+
+							)
+							\s*  function
+							(?:\s+  [A-Za-z_]\w*  )?
+							\s*  \(  [^()]*  \)
+							\s*  \{
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_]\w*\s*[=:]|[A-Za-z_]\w*\s*\(" />
+						<nameExpr expr="[A-Za-z_]\w*" />
+					</functionName>
+					<className>
+						<nameExpr expr="(?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*\." />
+						<nameExpr expr="(?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*" />
+					</className>
+				</function>
+			</parser>

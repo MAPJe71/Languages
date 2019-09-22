@@ -1,0 +1,185 @@
+-- karel programming language based on pascal
+--
+-- a karel program example:
+--
+{-
+        PROGRAM foo       
+        CONST
+                a = 1
+                b = 2
+        TYPE
+                test FROM bare
+                STRUCTURE xyz_structure
+                          test : INTEGER
+                ENDSTRUCTURE
+                test2 : xyz_structure
+        VAR
+                var1: test2
+                var2: test
+                var3: INTEGER
+                var4, var5: CHAR
+        ROUTINE do_something (l, k: BYTE, a: INTEGER = 60, b: String = "")
+        BEGIN
+                "main function"
+        END foo
+            
+        ROUTINE do_something
+        VAR
+                a: INTEGER
+        CONST
+        TYPE
+        BEGIN
+                IF (a=0; a < 1000; ++a) THEN
+                   print("a") FROM bare
+                ENDIF
+        END do_something
+        
+-}
+-- comments in karel are c style or haskell style.
+-- I added a multiline haskell related command for karel
+comment "--";          -- haskell style comment
+comment "{-" "-}";     -- haskell multiline comment
+comment "//" ;         -- c style single line comment
+comment "/*" "*/" ;    -- c style multiline comment
+
+-- each programm starts with a programm identifier
+--
+--      PROGRAM identifier
+--      BEGIN
+--      END identifier
+Prog. Program ::= "program" Ident Block "end" Ident ProcedureImplBlock;
+
+-- a block contains of different section
+-- the sections does not have a specific order.
+-- there is a section for constant declaration.
+-- another section is for the procedure declatation
+-- and one declaration is for the user types
+VBlock. Block ::= VariableDeclBlock ; 
+CBlock. Block ::= ConstDeclBlock ;
+TBlock. Block ::= TypeDeclBlock ;
+PBlock. Block ::= ProcedureDeclBlock ;
+SBlock. Block ::= Stm ;
+
+-- statement
+Sfor.      Stm ::= "for" ExpStm "do" Stm "endfor" ;
+Swhile.    Stm ::= "while" Exp "do" Stm  "endwhile" ;
+Srepeat.   Stm ::= "repeat" Stm  "until" Exp ;
+Sexp.      Stm ::= Exp;
+SDecl.     Stm ::= Decl;
+Sif.       Stm ::= "if" Exp "then" Stm "else" Stm "endif" ;
+JumpS.     Stm ::= Jump_stm ;
+LabelS.    Stm ::= Labeled_stm ;
+
+SexprOne.   ExpStm ::= ";" ;
+SexprTwo.   ExpSrm ::= Exp ";" ;
+
+SjumpOne.   Jump_stm ::= "goto" Ident ;
+SjumpTwo.   Jump_stm ::= "continue" ";" ;
+SjumpThree. Jump_stm ::= "break" ";" ;
+SjumpFive.  Jump_stm ::= "return" Exp ;
+
+SlabelOne.   Labeled_stm ::= Ident ":" Stm ;
+
+-- expressions
+Ecomma.      Exp   ::= Exp "," Exp2;
+Eassign.     Exp2  ::= Exp12 Assignment_op Exp2;
+Econdition.  Exp3  ::= Exp4 "?" Exp ":" Exp3;
+ESor.        Exp4  ::= Exp4 "or" Exp5;
+ESand.       Exp5  ::= Exp5 "and" Exp6;
+Eeq.         Exp6  ::= Exp6 "==" Exp7;
+Eneq.        Exp6  ::= Exp6 "<>" Exp7;
+Elthen.      Exp7  ::= Exp7 "<" Exp8;
+Egrthen.     Exp7  ::= Exp7 ">" Exp8;
+Ele.         Exp7  ::= Exp7 "<=" Exp8;
+Ege.         Exp7  ::= Exp7 ">=" Exp8;
+Eleft.       Exp8  ::= Exp8 ">=<" Exp9;
+Eplus.       Exp9  ::= Exp9 "+" Exp10;
+Eminus.      Exp9  ::= Exp9 "-" Exp10;
+Etimes.      Exp10 ::= Exp10 "*" Exp11;
+Etimes.      Exp10 ::= Exp10 "mul" Exp11;
+Ediv.        Exp10 ::= Exp10 "div" Exp11;
+Ediv.        Exp10 ::= Exp10 "/" Exp11;
+Emod.        Exp10 ::= Exp10 "mod" Exp11;
+Emod.        Exp10 ::= Exp10 "%" Exp11;
+Earray.      Exp11 ::= Exp11 "[" Exp "]" ;
+Efunk.       Exp11 ::= Exp11 "(" ")";
+Efunkpar.    Exp11 ::= Exp11 "(" [Exp2] ")";
+Eselect.     Exp11 ::= Exp11 "." Ident;
+Evar.        Exp12 ::= Ident;
+Estring.     Exp12 ::= String;
+
+(:[]).   [Exp2] ::= Exp2 ;
+(:).     [Exp2] ::= Exp2 "," [Exp2];
+
+-- unary operator
+Indirection. Unary_operator ::= Empty ;
+Plus.        Unary_operator ::= "+" ;
+Negative.    Unary_operator ::= "-" ;
+
+-- assignment
+Assign.       Assignment_op ::= "=" ;
+
+-- routine declaration bock
+--
+-- ROUTINE indentifier block <FROM identifier>
+RDeclB. ProcedureDeclBlock ::= "routine" Ident "(" [Decl] ")" ":" [Decl] Block FromBlock ;
+RDeclI. ProcedureImplBlock ::= "routine" Ident Block "Begin" Stm "end" Ident;
+
+-- type declaration block
+--
+--      TYPE
+--              i FROM identifier
+--              STRUCTURE k
+--                        j: INTEGER
+--              ENDSTRUCTURE
+--              m = k
+DTypeDB. TypeDeclBlock ::= "type" TypeDecl ;
+TypeD.   TypeDecl      ::= [UDecl] ;
+STypeD.  TypeDecl      ::= Ident "=" StructureType ;
+SType.   StructureType ::= "structure" Ident FromBlock VariableDecl "endstructure" ;
+
+-- the block for the variable declaration
+--
+--      VAR
+--              x: INTEGER
+--              y,z: CHAR
+Var.   VariableDeclBlock ::= "var" VariableDecl ;
+Vdecl. VariableDecl ::= [Decl] ;
+
+-- const variable block for constant parameter
+--
+--      CONST
+--              l = 1
+--              m = l = 2
+Const.  ConstDeclBlock ::= "const" ConstDecl ;
+Cdecl.  ConstDecl ::= [ Ident ] "=" Unary_operator TypeDecl ;
+separator nonempty ConstDecl "=" ;
+
+-- simple type declaration
+TIdent.  TypeDecl ::= Ident;
+TInt.    TypeDecl ::= "integer";
+TString. TypeDecl ::= "string";
+TBool.   TypeDecl ::= "boolean";
+TChar.   TypeDecl ::= "char";
+TByte.   TypeDecl ::= "byte";
+TShort.  TypeDecl ::= "short";
+TEmpty.  Empty    ::= ;
+
+--array type
+TArray.  TypeDecl ::= "array" "of" TypeDecl ;
+TAArray. TypeDecl ::= "array" "[" Exp "]" "of" TypeDecl ;
+
+Aster.  Asterisk ::= "*" ;
+EAster. Asterisk ::= Empty;
+separator nonempty Asterisk "," ;
+
+From.  FromBlock ::= "from" Ident ;
+EFrom. FromBlock ::= ;
+
+Decl.    Decl     ::= [ Ident ] ":" TypeDecl ;
+UDecl.   UDecl    ::= [ Ident ] Assignment_op Ident ;
+separator nonempty Decl "," ;
+separator nonempty UDecl "," ;
+
+(:[]).   [Ident] ::= Ident ;
+(:).     [Ident] ::= Ident "," [Ident] ;

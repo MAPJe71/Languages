@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=   "pacscript_syntax"        userDefinedLangName="PacScript"         />
+			<association id=   "pacscript_syntax"        ext=".pcs"                              />
+			<association id=   "pacscript_syntax"        ext=".pns"                              />
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ PacScript ] -->
+
+			<!--
+			|   http://densorobotics.com/
+			|   - high affinity with Microsoft's Visual Basic
+			|   - VALID_ID: [A-Za-z]\w{0,64}
+			\-->
+			<parser
+				displayName="[TBD] PacScript - Programmable Automation Controller Script by DENSO Robotics"
+				id         ="pacscript_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:\x27.*$)                                      # Single Line Comment 1
+						|	(?m-s:REM(\h.+)?$)                                  # Single Line Comment 2
+					"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

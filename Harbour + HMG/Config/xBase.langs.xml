@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+    <!-- The key words of the supported languages, don't touch them! -->
+    <Languages>
+		<Language name="xBase" ext="prg ch" commentLine="//" commentStart="/*" commentEnd="*/" />
+    </Languages>
+</NotepadPlus>

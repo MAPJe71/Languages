@@ -1,0 +1,116 @@
+'*********************************************************************************************
+'** Example of the use the Declare Method statement
+'**
+'**  Author:	TWIAV.NL
+'**  Date:		19 May 2013
+'*********************************************************************************************
+Declare Sub Main
+
+''''''''' .NET Assembly MBExtensionsDlgs.dll - Class "MBExtensions.MBExtensionsDlgs"  ''''''
+'This method will show an OpenFileDialog, allowing the user to select multiple files.
+'The return value is a string containing one or more file names separated by a semicolon (or
+'an empty string if the user clicks Cancel).
+'Please note: the dialog does not actually open any files; it will just return a string which
+'can be used for further processing
+Declare Method OpenMultipleFilesDlg
+    Class "MBExtensions.MBExtensionsDlgs"
+    Lib "MBExtensionsDlgs.dll"
+	(ByVal sPath As String			'sets the InitialDirectory displayed by the file dialog box
+	, ByVal sFileType As String		'filters file types (for some examples: below)
+	, ByVal sPrompt As String		'sets the title of the dialog box
+	) As String
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'This function populates a string array with the substrings in a string that are delimited
+'by a specified character
+Declare Function SplitStringAtCharacter
+	(ByVal sInput As String			'String to be split into substrings
+	, ByVal sSplitChar As String	'Character used as delimiter (e.g. ",", ";")
+	, sPartsArray() As String		'String array to be populated with the substrings
+	) As Integer					'Number of substrings found in sInput
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+OnError Goto HandleError
+
+Dim sSelectedFiles, sPath, sFileType, sPrompt, sSelectedFilesArray() As String
+Dim iCount, i As Integer
+
+	'For each filtering option, the filter string contains a description of the filter, followed by
+	'the vertical bar (|) and the filter pattern. The strings for different filtering options are
+	'separated by the vertical bar. You can add several filter patterns to a filter by separating
+	'the file types with semicolons
+	'** A FEW EXAMPLES (FOR YOUR CONVENIENCE) ****************************************************
+	sFileType = "MapInfo (*.tab)|*.tab" 'for TAB files only
+	' sFileType = "MapInfo (*.tab)|*.tab|All files (*.*)|*.*" 'for TAB files and all files
+	' sFileType = "txt files (*.txt)|*.txt" 'for TXT files
+	' sFileType = "csv files (*.csv)|*.csv" 'for CSV files
+	'sFileType = "Microsoft Excel (*.xls;*.xlsx)|*.xls;*.xlsx" 'for Microsoft Excel files
+	'*********************************************************************************************
+
+	sPrompt = "Open one or more files"
+
+	sSelectedFiles = OpenMultipleFilesDlg(sPath, sFileType, sPrompt)
+	
+	If sSelectedFiles = "" Then
+		Note "You did not select any files"
+		Exit Sub
+	End If
+
+	Note sSelectedFiles
+	
+	iCount = SplitStringAtCharacter(sSelectedFiles, ";", sSelectedFilesArray)
+	
+	Dialog
+	Title "These are the files you selected"
+	Control ListBox Title from Variable sSelectedFilesArray Width 320 Height 210
+	Control OKButton
+	
+	For i = 1 to Ubound(sSelectedFilesArray)
+		Print sSelectedFilesArray(i)
+		Print PathToDirectory$(sSelectedFilesArray(i))
+		Print PathToFileName$(sSelectedFilesArray(i))
+	Next
+
+Exit Sub
+'---------------------------
+HandleError:
+	Note Error$()
+
+End Sub Main
+
+'*********************************************************************************************
+Function SplitStringAtCharacter(ByVal sInput As String, ByVal sSplitChar As String, sPartsArray() As String) As Integer
+
+OnError Goto HandleError
+
+Dim iPos, iEnd, iCount As Integer
+
+	If Len(sInput) = 0 Then
+		SplitStringAtCharacter = 0
+		Exit Function
+	End If
+	
+	Do While iEnd <= Len(sInput)
+		iPos = iEnd + 1
+		iEnd = InStr(iPos, sInput, sSplitChar)
+		If iEnd = 0 Then
+			iEnd = Len(sInput) + 1
+		End If
+
+		iCount = iCount + 1
+		ReDim sPartsArray(iCount)
+		sPartsArray(iCount) = Mid$(sInput, iPos, iEnd - iPos)
+	Loop
+
+	SplitStringAtCharacter = UBound(sPartsArray)
+
+Exit Function
+'---------------------------
+HandleError:
+	Note Error$()
+
+End Function
+'*********************************************************************************************

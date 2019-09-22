@@ -1,0 +1,1837 @@
+###################################################################################
+# MacFileName    = LetterSoup.gsk
+# MacVersion     = 1.40
+# DevVersion     = 1.40
+# MacAuthor      = Red Roo
+# MacDescription = Generic ABC Challenge macro
+# MacUrl         = http://gsak.net/board/index.php?showtopic=15365&view=findpost&p=105365
+###################################################################################
+  NOERROR Commands=UPDATECHECK;DEPRECATED;SORT;SQLITECACHES;SQLSORT
+  UPDATECHECK Frequency=5
+  DEPRECATED Warning=NO
+
+  VERCHECK Version=7.7.4.36 (Please update your version of GSAK At http://gsak.net)
+  OPTION Explicit=YES
+###################################################################################
+#  Revision History
+# ==================
+# 1.10 Several minor text changes on the main form (all related to date selection)
+#      Minor code change when selecting finds (before the date)
+# 1.20 The same cache will not be selected twice if the letter appears more than
+#      once in the Diacritic set.
+#      New user option to process a Space character as a letters. The default is off
+#      Will now only display States within the Country selected and Counties within the State selected.
+# 1.30 Added option to search on the Last Letter of a cache name instead of the first letter.
+#      Include DevUser.Gsk if it exists on this system.
+#      Replaced the Output MsgOk 'box' with a form.
+#      All displayed Output is now clipped.
+#      The Select All checkbox in the County edit control is now enabled.
+#      When displaying caches for missed letters, the grid is now sorted by *Letter* by distance (previously sorted by name by distamce)
+# 1.35 Updated to allow for Deprecated commands (Gsak v8.1.1.88) 26-Jul-12 12:53:46 PM
+# 1.38 New Date conversion routine (ChangeDates) - will only run once.
+#      Dates are now Saved and Restored in Sql format to fix problems experienced by some users.
+#      Some Challenges specify that the cache must be placed before or after a specified date
+#      and finds must be after a different date I have added separate date box for found dates. 
+# 1.38 Reset controls have been added for the Placed and Found Date controls.
+#      A separate date control has been added for Found date. Previously the supplied date was used for both placements and finds.
+# 1.38 Reset PlacedDate causes $D2 to be selected and flag the changed to On or After.
+#      Gsak 7.7.4.36 or later is now required (the last version of Gsak v7
+# 1.38 Added Html Result display for Development Mode
+#      Fixed Finds date selections.
+#      <Alt D> Easter Egg will enter Development mode. This mode is used for testing and will currently cause a browser display of the output
+#   
+###################################################################################
+#  Possible future features
+# ==========================
+#  Translation to other languages.
+#
+# GC2WT1K - Min # of CacheTypes, Max number of finds per CacheType, no date requirement for Events
+# GC3RZ1F - Caches placed before $Date >> http://gsak.net/board/index.php?showtopic=15373&view=findpost&p=172965
+#
+###################################################################################
+
+  $D1=[20000502]                        # The date that Selective Availability was turned off.
+  $D2=[20000503]                        # The date that Dave Ulmer placed the first cache.
+
+  GOSUB Name=Initialise
+
+  SHOWSTATUS Msg="" Display=Off
+
+  WHILE TRUE
+        SHOWSTATUS Msg="" Display=No
+        $Fx=Form($Form,"")
+        $CacherN=AllTrim($CacherN)
+        GOSUB Name=SetFormPosition
+        BEGINCASE 
+          CASE $Fx="SystemExit" 
+          	 CANCEL
+        	 CASE $Fx="DevMode"
+        		 $DevUser=NOT($DevUser)
+        		 GOSUB Name=ReDisplay
+           CASE $Fx="PdateReset"
+          	 $PlacedDate=$D2
+          	 $LsCpb=FALSE
+          	 $LsCpa=TRUE 
+          	 $PdateReset=FALSE
+           CASE $Fx="FdateReset"
+           	 $FoundDate=$D2 
+          	 $FdateReset=FALSE
+           CASE $Fx="SfLL"
+              $MissedLetters=""
+              IF $SfLL
+                 $Form=EditForm($Form,"SfLL","FontStyle","Bold")
+                ELSE
+                 $Form=EditForm($Form,"SfLL","FontStyle","")
+              ENDIF 
+#              CANCELFILTER 
+           CASE $Fx="LsCpa" OR $Fx="LsCpb"
+              GOSUB Name=CheckCheckboxStatus
+           CASE $Fx="DncCbx" OR $Fx="SeaCbx"
+              GOSUB Name=ResetDiacriticSet
+           CASE $Fx="ClearAllCacheTypes"
+              $CacheTypes=""
+              $ClearAllCacheTypes=FALSE
+           CASE $Fx="SelectAllCacheTypes"
+              $CacheTypes=$CacheTypeList
+              $SelectAllCacheTypes=FALSE
+           CASE $Fx="SelectAllCounties"
+              $CountyClb=$CountyQuery
+              $SelectAllCounties=FALSE
+           CASE $Fx="ClearCbx"
+              IF $CountyRbt
+                 $CountyClb=""
+              ENDIF 
+              IF $StateRbt
+                 $StateName=""
+              ENDIF 
+              IF $CountryRbt
+                 $CountryName=""
+              ENDIF 
+              $ClearCbx=FALSE
+           CASE $Fx="Continue"
+              GOSUB Name=CheckCacher
+           CASE $Fx="CheckAvl"
+              GOSUB Name=CheckChallenge
+           CASE $Fx="CountryRbt" OR $Fx="StateRbt" OR $Fx="CountyRbt" OR $Fx="AnywhereRbt"
+              $Pb=$Fx
+              GOSUB Name=ReDisplay
+              $ClearCbx=FALSE
+           CASE $Fx="UpdateBtn"
+              GOSUB Name=Update
+           CASE $Fx="SaveCh"
+              GOSUB Name=SaveChallenge
+           CASE $Fx="DeleteCh"
+              GOSUB Name=DeleteChallenge
+           CASE $Fx="LoadCh"
+              IF $ChallengeList<>""
+                 GOSUB Name=LoadChallenge
+              ENDIF 
+           CASE $Fx="LsDb"
+              GOSUB Name=ChangeDb
+           CASE $Fx="SelectMissed"
+              GOSUB Name=SelectMissedLetters
+           CASE $Fx="CountryName"
+              $Pb="Country"
+              GOSUB Name=BuildCSClists
+           CASE $Fx="StateName"
+              $Pb="State"
+              GOSUB Name=BuildCSClists
+           CASE $Fx="SystemExit"
+              CANCEL 
+           CASE $Fx="ExitBtn"
+              BREAK 
+            OTHERWISE
+            	GOSUB Name=ReDisplay
+        ENDCASE 
+        GOSUB Name=CheckMissedLetters
+  ENDWHILE 
+  GOSUB Name=SaveSettings
+  
+  RETURN 
+###############################################################################
+  BEGINSUB Name=SaveSettings
+    MACSETTINGS Type=S Vars=_exePath,GsakVers,MacName,CountryRbt,StateRbt,CountyRbt,CountryName,StateName,CountyClb,CacherN,LsDb,PlacedDate,FoundDate,CacheTypes,AutoFieldUpd,_FormTop,_FormLeft,AnywhereRbt,UpdCountry,UpdState,UpdCounty,DncCbx,SeaCbx,DiacriticSet,LinkChDb,LsCpa,LsCpb,SpaceIsaLetter,DatesUpdated,FdateFlag,LsCpa,LsCpb
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckCacher
+     $Routine=1
+     $Out=""
+     $SqlOut=""
+     GOSUB Name=SetAlphabet
+     $status = SqLite("open","$_CurrentDataPath\sqlite.db3")
+     $List = "$_NewLine"
+     $List2= ""
+     $List3= ""
+     $MissedLetters=""
+     $CacheList="'RedRoo'"
+     $Count = 1
+     $Found = 0
+     GOSUB Name=CheckPlacedDate
+     GOSUB Name=BuildLists
+     GOSUB Name=CheckSelectionCfg
+     IF $ErrorMsg<>""
+        MSGOK Msg=$ErrorMsg Caption="Configuration Error..."
+        EXITSUB 
+     ENDIF 
+     $LetterLen=Len($letters)
+     $NewLetterCount=$LetterLen
+     $CacherNx=Replace("'","_",$CacherN)
+     WHILE $Count <= $LetterLen
+        $CheckLetter = Upper(Substr($letters,$Count,1))
+        SHOWSTATUS Msg="Testing Letter: $CheckLetter" Top=10
+        BEGINCASE 
+           CASE $CountyRbt
+              $ResStr="County: $CountyClb"
+              IF $SfLL
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND County in ($CountyList) AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(Name,1,1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND County in ($CountyList) AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ENDIF 
+           CASE $StateRbt
+              $ResStr="State: $StateName"
+              IF $SfLL
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND State ='$StateName' AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(Name,1,1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND State ='$StateName' AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ENDIF 
+           CASE $CountryRbt
+              $ResStr="Country: $CountryName"
+              IF $SfLL
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND Country = '$CountryName' AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(Name,1,1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND Country = '$CountryName' AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ENDIF 
+           CASE $AnywhereRbt
+              $ResStr="Location: Anywhere"
+              IF $SfLL
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, lParent, lDate, $Ctbl.CacheType, $Ctbl.PlacedDate FROM Logs INNER JOIN $Ctbl ON Logs.lParent = $Ctbl.code WHERE upper(substr(Name,1,1)) = '$CheckLetter' AND lParent NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr2 and lBy Like '$CacherNx' and lType in($LogType) $SqlStr1 LIMIT 1"
+              ENDIF 
+        ENDCASE 
+#        MSGOK Msg=$_sql
+        $result = Sqlite("SQL",$_sql,"")
+        IF Len($result) > 0
+           $name = Extract($result,";",1)
+           $code = Extract($result,";",2)
+           $date = SqlToDate(Extract($result,";",3))
+           $type = Extract($result,";",4)
+           $d0   = Extract($result,";",5)
+           IF Not($SpaceIsaLetter) AND $CheckLetter=" "
+              $Out="---;;;;"
+              $SqlOut=$SqlOut+$Out+$_NewLine
+              $List = $List  + $CheckLetter + $_NewLine
+              $NewLetterCount=$NewLetterCount-1
+           ELSE 
+           	IF $CheckLetter=" "
+              $Out="Space;$code;$name;$d0;$date"
+           	ELSE
+              $Out="$CheckLetter;$code;$name;$d0;$date"
+            ENDIF 
+            $SqlOut=$SqlOut+$Out+$_NewLine
+              $List = $List  + $CheckLetter + Chr(9)  + DateFormat($date) + Chr(9)+$type+"   -  "+ $Code +"   "+Chr(9)+ $Name + $_NewLine
+              $List2= $List2 + Chr(9) + $CheckLetter + Chr(9) + DateFormat($date) + Chr(9) + $Code +"  "+Chr(9) + $Name + $_NewLine
+              $Found = $Found + 1
+           ENDIF 
+
+           $CacheList=$CacheList+",'$code'"
+        ELSE 
+           IF Not($SpaceIsaLetter) AND $CheckLetter=" "
+              $Out="---;;;;"
+              $SqlOut=$SqlOut+$Out+$_NewLine
+              $List = $List  + $CheckLetter + $_NewLine
+              $NewLetterCount=$NewLetterCount-1
+           ELSE 
+           	IF $CheckLetter=" "
+              $Out=">>>;;;;"
+           	ELSE
+              $Out="$CheckLetter;;;;"
+            ENDIF 
+            $SqlOut=$SqlOut+$Out+$_NewLine
+            $List = $List + $CheckLetter + $_NewLine
+            $MissedLetters=$MissedLetters+$CheckLetter
+           ENDIF 
+        ENDIF 
+        $Count=$Count + 1
+     ENDWHILE 
+     SHOWSTATUS Msg="" Display=OFF
+     GOSUB Name=BuildDirectionStr
+     $Hdr="Results for: $CacherN"+$_NewLine+"Finds after : $Fdate"+$_NewLine+"$ResStr $_NewLine$DirectionStr $_NewLine"
+     $List =$List  + $_NewLine + Chr(09) + "$Found Caches found out of the $NewLetterCount needed"
+     $List2=$List2 + $_NewLine + Chr(09) + "$Found Caches found out of the $NewLetterCount needed"
+     CLIP Data=$Hdr$List
+     $list=$Hdr+$list
+     $FbCaption="Letter Soup Finds"
+#
+     IF $DevUser
+       $SqlOut="Letter;Code;Name;Placed Date;Found Date"+$_NewLine+$SqlOut
+       $Out=SqlToHtml($SqlOut,"Placed after $Pdate / Found after $Cdate","Y")
+     ENDIF 
+#
+     GOSUB Name=DisplayResults
+     $status=Sqlite("close","$_CurrentDataPath\sqlite.db3")
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckChallenge
+     $Routine=2
+     GOSUB Name=SetAlphabet
+     $MissedLetters=""
+     $status = SqLite("open","$_CurrentDataPath\sqlite.db3")
+     $List = "$_NewLine"
+     $CacheList="'RedRoo'"
+     $Count = 1
+     $Found = 0
+     GOSUB Name=CheckPlacedDate
+     BEGINCASE 
+        CASE $Oldversion
+           $LsStatusStr="Not Archived AND Not TempDisabled AND"
+        OTHERWISE 
+           $LsStatusStr="Status='A' AND"
+     ENDCASE 
+     GOSUB Name=BuildLists
+     $LetterLen=Len($letters)
+     $NewLetterCount=$LetterLen
+     GOSUB Name=CheckSelectionCfg
+     IF $ErrorMsg<>""
+        MSGOK Msg=$ErrorMsg Caption="Configuration Error..."
+        EXITSUB 
+     ENDIF 
+     WHILE $Count <= $LetterLen
+        $CheckLetter = Upper(Substr($letters,$Count,1))
+        SHOWSTATUS Msg="Testing Letter: $CheckLetter"
+        BEGINCASE 
+           CASE $CountyRbt
+              $ResStr="County: $CountyClb"
+              IF $SfLL
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND County in ($CountyList) LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND County in ($CountyList) LIMIT 1"
+              ENDIF 
+           CASE $StateRbt
+              $ResStr="State: $StateName"
+              IF $SfLL
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND State ='$StateName' LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND State ='$StateName' LIMIT 1"
+              ENDIF 
+           CASE $CountryRbt
+              $ResStr="Country: $CountryName"
+              IF $SfLL
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND Country ='$CountryName' LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND Country ='$CountryName' LIMIT 1"
+              ENDIF 
+           CASE $AnywhereRbt
+              $ResStr="Location: Anywhere"
+              IF $SfLL
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr Upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 LIMIT 1"
+              ELSE 
+                 $_Sql = "SELECT Name, Cachetype, PlacedDate, Code FROM $Ctbl WHERE $LsStatusStr upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 LIMIT 1"
+              ENDIF 
+        ENDCASE 
+        $result = Sqlite("SQL",$_sql,"")
+        IF Len($result) > 0
+           $name = Extract($result,";",1)
+           $type = Extract($result,";",2)
+           $date = SqlToDate(Extract($result,";",3))
+           $code = Extract($result,";",4)
+           IF Not($SpaceIsaLetter) AND $CheckLetter=" "
+              $List = $List  + $CheckLetter + $_NewLine
+           ELSE 
+              $List = $List + $CheckLetter + Chr(9) + DateFormat($date) + "   " +$type + Chr(9) + $Name + $_NewLine
+              $Found = $Found + 1
+           ENDIF 
+        ELSE 
+           $List = $List + $CheckLetter + $_NewLine
+        ENDIF 
+        IF Not($SpaceIsaLetter) AND $CheckLetter=" "
+           $NewLetterCount=$NewLetterCount-1
+        ENDIF 
+        $CacheList=$CacheList+",'$code'"
+        $count = $Count + 1
+     ENDWHILE 
+     SHOWSTATUS Msg="" Display=OFF
+     $Hdr="Challenge Check"+$_NewLine+"$ResStr"+$_NewLine
+     BEGINCASE 
+        CASE $LsCpa
+           $Hdr=$Hdr+"Caches placed after: $Pdate"+$_NewLine+$_NewLine
+        CASE $LsCpb
+           $Hdr=$Hdr+"Caches placed before: $Pdate"+$_NewLine+$_NewLine
+        OTHERWISE 
+           $Hdr=$Hdr+"Caches placed: Anytime"+$_NewLine+$_NewLine
+     ENDCASE 
+     $List=$List + $_NewLine + Chr(09) + "$Found Caches found out of $NewLetterCount needed"
+#     $List=$Hdr+$List
+     CLIP Data=$Hdr+$List
+     $list=$Hdr+$list
+     $FbCaption="Challenge Check"
+     GOSUB Name=DisplayResults
+     $status=Sqlite("close","$_CurrentDataPath\sqlite.db3")
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SelectMissedLetters
+     MACROFLAG Type=Clear Range=All
+     $Count=0
+     $List="$_NewLine"
+     $List2=""
+     GOSUB Name=CheckPlacedDate
+     WHILE $Count < Len($MissedLetters)
+        $count = $Count + 1
+        $CheckLetter = Upper(Substr($MissedLetters,$Count,1))
+        SHOWSTATUS Msg="Finding caches for: $CheckLetter"
+        BEGINCASE 
+           CASE $CountryRbt
+              IF $SfLL
+                 $_Sql = "SELECT Code from $Ctbl WHERE not found and upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND Country ='$CountryName' AND NOT IsOwner"
+              ELSE 
+                 $_Sql = "SELECT Code from $Ctbl WHERE not found and upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND Country ='$CountryName' AND NOT IsOwner"
+              ENDIF 
+           CASE $StateRbt
+              IF $SfLL
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND State ='$StateName' AND NOT IsOwner"
+              ELSE 
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND State ='$StateName' AND NOT IsOwner"
+              ENDIF 
+           CASE $CountyRbt
+              IF $SfLL
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND County in ($CountyList) AND NOT IsOwner"
+              ELSE 
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND County in ($CountyList) AND NOT IsOwner"
+              ENDIF 
+           CASE $AnywhereRbt
+              IF $SfLL
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(ltrim(rtrim(Name)),length(ltrim(rtrim(Name))),1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND NOT IsOwner"
+              ELSE 
+                 $_Sql = "SELECT Code FROM $Ctbl WHERE not found and upper(substr(Name,1,1)) = '$CheckLetter' AND Code NOT in($CacheList) AND CacheType in($TypeLst) $SqlStr1 AND NOT IsOwner"
+              ENDIF 
+        ENDCASE 
+        $Result = Sqlite("SQL",$_sql,"")
+        IF Len($Result) > 0
+           $List = $List + $Result + ";"
+        ELSE 
+           $List2=$List2+$CheckLetter+", "
+        ENDIF 
+        $code = Extract($result,";",1)
+        $CacheList=$CacheList+",'$code'"
+     ENDWHILE 
+     SHOWSTATUS Msg="" Display=N
+     $list=REPLACE(";",$_NewLine,$list)
+     $Status=CodeMatch($List,";","M")
+     MFILTER Expression=$d_MacroFlag
+     GOTO Position=Top
+     $Cnt=0
+
+     WHILE NOT($_EOL)
+     	 $Cnt=$Cnt+1
+     	 SHOWSTATUS Msg="$Cnt of $_Count - $d_Code" Title="Updating MacroSort"
+       IF $SfLL
+       	 $d_MacroSort=Upper(Right($d_Name,1))
+        ELSE
+       	 $d_MacroSort=Upper(Left($d_Name,1))
+       ENDIF  	
+     	 GOTO Position=Next 
+     ENDWHILE 
+   	 GOTO Position=Top
+   	 SHOWSTATUS Msg="" Display=N
+
+     IF $OldVersion
+        SORT By=MacroSort;Distance
+      ELSE 
+   	  	SQLSORT OrderBy=MacroSort, Distance
+     ENDIF 
+
+     IF $List2 = ""
+        GOSUB Name=BuildList3
+        $list=$List3
+     ELSE 
+        IF $DncCbx
+           $TempStr="character"
+        ELSE 
+           $TempStr="letter"
+        ENDIF 
+        $List2=Left($List2,Len($List2)-2)
+        $List3=""
+        IF $List<>""
+           GOSUB Name=BuildList3
+        ENDIF 
+        $list="No caches found for $TempStr(s) $List2"+$_NewLine+$_NewLine+$_NewLine+$_NewLine+"Caches located for missing letters..."+$_NewLine+$_NewLine+$List3
+     ENDIF 
+     CLIP Data=$list
+     $FbCaption="Select Caches for Missed Letters"
+     GOSUB Name=DisplayResults
+
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=BuildList3
+        GOTO Position=Top
+        WHILE NOT($_EOL)
+           IF $SfLL
+              $List3=$List3+Upper(Right($d_Name,1))+"  -  "+$d_Code
+           ELSE 
+              $List3=$List3+Upper(Left($d_Name,1))+"  -  "+$d_Code
+           ENDIF 
+           $List3=$List3+Chr(09)+$d_Name+$_NewLine
+           GOTO Position=Next
+        ENDWHILE 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=DisplayResults                    # Form 2...
+     $ResultBox=$list
+     SHOWSTATUS Msg="" Display=N
+     $FormB=EditForm($FormB,"Form2","Caption",$FbCaption)
+     IF $Found = $NewLetterCount
+        $FormB=EditForm($FormB,"Form2","Color","11468718")       # Green = 11468718
+     ELSE 
+        $FormB=EditForm($FormB,"Form2","Color","14540287")       # Pink  = 14540287
+     ENDIF 
+     WHILE TRUE
+        $Fx=Form($FormB,"")
+        IF $Fx="SystemExit"
+           CANCEL 
+        ENDIF 
+        IF $Fx="Ok"
+           BREAK 
+        ENDIF 
+     ENDWHILE 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckMissedLetters
+     IF $MissedLetters<>""
+        $Form=EditForm($Form,"SelectMissed","Enabled","Yes")
+     ELSE 
+        $Form=EditForm($Form,"SelectMissed","Enabled","No")
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckPlacedDate
+     $SqlStr1=""
+     $SqlStr2=""
+     $Fdate = DateToSql($FoundDate)
+     $Pdate = DateToSql($PlacedDate)
+#
+     BEGINCASE 
+        CASE $LsCpa AND $LsCpb
+           $LsCpa=FALSE
+           $LsCpb=FALSE
+        CASE $LsCpa
+           $SqlStr1="AND PlacedDate >= '$Pdate' "
+        CASE $LsCpb
+           $SqlStr1="AND PlacedDate < '$Pdate' "
+     ENDCASE 
+#
+     $Cdate=$Fdate
+     BEGINCASE 
+        CASE $FdateFlag
+           $SqlStr2="AND lDate >= '$Fdate' "
+        OTHERWISE   
+           $SqlStr2="AND lDate >= '$Pdate' "
+           $Cdate=$Pdate
+     ENDCASE
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SaveChallenge                               # from SaveName EditBox
+  	DECLARE Var=$SqlFdate Type=String
+     $SaveName=AllTrim($SaveName)
+     IF $SaveName="" AND $ChallengeList <> ""
+        $SaveName=$ChallengeList
+     ENDIF 
+     IF $SaveName<>""
+        IF $ChallengeData="" AND FileExists($ChallengeFile)
+           $ChallengeData=GetFile($ChallengeFile)
+        ENDIF 
+        $ChDb=$_CurrentDatabase
+        $SqlStr  =DateToSql($PlacedDate)
+        $SqlFdate=DateToSql($FoundDate)
+        $NewChallenge="$SaveName\$SqlStr\$CacheTypes\$CountryRbt\$CountryName\$StateRbt\$StateName\$CountyRbt\$CountyClb\$AnywhereRbt\$DncCbx\$SeaCbx\$DiacriticSet\$ChDb\$LsCpa\$LsCpb\$SpaceIsaLetter\$SqlFdate\$FdateFlag\$_NewLine"
+        $ChallengeData=List("Cl","Sort","")
+        $SearchStr=$SaveName
+        $SearchList=$ChallengeData
+        GOSUB Name=GetPos
+        IF Val($Pos)<>0
+           IF YesNo("Are you sure you want to replace the $SaveName Challenge?","Please Confirm")
+              $ChallengeData=Replace($TempStr,"",$ChallengeData)
+              $TempStr=List("Cl","Replace",$ChallengeData)
+              $ChallengeData=List("Cl","Add",$NewChallenge)
+           ELSE 
+              EXITSUB 
+           ENDIF 
+        ELSE 
+           $ChallengeData=List("Cl","Add",$NewChallenge)
+        ENDIF 
+        GOSUB Name=WriteChallengeData
+        GOSUB Name=LoadChallengeData
+     ENDIF 
+     $ChallengeList=$SaveName
+     $SaveName=""
+
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=DeleteChallenge                             # from SaveName EditBox
+     IF $DelName <> ""
+        IF RegEx($DelName,$ChallengeData)
+           IF YesNo("Are you sure you want to delete the $DelName Challenge?","Please Confirm")
+              $ChallengeData=List("Cl","Sort","")                                                # This ensures that the first instance of $SaveName is Deleted
+              $SearchStr=$DelName
+              $SearchList=$ChallengeData
+              GOSUB Name=GetPos
+              $ChallengeData=Replace($TempStr,"",$ChallengeData)
+              GOSUB Name=WriteChallengeData
+              GOSUB Name=LoadChallengeData
+           ENDIF 
+           $DelName=""
+        ELSE 
+           MSGOK Msg="The $DelName Challenge was not found to delete" Caption="Error..."
+        ENDIF 
+     ELSE 
+        MSGOK Msg="No Challenge selected for Deletion" Caption="Error..."
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=GetPos                      # Parse list for a string in Position 1
+     $Pos=""
+     $Count=RegExCount($_NewLine,$SearchList)
+     $Cntr=0
+     IF RegEx($SearchStr,$SearchList)
+        WHILE $Cntr < $Count
+           $Cntr=$Cntr+1
+           $TempStr=Extract($SearchList,$_NewLine,$Cntr)
+           IF $SearchStr=Extract($TempStr,"\",1)
+              $Pos=NumToStr($Cntr-1)
+              EXITSUB 
+           ENDIF 
+        ENDWHILE 
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=WriteChallengeData
+     $TempStr=List("Cl","Replace",$ChallengeData)
+     $ChallengeData=List("Cl","Sort","")
+     WHILE RegEx("$_NewLine$_NewLine",$ChallengeData)
+        $ChallengeData=Replace("$_NewLine$_NewLine","$_NewLine",$ChallengeData)
+     ENDWHILE 
+     $ResultStr=PutFile($ChallengeFile,$ChallengeData)
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=GetListPos                              # Parse string for a string
+     $Pos=""
+     $Count=RegExCount(";",$SearchList)
+     $Cntr=0
+     IF RegEx($SearchStr,$SearchList)
+        WHILE $Cntr < $Count
+           $Cntr=$Cntr+1
+           $TempStr=Extract($SearchList,";",$Cntr)
+           IF $SearchStr=$TempStr
+              $Pos=NumToStr($Cntr)
+              EXITSUB 
+           ENDIF 
+        ENDWHILE 
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=LoadChallenge                          # from the ChallengeList box      ** DateToSql()
+#     DECLARE Var=$Tmp1 Type=String
+#     DECLARE Var=$MacroFolder Type=String
+#     DECLARE Var=$ChFileDate Type=String 
+     $SearchStr=$ChallengeList
+     $SearchList=$ShortList
+     GOSUB Name=GetListPos
+     $Ch=List("Cl","Item","$Pos")
+     $SqlStr=Extract($Ch,"\",2)
+     $PlacedDate=SqlToDate($SqlStr)
+     $CacheTypes=Extract($Ch,"\",3)
+     $CountryRbt=StrToBool(Extract($Ch,"\",4))
+     $CountryName=Extract($Ch,"\",5)
+     $StateRbt=StrToBool(Extract($Ch,"\",6))
+     $StateName=Extract($Ch,"\",7)
+     $CountyRbt=StrToBool(Extract($Ch,"\",8))
+     $CountyClb=Extract($Ch,"\",9)
+     $AnyWhereRbt=StrToBool(Extract($Ch,"\",10))
+     $DncCbx=StrToBool(Extract($Ch,"\",11))
+     $SeaCbx=StrToBool(Extract($Ch,"\",12))
+     $DiacriticSet=Extract($Ch,"\",13)
+     $ChDb=Extract($Ch,"\",14)
+     $LsCpa=StrToBool(Extract($Ch,"\",15))
+     $LsCpb=StrToBool(Extract($Ch,"\",16))
+     $SpaceIsaLetter=StrToBool(Extract($Ch,"\",17))
+     $SqlFdate=Extract($Ch,"\",18)
+     IF $SqlFdate<>""
+       $FoundDate=SqlToDate($SqlFdate)
+     	ELSE 
+     	 $FoundDate=$_Today
+     ENDIF 
+     $FdateFlag=StrToBool(Extract($Ch,"\",19))
+     GOSUB Name=ResetDiacriticSet
+     IF $LinkChDb AND $ChDb <> "" AND $ChDb<> $_CurrentDatabase
+        DATABASE Name=$ChDb
+        $LsDb=$ChDb
+        GOSUB Name=BuildCSClists
+     ENDIF 
+     GOSUB Name=ReDisplay
+     IF $LinkChDb
+        $form = EditForm($form,"LinkChDb","fontcolor","32768")
+     ELSE 
+        $form = EditForm($form,"LinkChDb","fontcolor","7434751")
+     ENDIF 
+     $MissedLetters=""
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=LoadChallengeData                        # from the Challenges file
+     $ChallengeData=""
+     IF Not($ListExists)
+        $TmpLst=List("Cl","create",$_NewLine)
+        $ListExists=TRUE
+     ENDIF 
+     IF FileExists($ChallengeFile)
+        $ChallengeData=GetFile($ChallengeFile)
+        IF Extract($ChallengeData,$_NewLine,1)<>""
+           $ChallengeData=$_NewLine+$ChallengeData
+        ENDIF 
+        $ChLst=List("Cl","replace",$ChallengeData)
+        $ChLst=List("Cl","sort","")
+        $Cnt=0
+        $ShortList=""
+        $ChallengeNames=";"
+        WHILE $Cnt < RegExCount($_NewLine,$ChallengeData)
+           $Cnt=$Cnt+1
+           $ChLine=Extract($ChLst,$_NewLine,$Cnt)
+           $ShortList=$ShortList+Extract($ChLine,"\",1)+";"
+        ENDWHILE 
+     ENDIF 
+     IF $ShortList<>""
+        $form = EditForm($form,"ChallengeList","Values",$ShortList)
+        $form = EditForm($form,"DelName","Values",$ShortList)
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=ResetDiacriticSet
+     IF $DncCbx
+        $Form=EditForm($Form,"DiacriticSet","Enabled","Yes")
+        $Form=EditForm($Form,"SpaceIsaLetter","Enabled","Yes")
+     ELSE 
+        $Form=EditForm($Form,"DiacriticSet","Enabled","No")
+        $Form=EditForm($Form,"SpaceIsaLetter","Enabled","No")
+        $SpaceIsaLetter=FALSE
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckSelectionCfg
+     $ErrorMsg=""
+     BEGINCASE 
+        CASE Not($SeaCbx) AND Not($DncCbx)
+           $ErrorMsg="You have not selected any Character Set"
+        CASE Not($SeaCbx) AND $DncCbx AND $DiacriticSet=""
+           $ErrorMsg="You have selected to use Diacritic and/or Numeric Characters but have not input any Characters to test for"
+        CASE $Routine=1 AND $CacherN=""
+           $ErrorMsg="You must supply a Cacher Name"
+        CASE $CountryRbt AND $CountryName=""
+           $ErrorMsg="You have not selected a Country"
+        CASE $StateRbt AND $Statename=""
+           $ErrorMsg="You have not selected a State"
+        CASE $CountyRbt AND $CountyClb=""
+           $ErrorMsg="You have not selected any Counties"
+        CASE $CacheTypes="" OR $CacheTypes=";"
+           $ErrorMsg="You have not selected any Cache Types"
+     ENDCASE 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=BuildLists
+     $CountyList="'"+Replace(";","','",$CountyClb)+"'"
+     $TypeLst=""
+     $CacheTypes=$CacheTypes+";"
+     $Cnt=RegExCount(";",$CacheTypes)
+     $Cntr=0
+     WHILE $Cntr < $Cnt
+        $Cntr=$Cntr+1
+        $TypeLst=$TypeLst+"'"+Left(Extract($CacheTypes,";",$Cntr),1)+"',"
+     ENDWHILE 
+     $TypeLst=Left($TypeLst,Len($TypeLst)-1)
+     $LogType="'Found it'"
+     IF RegEx("Events",$CacheTypes)
+        $LogType=$LogType+",'Attended'"
+     ENDIF 
+     IF RegEx("Webcam",$CacheTypes)
+        $LogType=$LogType+",'Webcam Photo Taken'"
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=BuildCSClists           # Build the Country / State / County lists
+     BEGINCASE 
+        CASE $Pb="Country"
+           $CountryRbt=TRUE
+           $StateRbt=FALSE
+           $CountyRbt=FALSE
+           $AnywhereRbt=FALSE
+        CASE $Pb="State"
+           $CountryRbt=FALSE
+           $StateRbt=TRUE
+           $CountyRbt=FALSE
+           $AnywhereRbt=FALSE
+     ENDCASE 
+
+     IF $AutoFieldUpd
+        GOSUB Name=Update
+     ENDIF 
+     SHOWSTATUS Msg="Building a Country list from your database" Top=10
+     $_sql="Select Distinct Country From $Ctbl order by Country"
+     $QueryStr = Sqlite("SQL",$_sql,"")
+     $CountryQuery=Replace($_NewLine,";",$QueryStr)
+     IF Extract($CountryQuery,";",1) <> ""
+        $CountryQuery=";"+$CountryQuery
+     ENDIF 
+     $StateQuery=""
+     SHOWSTATUS Msg="Building a State list from your database" Top=10
+#     $_sql="Select Distinct State From $Ctbl order by Country, State"
+     $_sql="Select Distinct State From $Ctbl WHERE Country = '$CountryName' order by State"
+     $QueryStr = Sqlite("SQL",$_sql,"")
+     $StateQuery=Replace($_NewLine,";",$QueryStr)
+     IF Extract($StateQuery,";",1) <> ""
+        $StateQuery=";"+$StateQuery
+     ENDIF 
+     $CountyQuery=""
+     IF $RedRoo AND $Pb="Country"                                     # Added because the developer is too lazy to press a couple of buttons
+        BEGINCASE 
+           CASE $CountryName="Australia"                              # I live here
+              $StateName="WA"
+           CASE $CountryName="New Zealand"                            # and I holiday here (in Christchurch)
+              $StateName="South Island"
+        ENDCASE 
+     ENDIF 
+     $Pb=""
+     SHOWSTATUS Msg="Building a County list from your database" Top=10
+#     $_sql="Select Distinct County From $Ctbl order by Country, State, County"
+     $_sql="Select Distinct County From $Ctbl WHERE Country = '$CountryName' and State = '$StateName' order by Country, State, County"
+     $CountyQuery = Replace($_NewLine,";",Sqlite("SQL",$_sql,""))
+     $form = EditForm($form,"CountyClb","Values",$CountyQuery)
+
+     $ColunmCount=RegExCount(";",$CountyQuery)
+     BEGINCASE 
+        CASE $ColunmCount>32
+           $form = EditForm($form,"CountyClb","Columns","3")
+        CASE $ColunmCount>16
+           $form = EditForm($form,"CountyClb","Columns","2")
+        CASE $ColunmCount<17
+           $form = EditForm($form,"CountyClb","Columns","1")
+     ENDCASE 
+     GOSUB Name=ReDisplay
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=ReDisplay
+     $form = EditForm($form,"CacheTypes","Values",$CacheTypeList)
+ 	 	 IF $FdateFlag
+ 	 	 	 $Form=EditForm($Form,"FdateFlag","Width","137")
+ 	 	   $Form=EditForm($Form,"FoundDate","Visible","Yes")        
+ 	 	   $Form=EditForm($Form,"FdateReset","Visible","Yes")
+     ELSE
+ 	 	 	 $Form=EditForm($Form,"FdateFlag","Width","222")
+       $Form=EditForm($Form,"FoundDate","Visible","No")
+ 	 	   $Form=EditForm($Form,"FdateReset","Visible","No")
+     ENDIF 
+     IF $DevUser
+ 	 	   $Form=EditForm($Form,"DevLabel","Visible","Yes")
+ 	 	  ELSE 
+ 	 	   $Form=EditForm($Form,"DevLabel","Visible","No")
+     ENDIF 
+     SHOWSTATUS Msg="" Display=OFF
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SetFormPosition
+     $Form=EditForm($Form,"Form1","Top",$_FormTop)
+     $Form=EditForm($Form,"Form1","Left",$_FormLeft)
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=ChangeDb
+     IF $LsDb <> $_CurrentDatabase AND DataBaseExists($LsDb)
+        DATABASE Name=$LsDb
+        GOSUB Name=CheckMissingFields
+     ELSE 
+        CANCELFILTER 
+     ENDIF 
+     GOSUB Name=CheckForCachesTemp
+     GOSUB Name=BuildCSClists
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckMissingFields
+     $_Sql = "SELECT Code FROM $Ctbl WHERE Country=''"
+     $result = Sqlite("SQL",$_sql,"")
+     $NumResp=RegExCount($_NewLine,$result)
+     $Form=EditForm($Form,"Label9","Caption","$NumResp")                         # Error ????
+#
+     $_Sql = "SELECT Code FROM $Ctbl WHERE State=''"
+     $result = Sqlite("SQL",$_sql,"")
+     $NumResp=RegExCount($_NewLine,$result)
+     $Form=EditForm($Form,"Label10","Caption","$NumResp")
+#
+     $_Sql = "SELECT Code FROM $Ctbl WHERE County=''"
+     $result = Sqlite("SQL",$_sql,"")
+     $NumResp=RegExCount($_NewLine,$result)
+     $Form=EditForm($Form,"Label11","Caption","$NumResp")
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckForCachesTemp
+     IF $OldVersion
+        $_sql="PRAGMA table_info(CachesTemp)"
+        IF Sqlite("SQL",$_sql,"")=""
+           SHOWSTATUS Msg="Creating the CachesTemp Query Table" Top=10
+           SQLITECACHES 
+        ENDIF 
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckCheckboxStatus
+     BEGINCASE 
+        CASE $Fx="LsCpa"
+           IF $LsCpb
+              $LsCpb=FALSE
+           ENDIF 
+        CASE $Fx="LsCpb"
+           IF $LsCpa
+              $LsCpa=FALSE
+           ENDIF 
+     ENDCASE 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=BuildDirectionStr
+    IF $SfLL
+      $DirectionStr="Searching on the Last Letter of the Cache Name"
+    ELSE
+      $DirectionStr="Searching on the 1st Letter of the Cache Name"
+    ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=Update
+     IF $UpdCountry OR $AutoFieldUpd
+        SHOWSTATUS Msg="Updating Country fields" Top=10
+        $NumResp=GetCountry("bc")
+     ENDIF 
+     IF $UpdState OR $AutoFieldUpd
+        SHOWSTATUS Msg="Updating State fields" Top=10
+        $NumResp=GetState("bs")
+     ENDIF 
+     IF $UpdCounty OR $AutoFieldUpd
+        SHOWSTATUS Msg="Updating County fields" Top=10
+        $NumResp=GetCounty("yb")
+     ENDIF 
+     IF $OldVersion
+        SHOWSTATUS Msg="Updating CachesTemp " Top=10
+        SQLITECACHES Scope=All
+     ENDIF 
+     GOSUB Name=CheckMissingFields
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SetAlphabet
+     $Letters=""
+     IF $DncCbx AND $DiacriticSet <> ""
+        $Letters=$DiacriticSet
+     ENDIF 
+     IF $SeaCbx
+        $Letters=$Letters+$Sea
+     ENDIF 
+  ENDSUB 
+###############################################################################
+  BEGINSUB Name=ChangeDates
+  	DECLARE Var=$Data Type=String
+  	DECLARE Var=$CdC Type=String
+    DECLARE Var=$CdN Type=String
+    DECLARE Var=$CdT Type=String 
+  	IF FileExists($ChallengeFile)
+  		SHOWSTATUS Msg="Updating Challenge File"
+      $Data=""
+  		FILEREAD File=$ChallengeFile
+  			$CdC=Extract($line,"\",2)
+  			$CdT=REPLACE("-","/",$CdC)
+  			$CdT=REPLACE(".","/",$CdT)
+        $CdN=$CdC
+  			IF $CdC<>""
+  				BEGINCASE
+  				CASE Len(Extract($CdT,"/",3))=4
+  					$Cdn=Extract($CdT,"/",3)+"-"+Extract($CdT,"/",2)+"-"+Extract($CdT,"/",1)
+  				OTHERWISE
+  					$CdN=Extract($CdT,"/",1)+"-"+Extract($CdT,"/",2)+"-"+Extract($CdT,"/",3)
+  				ENDCASE
+  				$line=REPLACE($CdC,$CdN,$line)
+  			ENDIF 
+  			IF $Line<>""
+  			  $Data=$Data+$line+$_NewLine
+  			ENDIF 
+  		ENDREAD 
+#  		CLIP Data=$Data
+  	  $Result=PutFile($ChallengeFile,"$_NewLine$Data")
+  	ENDIF
+  	$DatesUpdated=TRUE
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=Initialise
+
+     $ListExists=FALSE
+# First set the name for the Caches Table
+     SHOWSTATUS Msg="Setting the Caches Table" Top=10
+     $Ctbl="Caches"
+     $OldVersion=FALSE
+     IF $_Version < "7.7.0.0"
+        $Ctbl="CachesTemp"
+        $OldVersion=TRUE
+     ENDIF 
+     $LsDb=$_CurrentDatabase
+     $PlacedDate=$D2
+     $FoundDate=$_Today
+     
+# Now populate $LsDb with the DATABASE List
+     SHOWSTATUS Msg="Setting the Database list" Top=10
+     $DbList="Not Selected;"+Sysinfo("Databases")
+     $Form=EditForm($Form,"LsDb","Values",$DbList)
+
+     SHOWSTATUS Msg="Setting a few default values " Top=10
+     $GsakVers="Gsak $_Version"
+     $Sea="ABCDEFGHIJKLMNOPQRSTUVWXYZ"                                    # Standard English Alphabet
+     $CtList="ZCBWEAGVIROUMT"                                             # CacheType List and Priority - Doesn't include types L,X (Maze Exhibits) ,Y (Waymarks)
+     $ChallengeFile=Sysinfo("macroPath")+"\LetterSoupChList.Txt"          # Default filename for saved Challenges
+     $DncCbx=FALSE                                                        # Diacritic/Numeric turned off by default
+     $SeaCbx=TRUE                                                         # Standard English Alphabet turned on by default
+     $MissedLetters=""                                                    # Initialise and clear
+     $DiacriticSet=""                                                     # Initialise and clear
+     $AnywhereRbt=TRUE                                                    # otherwise date errors may occur
+     $AutoFieldUpd=TRUE                                                   # Turned on by default
+     $DatesUpdated=FALSE
+     $LsCpb=FALSE
+     $Pb=""
+     $FdateFlag=FALSE 
+
+     GOSUB Name=CheckForCachesTemp
+
+     SHOWSTATUS Msg="Loading previous configuration" Top=10
+     MACSETTINGS Type=R FileCheck=N
+
+     IF NOT($DatesUpdated)
+       GOSUB Name=ChangeDates
+     ENDIF 
+
+     GOSUB Name=ChangeDb
+     GOSUB Name=LoadChallengeData
+     GOSUB Name=ResetDiacriticSet
+
+# Some form related functions
+#     $MacName=Left(SysInfo("Macrofile"),AT(".",SysInfo("Macrofile"))-1)+" - "+AllTrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1))
+#     $FormA=EditForm($FormA,"Mvers","Caption","v "+MacHeader("MacVersion"))
+
+     $Form=EditForm($Form,"Form1","Caption",MacHeader("MacFileName")+"  "+MacHeader("MacVersion"))
+     GOSUB Name=SetFormPosition                                               # from saved coords
+     SHOWSTATUS Msg="" Display=OFF
+
+     INCLUDE File="\DevUser.Gsk" FileCheck=N
+     $DevUser=FALSE
+     GOSUB Name=ReDisplay
+  ENDSUB 
+###################################################################################
+
+  DECLARE Var=$AnyWhereRbt Type=Boolean
+  DECLARE Var=$AutoFieldUpd Type=Boolean
+  DECLARE Var=$CacheList Type=String
+  DECLARE Var=$CacherN Type=String
+  DECLARE Var=$CacherNx Type=String
+  DECLARE Var=$CacheTypeList Type=String
+  DECLARE Var=$CacheTypes Type=String
+  DECLARE Var=$Ch Type=String
+  DECLARE Var=$ChallengeData Type=String
+  DECLARE Var=$ChallengeFile Type=String
+  DECLARE Var=$ChallengeNames Type=String
+  DECLARE Var=$ChDb Type=String
+  DECLARE Var=$CheckLetter Type=String
+  DECLARE Var=$ChLine Type=String
+  DECLARE Var=$ChLst Type=String
+  DECLARE Var=$ClearCbx Type=Boolean
+  DECLARE Var=$ClearAllCacheTypes Type=Boolean
+  DECLARE Var=$Cnt Type=Numeric
+  DECLARE Var=$Cntr Type=Numeric
+  DECLARE Var=$code Type=String
+  DECLARE Var=$ColunmCount Type=Numeric
+  DECLARE Var=$Count Type=Numeric
+  DECLARE Var=$CountryQuery Type=String
+  DECLARE Var=$CountryName Type=String
+  DECLARE Var=$CountryRbt Type=Boolean
+  DECLARE Var=$CountyClb Type=String
+  DECLARE Var=$CountyList Type=String
+  DECLARE Var=$CountyQuery Type=String
+  DECLARE Var=$CountyRbt Type=Boolean
+  DECLARE Var=$Ctbl Type=String
+  DECLARE Var=$CtList Type=String
+  DECLARE Var=$date Type=Date
+  DECLARE Var=$Cdate Type=String
+  DECLARE Var=$Fdate Type=String
+  DECLARE Var=$Pdate Type=String
+  DECLARE Var=$D1 Type=Date 
+  DECLARE Var=$D2 Type=Date 
+  DECLARE Var=$DatesUpdated Type=Boolean 
+  DECLARE Var=$DbList Type=String
+  DECLARE Var=$DevUser Type=Boolean
+  DECLARE Var=$DiacriticSet Type=String
+  DECLARE Var=$DirectionStr Type=String
+  DECLARE Var=$DncCbx Type=Boolean
+  DECLARE Var=$MissedLetters Type=String
+#  DECLARE Var=$Fd Type=String
+  DECLARE Var=$Form Type=String
+  DECLARE Var=$FbCaption Type=String
+  DECLARE Var=$Found Type=Numeric
+  DECLARE Var=$FoundDate Type=Date 
+  DECLARE Var=$PlacedDate Type=Date
+  DECLARE Var=$FdateFlag Type=Boolean 
+  DECLARE Var=$Fx Type=String
+  DECLARE Var=$GsakVers Type=String
+  DECLARE Var=$Hdr Type=String
+  DECLARE Var=$LetterLen Type=Numeric
+  DECLARE Var=$letters Type=String
+  DECLARE Var=$List Type=String
+  DECLARE Var=$List2 Type=String
+  DECLARE Var=$List3 Type=String
+  DECLARE Var=$ListExists Type=Boolean
+  DECLARE Var=$LogType Type=String
+  DECLARE Var=$LsCpb Type=Boolean
+  DECLARE Var=$LsDb Type=String
+  DECLARE Var=$LsStatusStr Type=String
+  DECLARE Var=$name Type=String
+  DECLARE Var=$ErrorMsg Type=String
+  DECLARE Var=$MacName Type=String
+  DECLARE Var=$NewChallenge Type=String
+  DECLARE Var=$NumResp Type=Numeric
+  DECLARE Var=$OldVersion Type=Boolean
+  DECLARE Var=$Pb Type=String
+  DECLARE Var=$Pos Type=String
+  DECLARE Var=$QueryStr Type=String
+  DECLARE Var=$NewLetterCount Type=Numeric
+  DECLARE Var=$RedRoo Type=Boolean
+  DECLARE Var=$ResStr Type=String
+  DECLARE Var=$Result Type=String
+  DECLARE Var=$ResultStr Type=String
+  DECLARE Var=$ResultBox Type=String
+  DECLARE Var=$Routine Type=Numeric
+  DECLARE Var=$SaveName Type=String
+  DECLARE Var=$Sea Type=String
+  DECLARE Var=$SeaCbx Type=Boolean
+  DECLARE Var=$SearchStr Type=String
+  DECLARE Var=$SearchList Type=String
+  DECLARE Var=$ShortList Type=String
+  DECLARE Var=$SpaceIsaLetter Type=Boolean
+  DECLARE Var=$SqlStr Type=String 
+  DECLARE Var=$SqlStr1 Type=String
+  DECLARE Var=$SqlStr2 Type=String
+#  DECLARE Var=$StateList Type=String
+  DECLARE Var=$StateName Type=String
+  DECLARE Var=$StateQuery Type=String
+  DECLARE Var=$StateRbt Type=Boolean
+  DECLARE Var=$status Type=String
+  DECLARE Var=$TempStr Type=String
+#  DECLARE Var=$Tmp Type=String
+  DECLARE Var=$TmpLst Type=String
+  DECLARE Var=$type Type=String
+  DECLARE Var=$TypeLst Type=String
+  DECLARE Var=$UpdCountry Type=Boolean
+  DECLARE Var=$UpdState Type=Boolean
+  DECLARE Var=$UpdCounty Type=Boolean
+
+# Special Development variables
+  DECLARE Var=$Out Type=String
+  DECLARE Var=$SqlOut Type=String
+  DECLARE Var=$D0 Type=String
+  
+###################################################################################
+<DATA> VarName=$CacheTypeList
+A - Project Ape;B - Letterbox;C - Cito;E - Events;G - Benchmarks;I - Whereigo;L - Locationless;M - Multi;O - Other;R - Earth Caches;T - Traditional;U - Unknown;V - Virtual;W - Webcam;X - Maze Exhibit;Y - Waymarks;Z - Mega Event;
+<ENDDATA>
+###################################################################################
+<DATA> VarName=$Form
+#********************************************************************
+# Form generated by GSAK form designer on Fri 28-Dec-2012 11:47:22
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Color = 13302271
+  Height = 598
+  Top = 81
+  Width = 685
+
+Name = Groupbox2
+  Type = Groupbox
+  Height = 115
+  Left = 153
+  Top = 403
+  Width = 204
+  Taborder = 8
+
+Name = Groupbox3
+  Type = Groupbox
+  Height = 366
+  Left = 324
+  Top = 35
+  Width = 342
+  Taborder = 10
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 199
+  Left = 11
+  Top = 202
+  Width = 305
+  Taborder = 11
+
+Name = Groupbox4
+  Type = Groupbox
+  Height = 115
+  Left = 12
+  Top = 403
+  Width = 138
+  Taborder = 13
+
+Name = Label1
+  Type = Label
+  Color = 32896
+  Font = Comic Sans MS
+  Height = 29
+  Left = 185
+  Size = 16
+  Style = bold
+  Top = 2
+  Width = 317
+  Caption = Letter Soup - ABC Challenges
+
+Name = Continue
+  Type = Button
+  Enter = Yes
+  Height = 30
+  Left = 11
+  Top = 529
+  Width = 156
+  Taborder = 0
+  Caption = Check Cacher Finds
+
+Name = CountryRbt
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox3
+  Exitonchange = No
+  Fontcolor = 32768
+  Height = 17
+  Left = 14
+  Top = 38
+  Width = 65
+  Taborder = 0
+  Caption = Country
+
+Name = StateRbt
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox3
+  Exitonchange = No
+  Fontcolor = 32768
+  Height = 17
+  Left = 14
+  Top = 60
+  Width = 65
+  Taborder = 1
+  Caption = State
+
+Name = CountyRbt
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox3
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 14
+  Top = 79
+  Width = 65
+  Taborder = 2
+  Caption = County
+
+Name = CountryName
+  Type = Combobox
+  Container = Groupbox3
+  Display = 25
+  Exitonchange = Yes
+  Height = 21
+  Left = 97
+  Top = 35
+  Values = $CountryQuery
+  Width = 170
+  Taborder = 3
+
+Name = StateName
+  Type = Combobox
+  Container = Groupbox3
+  Display = 25
+  Exitonchange = Yes
+  Height = 21
+  Left = 97
+  Top = 58
+  Values = $StateQuery
+  Width = 170
+  Taborder = 4
+
+Name = Label2
+  Type = Label
+  Color = 32768
+  Height = 13
+  Left = 36
+  Style = bold
+  Top = 69
+  Width = 84
+  Caption = Cacher Name
+
+Name = CacherN
+  Type = Edit
+  Height = 21
+  Left = 120
+  Top = 67
+  Width = 178
+  Taborder = 1
+
+Name = ExitBtn
+  Type = Button
+  Escape = Yes
+  Height = 30
+  Left = 586
+  Top = 529
+  Width = 81
+  Taborder = 2
+  Caption = Exit / Quit
+
+Name = LsDb
+  Type = Combobox
+  Display = 20
+  Exitonchange = Yes
+  Height = 21
+  Left = 121
+  Top = 40
+  Width = 179
+  Taborder = 3
+
+Name = Label3
+  Type = Label
+  Color = 255
+  Height = 13
+  Left = 35
+  Style = bold
+  Top = 44
+  Width = 62
+  Caption = Database
+
+Name = ClearAllCacheTypes
+  Type = Radiobutton
+  Container = Groupbox1
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 54
+  Top = 173
+  Width = 69
+  Taborder = 1
+  Caption = Clear All
+
+Name = ChallengeList
+  Type = Combobox
+  Display = 20
+  Height = 21
+  Left = 370
+  Top = 409
+  Width = 185
+  Taborder = 4
+
+Name = SaveName
+  Type = Edit
+  Height = 21
+  Left = 370
+  Top = 456
+  Width = 185
+  Taborder = 5
+
+Name = SaveCh
+  Type = Button
+  Height = 21
+  Left = 565
+  Top = 455
+  Width = 99
+  Taborder = 6
+  Caption = Save Challenge
+
+Name = LoadCh
+  Type = Button
+  Height = 21
+  Left = 564
+  Top = 409
+  Width = 99
+  Taborder = 7
+  Caption = Load Challenge
+
+Name = UpdateBtn
+  Type = Button
+  Container = Groupbox2
+  Height = 21
+  Left = 117
+  Top = 80
+  Width = 78
+  Taborder = 0
+  Caption = Update
+
+Name = UpdCountry
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox2
+  Fontcolor = 255
+  Height = 17
+  Left = 11
+  Top = 38
+  Width = 60
+  Taborder = 1
+  Caption = Country
+
+Name = UpdState
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox2
+  Fontcolor = 255
+  Height = 17
+  Left = 11
+  Top = 55
+  Width = 60
+  Taborder = 2
+  Caption = State
+
+Name = UpdCounty
+  Type = Checkbox
+  Captionposition = Left
+  Container = Groupbox2
+  Fontcolor = 255
+  Height = 17
+  Left = 11
+  Top = 73
+  Width = 60
+  Taborder = 3
+  Caption = County
+
+Name = Label6
+  Type = Label
+  Color = 16711680
+  Container = Groupbox2
+  Font = Comic Sans MS
+  Height = 23
+  Left = 51
+  Size = 12
+  Style = bold
+  Top = 12
+  Width = 115
+  Caption = Field Updates
+
+Name = CheckAvl
+  Type = Button
+  Height = 30
+  Left = 184
+  Top = 529
+  Width = 173
+  Taborder = 9
+  Caption = Owners - Test your challenge
+
+Name = AutoFieldUpd
+  Type = Checkbox
+  Captionposition = Right
+  Container = Groupbox2
+  Fontcolor = 32768
+  Height = 17
+  Left = 111
+  Top = 37
+  Width = 81
+  Taborder = 4
+  Caption = Auto Update
+
+Name = AnywhereRbt
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox3
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 91
+  Top = 81
+  Width = 75
+  Taborder = 5
+  Caption = Anywhere
+
+Name = Label7
+  Type = Label
+  Color = 16711680
+  Container = Groupbox3
+  Font = Comic Sans MS
+  Height = 23
+  Left = 83
+  Size = 12
+  Style = bold
+  Top = 9
+  Width = 142
+  Caption = Location Selector
+
+Name = CountyClb
+  Type = Checklistbox
+  Columns = 3
+  Container = Groupbox3
+  Height = 240
+  Left = 8
+  Top = 103
+  Width = 325
+  Taborder = 6
+
+Name = ClearCbx
+  Type = Checkbox
+  Captionposition = Right
+  Container = Groupbox3
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 67
+  Top = 345
+  Width = 96
+  Taborder = 7
+  Caption = Clear Locations
+
+Name = CacheTypes
+  Type = Checklistbox
+  Columns = 3
+  Container = Groupbox1
+  Height = 130
+  Left = 8
+  Top = 37
+  Width = 287
+  Taborder = 0
+
+Name = Label5
+  Type = Label
+  Color = 16711680
+  Container = Groupbox1
+  Font = Comic Sans MS
+  Height = 23
+  Left = 99
+  Size = 12
+  Style = bold
+  Top = 7
+  Width = 106
+  Caption = Cache Types
+
+Name = DeleteCh
+  Type = Button
+  Height = 20
+  Left = 565
+  Top = 482
+  Width = 99
+  Taborder = 12
+  Caption = Delete Challenge
+
+Name = Label8
+  Type = Label
+  Color = 16711680
+  Container = Groupbox4
+  Font = Comic Sans MS
+  Height = 23
+  Left = 11
+  Size = 12
+  Style = bold
+  Top = 9
+  Width = 121
+  Caption = Character Set
+
+Name = DncCbx
+  Type = Radiobutton
+  Container = Groupbox4
+  Exitonchange = Yes
+  Fontcolor = 4210816
+  Height = 17
+  Left = 5
+  Top = 51
+  Width = 118
+  Taborder = 0
+  Caption = Diacritics / Numbers
+
+Name = SeaCbx
+  Type = Radiobutton
+  Container = Groupbox4
+  Exitonchange = Yes
+  Fontcolor = 4210816
+  Height = 17
+  Left = 6
+  Top = 33
+  Width = 114
+  Taborder = 1
+  Caption = English Alphabet
+
+Name = DiacriticSet
+  Type = Edit
+  Container = Groupbox4
+  Height = 21
+  Left = 5
+  Top = 71
+  Width = 126
+  Taborder = 2
+
+Name = SelectAllCacheTypes
+  Type = Radiobutton
+  Container = Groupbox1
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 155
+  Top = 173
+  Width = 73
+  Taborder = 2
+  Caption = Select All
+
+Name = SelectAllCounties
+  Type = Checkbox
+  Container = Groupbox3
+  Enabled = Yes
+  Exitonchange = Yes
+  Fontcolor = 32768
+  Height = 17
+  Left = 190
+  Top = 345
+  Width = 97
+  Taborder = 8
+  Caption = Select All
+
+Name = LinkChDb
+  Type = Checkbox
+  Captionposition = Right
+  Fontcolor = 32768
+  Height = 17
+  Left = 370
+  Top = 433
+  Width = 265
+  Taborder = 14
+  Caption = Select saved Database when loading Challenges
+
+Name = Label9
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 75
+  Top = 40
+  Width = 34
+
+Name = Label10
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 75
+  Top = 58
+  Width = 34
+
+Name = Label11
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 75
+  Top = 75
+  Width = 34
+
+Name = SelectMissed
+  Type = Button
+  Enabled = No
+  Height = 30
+  Left = 371
+  Top = 529
+  Width = 199
+  Taborder = 15
+  Caption = Select caches for missed letters
+
+Name = DelName
+  Type = Combobox
+  Display = 25
+  Height = 21
+  Left = 370
+  Top = 483
+  Width = 185
+  Taborder = 17
+
+Name = LsCpb
+  Type = Checkbox
+  Captionposition = Left
+  Exitonchange = Yes
+  Fontcolor = 16711680
+  Height = 17
+  Left = 34
+  Top = 112
+  Width = 115
+  Taborder = 16
+  Caption = Before this date
+
+Name = LsCpa
+  Type = Checkbox
+  Captionposition = Left
+  Exitonchange = Yes
+  Fontcolor = 16711680
+  Height = 17
+  Left = 34
+  Top = 129
+  Width = 115
+  Taborder = 18
+  Caption = On or after this date
+
+Name = SpaceIsaLetter
+  Type = Checkbox
+  Container = Groupbox4
+  Fontcolor = 4210816
+  Height = 17
+  Left = 5
+  Top = 93
+  Width = 129
+  Taborder = 3
+  Caption = Space is a Letter
+
+Name = SfLL
+  Type = Checkbox
+  Exitonchange = Yes
+  Fontcolor = 4210816
+  Height = 20
+  Left = 35
+  Top = 174
+  Width = 278
+  Taborder = 21
+  Caption = Select Last Letter of Name instead of First
+
+Name = Label12
+  Type = Label
+  Color = 12632256
+  Height = 17
+  Left = 549
+  Top = 5
+  Width = 120
+  Caption = Developed by Red Roo
+
+Name = Label13
+  Type = Label
+  Color = 12632256
+  Height = 17
+  Left = 554
+  Top = 18
+  Width = 105
+  Caption = assisted by Gamma5
+
+Name = PlacedDate
+  Type = Date
+  Color = 16758711
+  Height = 21
+  Left = 173
+  Top = 121
+  Width = 85
+  Taborder = 22
+
+Name = Label14
+  Type = Label
+  Color = 16711680
+  Height = 17
+  Left = 34
+  Style = bold;underline
+  Top = 98
+  Width = 140
+  Caption = Caches must be placed
+
+Name = FoundDate
+  Type = Date
+  Color = 7852165
+  Height = 21
+  Left = 173
+  Top = 152
+  Width = 85
+  Taborder = 23
+
+Name = FdateFlag
+  Type = Checkbox
+  Exitonchange = Yes
+  Fontcolor = 26112
+  Height = 20
+  Left = 35
+  Top = 152
+  Width = 216
+  Taborder = 24
+  Caption = Finds must be on or after the Placed Date
+
+Name = Label4
+  Type = Label
+  Color = 255
+  Height = 17
+  Left = 268
+  Top = 104
+  Width = 36
+  Caption = Reset
+
+Name = PdateReset
+  Type = Radiobutton
+  Exitonchange = Yes
+  Height = 20
+  Left = 276
+  Top = 120
+  Width = 15
+  Taborder = 25
+
+Name = FdateReset
+  Type = Radiobutton
+  Exitonchange = Yes
+  Height = 20
+  Left = 276
+  Top = 152
+  Width = 16
+  Taborder = 26
+
+Name = DevMode
+  Type = Button
+  Height = 25
+  Left = 750
+  Top = 6
+  Width = 75
+  Taborder = 27
+  Caption = &Development Mode
+
+Name = DevLabel
+  Type = Label
+  Color = 255
+  Height = 23
+  Left = 397
+  Size = 12
+  Style = bold
+  Top = 506
+  Visible = No
+  Width = 242
+  Caption = ###  Development Mode  ###
+
+<enddata>
+
+
+###################################################################################
+<Data> VarName=$FormB
+#********************************************************************
+# Form generated by GSAK form designer on Wed 04-Apr-2012 08:06:58
+#********************************************************************
+
+Name = Form2
+  Type = Form
+  Height = 588
+  Width = 615
+
+Name = Ok
+  Type = Button
+  Height = 25
+  Left = 264
+  Top = 517
+  Width = 75
+  Taborder = 10
+  Caption = Ok-Exit
+
+Name = ResultBox
+  Type = Memo
+  Font = Arial
+  Height = 496
+  Left = 43
+  Scrollbars = Both
+  Top = 15
+  Width = 517
+  Taborder = 11
+
+<enddata>
+
+
+

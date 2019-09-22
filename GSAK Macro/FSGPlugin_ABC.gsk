@@ -1,0 +1,507 @@
+#*******************************************
+# MacDescription = FSG Plugin - Check your alphabetical challenge
+# MacFileName = FSGPlugin_ABC.gsk
+# MacAuthor = sbeelis
+# MacVersion = 1.06
+# MacUrl = http://gsak.net/board/index.php?showtopic=20037&view=findpost&p=143616
+#*******************************************
+
+# Based on 'FSGPlugin_Oldest.gsk' from 'jmonti', which is based on code
+# from 'FSGPlugin_FirstCacheByCounty.gsk' by 'The CEO'
+#
+# Purpose:
+#  To display a table with the first cache found for each letter of the alphabet.
+#
+# Syntax:
+#   <plugin>FSGPlugin_ABC?letters&showheader=xxxxx&year=yyyy</plugin>
+#   where
+#    letters
+#       Is a list of characters to check for
+#       If not specified the default is 0-9A-Z
+#    showheader
+#       false surpresses the header generation
+#       true generates the header (default)
+#    year
+#       Is the four digit year to which the output is limited
+#       If not specified, all finds are used (not limited to a year)
+#
+# Changes
+# V1.0    2011-10-27  first version
+# V1.01   2011-10-27  added language localisation
+# V1.02   2011-10-30  added support for limiting to country, county, state
+# V1.03   2012-02-01  fixed broken links for GC codes
+# V1.04               skipped to avoid confusion with Daemonic's version
+# V1.05   2012-09-28  added support for limiting year (Daemonic)
+# V1.06   2012-10-19  added support for owner name
+
+  # Declares
+  Declare Var=$LettersList Type=String
+  Declare Var=$param Type=String
+  Declare Var=$length Type=Numeric
+  Declare Var=$matches Type=Numeric
+  Declare Var=$letterU Type=String
+  Declare Var=$letterL Type=String
+  Declare Var=$GetCache Type=String
+  DECLARE Var=$LettersYear Type=String
+  DECLARE Var=$LettersCountry Type=String
+  DECLARE Var=$LettersCounty Type=String
+  DECLARE Var=$LettersState Type=String
+  DECLARE Var=$LettersLimit Type=String
+  Declare Var=$LettersShowHeading Type=Boolean
+  Declare Var=$LettersShowSummary Type=Boolean
+  DECLARE Var=$LettersShowLimits Type=Boolean
+  DECLARE Var=$LettersLimitHeading Type=String
+  DECLARE Var=$LettersUseCountyOverState Type=Boolean
+  DECLARE Var=$owner Type=Boolean
+
+  # Make sure we aren't being called directly
+  IF $_MacroLevel = 1
+    RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly
+  ENDIF
+
+    GOSUB Name=InitLanguage
+
+  # Get input parameters
+  $LettersList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  $LettersShowHeading=TRUE
+  $LettersShowSummary=TRUE
+  $LettersShowLimits=TRUE
+  $LettersYear=""
+  $LettersUseCountyOverState=FALSE
+  $LettersCountry=""
+  $LettersCounty=""
+  $LettersState=""
+  $LettersLimit=""
+  $LettersLimitHeading=""
+  $length = len($_MacroParms)
+  $count = 1
+  $owner = FALSE
+
+  WHILE ($count <= $length)
+    $param = Extract($_MacroParms,"&",$count)
+    IF lower($param) = "sectionheading=false"
+      $LettersShowHeading=FALSE
+    ENDIF
+    IF lower($param) = "summary=false"
+      $LettersShowSummary=FALSE
+    ENDIF
+    IF lower($param) = "limitheading=false"
+      $LettersShowLimits=FALSE
+    ENDIF
+    IF lower(left($param, len("letters="))) = "letters="
+      $LettersList = upper(substr($param, len("letters=")+1, 0))
+    ENDIF
+    IF lower(left($param, len("year="))) = "year="
+      $LettersYear = Substr($param, len("year=")+1, 0)
+    ENDIF
+    IF lower(left($param, len("country="))) = "country="
+      $LettersCountry = Substr($param, len("country=")+1, 0)
+    ENDIF
+    IF lower(left($param, len("county="))) = "county="
+      $LettersCounty = Substr($param, len("county=")+1, 0)
+    ENDIF
+    IF lower(left($param, len("state="))) = "state="
+      $LettersState = Substr($param, len("state=")+1, 0)
+    ENDIF
+    IF Lower(Left($param, Len("owner="))) = "owner="
+      $owner = TRUE
+    ENDIF
+    $count = $count + 1
+  ENDWHILE
+
+  # Exclude locationless?
+  IF $Excludelocationless
+    $Locationless = "Cachetype <>'L' AND Exclude <> '1'"
+  ELSE
+    $Locationless = "1"
+  ENDIF
+
+  # limit search by year?
+    IF Len($LettersYear) > 0
+        $LettersLimit = $LettersLimit + " AND FoundByMeDate >= '$LettersYear-01-01' AND FoundByMeDate <= '$LettersYear-12-31'"
+        $LettersLimitHeading = $LettersLimitHeading + $LangYear + "=" + $LettersYear
+    ENDIF
+
+  # limit search geographically?
+    IF Len($LettersCountry) > 0
+        $LettersLimit = $LettersLimit + " AND Country = '$LettersCountry'"
+        $LettersLimitHeading = $LettersLimitHeading + $Lang49 + "=" + $LettersCountry
+    ENDIF
+    IF Len($LettersCounty) > 0
+        $LettersLimit = $LettersLimit + " AND County = '$LettersCounty'"
+        IF Len($LettersLimitHeading) > 0
+            $LettersLimitHeading = $LettersLimitHeading + ", "
+        ENDIF
+        $LettersLimitHeading = $LettersLimitHeading + $LangCounty + "=" + $LettersCounty
+    ENDIF
+    IF Len($LettersState) > 0
+        $LettersLimit = $LettersLimit + " AND State = '$LettersState'"
+        IF Len($LettersLimitHeading) > 0
+            $LettersLimitHeading = $LettersLimitHeading + ", "
+        ENDIF
+        $LettersLimitHeading = $LettersLimitHeading + $Lang169 + "=" + $LettersState
+    ENDIF
+    IF (Len($LettersCounty) > 0) AND (Len($LettersState) = 0)
+        $LettersUseCountyOverState = TRUE
+    ENDIF
+
+
+  # Initialize the output string
+  $out = ""
+
+  # Initialize Section header
+  $colspan = 1
+  IF $owner
+    $text = $LangHeaderOwner
+  ELSE
+    $text= $LangHeader
+  ENDIF
+  IF $LettersShowHeading
+    GOSUB Name=SectionHead
+  ENDIF
+
+  IF (Len($LettersLimit) = 0 )
+      $LettersShowLimits=FALSE
+    ENDIF
+
+    IF $LettersShowLimits
+        $out = $out + $LangLimitHeader + $LettersLimitHeading + $_CrLf
+    ENDIF
+
+
+  # Initialize Some of the output data
+  $out = $out + "<table width='$maxtablewidth' style='text-align: left;'>" + $_CrLf
+  # Column Heads
+  $text1 = "<b>$LangLetter</b>"  # Letter
+  $text2 = "<b>$Lang34</b>" # Code
+  $text3 = "<b>$Lang32</b>" # Date
+  $text4 = "<b>$Lang49</b>" # Country
+  IF $LettersUseCountyOverState
+    $text5 = "<b>$LangCounty</b>" # County
+  ELSE
+    $text5 = "<b>$Lang169</b>" # State
+  ENDIF
+  IF $owner
+    $text6 = "<b>$LangT6</b>" # Name
+  ELSE
+    $text6 = "<b>$Lang35</b>" # Name
+  ENDIF
+
+  # Build the table header for this state
+  $out = $out + "<tr>" + "$_CrLf " + $_CrLf
+  $out = $out + "<td style='$stTab2cHead'>$text1</td>" + $_CrLf
+  IF $miletypes
+    $out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+  ENDIF
+  $out = $out + "<td style='$stTab2cHead'>$text6</td>" + $_CrLf
+  $out = $out + "<td style='$stTab2cHead'>$text2</td>" + $_CrLf
+  $out = $out + "<td style='$stTab2cHead'>$text3</td>" + $_CrLf
+  IF $FlagIcons
+    $out = $out + "<td style='$stTab2cHead'>&nbsp;</td>" + $_CrLf
+  ELSE
+    $out = $out + "<td style='$stTab2cHead'>$text4</td>" + $_CrLf
+  ENDIF
+  $out = $out + "<td style='$stTab2cHead'>$text5</td>" + $_CrLf
+  $out = $out + "</tr>" + $_CrLf
+
+  # Initialize variables
+  $count = 1
+  $matches = 0
+  $length = len($LettersList)
+
+  WHILE $count <= $length
+    $letterU = upper(substr($LettersList, $count, 1))
+    $letterL = lower($letterU)
+
+    SHOWSTATUS msg="$LangMsgSearch1 $letterU $LangMsgSearch2" Width=350
+
+    IF $owner
+      $_sql = "SELECT rowid, ldate, state, code, cachetype, ownername, llogid, url, country, county FROM allfinds WHERE (ownername like '$letterU%' or ownername like '$letterL%') and $Locationless $LettersLimit ORDER BY FoundByMeDate, cast(cacheId as integer) LIMIT 1"
+    ELSE
+      $_sql = "SELECT rowid, ldate, state, code, cachetype, name, llogid, url, country, county FROM allfinds WHERE (name like '$letterU%' or name like '$letterL%') and $Locationless $LettersLimit ORDER BY FoundByMeDate, cast(cacheId as integer) LIMIT 1"
+    ENDIF
+    $work = Sqlite("sql",$_sql)
+    $LogTotal = $_SqlRows
+
+    IF ($LogTotal > 0)
+
+      # Grab the first (only?) row
+      $GetCache = Extract($work,$_CrLf ,1)
+
+      #Extract the dates
+      $LogDateDate = SqlToDate(Extract($GetCache,";",2))
+
+      #Strip off the suffix code if necessary
+      $StripCode = Extract($GetCache,";",4)
+      $StripCode = Extract($StripCode,"_",1)
+
+      # Format the date to users standard format for display
+      $FindDate = DateFormat($LogDateDate)
+
+      # Log ID for URL link to log
+      $LogidSubstitute = Val(Extract($GetCache,";",7))
+      IF $LogidSubstitute <>0
+        BEGINCASE
+        CASE Left($StripCode,2)="GC"
+          $text3 = "<a href='http://www.geocaching.com/seek/log.aspx?LID=$LogidSubstitute'>$FindDate</a>"
+        CASE Left($StripCode,2)="GA"
+          $text3 = "<a href='http://geocaching.com.au/log/$LogidSubstitute'>$FindDate</a>"
+        OTHERWISE
+          $text3 = "$FindDate"
+        ENDCASE
+      ELSE
+        $text3 = "$FindDate"
+      ENDIF
+
+      # Initialize other output data
+      $text1 = $letterU                             # letter
+      $text2 = Extract($GetCache,";",8)             # code
+      BEGINCASE
+        CASE Left($StripCode,2)="GC"
+          $text2 = "<a href='http://coord.info/$StripCode'>$StripCode</a>"
+        CASE Left($StripCode,2)="GA"
+          $text2 = "<a href='http://geocaching.com.au/cache/$StripCode'>$StripCode</a>"
+        OTHERWISE
+          $text2 = "$StripCode"
+      ENDCASE
+
+      $text9 = Extract($GetCache,";",9)   # country
+      IF $LettersUseCountyOverState
+          $text4 = Extract($GetCache,";",10)  # county
+        ELSE
+          $text4 = Extract($GetCache,";",3)   # state
+        ENDIF
+
+      $text5 = Extract($GetCache,";",6)   # name / owner name
+
+      IF $miletypes
+        $tmpB = FALSE
+        GOSUB Name=StripCodeType
+        $text6 = $TypeImage
+      ELSE
+        $text6 = ""
+      ENDIF
+
+      IF $FlagIcons
+        # Country flag
+        $FullName = $text9
+        GOSUB Name=FlagImage
+      ENDIF
+
+      $matches = $matches + 1
+    ELSE
+      # no cache found for this letter -> create empty line
+      $text1 = $letterU
+      $text2 = ""
+      $text3 = ""
+      $text4 = ""
+      $text5 = ""
+       $text6 = ""
+       $text7 = ""
+      $text9 = ""
+    ENDIF
+
+    # Now build the output table row
+    $out = $out + "<tr>" + $_CrLf
+    $out = $out + "<td style='$st2c1'>$text1</td>" + $_CrLf   # letter
+     IF $miletypes
+      $out = $out + "<td style='$st2c2'>$text6</td>" + $_CrLf # type
+    ENDIF
+    $out = $out + "<td width=30% style='$st2c1'>$text5</td>" + $_CrLf # name
+    $out = $out + "<td style='$st2c2'>$text2</td>" + $_CrLf   # code
+    $out = $out + "<td style='$st2c2'>$text3</td>" + $_CrLf   # date
+    IF $FlagIcons
+      $out = $out + "<td style='$st2c2'>$text7</td>" + $_CrLf # flag
+    ELSE
+      $out = $out + "<td style='$st2c2'>$text9</td>" + $_CrLf # country
+    ENDIF
+    $out = $out + "<td style='$st2c2'>$text4</td>" + $_CrLf   # state
+    $out = $out + "</tr>" + $_CrLf
+
+    $count = $count + 1
+  ENDWHILE # Process letters
+
+  $out = $out + "</table>" + $_CrLf
+
+  IF $LettersShowSummary
+    IF $matches = 0
+        $out = $out + $LangSummaryNone1 + "$length" + $LangSummaryNone2 + $_CrLf
+    ELSE
+      IF $matches = $length
+        $out = $out + $LangSummaryAll1 + "$length" + $LangSummaryAll2 + $_CrLf
+      ELSE
+        $out = $out + $LangSummarySome1 +"$matches" + $LangSummarySome2 + "$length" + $LangSummarySome3 + $_CrLf
+      ENDIF
+    ENDIF
+  ENDIF
+
+  SHOWSTATUS msg=$LangMsgOutput Width=350
+
+  $p_FSGData = $out
+
+
+BEGINSUB Name=FlagImage
+  # Enter with $FullName containing the country name
+  # Exits with $text7 containing the html to the flag Image
+  $text7 = ""
+  $tmpS1 = $FullName
+  $FullName = "=" + $FullName + ","
+  IF At($FullName,$world)>0
+    $text7 = SubStr($world,At($FullName,$world)-2,2)
+    IF $tmpS1 = "Hong Kong"
+      $text7 = "HK"
+    ENDIF
+    $text7 = "<img align ='top' vspace='1'  alt='$tmpS1' title='$tmpS1' src='" + $ImageURL + "flags/" + $text7 + ".gif'/>"
+  ENDIF
+ENDSUB # FlagImage
+
+BEGINSUB Name=StripCodeType
+  #Enters with $Stripcode containing code
+  # and $tmpB where TRUE = Placed table and FALSE = finds table
+  #Exits with $TypeImage containing image of cache type
+  $Types = "ABCEGLMRTUVWZXIY123"
+  $Typenums = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+  # If $tmpB is true then use the placed table instead
+  IF $tmpB
+    $_sql = "Select CacheType from PlacedStatsData WHERE Code like '$StripCode' LIMIT 1"
+  ELSE
+    $_sql = "Select CacheType from Allfinds WHERE Code like '$StripCode' LIMIT 1"
+  ENDIF
+  $tmpS = Sqlite("sql",$_sql)
+  $tmpN = At($tmpS,$Types)
+  $thistype  = Extract($Typenums, "," , $tmpN)
+  BEGINCASE
+    CASE $thistype = "Y"
+      $TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+    CASE $thistype = "L"
+      $TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+    OTHERWISE
+      $TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+  ENDCASE
+ENDSUB #StripCodeType
+
+BEGINSUB Name=SectionHead
+  # This subroutine is called by all the stats generating routines.
+  # It writes the section header and also handles the half width sections
+  # intelligently .
+  # Add a couple of blank lines to the output variable
+  $out = $out + "<br /><br />" + $CR
+  $out = $out + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column $text -->" + $CR
+  IF $colspan = 1
+    # This is a full width section
+    # If the last section was a half width close the previous table off
+    IF $lastcolspan = 2
+      GOSUB Name=Close2col
+    ENDIF
+    $lastcolspan = 1
+    $column = 1
+    $width = $maxtablewidth
+  ELSE
+    # This is a half width section
+    IF $column = 1
+      # First Column
+      # If we're following another half width block, close the table off
+      IF $lastcolspan = 2
+        GOSUB Name=Close2col
+      ENDIF
+      GOSUB Name=Open2Col
+      $column = 2
+    ELSE
+      # Second Column
+      GOSUB Name=Mid2Col
+      $column = 1
+    ENDIF
+    $lastcolspan = 2
+    $width = $maxtablewidth/2
+  ENDIF
+  $tmpS = ""
+  IF $Placed
+    $tmpS = $stYearDataTit
+  ENDIF
+  # And add the header to the output variable
+  $out = $out + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+  $out = $out + "<a name='$Srun'></a>"
+  $out = $out + "    $text" + $CR + "</div><br />" + $CR
+ENDSUB #SectionHead
+
+BEGINSUB Name=InitLanguage
+  DECLARE Var=$LangLetter Type=String
+  DECLARE Var=$LangYear Type=String
+  DECLARE Var=$LangHeader Type=String
+  DECLARE Var=$LangHeaderOwner Type=String
+  DECLARE Var=$LangMsgSearch1 Type=String
+  DECLARE Var=$LangMsgSearch2 Type=String
+  DECLARE Var=$LangMsgOutput Type=String
+  DECLARE Var=$LangSummaryNone1 Type=String
+  DECLARE Var=$LangSummaryNone2 Type=String
+  DECLARE Var=$LangSummaryAll1 Type=String
+  DECLARE Var=$LangSummaryAll2 Type=String
+  DECLARE Var=$LangSummarySome1 Type=String
+  DECLARE Var=$LangSummarySome2 Type=String
+  DECLARE Var=$LangSummarySome3 Type=String
+  DECLARE Var=$LangCounty Type=String
+  DECLARE Var=$LangLimitHeader Type=String
+
+  # default: English
+  $LangLetter = "Letter"
+  $LangYear = "Year"
+  $LangHeader ="Caches starting with letters of the alphabet"
+  $LangHeaderOwner ="Caches of owners, whose names start with letters of the alphabet"
+  $LangMsgSearch1="Searching caches starting with "
+  $LangMsgSearch2=""
+  $LangMsgOutput="Generating output for alphabetical list."
+  $LangSummaryNone1="Fulfilling none of "
+  $LangSummaryNone2=" criteria"
+  $LangSummaryAll1="Fulfilling all "
+  $LangSummaryAll2=" criteria"
+  $LangSummarySome1="Fulfilling "
+  $LangSummarySome2=" out of "
+  $LangSummarySome3=" criteria"
+  $LangCounty = "County"
+  $LangLimitHeader = "Limiting finds to: "
+
+  IF $Language = "Deutsch"
+    $LangLetter = "Buchstabe"
+    $LangYear = "Jahr"
+    $LangHeader ="Caches, welche mit allen Buchstaben des Alphabetes starten"
+    $LangHeaderOwner ="Caches von Ownern, deren Namen mit allen Buchstaben des Alphabetes starten"
+    $LangMsgSearch1="Suche nach Caches, die mit"
+    $LangMsgSearch2="starten"
+    $LangMsgOutput="Erzeuge alphabetische Liste."
+    $LangSummaryNone1="Keines von "
+    $LangSummaryNone2=" Kriterien erfüllt"
+    $LangSummaryAll1="Alle "
+    $LangSummaryAll2=" Kriterien erfüllt"
+    $LangSummarySome1=""
+    $LangSummarySome2=" von "
+    $LangSummarySome3=" Kriterien erfüllt"
+    $LangCounty = "County"
+    $LangLimitHeader = "Funde beschränkt auf: "
+  ENDIF
+
+  ###########################################
+  # Modify below for your own language
+  # If you post this section in the forum, I'll include the translations in the next version of the plugin
+  IF $Language = "<your language here>"
+    $LangLetter = "Letter"
+    $LangYear = "Year"
+    $LangHeader ="Caches starting with letters of the alphabet"
+    $LangHeaderOwner ="Caches of owners, whose names start with letters of the alphabet"
+    $LangMsgSearch1="Searching caches starting with "
+    $LangMsgSearch2=""
+    $LangMsgOutput="Generating output for alphabetical list."
+    $LangSummaryNone1="Fulfilling none of "
+    $LangSummaryNone2=" criteria"
+    $LangSummaryAll1="Fulfilling all "
+    $LangSummaryAll2=" criteria"
+    $LangSummarySome1="Fulfilling "
+    $LangSummarySome2=" out of "
+    $LangSummarySome3=" criteria"
+    $LangCounty = "County"
+    $LangLimitHeader = "Limiting finds to: "
+  ENDIF
+  ###########################################
+
+ENDSUB
+
+

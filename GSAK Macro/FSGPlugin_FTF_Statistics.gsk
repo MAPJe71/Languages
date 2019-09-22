@@ -1,0 +1,290 @@
+#*******************************************
+# MacVersion = 2.3
+# MacDescription = Create FTF, STF and TTF data based on content of UserData-field and Usort-order
+# MacAuthor = Geo_rge_Caching
+# MacFileName = FSGPlugin_FTF_Statistics.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=23210&view=findpost&p=171906
+#*******************************************
+#
+# Use:
+# Paste in one of the Notes-fields of FSG (without # and leading spaces offcoarse):
+#	<subhead>FTF, STF and TTF-Statistics plugin</subhead>
+#	<plugin>FSGPlugin_FTF_Statistics?FTFOrder=UserSort&FTFColumn=UserData</plugin>
+#
+# Valid entries for parameters:
+#	FTFOrder:	UserSort or FoundByMeDate (default=FoundByMeDate)
+#	FTFColumn:	UserData, User2, User3 or User4 (default=UserData)
+#
+# Change Log:
+# V1.6 2012-09-06:
+#      SET-commands removed
+#      SQLSort OrderBy=UserSort asc
+#      Write output to clipboard
+#      Status/exit-message is displayed
+# V1.7 2012-09-10:
+#      Adapt macro to run as FSG-plugin and renamed script to FSGPlugin_FTF-Statistics
+#      Use Macro_Parameters for FTFOrder selection:
+#      - "FTFOrder" column to sort on: UserSort (default) or FoundByMeDate
+# V1.8 2012-09-11:
+#      Use Macro_Parameters for FTFColumn selection:
+#      - "FTFColumn" and column which holds FTF, STF and TTF info: UserData (default), User2, User3 or User4
+# V1.9 2012-09-13:
+#      GCUserName retreived from GSAK.ini
+#      GCUserName removed from plugin-parameter list/check
+# V2.0 2012-10-08:
+#      Macro filename changed '-' to '_' to allow updates via Macro-manager
+#      FTF, STF and TTF header width changed.
+# V2.1 2012-10-19:
+#      FTFOrder default changed to 'FoundByMeDate'
+# V2.2 2012-12-15:
+#      Typo in plugin-description corrected ('_' in FSGPlugin_FTF_Statistics)
+# V2.3 2013-01-06:
+#      
+#
+# Check if plugin is started as a standalone macro
+IF $_MacroLevel = 1
+ RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly
+ENDIF
+
+SHOWSTATUS msg="Macro FSGPlugin_FTF_Statistics running" Width=350
+Gosub Name=DeclareVariables
+Gosub Name=InitVariables
+Gosub Name=GetParameters
+
+# Save state
+$SavedFilter = SaveFilter()			# Save active filter
+$CurrentSort = $_OrderBy			# Save order
+
+# Get FTF-caches
+$FoundType = "FTF"
+Gosub Name=GeTCaches
+
+# Get STF-caches
+$FoundType = "STF"
+Gosub Name=GeTCaches
+
+# Get TTF-caches
+$FoundType = "TTF"
+Gosub Name=GeTCaches
+
+# Write footer-text
+Gosub Name=FooterText
+# Write data for FSG to persistent variable named $p_FSGData
+$p_FSGData=$AddData
+
+# Restore state
+If RestoreFilter($SavedFilter,True) = 0
+  Pause Msg="No waypoints in filter, action cancelled $_CrLf"
+EndIf
+SQLSort OrderBy=$CurrentSort
+
+# Subroutines
+BeginSub Name=DeclareVariables
+	# Declare variables
+	Declare Var=$AddData Type=String
+	Declare Var=$FoundType Type=String
+	Declare Var=$CountFTF Type=Numeric
+	Declare Var=$CountSTF Type=Numeric
+	Declare Var=$CountTTF Type=Numeric
+	Declare Var=$Currentsort Type=String
+	Declare Var=$x Type=Numeric
+	Declare Var=$t1 Type=Numeric
+	Declare Var=$t2 Type=Numeric
+	Declare Var=$Type Type=String
+	Declare Var=$ParamCount Type=Numeric
+	Declare Var=$Parameter Type=String
+	Declare Var=$ParamName Type=String
+	Declare Var=$ParamValue Type=String
+	Declare Var=$FTFOrder Type=String
+	Declare Var=$FTFColumn Type=String
+	Declare Var=$GCUserName Type=String
+	Declare Var=$MacroVersion Type=String
+EndSub
+
+BeginSub Name=InitVariables
+	# Init Variables
+	$AddData = ""
+	$FoundType = ""
+	$p_FSGData = ""
+	$CountFTF = 0
+	$CountSTF = 0
+	$CountTTF = 0
+	$ParamCount = 0				# Number of ported parameters
+	$FTFOrder = "FoundByMeDate"	# Default column to sort results on (default: FoundByMeDate)
+	$FTFColumn = "UserData"		# Default column which holds FTF, STF and TTF info
+	$x = 0						# Set cache counter to zero
+	$t1 = 0						# Interval counter/variable
+	$t2 = 0						# Logdata of previous cache
+	$Type = ""					# Cache Type
+	$GCUserName = Sysinfo("gsakini;TfmConfig;EdtGeoName.Text")
+	$MacroVersion = MacHeader("MacVersion")
+EndSub
+
+BeginSub name=GetParameters
+	# Find parameter values received from FSG
+	If $_MacroParms <> ""
+		$ParamCount = RegExCount("&",$_MacroParms) + 1
+		While $ParamCount > 0
+			$Parameter = Extract($_MacroParms,"&",$ParamCount)
+			$ParamName = Extract($Parameter,"=",1)
+			$ParamValue = Extract($Parameter,"=",2)
+			BeginCase
+				Case $ParamName = "FTFOrder"
+					If ($ParamValue = "FoundByMeDate") or ($ParamValue = "UserSort")
+						$FTFOrder = $ParamValue
+					EndIf
+				Case $ParamName = "FTFColumn"
+					If ($ParamValue = "UserData") or ($ParamValue = "User2") or ($ParamValue = "User3") or ($ParamValue = "User4")
+						$FTFColumn = $ParamValue
+					EndIf
+			EndCase
+			$ParamCount = $ParamCount - 1
+		EndWhile
+	EndIf
+EndSub
+
+BeginSub Name=GeTCaches
+#	Filter on FoundType in FTFColumn
+	BeginCase
+	Case $FTFColumn="UserData"
+		Mfilter Where=g_regex($FoundType,UserData)
+	Case $FTFColumn="User2"
+		Mfilter Where=g_regex($FoundType,User2)
+	Case $FTFColumn="User3"
+		Mfilter Where=g_regex($FoundType,User3)
+	Case $FTFColumn="User4"
+		Mfilter Where=g_regex($FoundType,User4)
+	EndCase
+	If $_FilterCount > 0
+		# Sort ascending on $FTFOrder Column
+		SQLSort OrderBy=$FTFOrder asc
+		BeginCase
+		Case $FoundType="FTF"
+			$CountFTF = $_FilterCount
+			$AddData = $AddData + $FTFHeaderBegin + "<a name=" + $_Quote + "15" + $_Quote + "></a> $GCUserName has $_FilterCount $FoundType" + "s"
+		Case $FoundType="STF"
+			$CountSTF = $_FilterCount
+			$AddData = $AddData + $STFHeaderBegin + "<a name=" + $_Quote + "15" + $_Quote + "></a> $GCUserName has $_FilterCount $FoundType" + "s"
+		Case $FoundType="TTF"
+			$CountTTF = $_FilterCount
+			$AddData = $AddData + $TTFHeaderBegin + "<a name=" + $_Quote + "15" + $_Quote + "></a> $GCUserName has $_FilterCount $FoundType" + "s"
+		EndCase
+		# Complete table header
+		$AddData = $AddData + $HeaderCont
+		# Get Cache info
+		$x = 0						# Set cache counter to zero
+		$t1 = 0						# Interval counter/variable
+		$t2 = 0						# Logdata of previous cache
+		$Type = ""					# Cache Type
+		Goto Position=Top			# Start at top of selection
+		While not ($_eol)			# Loop through selected caches
+			$x = $x + 1				# Count the number for printing purposes
+			# Counter column
+			$AddData = $AddData + "<tr>" + $_CrLf + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(202, 192, 137);" + $_Quote + "align=" +$_Quote + "center" + $_Quote + "><b style=" + $_Quote + "max-width: 740px;" + $_Quote + ">$x</b></td>" + $_CrLf
+			# Found Date Column
+			$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "align=" +$_Quote + "center" + $_Quote + "><a style=" + $_Quote + "max-width: 740px;" + $_Quote + ">$d_FoundByMeDate</a></td>" + $_CrLf
+			# Interval column
+			If $t2=0
+				$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "></td>" + $_CrLf
+			Else
+				$t1 = $d_FoundByMeDate - $t2
+				$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "align=" + $_Quote + "right" + $_Quote + ">$t1 days</td>" + $_CrLf
+			EndIf
+			# GC-code column
+			$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "align=" +$_Quote + "left" + $_Quote + "><a style=" + $_Quote + "max-width: 740px; align=" + $_Quote + "left" + $_Quote + " href=" + $_Quote + "http://coord.info/$d_Code" + $_Quote + ">$d_Code</a></td>" + $_CrLf
+			# Cache type Column
+			BeginCase
+			Case $d_CacheType = "A"		# Project Ape
+				$Type = ""
+			Case $d_CacheType = "B"		# Letterbox
+				$Type = "5.gif"
+			Case $d_CacheType = "C"		# Cash In Trash Out (CITO)
+				$Type = "13.gif"
+			Case $d_CacheType = "E"		# Event
+				$Type = "6.gif"
+			Case $d_CacheType = "G"		# Benchmark
+				$Type = "27.gif"
+			Case $d_CacheType = "I"		# Whereigo
+				$Type = "1858.gif"
+			Case $d_CacheType = "L"		# Locationless
+				$Type = "12.gif"
+			Case $d_CacheType = "M"		# Multi
+				$Type = "3.gif"
+			Case $d_CacheType = "O"		# Other
+				$Type = "1.gif"
+			Case $d_CacheType = "R"		# Earthcache
+				$Type = "earthcache.gif"
+			Case $d_CacheType = "T"		# Traditional
+				$Type = "2.gif"
+			Case $d_CacheType = "U"		# Unknown/Mystery
+				$Type = "8.gif"
+			Case $d_CacheType = "V"		# Virtual
+				$Type = "4.gif"
+			Case $d_CacheType = "W"		# Webcam
+				$Type = "11.gif"
+			Case $d_CacheType = "X"		# Maze Exhibit
+				$Type = ""
+			Case $d_CacheType = "Y"		# Waymark
+				$Type = "1499.gif"
+			Case $d_CacheType = "Z"		# Mega event
+				$Type = "453.gif"		
+			EndCase
+			If $Type=""
+				$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "></td>" + $_CrLf
+			Else
+				$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(224, 224, 183);" + $_Quote + "align=" +$_Quote + "center" + $_Quote + "><img style=" + $_Quote + "max-width: 740px;" + $_Quote + " src=" + $_Quote + "http://www.geocaching.com/images/wpttypes/sm/$Type" + $_Quote + " align=" + $_Quote + "center" + $_Quote + "></td>" + $_CrLf
+			EndIf
+			# Cache Name Column
+			$AddData = $AddData + "<td style=" + $_Quote + "background: none repeat scroll 0% 0% rgb(202, 192, 137);" + $_Quote + "align=" + $_Quote + "left" + $_Quote + ">$d_Name</td>" + $_CrLf + "</tr>" +$_CrLf
+			$t2 = $d_FoundByMeDate
+			Goto Position=Next
+		EndWhile
+		# Complete table by adding the footer
+		$AddData = $AddData + $Footer
+	Else
+		Pause Msg="No $FoundType caches found in filter."
+	EndIf
+EndSub
+
+BeginSub Name=FooterText
+	$AddData = $AddData + "<span style=" + $_Quote + "font-family: Verdana, Arial, sans-serif; font-size: 10px;" + $_Quote + ">"
+	$AddData = $AddData + "<div style='text-align:left'>FSGPlugin_FTF_Statistics V$MacroVersion</div>"
+	$AddData = $AddData + "<div style='text-align:left'>Created by Geo_rge_Caching</div>"
+	$AddData = $AddData + "</span>"
+EndSub
+
+<data> VarName=$FTFHeaderBegin
+<!-- FTFs rgb(205, 127, 50) -->
+<div style="width: 748px; background: none repeat scroll 0% 0% rgb(219, 219, 112); font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid rgb(0, 0, 0); text-align: center;">
+<enddata>
+
+<data> VarName=$STFHeaderBegin
+<!-- STFs rgb(230, 232, 250) -->
+<div style="width: 748px; background: none repeat scroll 0% 0% rgb(192, 192, 192); font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid rgb(0, 0, 0); text-align: center;">
+<enddata>
+
+<data> VarName=$TTFHeaderBegin
+<!-- TTFs rgb(140, 120, 83) -->
+<div style="width: 748px; background: none repeat scroll 0% 0% rgb(140, 120, 83); font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid rgb(0, 0, 0); text-align: center;">
+<enddata>
+
+<data> VarName=$HeaderCont
+</div>
+
+<br>
+<table text-align: center;">
+<tbody>
+<tr>
+<td width=60 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);" align="center"><b>Count</b></td>
+<td width=115 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);" align="center"><b>Date</b></td>
+<td width=95 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);" align="center"><b>Interval</b></td>
+<td width=90 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);" align="center"><b>Code</b></td>
+<td width=25 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);">&nbsp;</td>
+<td width=400 style="background: none repeat scroll 0% 0% rgb(234, 234, 207);" align="left"><b>Cache Name</b></td>
+</tr>
+<enddata>
+
+<data> VarName=$Footer
+</tbody></table>
+<br>
+<enddata>

@@ -1,0 +1,52 @@
+' =========================================================================
+'
+'   File....... SW21-EX14-Debounce.BS2
+'   Purpose.... Multi-input button scanning and debouncing
+'   Author..... (C) 2000 - 2005, Parallax, Inc.
+'   E-mail..... support@parallax.com
+'   Started....
+'   Updated.... 01 SEP 2005
+'
+'   {$STAMP BS2}
+'   {$PBASIC 2.5}
+'
+' =========================================================================
+
+
+' -----[ Program Description ]---------------------------------------------
+'
+' This program demonstrates the simultaneous debouncing of multiple inputs.
+' The input subroutine is easily adjusted to handle any number of inputs.
+
+
+' -----[ I/O Definitions ]-------------------------------------------------
+
+BtnBus          VAR     INA                     ' four inputs, pins 0 - 3
+
+
+' -----[ Variables ]-------------------------------------------------------
+
+btns            VAR     Nib                     ' debounced inputs
+idx             VAR     Nib                     ' loop counter
+
+
+' -----[ Program Code ]----------------------------------------------------
+
+Main:
+  DO
+    GOSUB Get_Buttons                           ' get debounced inputs
+    DEBUG HOME,
+          "Inputs = ", IBIN4 btns               ' display in binary mode
+    PAUSE 50
+  LOOP
+
+
+' -----[ Subroutines ]-----------------------------------------------------
+
+Get_Buttons:
+  btns = %1111                                  ' enable all four inputs
+  FOR idx = 1 TO 5
+    btns = btns & ~BtnBus                       ' test inputs
+    PAUSE 5                                     ' delay between tests
+  NEXT
+  RETURN

@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<!-- language doesnt really mean anything, its more of a comment -->
+	<AutoComplete language="OpenSCAD">
+		<!--
+		Environment specifies how the language should be interpreted. ignoreCase makes autocomplete
+		ignore any casing, start and stopFunc specify what chars a function starts and stops with.
+		param specifies parameter separator and terminal can be used to specify a character that stops
+		any function. Using the same character for different functions results in undefined behaviour.
+		
+		05/11/2009
+		The basic word character are : A-Z a-z 0-9 and '_' 
+		If your function name contains other characters,
+		add your characters in "additionalWordChar" attribute (without separator)
+		in order to make calltip hint work
+		-->
+		<Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" additionalWordChar="$"/>		
+		<KeyWord name="$fa = "/>
+		<KeyWord name="$fa" func="yes" >
+  			<Overload retVal="" descr="$fa = x  - X is the minimum angle for an arc fragment.
+			Default value is 12."/> 
+		</KeyWord>
+		<KeyWord name="$fn = "/>
+		<KeyWord name="$fn" func="yes" >
+  			<Overload retVal="" descr="$fn = x  - Default is zero.  When greater than zero, x is
+			the minimum fragments in a full circle.  $fa and $fs are ignored."/> 
+		</KeyWord>				
+		<KeyWord name="$fs = "/>
+		<KeyWord name="$fs" func="yes" >
+  			<Overload retVal="" descr="$fs = x  - X is the minimum size of an an arc fragment."/> 
+		</KeyWord>		
+		<KeyWord name="abs ( ) "/>
+		<KeyWord name="abs" func="yes" >
+  			<Overload retVal="" descr="abs (x) -> Returns the positive value of a 
+			signed decimal number."/> 
+		</KeyWord>
+		<KeyWord name="acos ( ) "/>
+		<KeyWord name="acos" func="yes" >
+  			<Overload retVal="" descr="acos (x) -> Returns inverse cosine of x, in degrees."/> 
+		</KeyWord>
+		<KeyWord name="asin ( ) "/>
+		<KeyWord name="asin" func="yes" >
+  			<Overload retVal="" descr="asin (x) -> Returns inverse sine of x, in degrees."/> 
+		</KeyWord>
+		<KeyWord name="assign (" />
+		<KeyWord name="assign" func="yes" >
+  			<Overload retVal="" descr="assign (a = ...) -> Set variables to a new value for a sub-tree."/> 
+		</KeyWord>		
+		<KeyWord name="atan ( ) "/>
+		<KeyWord name="atan" func="yes" >
+  			<Overload retVal="" descr="atan (x) -> Returns inverse tangent of x, in degrees."/> 
+		</KeyWord>
+		<KeyWord name="atan2 ( , ) "/>
+		<KeyWord name="atan2" func="yes" >
+  			<Overload retVal="" descr="atan2 (y,x) -> Two argument atan function; 
+			returns value of inverse cosine of y/x, in degrees."/> 
+		</KeyWord>
+		<KeyWord name="ceil ( ) "/>
+		<KeyWord name="ceil" func="yes" >
+  			<Overload retVal="" descr="ceil (x) -> Returns the smallest  
+			integer not less than x."/> 
+		</KeyWord>
+		<KeyWord name="center = true"/>
+		<KeyWord name="center = false"/>
+		<KeyWord name="children ()"/>		
+		<KeyWord name="circle (d = "/>
+		<KeyWord name="circle (r = "/>
+		<KeyWord name="circle" func="yes" >
+  			<Overload retVal="" descr="circle (r) - Draws a 2D circle of 
+			radius r at the origin. d may be used for diameter.
+			2D primitives may be extruded into 3D space."/> 
+		</KeyWord>
+		<KeyWord name="color ("/>
+		<KeyWord name="color" func="yes" >
+  			<Overload retVal="" descr="color (quote colorname quote) - Displays child elements in named color; 
+					partial list of colorname choices:
+						Black       White       Blue        Green       Yellow      Purple
+						Red         Brown       Grey        SeaGreen    DarkGreen   ForrestGreen
+						Olive       OliveDrab   Teal        Turquoise   PowderBlue  SkyBlue
+						SteelBlue   Navy        Pink        DeepPink    Salmon      DarkRed
+						Gold        Goldenrod   Violet      Indigo      LightGrey   Lime
+						Maroon      SaddleBrown Silver      SlateGray   DarkKhaki   Tan
+						Beige       Orange      OrangeRed   SpringGreen Cyan        LightSeaGreen
+						
+					Color may also be specified by [r, g, b, a] values ranging from 0.0 to 1.0"/> 
+		</KeyWord>		
+		<KeyWord name="convexity = "/>
+		<KeyWord name="convexity" func="yes" >
+  			<Overload retVal="" descr="convexity: Integer.  The convexity parameter specifies the maximum 
+			number of front sides (back sides) a ray intersecting the object might penetrate. 
+			This parameter is only needed for correctly displaying the object in OpenCSG preview 
+			mode and has no effect on the polyhedron rendering."/> 
+		</KeyWord>
+		<KeyWord name="cos ( ) "/>
+		<KeyWord name="cos" func="yes" >
+  			<Overload retVal="" descr="cos (x) -> Returns cosine of x degrees."/> 
+		</KeyWord>
+		<KeyWord name="cube (size = ["/>
+		<KeyWord name="cube (size = [1, 1, 1]);"/>	
+		<KeyWord name="cube" func="yes" >
+  			<Overload retVal="" descr="cube ([x,y,z]), center =  ...) - Creates a cube at the origin 
+			of the coordinate system. When center is true the cube will be centered
+			on the origin, otherwise it is created in the first octant."/> 
+		</KeyWord>		
+		<KeyWord name="cylinder (h = "/>
+		<KeyWord name="cylinder (h = , d = , center = true);"/>		
+		<KeyWord name="cylinder (h = , r = , center = true);"/>
+		<KeyWord name="cylinder (h = , r1 = , r2 = , center = true);"/>
+		<KeyWord name="cylinder (h = , r1 = , r2 = , center = true, $fn = );"/>
+		<KeyWord name="cylinder" func="yes" >
+  			<Overload retVal="" descr="cylinder (h, r1, r2, center = ...) -  Creates a cylinder or 
+			cone at the origin of the coordinate system. A single radius (r) 
+			makes a cylinder, two different radii (r1, r2) make a cone.
+			(d), (d1, d2)  may be used for diameters.
+			If center=false (default) the base of the cone/cylinder
+			will be at the origin; if true, the height will be centered 
+			on the origin."/> 
+		</KeyWord>		
+		<KeyWord name="difference() { "/>
+		<KeyWord name="difference" func="yes" >
+  			<Overload retVal="" descr="difference () {...} - Subtracts the 2nd 
+			(and all further) child nodes from the first one."/> 
+		</KeyWord>
+		<KeyWord name="dxf_cross (file = , layer = , origin = , scale = );"/>
+		<KeyWord name="dxf_dim (file = , name = , layer = , origin = , scale =);"/>
+		<KeyWord name="echo ( );"/>
+		<KeyWord name="echo" func="yes" >
+  			<Overload retVal="" descr="echo (quoted text, values) - Prints contents
+			to the compilation window."/> 
+		</KeyWord>		
+		<KeyWord name="else { "/>
+		<KeyWord name="exp ( ) "/>
+		<KeyWord name="exp" func="yes" >
+  			<Overload retVal="" descr="exp (x) -> Returns the number e raised 
+			to the power of x."/> 
+		</KeyWord>
+		<KeyWord name="floor ( ) "/>
+		<KeyWord name="floor" func="yes" >
+  			<Overload retVal="" descr="floor (x) -> Returns the largest 
+			integer not greater than x."/> 
+		</KeyWord>
+		<KeyWord name="for ("/>
+		<KeyWord name="for (  = [ :  : ]) {"/>
+		<KeyWord name="for" func="yes" >
+  			<Overload retVal="" descr="for loop:  Iterate over the values in a vector or range.
+			    Vector version: for (variable=<vector>) <do_something> - <variable> is assigned to each successive value in the vector
+			    Range version: for (variable=<range>) <do_something>
+			        Range: [<start>:<end>] - iterate from start to end inclusive. Also works if if <end> is smaller than <start>
+			        Range: [<start>:<increment>:<end>] - iterate from start to end with the given increment.
+			    Nested loops : for ( variable1 = <range or vector>, variable2 = <range or vector> ) <do something, using both variables>"/> 
+		</KeyWord>
+		<KeyWord name="function "/>
+		<KeyWord name="height"/>
+		<KeyWord name="hull () { "/>
+		<KeyWord name="hull" func="yes" >
+  			<Overload retVal="" descr="hull () {...} - Displays the convex hull of child nodes."/> 
+		</KeyWord>
+		<KeyWord name="if ( ) {"/>
+		<KeyWord name="if" func="yes" >
+  			<Overload retVal="" descr="If Statement:  if (boolean condition true) {dosomething();} else {dosomethingelse();} 
+			    conditions ex.  (a==b), (a>b), (a<b) 
+				Usage example:
+				    if (x > y) {
+				        cube(size = 1, center = false);
+				    } else {
+				        cube(size = 2, center = true);
+				    }"/> 
+		</KeyWord>
+		<KeyWord name="import (file = );"/>
+		<KeyWord name="include "/>
+		<KeyWord name="include" func="yes" >
+  			<Overload retVal="" descr="Include Statement:  include [left arrow] filename.scad [right arrow]; 
+			    The referenced file is included as if the file contents were 
+				written into the file at that point."/> 
+		</KeyWord>		
+		<KeyWord name="intersection () { "/>
+		<KeyWord name="intersection" func="yes" >
+  			<Overload retVal="" descr="intersection () {...} - Creates the intersection of all child
+			nodes.  This keeps the overlapping portion."/> 
+		</KeyWord>
+		<KeyWord name="intersection_for ("/>
+		<KeyWord name="intersection_for" func="yes" >
+  			<Overload retVal="" descr="intersection_for:  Iterate over the values in a 
+			vector or range and take an intersection of the contents."/> 
+		</KeyWord>
+		<KeyWord name="len ( ) "/>
+		<KeyWord name="len" func="yes" >
+  			<Overload retVal="" descr="len (param) -> Returns the length of an 
+			array, vector, or string parameter."/> 
+		</KeyWord>
+		<KeyWord name="linear_extrude (height = "/>
+		<KeyWord name="linear_extrude" func="yes" >
+  			<Overload retVal="" descr="Linear Extrusion is a modeling operation that takes a 2D polygon 
+			as input and extends it in the third dimension to create a 3D shape."/> 
+		</KeyWord>
+		<KeyWord name="ln ( ) "/>
+		<KeyWord name="ln" func="yes" >
+  			<Overload retVal="" descr="ln (x) -> Returns the natural logarithm of x."/> 
+		</KeyWord>
+		<KeyWord name="log ( ) "/>
+		<KeyWord name="log" func="yes" >
+  			<Overload retVal="" descr="log (x) -> Returns the logarithm of x."/> 
+		</KeyWord>
+		<KeyWord name="lookup ("/>
+		<KeyWord name="lookup" func="yes" >
+  			<Overload retVal="" descr="Look up value in table, and linearly interpolate if there's 
+			no exact match. The first argument is the value to look up. The 
+			second is the lookup table -- a vector of key-value pairs."/> 
+		</KeyWord>
+		<KeyWord name="max ( ) "/>
+		<KeyWord name="max" func="yes" >
+  			<Overload retVal="" descr="max (x,y) -> Returns the maximum of two parameters."/> 
+		</KeyWord>
+		<KeyWord name="min ( ) "/>
+		<KeyWord name="min" func="yes" >
+  			<Overload retVal="" descr="min (x,y) -> Returns the minimum of two parameters."/> 
+		</KeyWord>
+		<KeyWord name="minkowski () { "/>
+		<KeyWord name="minkowski" func="yes" >
+  			<Overload retVal="" descr="minkowski () {...} - Displays the Minkowski sum of child nodes."/> 
+		</KeyWord>
+		<KeyWord name="mirror (["/>
+		<KeyWord name="mirror ([0, 0, 0]) "/>	
+		<KeyWord name="mirror" func="yes" >
+  			<Overload retVal="" descr="mirror ([x,y,z]) {...} - Mirrors the child object on a plane through
+			the origin.  The argument to mirror() is the normal vector of a plane
+			intersecting the origin through which to mirror the object."/> 
+		</KeyWord>		
+		<KeyWord name="module "/>
+		<KeyWord name="module" func="yes" >
+  			<Overload retVal="" descr="module modulename(parameter1, parameter2, ...) {...} 
+			Defines	a procedure that may be reused.  The module is 'called' by 
+			using the module name followed by the parameter list.  Parameters 
+			are values used within the module body, and may passed in by the 
+			module call, or given default values in the module parameter list."/> 
+		</KeyWord>			
+		<KeyWord name="multimatrix (m = "/>
+		<KeyWord name="norm ("/>
+		<KeyWord name="norm" func="yes" >
+  			<Overload retVal="" descr="norm (param) -> Returns the euclidean norm of
+			a vector. Note this returns the actual numeric length while
+			len returns the number of elememts in the vector or array."/> 
+		</KeyWord>		
+		<KeyWord name="offset (  ,  )"/>
+		<KeyWord name="offset" func="yes" >
+  			<Overload retVal="" descr="offset (offset, join_type) -> Moves polygon outlines
+			outward or inward by the offset amount.  A negative offset value 
+			moves the outline inward.  Join types: bevel, round, miter (default)."/> 
+		</KeyWord>			
+		<KeyWord name="origin"/>
+		<KeyWord name="polygon ( points = [ ["/>
+		<KeyWord name="polygon" func="yes" >
+  			<Overload retVal="" descr="polygon (points = [ [x, y], ... ], paths = [ [p1, p2, p3..], ...], convexity = N)
+			Creates a 2D polygon with the specified points and paths.
+			2D primitives may be extruded into 3D space."/> 
+		</KeyWord>		
+		<KeyWord name="polyhedron (points = [ ["/>	
+		<KeyWord name="pow ( , ) "/>
+		<KeyWord name="pow" func="yes" >
+  			<Overload retVal="" descr="pow (x,y) -> Returns x to the power y."/> 
+		</KeyWord>	
+		<KeyWord name="projection ("/>
+		<KeyWord name="projection" func="yes" >
+  			<Overload retVal="" descr="projection () - Use the projection function to create 2D drawings
+			from 3D models, and export them to the dxf format."/> 
+		</KeyWord>		
+		<KeyWord name="rands ("/>
+		<KeyWord name="rands" func="yes" >
+  			<Overload retVal="" descr="rands (min, max, count, seed) - Random number generator.
+			min - minumum value of random number range
+			max - maximum value of random number range
+			count - number of random numbers to return as a vector
+			seed (optional) - seed value for random number generator for repeatable results."/> 
+		</KeyWord>
+		<KeyWord name="render (convexity = "/>
+		<KeyWord name="render" func="yes" >
+  			<Overload retVal="" descr="render  - Forces the generation of a mesh even in preview
+			mode. Useful when the boolean operations become too slow to track."/> 
+		</KeyWord>		
+		<KeyWord name="resize (newsize = ["/>
+		<KeyWord name="resize (newsize = [0, 0, 0]) "/>	
+		<KeyWord name="resize" func="yes" >
+  			<Overload retVal="" descr="resize ([x,y,z]) {...} - Modifies the object
+			to match the given x, y, and z."/> 
+		</KeyWord>
+		<KeyWord name="rotate (a = ["/>
+		<KeyWord name="rotate (a = [0, 0, 0]) "/>	
+		<KeyWord name="rotate (a = , v = [0, 0, 0]) "/>		
+		<KeyWord name="rotate" func="yes" >
+  			<Overload retVal="" descr="rotate (a = [x,y,z]) {...} - Rotates the object 'a' degrees
+			     about the origin.  
+			Also: rotate (a = deg, v = [x,y,z]) {...} - Rotates the object 'a' degrees
+			     around the axis specified by the vector."/> 
+		</KeyWord>					 
+		<KeyWord name="rotate_extrude (convexity ="/>
+		<KeyWord name="round ( ) "/>		
+		<KeyWord name="round" func="yes" >
+  			<Overload retVal="" descr="round (number) -> int.  Returns the greatest or least integer part, 
+			respectively, if the numeric input is positive or negative."/> 
+		</KeyWord>	
+		<KeyWord name="scale (v = ["/>
+		<KeyWord name="scale (v = [1, 1, 1]) "/>
+		<KeyWord name="scale" func="yes" >
+  			<Overload retVal="" descr="scale ([x,y,z]) {...} - Scales child 
+			elements using the specified vector."/> 
+		</KeyWord>		
+		<KeyWord name="search "/>
+		<KeyWord name="sign ( )"/>
+		<KeyWord name="sign" func="yes" >
+  			<Overload retVal="" descr="sign (x) -> Returns -1.0 for a negative number; 
+			1.0 for a positive number; and 0.0 for zero."/> 
+		</KeyWord>
+		<KeyWord name="sin ( ) "/>
+		<KeyWord name="sin" func="yes" >
+  			<Overload retVal="" descr="sin (x) -> Returns sine of x degrees."/> 
+		</KeyWord>
+		<KeyWord name="slices"/>
+		<KeyWord name="sphere (d = "/>
+		<KeyWord name="sphere (r = "/>		
+		<KeyWord name="sphere" func="yes" >
+  			<Overload retVal="" descr="sphere (r) - Creates a sphere of 
+			radius r at the origin of the coordinate system.
+			d may be used for diameter."/> 
+		</KeyWord>		
+		<KeyWord name="sqrt ( ) "/>
+		<KeyWord name="sqrt" func="yes" >
+  			<Overload retVal="" descr="sqrt (x) -> Returns the square root of x."/> 
+		</KeyWord>
+		<KeyWord name="square ([ , ]"/>
+		<KeyWord name="square" func="yes" >
+  			<Overload retVal="" descr="square ([x,y], center = ) -> Draws a 2D square with sides = x, 
+			or a rectangle with sides x, y, in the first quadrant.
+			If center = true it is centered on the origin.
+			2D primitives may be extruded into 3D space."/> 
+		</KeyWord>
+		<KeyWord name="str ("/>
+		<KeyWord name="str" func="yes" >
+  			<Overload retVal="" descr="str (x) - Converts all arguments
+			to strings and concatinates."/> 
+		</KeyWord>
+		<KeyWord name="surface (file = "/>
+		<KeyWord name="surface" func="yes" >
+  			<Overload retVal="" descr="surface (file = [quote]surface.dat[quote], center = true, convexity = 5)"/> 
+		</KeyWord>		
+		<KeyWord name="tan ( ) "/>
+		<KeyWord name="tan" func="yes" >
+  			<Overload retVal="" descr="tan (x) -> Returns tangent of x degrees."/> 
+		</KeyWord>
+		<KeyWord name="translate (["/>
+		<KeyWord name="translate ([0, 0, 0]) "/>	
+		<KeyWord name="translate ([0, 0, 0]) cube (size = [1, 1, 1]); "/>
+		<KeyWord name="translate ([0, 0, 0]) cylinder (h = "/>	
+		<KeyWord name="translate ([0, 0, 0]) rotate (a = [0, 0, 0]) cube (size = [1, 1, 1]); "/>
+		<KeyWord name="translate ([0, 0, 0]) rotate (a = [0, 0, 0]) cylinder (h = "/>	
+		<KeyWord name="translate" func="yes" >
+  			<Overload retVal="" descr="translate ([x,y,z]) {...} - Moves the child
+			objects along the specified vector."/> 
+		</KeyWord>					
+		<KeyWord name="triangles = [ ["/>
+		<KeyWord name="triangles" func="yes" >
+  			<Overload retVal="" descr="triangles: polyhedron (points [ [x,y,z],...], triangles = [ [p1, p2, p3..]], ...], convexity = N)
+			Vector of point triplets (each a 3 number vector). Each number is the 0-indexed point number 
+			from the point vector."/> 
+		</KeyWord>
+		<KeyWord name="twist = "/>	
+		<KeyWord name="union () { "/>
+		<KeyWord name="union" func="yes" >
+  			<Overload retVal="" descr="union () {...} - Creates a union of all child nodes."/> 
+		</KeyWord>
+		<KeyWord name="use "/>
+		<KeyWord name="version" func="yes" >
+  			<Overload retVal="" descr="version () - Returns the OpenSCAD version as a vector;
+			e.g. [2011, 09, 23]"/> 
+		</KeyWord>			
+		<KeyWord name="version_num" func="yes" >
+  			<Overload retVal="" descr="version_num () - Returns the OpenSCAD version as a number;
+			e.g. 20110923"/> 
+		</KeyWord>		
+	</AutoComplete>
+</NotepadPlus>

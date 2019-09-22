@@ -1,0 +1,217 @@
+#@##################################################################################
+#@ MacFileName    = BackupS.gsk
+#@ MacVersion     = 1.0
+#@ MacDescription = Two separate and different Backup routines in a macro.
+#@ MacAuthor      = Wayne (Team Red Roo)
+#@ MacUrl         = http://gsak.net/board/index.php?act=ST&f=15&t=9678
+#@##################################################################################
+#@  User Notes:     Use this macro to run any number of backups in a series. You can
+#@                  select the maximum number of backups that you want via the user
+#@                  interface.
+#@                  This macro fully maintains backup files. i.e. backup files are
+#@                  deleted and\or renamed automatically as required.
+#@##################################################################################
+  VERCHECK Version=7.2.1.0 (Please update your version of Gsak At http://gsak.net)
+  SHOWSTATUS Msg=x Display=Off
+  GOSUB Name=DeclareVariables
+  $MacroName=Left(SysInfo("Macrofile"),AT(".",SysInfo("Macrofile"))-1)
+  $MacroVers=" v"+AllTrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1))
+  $BkpForm=EditForm($BkpForm,"Form1","Caption","$MacroName - $MacroVers")
+  $Cnt=0
+  $Numbers=""
+  $MaxCnt=100
+  WHILE $Cnt < $MaxCnt
+      $Cnt = $Cnt + 1
+      $Numbers = $Numbers + ";" + Str($Cnt,3,0)
+  ENDWHILE 
+  $MacroFldr=Sysinfo("MacroPath")
+  $CfgFldr = "$MacroFldr\Data"
+  GOSUB Name=CheckCfgFolder
+  $CfgFile = "$CfgFldr\$MacroName.Txt"
+  GOSUB Name=ReadCfg
+  WHILE TRUE
+      $FormExit = Form($BkpForm,"")
+      BEGINCASE 
+          CASE $FormExit="SystemExit"
+              CANCEL
+          CASE $FormExit="MbExit"
+              BREAK 
+          CASE $FormExit="Reset"
+              $BkpDir="$_Install\Backup"
+          OTHERWISE 
+              GOSUB Name=RunBackup
+              BREAK 
+      ENDCASE 
+  ENDWHILE 
+  GOSUB Name=WriteCfg
+  RETURN 
+  BEGINSUB Name=RunBackup
+      $BkpF    = "MacroBackup"
+      $Extn    = ".Zip"
+      $Comspec = GetEnvV("comspec")
+      $Cnt=Val($NumBkps)
+      WHILE $Cnt <=  $MaxCnt
+          $DelBkp="$BkpDir$BkpF$Cnt$Extn"
+          IF FileExists($DelBkp)
+              FILEERASE File=$DelBkp
+          ENDIF 
+          $Cnt=$Cnt+1
+      ENDWHILE 
+      SHOWSTATUS Msg="Renaming old Backups..."  Top=80 Left=280 width=450
+      $Ver=Val($NumBkps)
+      $ThisBkp="$BkpDir$BkpF$Ver$Extn"
+      WHILE $Ver> 1
+          $Ver=$Ver-1
+          $ThisBkp="$BkpDir$BkpF$Ver$Extn"
+          IF FileExists($ThisBkp)
+              $OldVer=$Ver+1
+              $ThatBkp  ="$BkpF$OldVer$Extn"
+              $Parms="/c Ren $_Quote$ThisBkp$_Quote $ThatBkp"
+              $Command="$ComSpec Parms=$Parms"
+              RUNPGM Pgm=$Command Wait=yes hide=yes
+          ENDIF 
+      ENDWHILE 
+      $ThisBkp="$BkpDir$BkpF"+"1"+"$Extn"
+      SHOWSTATUS Msg="Creating Backup...$ThisBkp"
+      BACKUP File=$ThisBkp Database=All
+      SHOWSTATUS Msg=x Display=Off
+  ENDSUB 
+  BEGINSUB Name=ReadCfg
+      $BkpDir=""
+      $NumBkps=""
+      IF FileExists($CfgFile)
+          FILEREAD File=$CfgFile
+              $BkpDir  =Extract($Line,";",1)
+              $NumBkps =Extract($Line,";",2)
+          ENDREAD 
+      ENDIF 
+      IF Alltrim($BkpDir)=""                         
+          $BkpDir="$_Install\Backup"
+      ENDIF 
+      IF Right($BkpDir,1) <> "\"
+          $BkpDir=$BkpDir+"\"
+      ENDIF 
+      IF Alltrim($NumBkps)="" OR Val($NumBkps)=0     
+          $NumBkps = "  5"											
+      ENDIF 
+  ENDSUB 
+  BEGINSUB Name=WriteCfg
+      $Data="$BkpDir;$NumBkps;"
+      $ResultStr=PutFile($CfgFile,$Data)
+      IF Left($ResultStr, 7) = "*Error*"
+          MSGOK Msg="Unable to write to $CfgFile " Caption="Configuration Write Error"
+          CANCEL 
+      ENDIF 
+  ENDSUB 
+  BEGINSUB Name=CheckCfgFolder
+      IF Not (FolderExists($CfgFldr))
+          $ResultStr=PutFile("$_Install\Temp\Temp.Bat","MD "+ Quote("$CfgFldr"))
+          FILEOPEN File="$_Install\Temp\Temp.Bat" Wait=yes
+          IF NOT(RegEx("OK",$ResultStr))
+              MSGOK Msg="Error creating the Configuration folder"
+              RETURN 
+          ENDIF 
+      ENDIF 
+  ENDSUB 
+  BEGINSUB Name=DeclareVariables
+      DECLARE Var=$BkpDir Type=String
+      DECLARE Var=$BkpF Type=String
+      DECLARE Var=$BkpForm Type=String
+      DECLARE Var=$CfgFile Type=String
+      DECLARE Var=$CfgFldr Type=String
+      DECLARE Var=$Cnt Type=Numeric
+      DECLARE Var=$Command Type=String
+      DECLARE Var=$Comspec Type=String
+      DECLARE Var=$Data Type=String
+      DECLARE Var=$DelBkp Type=String
+      DECLARE Var=$Extn Type=String
+      DECLARE Var=$FormExit Type=String
+      DECLARE Var=$MacroFldr Type=String
+      DECLARE Var=$MacroName Type=String
+      DECLARE Var=$MacroVers Type=String
+      DECLARE Var=$MaxCnt Type=Numeric
+      DECLARE Var=$Numbers Type=String
+      DECLARE Var=$NumBkps Type=String
+      DECLARE Var=$OldVer Type=Numeric
+      DECLARE Var=$Parms Type=String
+      DECLARE Var=$ResultStr Type=String
+      DECLARE Var=$ThatBkp Type=String
+      DECLARE Var=$ThisBkp Type=String
+      DECLARE Var=$Ver Type=Numeric
+  ENDSUB 
+  <DATA> VarName=$BkpForm
+Name = Form1
+  Type = Form
+  Color = 16710366
+  Delay = 10
+  Height = 264
+  Top = 120
+  Width = 500
+Name = Label1
+  Type = Label
+  Color = 255
+  Font = Comic Sans MS
+  Height = 30
+  Left = 133
+  Size = 16
+  Style = bold
+  Top = 10
+  Width = 226
+  Caption = Macro Backup Options
+Name = Continue
+  Type = Button
+  Height = 25
+  Left = 85
+  Top = 169
+  Width = 75
+  Taborder = 8
+  Caption = Continue
+Name = Label2
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 85
+  Top = 68
+  Width = 156
+  Caption = Number of Backups in this Series
+Name = MbExit
+  Type = Button
+  Escape = Yes
+  Height = 25
+  Left = 313
+  Top = 172
+  Width = 75
+  Taborder = 9
+  Caption = Exit
+Name = BkpDir
+  Type = Folder
+  Height = 21
+  Left = 86
+  Top = 115
+  Width = 302
+  Taborder = 10
+Name = NumBkps
+  Type = Combobox
+  Height = 21
+  Left = 252
+  Top = 64
+  Values = $Numbers
+  Width = 47
+  Taborder = 11
+Name = Label3
+  Type = Label
+  Color = 16711680
+  Height = 13
+  Left = 85
+  Top = 98
+  Width = 117
+  Caption = Backup folder / directory
+Name = Reset
+  Type = Button
+  Height = 20
+  Left = 393
+  Top = 114
+  Width = 63
+  Taborder = 12
+  Caption = Reset
+<enddata>

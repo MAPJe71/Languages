@@ -1,0 +1,90 @@
+
+http://lua4z.com/doc/manual/syntax.md.html#EBNF
+
+Before generating the diagrams, the following changes were made to the EBNF notation from the Lua Reference Manual:
+
+1)  The notation was converted to match the EBNF used by the W3C:
+
+    EBNF notation differences Meaning   Lua Reference Manual    W3C
+    0 or more occurrences of A          {A}                     (A)*
+    Optional A                          [A]                     (A)?
+
+2)  Some symbol names were expanded for readability.
+
+3)  Literal strings (as opposed to EBNF symbol names) were enclosed in quotation marks.
+
+
+EBNF
+
+Chunk ::= (Statement (";")?)* (LastStatement (";")?)?
+
+Block ::= Chunk
+
+Statement ::=  VariableList "=" ExpressionList |
+  FunctionCall |
+  "do" Block "end" |
+  "while" Expression "do" Block "end" |
+  "repeat" Block "until" Expression |
+  "if" Expression "then" Block
+    ("elseif" Expression "then" Block)*
+    ("else" Block)? "end" |
+  "for" Name "=" Expression "," Expression ("," Expression)?
+    "do" Block "end" |
+  "for" NameList "in" ExpressionList
+    "do" Block "end" |
+  "function" FunctionName FunctionBody |
+  "local" "function" Name FunctionBody |
+  "local" NameList ("=" ExpressionList)?
+
+LastStatement ::= "return" (ExpressionList)? | "break"
+
+FunctionName ::= Name ("." Name)* (":" Name)?
+
+VariableList ::= Variable ("," Variable)*
+
+Variable ::=  Name |
+  PrefixExpression "[" Expression "]" |
+  PrefixExpression "." Name
+
+NameList ::= Name ("," Name)*
+
+ExpressionList ::= (Expression ",")* Expression
+
+Expression ::=  "nil" | "false" | "true" |
+  Number | String | "..." | Function |
+  PrefixExpression | TableConstructor |
+  Expression BinaryOperator Expression |
+  UnaryOperator Expression
+
+PrefixExpression ::= Variable |
+  FunctionCall |
+  "(" Expression ")"
+
+FunctionCall ::= PrefixExpression args |
+  PrefixExpression ":" Name Arguments
+
+Arguments ::=  "(" (ExpressionList)? ")" |
+  TableConstructor | String
+
+Function ::= "function" FunctionBody
+
+FunctionBody ::= "(" (ParameterList)? ")" Block "end"
+
+ParameterList ::= NameList ("," "...")? | "..."
+
+TableConstructor ::= "{" (FieldList)? "}"
+
+FieldList ::= Field (FieldSeparator Field)* (FieldSeparator)?
+
+Field ::= "[" Expression "]" "=" Expression |
+  Name "=" Expression | Expression
+
+FieldSeparator ::= "," | ";"
+
+BinaryOperator ::= "+" | "-" | "*" | "/" |
+  "^" | "%" | ".." |
+  "<" | "<=" | ">" | ">=" |
+  "==" | "~=" |
+  "and" | "or"
+
+UnaryOperator ::= "-" | "not" | "#"

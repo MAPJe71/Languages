@@ -1,0 +1,12 @@
+** This line is a comment
+** So is this one
+**
+*Keyword with spaces, parameter1 = 2943987.73E-01, parameter2=17.5
+**
+*Keyword, parameter3=192375.5 #another comment
+other stuff for the keyword
+even more
+**
+*Parameter
+aa=17.5
+bb=aa * 43. 

@@ -1,0 +1,12 @@
+{
+	"root":"CT#14864-1.js",
+	"branches":[
+		{
+			"name":"TypeMyClass",
+			"leaves":[
+				"Init",
+				"GetVarA"
+			]
+		}
+	]
+}

@@ -1,0 +1,43 @@
+			<parser
+				displayName="Javascript"
+				id         ="js_function"
+				commentExpr="(?x)
+                                (?s:/\*.*?\*/)
+                            |   (?m-s://.*?$)
+                            "
+			>
+				<classRange
+					mainExpr    ="(?x)
+                            ^
+                            \h*  function
+                            (?:
+                                \s+  [A-Za-z_]\w*
+                                \s*  \([^()]*\)
+                            |
+                                \s*  \([^()]*\)
+                            )
+                            \s*  \{
+                        "
+					openSymbole ="\{"
+					closeSymbole="\}"
+				>
+					<className>
+						<nameExpr expr="[A-Za-z_]\w*\s*\(" />
+						<nameExpr expr="[A-Za-z_]\w" />
+					</className>
+					<function
+						mainExpr="(?x)
+                                (?:var\s+|let\s+|this\.)
+                                \K
+                                [A-Za-z_]\w*        \s*
+                                =                   \s*
+                                function            \s*
+                                \(
+                            "
+					>
+						<functionName>
+							<funcNameExpr expr="^[A-Za-z_]\w*" />
+						</functionName>
+					</function>
+				</classRange>
+			</parser>

@@ -1,0 +1,337 @@
+#TITLE=Nullsoft (SuperPiMP|Scriptable) Installation System Script
+#DELIMITER="'\|=
+#QUOTATION1="
+#QUOTATION2='
+#QUOTATION3=`
+#CONTINUE_QUOTE=y
+#LINECOMMENT=;
+#LINECOMMENT2=#
+#WHOLELINE=y
+#COMMENTON=
+#COMMENTOFF=
+#COMMENTON2=
+#COMMENTOFF2=
+#ESCAPE=
+#CASE=n
+#PREFIX1=
+#PREFIX2=
+#PREFIX3=
+#PREFIX4=
+#PREFIX5=
+#SUFFIX1=
+#SUFFIX2=
+#SUFFIX3=
+#SUFFIX4=:
+#SUFFIX5=
+#SPECIAL_STX=
+
+#KEYWORD=Header stuff
+;Insaller attributes
+    OutFile
+    Name
+    Caption
+    SubCaption
+    BrandingText
+    Icon
+    WindowIcon
+    BGGradient
+    SilentInstall
+    SilentUnInstall
+    CRCCheck
+    MiscButtonText
+    InstallButtonText
+    FileErrorText
+    InstallDir
+    InstallDirRegKey
+    LicenseText
+    LicenseData
+    ComponentText
+    InstType
+    EnabledBitmap
+    DisabledBitmap
+    SpaceTexts
+    DirShow
+    DirText
+    InstallColors
+    InstProgressFlags
+    AutoCloseWindow
+    ShowInstDetails
+    DetailsButtonText
+    CompletedText
+    UninstallText
+    UninstallIcon
+    UninstallCaption
+    UninstallSubCaption
+    ShowUninstDetails
+    UninstallButtonText
+
+;Compiler flags
+
+    SetOverwrite
+    SetCompress
+    SetDatablockOptimize
+    SetDateSave
+
+;Sections
+
+    Section
+    SectionIn
+    SectionEnd
+    SectionDivider
+    AddSize
+
+;Functions
+
+    Function
+    FunctionEnd
+
+;Compiler utility commands
+
+    !system
+    !include
+    !cd
+    !packhdr
+    !define
+    !undef
+    !ifdef
+    !ifndef
+    !endif
+    !else
+    !macro
+    !macroend
+    !insertmacro
+
+#KEYWORD=Instructions
+    SetOutPath
+    File
+    Exec
+    ExecWait
+    ExecShell
+    Rename
+    Delete
+    RMDir
+    WriteRegStr
+    WriteRegExpandStr
+    WriteRegDWORD
+    WriteRegBin
+    WriteINIStr
+    ReadRegStr
+    ReadRegDWORD
+    ReadINIStr
+    ReadEnvStr
+    ExpandEnvStrings
+    DeleteRegValue
+    DeleteRegKey
+    EnumRegKey
+    EnumRegValue
+    DeleteINISec
+    DeleteINIStr
+    CreateDirectory
+    CopyFiles
+    SetFileAttributes
+    CreateShortCut
+    GetFullPathName
+    SearchPath
+    CallInstDLL
+    RegDLL
+    UnRegDLL
+    GetDLLVersion
+    GetDLLVersionLocal
+    GetFileTime
+    GetFileTimeLocal
+    Goto
+    Call
+    IfErrors
+    ClearErrors
+    SetErrors
+    FindWindow
+    SendMessage
+    IsWindow
+    IfFileExists
+    MessageBox
+    StrCmp
+    IntCmp
+    IntCmpU
+    Abort
+    FindFirst
+    FindNext
+    FindClose
+    FileOpen
+    FileClose
+    FileRead
+    FileWrite
+    FileSeek
+    SetDetailsView
+    SetDetailsPrint
+    SetAutoClose
+    DetailPrint
+    Sleep
+    BringToFront
+    HideWindow
+    StrCpy
+    StrLen
+    Push
+    Pop
+    Exch
+    IntOp
+    IntFmt
+    Reboot
+    IfRebootFlag
+    SetRebootFlag
+    WriteUninstaller
+    Return
+    GetFileTime
+    GetFileTimeLocal
+    Quit
+    GetFunctionAddress
+    GetLabelAddress
+    GetCurrentAddress
+    FileReadByte
+    FileWriteByte
+    AllowRootDirInstall
+    GetTempFileName
+
+#KEYWORD=Callback fucntions
+    .onInit
+    .onUserAbort
+    .onInstSuccess
+    .onInstFailed
+    .onVerifyInstDir
+    .onNextPage
+    .onPrevPage
+    un.onInit
+    un.onUserAbort
+    un.onUninstSuccess
+    un.onUninstFailed
+
+#KEYWORD=Constants
+    MB_OK
+    MB_OKCANCEL
+    MB_ABORTRETRYIGNORE
+    MB_RETRYCANCEL
+    MB_YESNO
+    MB_YESNOCANCEL
+    MB_ICONEXCLAMATION
+    MB_ICONINFORMATION
+    MB_ICONQUESTION
+    MB_ICONSTOP
+    MB_TOPMOST
+    MB_SETFOREGROUND
+    MB_RIGHT
+    MB_DEFBUTTON1
+    MB_DEFBUTTON2
+    MB_DEFBUTTON3
+    MB_DEFBUTTON4
+    IDABORT
+    IDCANCEL
+    IDIGNORE
+    IDNO
+    IDOK
+    IDRETRY
+    IDYES
+    NORMAL
+    FILE_ATTRIBUTE_NORMAL
+    ARCHIVE
+    FILE_ATTRIBUTE_ARCHIV
+    HIDDEN
+    FILE_ATTRIBUTE_HIDDE
+    OFFLINE
+    FILE_ATTRIBUTE_OFFLIN
+    READONLY
+    FILE_ATTRIBUTE_READONL
+    SYSTEM
+    FILE_ATTRIBUTE_SYSTE
+    TEMPORARY
+    FILE_ATTRIBUTE_TEMPORAR
+    SW_SHOWNORMAL
+    SW_SHOWMAXIMIZED
+    SW_SHOWMINIMIZED
+    ALT
+    CONTROL
+    EXT
+    SHIFT
+    HKCR
+    HKEY_CLASSES_ROOT
+    HKLM
+    HKEY_LOCAL_MACHINE
+    HKCU
+    HKEY_CURRENT_USER
+    HKU
+    HKEY_USERS
+    HKCC
+    HKEY_CURRENT_CONFIG
+    HKDD
+    HKEY_DYN_DATA
+    HKPD
+    HKEY_PERFORMANCE_DATA
+    true
+    false
+    show
+    hide
+    on
+    off
+    normal
+    silent
+    silentlog
+    force
+    auto
+    try
+    ifnewer
+    /NOCUSTOM
+    /CUSTOMSTRING
+    /COMPONENTSONLYONCUSTOM
+    /windows
+    /r
+    /oname
+    /REBOOTOK
+    /ifempty
+    /SILENT
+    /SHORT
+    +
+    -
+    *
+    /
+    %
+    |
+    &
+    ^
+    ~
+    !
+    ||
+    &&
+
+#KEYWORD=Variables
+    $INSTDIR
+    $OUTDIR
+    $0
+    $1
+    $2
+    $3
+    $4
+    $5
+    $6
+    $7
+    $8
+    $9
+    $R0
+    $R1
+    $R2
+    $R3
+    $R4
+    $R5
+    $R6
+    $R7
+    $R8
+    $R9
+    $PROGRAMFILES
+    $DESKTOP
+    $EXEDIR
+    $WINDIR
+    $SYSDIR
+    $TEMP
+    $STARTMENU
+    $SMPROGRAMS
+    $SMSTARTUP
+    $QUICKLAUNCH
+    $HWNDPARENT
+    $CMDLINE 

@@ -1,0 +1,124 @@
+' {$STAMP BS1}
+' Demo program sequences ten led patterns
+' Press switch to start sequence of displays
+
+Init:
+DIRS = 248  'Set ports 3-7 to Outputs
+            'Ports 0-2 default to Inputs
+
+
+SYMBOL loops = B0  'Loop counter
+SYMBOL dly = B1    'Delay time
+
+WaitHere:
+BUTTON 0,0,0,0,B0,1,main
+GOTO waithere
+
+
+Main:
+PINS = 0    'Clear then blink LED3 5 times
+FOR loops = 1 TO 5
+HIGH 3
+PAUSE 150
+LOW 3
+PAUSE 150
+NEXT
+
+FOR loops = 1 TO 5 'Flash all LEDs
+PINS = 248
+PAUSE 200
+PINS = 0
+PAUSE 500
+NEXT
+
+FOR loops = 1 TO 5 'Rotate pairs
+PINS = 192
+PAUSE 400
+PINS = 96
+PAUSE 400
+PINS = 48
+PAUSE 400
+PINS = 144
+PAUSE 400
+NEXT
+
+FOR loops = 1 TO 5 'Rotate around center
+PINS = 88
+PAUSE 400
+PINS = 168
+PAUSE 400
+NEXT
+
+FOR loops = 1 TO 5 'Vertical pairs
+PINS = 144
+PAUSE 400
+PINS = 96
+PAUSE 400
+NEXT
+
+FOR loops = 1 TO 5 'Horizontal pairs
+PINS = 48
+PAUSE 400
+PINS = 192
+PAUSE 400
+NEXT
+
+FOR loops = 1 TO 5 'Rotate single right
+PINS = 16
+PAUSE 200
+PINS = 32
+PAUSE 200
+PINS = 64
+PAUSE 200
+PINS = 128
+PAUSE 200
+NEXT
+
+FOR loops = 1 TO 5 'Rotate single left
+PINS = 128
+PAUSE 200
+PINS = 64
+PAUSE 200
+PINS = 32
+PAUSE 200
+PINS = 16
+PAUSE 200
+NEXT
+
+FOR loops = 1 TO 5 'Rotate right with center
+PINS = 24
+PAUSE 100
+PINS = 40
+PAUSE 100
+PINS = 72
+PAUSE 100
+PINS = 136
+PAUSE 100
+NEXT
+
+FOR loops = 1 TO 5 'Rotate left with center
+PINS = 136
+PAUSE 100
+PINS = 72
+PAUSE 100
+PINS = 40
+PAUSE 100
+PINS = 24
+PAUSE 100
+NEXT
+
+GOTO main
+
+
+
+
+
+
+'LipoTest:
+'BUTTON 0,0,0,0,B0,1,lipolow
+'GOTO lipotest
+
+'LipoLow:
+'HIGH 7
+'BUTTON 0,0,0,0,B0,0,Init
+'GOTO lipolow

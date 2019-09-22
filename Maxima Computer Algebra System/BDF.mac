@@ -1,0 +1,333 @@
+disp("loading mnewton");
+load(mnewton);
+load(rkf45);
+
+disp("")$
+ disp("BDF.mac:  help(BDF) for contents");
+ 
+ BDF_help():=block(printf(true,
+"BDF.mac contains 2nd order stiff ODE solvers:
+    BDF2(oderhs,yvar,y0,t_interval,nsteps)
+    BDF2a(oderhs,yvar,y0,t_interval)
+    rkf45(oderhs,yvar,y0,t_interval)
+    wxtimeplot(s)
+    -
+    -
+    for any of the above functions,
+    help(function_name) returns help lines for function_name
+    -
+    Last Modified Feb. 18, 2017
+    Questions or comments to barth@kzoo.edu"
+)
+);
+/*
+The help utility
+*/
+help(_input):=block(
+eval_string(sconcat(string(_input),"_help()")),
+return(done)
+);
+
+BDF2(oderhs,yvar,y0,t_interval,nsteps):=block(
+     /*  BDF2 fixed timestep, vector equation
+         Eric Barth, Feb. 2017	 */
+    [numer:true,newtonepsilon,newtonmaxiter,tvar,h,_t,_y,yy,_s,
+	varlist,sublist,nvar,tnew],
+
+	varlist:[aa,bb,cc,dd,ee,ff], /*we can handle up to 5 dimensions*/
+	tvar:t_interval[1],
+	_t[1]:t_interval[2],
+	if listp(yvar) then (
+	        _y[1]:y0,
+			nvar:length(yvar), 
+			varlist:makelist(varlist[k],k,1,nvar,1),
+			sublist:append([tvar=tnew],makelist(yvar[i]=varlist[i],i,1,nvar,1))
+            )
+	else (
+		    _y[1]:[y0],
+			nvar:1, 
+			varlist:varlist[1],
+            sublist:append([tvar=tnew],[yvar=varlist])			
+            ),	
+    
+    newtonepsilon:1e-14, 
+    newtonmaxiter:4,
+    h:abs(t_interval[3]-t_interval[2])/nsteps,
+
+	 /* first step with backward euler */
+	   i:1,
+       _t[i+1]:_t[i]+h,	 tnew:_t[i+1],
+	   nn:mnewton(varlist-_y[1]-h*at(oderhs,sublist),varlist,_y[1]),
+	   _y[2]:map(rhs,nn[1]),
+      
+	  /* now BDF2 loop */
+     for i:2 thru nsteps do(
+            _t[i+1]:_t[i]+h, tnew:_t[i+1], 
+            nn:mnewton( varlist-4/3*_y[i]+1/3*_y[i-1]-2/3*h*at(oderhs,sublist),varlist,_y[i]),
+            _y[i+1]:map(rhs,nn[1])
+		),
+		/* format the output */
+       _s:makelist(append([_t[k]],_y[k]),k,1,nsteps,1)	       	
+)$
+
+/*the help file for use with help()*/
+BDF2_help():=block(printf(true,
+"BDF2(rhs,[depvars],[inits],[indvar,a,b],nsteps) computes a numerical solution
+   of the equation x'=rhs
+   where rhs is a function of the dependent variables listed in [depvars]
+   and the independent variable indvar from a to b with initial values
+   of the dependent variables given by indvar.
+   The solution is a list of lists.
+   
+   The method is variable stepsize backward difference formula (BDF) method of order 2
+   espcially useful for solving stiff equations
+	 
+     Examples
+	     
+		for the 1D equation y'=-y*x with y(0)=.7
+		on the interval 0<=x<=7
+		
+	    s1:BDF2(-y*x,y,.7,[x,0,5],100)$
+	 
+        for the equation 2D Brusselator system
+		x' = 1-4x+x^2y
+		y' = 3*x-x^2y
+		sol:BDF2([1-4*x+x^2*y,3*x-x^2*y],[x,y],[1,1],[t,0,30],1000)$
+
+
+Note that $ rather than ; at the end of the command suppresses output.
+
+See wxtimeplot(s)		
+           "
+)
+);	
+
+
+BDF2a(oderhs,yvar,y0,t_interval,[options]):=block(
+     /*  BDF2 adaptive timestep vector version 
+         Eric Barth, Feb. 2017		 */
+    [numer:true,newtonepsilon,newtonmaxiter,Rtol,hshrinkfactor,safetyfac,
+      hgrowfactor,h,hnew,maxnsteps,tmax,maxstep,laststep,rejects,_t,_y,yy,_s,
+      tnew,r,nn,h1,hn,hm1,LTE,laststep,fac,maxfac,maxLTE,bigstep,smallstep,
+      showreport, varlist,sublist,nvar,rhs],
+    show_report:assoc('report,options,false),
+    h:assoc('h_start,options,0.00001),
+    Rtol:assoc('absolute_tolerance,options,1e-4),
+	maxnsteps:assoc('max_iterations,options,2000),
+	newtonepsilon:assoc('newtoneps,options,1e-14),
+	newtonmaxiter:assoc('newtonits,options,4),
+	verbose:assoc('showfails,options,false),
+    tvar:t_interval[1],
+    hshrinkfactor:1.0,
+    safetyfac:0.5,
+    hgrowfactor:.5,
+    maxLTE:0.0,
+    bigstep:0.0,
+    smallstep:100.0,
+    
+    tmax:t_interval[3],
+    maxstep:abs(t_interval[3]-t_interval[2]),
+    maxfac:2.0,
+    laststep:false,
+    rejects:0,
+	varlist:[aa,bb,cc,dd,ee,ff], /*we can handle up to 5 dimensions*/
+	tvar:t_interval[1],
+	_t[1]:t_interval[2],
+	if listp(yvar) then (
+	        _y[1]:y0,
+			nvar:length(yvar), 
+			varlist:makelist(varlist[k],k,1,nvar,1),
+			sublist:append([tvar=tnew],makelist(yvar[i]=varlist[i],i,1,nvar,1))
+            )
+	else (
+		    _y[1]:[y0],
+			nvar:1, 
+			varlist:varlist[1],
+            sublist:append([tvar=tnew],[yvar=varlist])			
+            ),	
+
+
+    i:1, 
+	_t[i+1]:_t[i]+h,	tnew:_t[i+1], 
+      nn:mnewton(varlist-_y[1]-h*at(oderhs,sublist),varlist,_y[1]),
+	  if emptyp(nn) then ( disp("mnewton failed to converge"),return()),
+     _y[i+1]:map(rhs,nn[1]),  /* 1st step with backward euler */
+	i:2, 
+	_t[i+1]:_t[i]+h,	tnew:_t[i+1], 	 
+	  nn:mnewton( varlist-4/3*_y[i]+1/3*_y[i-1]-2/3*h*at(oderhs,sublist),varlist,_y[i]),
+	  if emptyp(nn) then ( disp("mnewton failed to converge"),return()),
+     _y[i+1]:map(rhs,nn[1]),  /* 2nd step with BDF2 */
+    i:3, 
+     do (
+            _t[i+1]:_t[i]+h,	tnew:_t[i+1],   
+            r:h/(_t[i]-_t[i-1]), 
+            nn:mnewton(varlist-(1+r)^2*_y[i]/(1+2*r)+r^2*_y[i-1]/(1+2*r)-h*(1+r)/(1+2*r)*at(oderhs,sublist),varlist,_y[i]),
+			if emptyp(nn) then ( disp("mnewton failed to converge"),return()),
+			_y[i+1]:map(rhs,nn[1]), 
+                h1:h, 
+                hn:_t[i]-_t[i-1],  
+                hm1:_t[i-1]-_t[i-2], 
+                LTE: lmax(abs((hn+h1)/6.0*(   (_y[i+1]-_y[i])/h1 - 
+                         (1.0+h1/hn)*(_y[i]-_y[i-1])/hn +
+                           (h1/hn)*(_y[i-1]-_y[i-2])/hm1 ))), 
+           if (LTE>Rtol) then ( 
+                 rejects:rejects+1,
+                 if verbose then disp(concat(rejects," rejected step at i=",i)),
+                 h:(_t[i]-_t[i-1])/2.0,
+                 i:i-1,
+                 if laststep then laststep:false
+               ) 
+            else (   /* accept the step, grow h */
+                bigstep:max(h,bigstep),
+                smallstep:min(h,smallstep),
+                maxLTE:max(maxLTE,LTE),
+                if laststep then (
+                    _s:makelist(append([_t[k]],_y[k]),k,1,i+1,1),	       	
+                   if show_report then (
+						  print("------------------------------------------------------"),
+						  print("Info: BDF2a:"),
+						  print("   Integration points selected:",i+1),
+						  print("    Total number of iterations:",i+rejects),
+						  print("           Bad steps corrected:",rejects),
+						  print("       Maximum estimated error:",maxLTE),
+						  print("Minimum integration step taken:",smallstep),
+						  print("Maximum integration step taken:",bigstep),
+						  print("------------------------------------------------------")
+                    ),
+                    return(_s)
+                ),
+                fac:safetyfac*(Rtol/LTE)^(1/3),
+                hnew: min(min(maxfac,fac)*h,maxstep),
+                i:i+1, 
+                if _t[i]+hnew > tmax then 
+                    (h:tmax-_t[i], laststep:true)
+                   else
+                     h:hnew, 
+               if i>maxnsteps then (disp("exceeded maxnsteps",maxnsteps),return())
+            )
+        )
+    )$
+/*the help file for use with help()*/
+BDF2a_help():=block(printf(true,
+"BDF2a(rhs,[depvars],[inits],[indvar,a,b]) computes a numerical solution
+   of the equation x'=rhs
+   where rhs is a function of the dependent variables listed in [depvars]
+   and the independent variable indvar from a to b with initial values
+   of the dependent variables given by indvar.
+   The solution is a list of lists.
+   
+   The method is variable stepsize backward difference formula (BDF) method of order 2
+	 
+     Examples
+	     
+		for the 1D equation y'=-y*x with y(0)=.7
+		on the interval 0<=x<=7
+		
+	    s1:BDF2a(-y*x,y,.7,[x,0,5])$
+	 
+        for the equation 2D Brusselator system
+		x' = 1-4x+x^2y
+		y' = 3*x-x^2y
+		sol:BDF2a([1-4*x+x^2*y,3*x-x^2*y],[x,y],[1,1],[t,0,30],report=true)$
+
+optional arguments (with defaluts):  
+report=false, absolute_tolerance=1e-4, h_start=0.00001, 
+max_iterations = 1000, newtoneps=1e-14, newtonits=4
+
+
+Note that $ rather than ; at the end of the command suppresses output.
+
+See wxtimeplot(s)		
+           "
+)
+);	
+
+/* wxtimeplot takes the output of sol: rk45() and plots 
+   up to 3 dependent variables plus the scaled integration timestep size vs time*/
+wxtimeplot(sol):=block(
+[t0,t,tt,dt,big,dtbig],
+t0:map(first,sol),
+t:part(t0,allbut(1)),
+tt:part(t0,allbut(length(t0))),
+dt:t-tt,
+dtbig:lmax(dt),
+big:lmax(map(second,abs(sol))),
+if is(equal(length(part(sol,1)),3)) then(
+          big: max(big,lmax(map(third,abs(sol)))),
+          wxdraw2d(user_preamble="set key outside",
+		  point_type=6, key="y1",
+          points(makelist([p[1],p[2]],p,sol)),
+         color=red, key="y2",
+         points(makelist([p[1],p[3]],p,sol)),
+           color=magenta, key="log(dt)",point_size=.2,
+            points(t,log(dt)/log(10.0)),
+		  xlabel="t",ylabel=""))
+  elseif is(equal(length(part(sol,1)),2)) then
+		  wxdraw2d(user_preamble="set key outside",
+		  point_type=6, key="y1",
+          points(makelist([p[1],p[2]],p,sol)),
+           color=magenta, 
+		   key="log(dt)",point_size=.2,
+            points(t,log(dt)/log(10.0)),
+		  xlabel="t",ylabel="")
+  elseif is(equal(length(part(sol,1)),4)) then(
+          big: max(big,lmax(map(third,abs(sol)))),
+		  big: max(big,lmax(map(fourth,abs(sol)))),
+		  wxdraw2d(user_preamble="set key outside",
+		  point_type=6, key="y1",
+          points(makelist([p[1],p[2]],p,sol)),
+		  color=red, key="y2",
+         points(makelist([p[1],p[3]],p,sol)),
+		 color=green, key="y3",
+         points(makelist([p[1],p[4]],p,sol)),  
+           color=magenta, key="log(dt)",point_size=.2,
+          points(t,log(dt)/log(10.0)),
+		  xlabel="t",ylabel=""))
+		  );
+/*the help file for use with help()*/
+wxtimeplot_help():=block(printf(true,
+"wxtimeplot(sol) takes the output of sol: rk45 and plots 
+   up to 3 dependent variables vs time 
+    plus a scaled representation of theintegration timestep size 
+	 throughout the integration.
+	 
+     Example
+        sol:rkf45([1-4*x+x^2*y,3*x-x^2*y],[x,y],[1,1],[t,0,30])$
+         wxtimeplot(sol)		
+           "
+)
+);
+
+/*the help file for use with help()*/
+rkf45_help():=block(printf(true,
+"rkf4f(rhs,[depvars],[inits],[indvar,a,b]) computes a numerical solution
+   of the equation x'=rhs
+   where rhs is a function of the dependent variables listed in [depvars]
+   and the independent variable indvar from a to b with initial values
+   of the dependent variables given by indvar.
+   The solution is a list of lists.
+   
+   The method is variable stepsize embedded Runge Kutte method of order 4-5
+	 
+     Examples
+	     
+		for the 1D equation y'=-y*x with y(0)=.7
+		on the interval 0<=x<=7
+		
+	    s1:rkf45(-y*x,y,.7,[x,0,5])$
+	 
+        for the equation 2D Brusselator system
+		x' = 1-4x+x^2y
+		y' = 3*x-x^2y
+		sol:rkf45([1-4*x+x^2*y,3*x-x^2*y],[x,y],[1,1],[t,0,30],report=true)$
+
+optional arguments (with defaluts):  
+report=false,  absolute_tolerance=1e-6, max_iterations=10000, 
+h_start=(b-a)/100  ,full_solution=false
+
+Note that $ rather than ; at the end of the command suppresses output.
+
+See wxtimeplot(s)		
+           "
+)
+);

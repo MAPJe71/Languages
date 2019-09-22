@@ -1,0 +1,376 @@
+/* file moller3.mac
+   April 15, 2011.
+   m_tr and nc_tr comparisons of
+   the square of polarized amplitudes
+   compared with dirac spinor results
+   found in moller2.mac
+   */
+   
+  " moller3.mac "$
+    "*********************************************"$
+   print ("      ver: ",_binfo%,"  date: ",mydate )$
+  " Maxima by Example, Ch. 12 "$
+  " Dirac Algebra and Quantum Electrodynamics "$
+  " Edwin L. Woollett "$
+  " http://www.csulb.edu/~woollett  "$
+  " woollett@charter.net "$
+  " SQUARED POLARIZED AMPLITUDES VIA SYMBOLIC AND MATRIX TRACE METHODS"$
+  "  FOR ARBITRARY ENERGY MOLLER SCATTERING  "$
+  "  e(-,p1,sv1) + e(-,p2,sv2) --> e(-,p3,sv3) + e(-,p4,sv4) "$  
+  " --------------------------------------------------------"$
+
+
+  invar (D(p1,p1) = m^2,         
+         D(p2,p2) = m^2,         
+         D(p3,p3) = m^2,         
+         D(p4,p4) = m^2,
+         D(p1,Sp1) = 0,
+         D(Sp1,Sp1) = -1,
+         D(p2,Sp2) = 0,
+         D(Sp2,Sp2) = -1,
+         D(p3,Sp3) = 0,
+         D(Sp3,Sp3) = -1,
+         D(p4,Sp4) = 0,
+         D(Sp4,Sp4) = -1 )$
+         
+
+         
+         
+   comp_def ( p1( E,0,0,p),
+              Sp1 (p/m,0,0,E/m),
+              p2( E,0,0,-p),
+              Sp2 (p/m,0,0,-E/m),
+              p3 (E,p*sin(th),0,p*cos(th)),
+              Sp3 (p/m,E*sin(th)/m,0,E*cos(th)/m),
+              p4 (E,-p*sin(th),0,-p*cos(th)),
+              Sp4 (p/m,-E*sin(th)/m,0,-E*cos(th)/m))$ 
+             
+    
+             
+  p_Em (expr) := expand (ratsubst(E^2-m^2,p^2,expr))$    
+  
+  E_pm (expr) := expand (ratsubst (p^2 + m^2,E^2,expr))$
+    
+    
+  s_th : VP (p1+p2,p1+p2);
+  
+  t_th : VP (p1-p3,p1-p3);
+  
+  u_th : VP (p1-p4,p1-p4);  
+
+  
+  t_th2 : to_ao2 (t_th,th);
+  
+  u_th2 : to_ao2 (u_th,th);
+  
+  t_thE : p_Em(t_th);
+  
+  u_thE : p_Em(u_th);      
+  
+
+  
+   load("MSQcomp.mac")$  
+   
+ /*
+   
+
+
+  " Here we use MSQcomp()  "$
+  
+  " with details = false "$
+  
+  "  ========================="$
+  
+  " case RR --> LL  "$
+  
+  [sv1,sv2,sv3,sv4]:[1,1,-1,-1]$
+  
+  A_spinor : 2*m^2/p^2$
+  
+  MSQcomp();
+  
+  " =========================="$
+  
+  " case RR --> RL, looking at details "$
+  
+  details : true$
+  
+  [sv1,sv2,sv3,sv4]:[1,1,1,-1]$
+  
+  A_spinor : m*sin(th/2)*E/(p^2*cos(th/2))-m*cos(th/2)*E/(p^2*sin(th/2))$
+  
+  MSQcomp();
+  
+  */
+ 
+  
+  
+/*  
+  
+
+  
+ " Case 0 --> 0, yes, case RR --> LL  " $
+     
+ " take the dirac spinor amplitude from moller2.mac run "$
+     
+   Mfi_RR_LL : 2*m^2/p^2$
+   
+   Mfi_RR_LL_E : p_Em(Mfi_RR_LL);
+  "--------- M1n --------------------------- "$
+   
+   " m_tr(..)  method "$
+   
+   M1n_m : mcon ( m_tr (S(-1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu)*
+                 m_tr (S(-1,Sp4),p4+m,mu,S(1,Sp2),p2+m,nu), mu,nu)$
+                 
+   time (%);
+                 
+    M1n_m : p_Em (M1n_m); 
+    
+    M1n_m : trigsimp (M1n_m);
+    
+    " noncov(tr(..)) method with stu_flag = false "$
+    
+    M1n_s : econ ( nc_tr (S(-1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu)*
+                 nc_tr (S(-1,Sp4),p4+m,mu,S(1,Sp2),p2+m,nu), mu,nu)$
+                 
+    time (%);
+    
+    M1n_s : p_Em (M1n_s);
+    
+    M1n_s : trigsimp (M1n_s);
+    
+    " compare methods "$
+    
+    M1n_s - M1n_m;
+    
+    " -----------  M2n ------------------------- "$
+    
+    " m_tr(..)  method "$
+    
+    M2n_m : mcon ( m_tr (S(-1,Sp4),p4+m,mu,S(1,Sp1),p1+m,nu)*
+                m_tr (S(-1,Sp3),p3+m,mu,S(1,Sp2),p2+m,nu), mu,nu)$
+                
+    time (%);
+                
+    M2n_m :  p_Em (M2n_m);
+    
+    M2n_m : trigsimp (M2n_m);
+    
+    " noncov(tr(..)) method with stu_flag = false "$
+    
+    M2n_s : econ ( nc_tr (S(-1,Sp4),p4+m,mu,S(1,Sp1),p1+m,nu)*
+                 nc_tr (S(-1,Sp3),p3+m,mu,S(1,Sp2),p2+m,nu), mu,nu)$
+                 
+    time (%);
+                
+    M2n_s :  p_Em (M2n_s);
+    
+    M2n_s : trigsimp (M2n_s);
+    
+    M2n_s - M2n_m;
+    
+    " ------------- M12 -----------------------"$
+    
+    M12n_m : mcon ( m_tr (S(-1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu,S(-1,Sp4),p4+m,mu,
+                                       S(1,Sp2),p2+m,nu),mu,nu)$
+    
+    time (%);
+    
+    M12n_m : p_Em (M12n_m); 
+    
+    M12n_m : trigsimp (M12n_m);
+    
+    M12n_s : nc_tr (S(-1,Sp3),p3+m,mu,S(1,Sp1),p1+m,nu,S(-1,Sp4),p4+m,mu,
+                                       S(1,Sp2),p2+m,nu)$
+    
+    time (%);
+    
+    M12n_s : p_Em (M12n_s); 
+    
+    M12n_s : trigsimp (M12n_s);
+    
+    M12n_s - M12n_m;
+    
+    " ------------------- M21 ------------------ "$
+    
+    M21n_m : mcon ( m_tr (S(-1,Sp4),p4+m,mu,S(1,Sp1),p1+m,nu,S(-1,Sp3),p3+m,mu,
+                                   S(1,Sp2),p2+m,nu),mu,nu)$
+                                   
+    time (%);    
+    
+    
+    M21n_m : p_Em (M21n_m); 
+    
+    M21n_m : trigsimp (M21n_m);
+    
+    M21n_s : nc_tr (S(-1,Sp4),p4+m,mu,S(1,Sp1),p1+m,nu,S(-1,Sp3),p3+m,mu,
+                                    S(1,Sp2),p2+m,nu)$
+                                    
+    time (%);
+    
+    M21n_s : p_Em (M21n_s);
+    
+    M21n_s : trigsimp (M21n_s);
+    
+    M21n_s - M21n_m;
+    
+    " form MfiSQ "$
+    
+    MfiSQ : trigsimp (M1n_m/t_thE^2 + M2n_m/u_thE^2 - M12n_m/(t_thE*u_thE)
+                 - M21n_m/(t_thE*u_thE));
+                 
+        
+    trigsimp (MfiSQ - Mfi_RR_LL_E^2);
+    
+  */
+  
+    
+    
+ /*  
+    
+    " =========================================== "$
+    
+    " AUTOMATE FOR OTHER HELICITY VALUES "$
+    
+ 
+  
+  
+  " let A_spinor and sv1,sv2,sv3,sv4 be global. "$
+  
+    
+   MSQcomp () :=
+   
+    ( A_spSQ : E_pm (A_spinor^2),
+    
+       display (A_spSQ),
+    
+    
+     M1n_m : trigsimp (E_pm (mcon ( m_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu)*
+                 m_tr (S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),
+                 
+     disp ("M1n_m"),            
+     display (M1n_m),
+                 
+    /*                 
+    M1n_m : p_Em (M1n_m),
+    
+    M1n_m : trigsimp (M1n_m),
+    
+    */  
+    
+    M1n_s : trigsimp (E_pm (econ ( nc_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu)*
+                 nc_tr (S(sv4,Sp4),p4+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),    
+                 
+     disp ("M1n_s"),
+     display (M1n_s),      
+                 
+   /*                      
+        
+    M1n_s : p_Em (M1n_s),
+    
+    M1n_s : trigsimp (M1n_s),
+    
+   */ 
+    
+    print ("  M1n_s - M1n_m = ",M1n_s - M1n_m),
+    
+    
+    
+    
+    
+    M2n_m : trigsimp (E_pm (mcon ( m_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu)*
+                m_tr (S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),                
+                
+    disp ("M2n_m"),
+                
+  /*
+                
+    M2n_m :  p_Em (M2n_m),
+    
+    M2n_m : trigsimp (M2n_m),            
+  */
+    
+    M2n_s : trigsimp (E_pm (econ ( nc_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu)*
+                nc_tr (S(sv3,Sp3),p3+m,mu,S(sv2,Sp2),p2+m,nu), mu,nu))),    
+                
+    disp ("M2n_s"),
+                
+  /* 
+    M2n_s :  p_Em (M2n_s),
+    
+    M2n_s : trigsimp (M2n_s),
+  */
+    
+    print (  "M2n_s - M2n_m = ",M2n_s - M2n_m),
+    
+    
+    
+    M12n_m : trigsimp (E_pm (mcon ( m_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu,S(sv4,Sp4),p4+m,mu,
+                                       S(sv2,Sp2),p2+m,nu),mu,nu))),
+                                       
+    disp ("M12n_m"),
+    
+  /*    
+    
+    M12n_m : p_Em (M12n_m),
+    
+    M12n_m : trigsimp (M12n_m),
+  */ 
+    
+    
+    M12n_s : trigsimp (E_pm (nc_tr (S(sv3,Sp3),p3+m,mu,S(sv1,Sp1),p1+m,nu,S(sv4,Sp4),p4+m,mu,
+                                       S(sv2,Sp2),p2+m,nu))),
+                                       
+    disp ("M12n_s"),
+                                       
+  /*
+    
+    M12n_s : p_Em (M12n_s),
+    
+    M12n_s : trigsimp (M12n_s),
+  */
+    
+    print ("  M12n_s - M12n_m = ",M12n_s - M12n_m),
+    
+    
+    
+    M21n_m : trigsimp (E_pm (mcon ( m_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu,S(sv3,Sp3),p3+m,mu,
+                                   S(sv2,Sp2),p2+m,nu),mu,nu))),
+                                   
+    disp ("M21n_m"),
+        
+  /*
+    M21n_m : p_Em (M21n_m),
+    
+    M21n_m : trigsimp (M21n_m),
+  */
+    
+    M21n_s : trigsimp (E_pm (nc_tr (S(sv4,Sp4),p4+m,mu,S(sv1,Sp1),p1+m,nu,S(sv3,Sp3),p3+m,mu,
+                                   S(sv2,Sp2),p2+m,nu))),
+                                   
+    disp ("M21n_s"),
+    
+  /*
+    M21n_s : p_Em (M21n_s),
+    
+    M21n_s : trigsimp (M21n_s),
+  */
+    
+    print ("  M21n_s - M21n_m = ",M21n_s - M21n_m),
+    
+    
+    
+    MfiSQ : expand (M1n_m/t_th^2 + M2n_m/u_th^2 - M12n_m/(t_th*u_th)
+                 - M21n_m/(t_th*u_th)),
+                 
+    MfiSQ : trigsimp (MfiSQ),    
+    
+    
+    trigsimp (MfiSQ - A_spSQ) )$
+    
+    
+    
+  */
+  
+  

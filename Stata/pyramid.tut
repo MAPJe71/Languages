@@ -1,0 +1,421 @@
+*! pyramid tutor v1.02 march  1999. JM.Lauritsen
+*
+set output error
+version 2.1
+noisily tut_chk pyramid
+set display page 23
+set more 1
+
+if "$S_OS"=="Windows" {
+	local wwait "tut_wait"
+	`wwait'
+}
+
+capture program drop _yesno
+program define _yesno
+	macro define answ
+	while lower("%answ")!="y" & lower("%answ")!="n" {
+		di in gr "%_1? (" in wh "y" in gr "/" in wh "n" in gr ")" /*
+		*/ _col(50) _request(answ)
+	}
+end
+
+#delimit ;
+di _n(3) in wh
+"  ___  ____  ____  ____  ____ tm" _n
+" /__    /   ____/   /   ____/" _n
+"___/   /   /___/   /   /___/    Population Pyramids and reshape" _n
+"----------------------------------------------------" _n(2) ;
+
+di in gr "Tutorial for Stata version 5+ made by " 
+in yel "Jens M.Lauritsen, v1.02 " _n(2) 
+in gre "Stata is obtaining its input from the disk," _n
+"                       but" in wh " is " in gre "producing results as you watch."
+_n(2)
+_n " output presented like this: " _n in wh ". text" _n in gre " is the command stata received"_n 
+   _n(2)
+
+"This tutorial can be discontinued at any time by pressing " 
+in wh "Break" in gr "." 
+_n
+
+;set more 0; more ; set more 1;
+di
+_n in yel " When You understand the commands in this file, You will be able to: " _n
+in wh _n  "             - read datafile and make simple lists of contents"
+_n  "             - define new variables "
+_n  "             - change file format from long to wide format"
+_n  "             - convert a string to a numerical variable"
+_n           "             - draw population pyramids" 
+_n(3) in yel    "             NOTE " in wh "Hbar.ado developed by N.Cox" 
+_n in yel       "                  must be installed for the population pyramids to be plotted" 
+_n(2)           "                  fyn.dta should reside in %path  " _n(3);
+
+#delimit cr
+global F5 "tutorial contents;"
+global F6 "tutorial intro;"
+global F7 "tutorial pyramid;"
+
+
+
+#delimit ;
+
+di in gr "When you are ready to continue, press the space bar." ;
+set more 0; more ; set more 1;
+
+drop _all ;
+label drop _all ;
+
+di in wh _n(4)
+"Population pyramids" _n
+"--------------------" _n ;
+
+di in wh ".use fyn ,clear";
+qui use fyn,clear;
+di in wh _dup(79) "-" _n
+in gr "We use population data from Funen County 1998"
+in wh ". Lets look at some of the data" in gr " :" _n
+in wh _dup(79) "-" _n(2)
+;
+di in wh ". list c1-c5 c52 c100 c101 c102, nodisplay";
+noi  list c1-c5 c52 c100 c101, nodisplay;
+di _n(2) in wh _dup(79) "-" _n
+in gre "  We see 5 observations and a top line with variable names across. "
+_n(2)
+in gre " To understand data you must understand the above display - it is simple " _n
+in gre " We have 5 rows of data 1 2 3 4 5 and in each variables c1 c2 c3 .... c101 "_n
+_n
+in yel " the value of c3 in row 3 is what ? " in yel " the answer is " in wh "3005" _n
+in yel " the value of c1 in row 1 is what ? " in yel " the answer is " in wh "Age"_n
+_n
+in wh " This is called a " in wh "wide" in gre " format" 
+in wh " Notice: " in yel "many variables few observations" _n(2)
+" Only some of the variables are shown. You could scroll the variables"_n
+" window and see the names of the other variables" ;
+set more 0 ; more ; set more 1 ;
+di in wh _dup(79) "-" _n;
+di in wh "Lets look at data for males: (age 2-61 omitted)" _n 
+in wh". list c1-c3 c63-c102";
+preserve;
+drop in 4/5;
+drop in 1/2;
+noi list c1-c3 c63-c102 ;
+restore;
+
+di in wh _dup(79) "-" _n
+ in gre " We see the data for males one variable for each age, c102 is the total "_n(3) ;
+set more 0 ; more ; set more 1 ;
+
+di in wh _dup(79) "-" _n "Let's look at the data again, as before and by observation " _n
+in wh _dup(79) "-" _n(2);
+di in wh ". list c1-c5 c52 c100-c101 in 3/4, nodisplay ";
+noi  list c1-c5 c50 c100 c101 in 3/4, nodisplay;
+di in wh _n ". list c1-c5 c52 c100-c101 in 3/4";
+noi list c1-c5 c52 c100-c101 in 3/4 ;
+di in wh _dup(79) "-" _n " We only show observation 3+4: "in wh" in 3/4"  
+in gre " note change of display with"in wh " ,nodisplay" _n(2) 
+in wh _dup(79) "-";
+
+set more 0 ; more ; set more 1 ;
+di in wh _dup(79) "-" _n
+in gre " We want to add a variable indicating the sex " _n
+" with values 1=male and 2=female and appropriate labels: " _n
+in wh _dup(79) "-" _n;
+di in wh ". gen sex = 1 in 3";
+noi gen sex = 1 in 3;
+di in wh ". replace sex = 2 in 4";
+noi replace sex = 2 in 4;
+di in wh ". list sex c1-c6,nodispl";
+noi list sex c1-c6,nodispl;
+di in wh _dup(79) "-" _n
+in yel " the value of sex in row 3 is what ? " in yel " the answer is " in wh "1" _n
+in yel " the value of sex in row 1 is what ? " in yel " the answer is " in wh "."_n
+in yel "              Period " in whi "." in yel " is STATA's value for unknown or missing"
+_n;
+
+set more 0 ; more ; set more 1 ;
+di in gre " We have the variable and wish to add " in wh " labels"_n
+in wh _dup(79) "-" _n;
+di in wh ". label define sexlbl 1 male 2 female";
+noi label define sexlbl 1 male 2 female;
+di in wh ". label value sex sexlbl";
+noi label value sex sexlbl;
+di in wh ". list sex c1-c6,nodispl";
+noi list sex c1-c6,nodispl;
+di in wh _dup(79) "-" _n
+in gre " Note the change from 1 and 2 at variable sex to labelled value"_n
+; set more 0 ; more ; set more 1 ;
+di in yel " What is the difference between variables " in wh "sex " in yel "and" 
+in wh " c1 " in yel "?" _n
+in wh _dup(79) "-" ;
+set more 0 ; more ; set more 1 ;
+* describe and variable type;
+di _n in wh ". describe c1 sex " _n;
+noi d c1 sex ;
+di _n in wh _dup(79) "-" _n
+in wh "       c1" in gre " is a " in wh "string (str14 %14s)" in gre  " of length 14 characters"_n(2)
+in wh "       Sex" in gre " is a " in wh "numeric" in gre " of type " in wh "float (%9.0g)" 
+in gre " values are defined by " in wh "sexlbl"  _n(2) "  We are also told the variable number, for sex is " in wh "103" _n(2);
+
+di in wh _dup(79) "-" ;
+di in yel " If you do not know the difference between a string and a numerical variable" _n
+   in yel " look in the help menu now." _n(2) " Version 5: " in wh "help datatypes" _n in yel " Version 6: " in wh "Stata Command datatypes "_n
+; set more 0 ; more ; set more 1 ;
+di in gre "  Another check of the variable " in wh "sex" in gre " is the command " in wh "codebook"
+_n in wh _dup(79) "-" _n;
+di in wh ". codebook sex";
+noi codebook sex;
+di _n in wh _dup(79) "-"
+; set more 0 ; more ; set more 1 ;
+
+di in wh _dup(79) "-" _n(2)
+in yel " Now we want to change the structure of the file. " _n(2)
+in gre " Instead of one observation for all males and one observation for all females" _n(2)
+" We want many observations with three variables: " in wh " sex, age and population count" _n(2)
+in gre "  STATA facilitates this by transposing the data from : " in wh " wide to long format " _n(2)
+in gre "  In long format, one has few variables and many observations" _n
+in gre "  In wide format, one has few observations and many variables";
+di _n in wh _dup(79) "-" _n(2);
+; set more 0 ; more ; set more 1 ;
+di _n(2) in yel " Step " in wh " 1 " in gre ", delete all observations except the two with male and female data" _n
+in wh ". drop if sex == .";
+noi drop if sex == .;
+di _n in wh _dup(79) "-" _n(2);
+
+di in yel " Step " in wh " 2 " in gre ", delete the variable "in wh "c" in gre ", which contained descriptions"  ;
+drop c1;
+di in wh ". drop c1" _n;
+di in gre " Step " in wh " 3 " in gre ", generate a variable indicating observation number "  ;
+di in wh ". gen id = _n" _n;
+noi gen id = _n;
+
+
+di in wh ". list id sex c2 c3 c4 ";
+noi list id sex c2 c3 c4 ;
+;set more 0 ; more ; set more 1 ;
+
+
+di _n(2) in yel "Before the actual reshape, assure that you have the latest version of reshape" _n
+_n in yel "The syntax for the command reshape changed by mid 1998"
+_n in yel "therefore we check the version of " in wh "YOUR" in yel " reshape.ado"
+_n in wh _dup(79) "-" _n(2)
+_n(2) in wh ". which reshape" _n;
+noi which reshape;
+#d cr;
+di _n(2) " This version  number indicates YOUR reshape.ado" _n(2)
+
+_yesno " Please confirm that your reshape.ado is at least version 4.0.3" in wh " y " in yel "or" in wh " n"
+
+if lower("%answ")!="y" {
+  di in yel "Update your version of Stata from www.stata.com, and restart this tutorial"_n
+  di in yel "Try " in wh "help update     lookup update   search update" _n
+  exit
+capture }
+di _n(3)
+#d ;
+;set more 0 ; more ; set more 1 ;
+
+di _n in yel " Step " in wh " 4 " in gre ", reshape data. Two new variables, c with counts and j for age"  _n(2)
+in yel " Note the change (soon) in the variables window" _n;
+
+di in wh ". reshape long c, i(id) j(age)" ;
+noi reshape long c, i(id) j(age) ;
+noi sort sex age;
+di in wh _dup(79) "-" _n(2)
+in gre "  Data has been changed to few variables and many observations " in wh " how many ? " _n
+
+;set more 0 ; more ; set more 1 ;
+
+di in wh ". list in 1/4";
+noi list in 1/4;
+di _n in wh ". list in 1/4, nolabel";
+noi list in 1/4,nolabel;
+di in wh _dup(79) "-" _n
+in yel " the value of sex in row 3 is what ? " in yel " the answer is " in wh "1" _n
+in yel _n " this value has the label " in wh "male" _n 
+in yel "              by " in whi ",nolabel" in yel " we see the value not the label"
+_n;
+
+set more 0 ; more ; set more 1 ;
+di in wh _dup(79) "-" _n
+in gre "  Let us look at the data again - how many variables ? " _n
+_n in wh ". describe";
+noi d;
+di _n in gre " We notice that variable " in wh "c" in gre " is string " _n
+; set more 0 ; more ; set more 1 ;
+#d cr;
+
+di in wh _dup(79) "-"
+di in yel " Step " in wh " 5 " in gre ", age should be 0 in first and 99 in last observation"  _n(2)
+
+di in wh ". list if age < 5 | age > 99 "
+noi list if age < 5 | age > 99
+set more 0 
+more  
+set more 1 
+di in wh ". replace age = age-2"
+noi replace age = age-2                                                          
+di in wh _n ". list if age < 3 | age > 97"
+noi list if age > 97 | age < 3
+di _n in gre "Note that age is correct, but observation 101 and 202 contain totals " _n
+#d ;
+set more 0 ; more ; set more 1 ;
+di _n in wh ". drop if age > 99";
+drop if age > 99;
+
+
+
+
+di _n in yel " Step " in wh " 6 " in gre ", calculate variables for the population pyramids " _n
+  " With the function " in wh "real(c)" in gre " we can convert from string to numeric" _n(2);
+
+di _n in wh ". generate count = real(c)";
+gen count = real(c);
+di in wh ". generate males = -real(c) if sex == 1";
+gen males = -real(c) if sex == 1;
+di in wh ". generate females = real(c) if sex == 2";
+gen females = real(c) if sex == 2;
+set more 0 ; more ; set more 1 ;
+di _n in wh ". list sex c count males females in 1/3";
+noi list sex c count males females in 1/3,nodisplay;
+di _n in wh ". list sex c count males females in 190/193";
+noi list sex c count males females in 190/193,nodisplay;
+set more 0 ; more ; set more 1 ;
+di _n in wh ". describe ";
+noi d ;
+set more 0 ; more ; set more 1 ;
+
+di _n in yel " Step " in wh " 6a " in gre ", Let us save the file (replace if existing)" _n
+_n in wh ". save long, replace" _n(3);
+
+save long, replace;
+
+di in yel " Step " in wh " 7 " in gre ", We want to see the counts ! " _n
+ " First as a scatterplot with age, then by sex and finally pyramids" _n ;
+set more 0 ; more ; set more 1 ;
+di in wh ". graph count age";
+gra count age;
+set more 0 ; more ; set more 1 ;
+sort sex;
+di in wh ". sort sex";
+di in wh ". graph count age, by(sex) total ylabel";
+graph count age, by(sex) total;
+set more 0 ; more ; set more 1 ;
+di  _n(2) in wh ". hbar males females";
+hbar males females;
+di _n in yel " We are not satisfied. " _n 
+ " Labels are awfull and we should have males and females side by side " _n
+ " Not under each other" in gre " We must do more to the data" ;
+set more 0 ; more ; set more 1 ;
+
+di _n in yel " The trick here is to copy the female data to the observations with the " _n 
+ " male data. Look below how to do that" _n 
+in wh ". list sex age males females in 1/3";
+noi list sex age males females in 1/3;
+di in wh ". list sex age males females in 101/103";
+noi list sex age males females in 101/103;
+set more 0 ; more ; set more 1 ;
+di _n in wh " _n+100 " in yel "means: value from current observation + 100" _n(2) ;
+di in wh ". replace females = real(c[_n+100]) if sex == 1";
+replace females = real(c[_n+100]) if sex == 1;
+di _n(2) in gre " Let us check the calculation with" in wh " list" _n(2) in wh ". list  id age c males females if age < 10";
+noi list id age c males females if age < 3;
+
+di " Let us try the pyramid again ";
+di  _n(2) in wh ". hbar males females";
+hbar males females;
+di _n in yel " Much better but still: We are not satisfied. " _n 
+ " Labels are awfull and we do not need observations above number 100 " _n(2)
+;
+set more 0 ; more ; set more 1 ;
+di in wh ". drop in 101/200";
+drop in 101/200;
+
+di in wh ". drop c count";
+drop c count;
+
+di in wh ". generate lbl =  age";
+gen lbl =  age;
+
+* next line thanks to N.Cox:;
+di in wh ". replace lbl = . if mod(age,10) > 0" ;
+replace lbl = . if mod(age,10) > 0 ;
+
+
+di in wh ". list in 1/11, nodisplay";
+noi list age males females lbl in 1/11, nodispl;
+
+di _n in wh ". hbar males females, l(lbl)" ;
+hbar males females, l(lbl);
+
+di " Age labels could be improved and we need titles plus x axis labels";
+set more 0 ; more ; set more 1 ;
+
+di in wh ". gen str2 slbl = string(lbl)" ;
+gen str2 slbl = string(lbl);
+replace slbl = " " if lbl == . ;
+di in wh ". replace slbl = " " if lbl == . ";
+
+
+di in wh ". hbar males females, l(slbl) lap /*" _n
+  "*/ xla(-4250,-4000,-3000,-2000,-1000,0,1000,2000,3000,4000,4250) /*" _n
+  "*/ ttick t(Demographic composition, 1998) /*" _n
+  "*/ barfrac(0.85) xline(-1000,-2000,-3000,0,1000,2000,3000)";
+
+
+hbar males females, l(slbl) lap /*
+  */ xla(-4250,-4000,-3000,-2000,-1000,0,1000,2000,3000,4000,4250) /*
+  */ ttick t(Demographic composition, 1998) /*
+  */ barfrac(0.85) xline(-1000,-2000,-3000,0,1000,2000,3000);
+
+di _n " Let us save the graph for reuse, note the added lines" _n;
+set more 0 ; more ; set more 1 ;
+
+di _n in wh ". hbar males females, l(slbl) lap /*" _n
+  "*/ xla(-4250,-4000,-3000,-2000,-1000,0,1000,2000,3000,4000,4250) /*" _n
+  "*/ ttick t1(Demographic composition, 1998) t2(Funen County, Denmark) /*" _n
+  "*/ barfrac(0.85) xline(-1000,-2000,-3000,0,1000,2000,3000) /* " _n
+  "*/ saving(pyramid,replace)";
+
+hbar males females, l(slbl) lap /*
+  */ xla(-4250,-4000,-3000,-2000,-1000,0,1000,2000,3000,4000,4250) /*
+  */ ttick t1(Demographic composition, 1998) t2(Funen County, Denmark)/*
+  */ barfrac(0.85) xline(-1000,-2000,-3000,0,1000,2000,3000) saving(pyramid,replace);
+
+
+di _n " Let us make a new graph which " _n "check the difference in number of males and females  ";
+set more 0 ; more ; set more 1 ;
+di in wh ". gen dif = males - (-females)";
+gen dif = males - (-females);
+di in wh ". label var dif Male             Female          ";
+label var dif "Male             Female          ";
+
+di _n in wh ". hbar dif, l(slbl) lap /*" _n
+  "*/ xla(-500,-250,0,250,500) t2(Diffence N males - N of females) /*" _n
+  "*/ ttick t1(Female preponderance with age) /*" _n
+  "*/ barfrac(0.85) xline(-250,0,250,500)" ;
+
+hbar dif, l(slbl) lap /*
+  */ xla(-500,-250,0,250,500) t2(Diffence N males - N of females) /*
+  */ ttick t1(Female preponderance with age) /*
+  */ barfrac(0.85) xline(-250,0,250,500);
+
+#d cr;
+di in wh _dup(79) "-" _n(2)
+di in yel " You have seen these commands, try " in wh " help" in yel " if you want to repeat"  _n(2)
+di in wh " list                  " in gre " listing cases "
+di in wh " list in 1/3, nodisplay" in gre " listing subsamples and changing output"
+di in wh " generate              " in gre " define new variabes"
+di in wh " replace  .. if x < 1  " in gre " replace value with new value  "
+di in wh " codebook              " in gre " simple table with definitions"
+di in wh " label                 " in gre " adding descriptions to variables"
+di in wh " reshape               " in gre " change data from wide to long"
+di in wh " graph x y, saving()   " in gre " graphing with optional save"
+di in wh " graph x y, by(z) total" in gre " conditional graphing"
+di in wh " hbar                  " in gre " horizontal bar graphs"
+di in wh " save                  " in gre " saving changed data" _n(2)
+di in wh _dup(79) "-" _n
+
+di "Repeat this tutorial: press F7 - list of tutorials press: F6 or F5" _n
+exit
+

@@ -1,0 +1,211 @@
+#*******************************************
+# MacVersion = 0.2
+# MacDescription = Generate UE Word File
+# MacAuthor = Lignumaqua
+# MacFileName = UEWordFile.gsk
+# MacUrl =
+#*******************************************
+
+# Version History:
+#
+# 0.1 12-28-08 First beta release
+# 0.2 12-30-08 Separated out Database variables
+#
+# Generates the Syntax coloring Word File for the UltraEdit Text Editor.
+# After the macro has run the appropriate code will be in the clipboard 
+# ready for pasting into the file.
+
+VERCHECK Version=7.5.0.173 (Note: this macro requires the latest 7.5 GSAK release)
+
+
+$SQLfile = $_Install + "\static.db3"
+$status = Sqlite("open",$SQLfile)
+
+$_sql = "SELECT vfrom FROM lookup WHERE type='functions' order by vfrom"
+$FunctionStrings = Sqlite("sql",$_sql)
+
+# Functions
+$count = RegExCount($_NewLine,$FunctionStrings) + 1
+$i = 1
+$FunctionSection = $Section2
+$LastLetter = Left($FunctionStrings,1)
+
+WHILE $i <= $count
+	$NextFunction = Extract($FunctionStrings,$_NewLine,$i)
+	$NextFunction = Upper(Left($NextFunction,1)) + Right($NextFunction,Len($NextFunction)-1)
+	BEGINCASE
+	CASE $i = 1
+		$FunctionSection = $FunctionSection + $NextFunction
+	CASE Left($NextFunction,1) <> $LastLetter
+		$FunctionSection = $FunctionSection +$_NewLine + $NextFunction
+		$lastLetter = Left($NextFunction,1)
+	OTHERWISE
+		$FunctionSection = $FunctionSection + " " + $NextFunction
+	ENDCASE
+	$i = $i + 1
+ENDWHILE
+$FunctionSection = $FunctionSection +$_NewLine
+
+
+# System Variables
+$_sql = "SELECT vfrom FROM lookup WHERE type='sysvars' and vfrom not in(select vfrom FROM lookup WHERE type = 'noupdate') order by vfrom"
+$SystemStrings = Sqlite("sql",$_sql)
+
+$count = RegExCount($_NewLine,$SystemStrings) + 1
+$i = 1
+$SystemSection = $Section3
+
+WHILE $i <= $count
+	$NextSystem = Extract($SystemStrings,$_NewLine,$i)
+	BEGINCASE
+		CASE $i = 1
+			$SystemSection = $SystemSection + $NextSystem
+		CASE $i/6 = Int($i/6)
+			$SystemSection = $SystemSection +$_NewLine + $NextSystem
+		OTHERWISE
+			$SystemSection = $SystemSection + " " + $NextSystem
+	ENDCASE
+	$i = $i + 1
+ENDWHILE
+$SystemSection = $SystemSection +$_NewLine
+
+
+# Commands
+$_sql = "SELECT vfrom FROM lookup WHERE type='commands' order by vfrom"
+$CommandStrings = Upper(Sqlite("sql",$_sql))
+
+$count = RegExCount($_NewLine,$CommandStrings) + 1
+$i = 1
+$CommandSection = $Section4
+$LastLetter = Left($CommandStrings,1)
+
+WHILE $i <= $count
+	$NextCommand = Extract($CommandStrings,$_NewLine,$i)
+	BEGINCASE
+		CASE Left($NextCommand,1) = "<"
+		CASE $CommandSection = $Section4
+			$CommandSection = $CommandSection + $NextCommand
+		CASE Left($NextCommand,1) <> $LastLetter
+			$CommandSection = $CommandSection +$_NewLine + $NextCommand
+			$lastLetter = Left($NextCommand,1)
+		OTHERWISE
+			$CommandSection = $CommandSection + " " + $NextCommand
+	ENDCASE
+	$i = $i + 1
+ENDWHILE
+$CommandSection = $CommandSection +$_NewLine
+
+
+# Read Only database Variables
+$_sql = "SELECT vfrom FROM lookup WHERE type = 'noupdate' order by vfrom"
+$ReadOnlyStrings = Sqlite("sql",$_sql)
+
+$count = RegExCount($_NewLine,$ReadOnlyStrings) + 1
+$i = 1
+$ReadOnlySection = $Section6
+
+WHILE $i <= $count
+	$NextReadOnly = Extract($ReadOnlyStrings,$_NewLine,$i)
+	BEGINCASE
+		CASE $i = 1
+			$ReadOnlySection = $ReadOnlySection + $NextReadOnly
+		CASE $i/6 = Int($i/6)
+			$ReadOnlySection = $ReadOnlySection +$_NewLine + $NextReadOnly
+		OTHERWISE
+			$ReadOnlySection = $ReadOnlySection + " " + $NextReadOnly
+	ENDCASE
+	$i = $i + 1
+ENDWHILE
+$ReadOnlySection = $ReadOnlySection +$_NewLine
+
+# Database Variables
+$_sql = "SELECT vfrom FROM lookup WHERE type='dbv' and vfrom not in(select vfrom FROM lookup WHERE type = 'noupdate') order by vfrom"
+$DatabaseStrings = Sqlite("sql",$_sql)
+
+$count = RegExCount($_NewLine,$DatabaseStrings) + 1
+$i = 1
+$DatabaseSection = $Section8
+
+WHILE $i <= $count
+	$NextDatabase = Extract($DatabaseStrings,$_NewLine,$i)
+	BEGINCASE
+		CASE $i = 1
+			$DatabaseSection = $DatabaseSection + $NextDatabase
+		CASE $i/6 = Int($i/6)
+			$DatabaseSection = $DatabaseSection +$_NewLine + $NextDatabase
+		OTHERWISE
+			$DatabaseSection = $DatabaseSection + " " + $NextDatabase
+	ENDCASE
+	$i = $i + 1
+ENDWHILE
+$DatabaseSection = $DatabaseSection +$_NewLine
+
+
+
+$status = Sqlite("close",$SQLfile)
+
+$UEFile = $Section1 + $FunctionSection + $SystemSection + $CommandSection + $Section5 + $ReadOnlySection + $Section7 + $DatabaseSection
+
+CLIP Data=$UEFile
+
+CANCEL
+
+##################################
+
+<data> VarName=$Section1
+/L14"GSAK Macro" Line Comment = #  Block Comment On Alt = <Data Block Comment Off Alt = Data> File Extensions = GSK
+/Open Brace Strings =  "(" "IF" "BEGINSUB" "WHILE" "BEGINCASE"
+/Close Brace Strings = ")" "ENDIF" "ENDSUB" "ENDWHILE" "ENDCASE"
+/Indent Strings = "BEGINSUB" "WHILE" "IF" "ELSE" "BEGINCASE" "CASE" "OTHERWISE"
+/Unindent Strings = "ENDSUB" "ENDWHILE" "ENDIF" "ELSE" "ENDCASE" "CASE" "OTHERWISE"
+/Open Fold Strings = "BEGINSUB" "WHILE" "IF" "BEGINCASE"
+/Close Fold Strings = "ENDSUB" "ENDWHILE" "ENDIF" "ENDCASE"
+/Function String = "BEGINSUB Name=^([a-zA-Z]*^)^p"
+<enddata>
+
+<data> VarName=$Section2
+/C1"Functions" STYLE_FUNCTION
+<enddata>
+
+<data> VarName=$Section3
+/C2"System Variables"
+FALSE
+TRUE
+<enddata>
+
+<data> VarName=$Section4
+/C3"Commands" 
+<enddata>
+
+<data> VarName=$Section5
+/C4"Persistent Variables" 
+** $p_
+/C5"Operators" 
++
+-
+=
+// /
+*
+^
+<>
+<
+>
+<=
+>=
+AND
+OR
+NOT
+<enddata>
+
+<data> VarName=$Section6
+/C6"Read Only System Variables"
+<enddata>
+
+<data> VarName=$Section7
+/C7"Other Variables"
+** $
+<enddata>
+
+<data> VarName=$Section8
+/C8"Database Variables"
+<enddata>

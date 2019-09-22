@@ -1,0 +1,72 @@
+/* file qplot.mac */
+
+/************************************************************************
+    qplot.mac is a package of Maxima functions 
+    
+    Copyright (C) 2011,2009  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+/*  qplot is a quick interface to plot2d, mainly of
+ *   use for quick plots of a function or a set of
+ *   functions. Features: stronger line thickness and color,
+ *   grid, stronger axes, better default plotting of
+ *   fast changing parametric functions.
+ *   See Maxima by Example, Ch. 2, Two Dimensional
+ *   Plots and Least Squares Fits, for an introduction
+ *   to plot2d and qplot.
+ *   Simple examples:
+ *   qplot ( x^3, [x,-2,2])$
+ *   qplot ( [x^3, x^2, x], [x,-2,2] )$
+ *   qplot ( [u^3, u^2, u], [u,-2,2], [x,-3,3])$
+ *   qplot ( [u^3, u^2, u], [u,-2,2], [x,-3,3], [y,-10,10])$
+ */
+    
+/* disp("qplot(exprlist, prange, hvrange),  hvrange lists are optional ")$ */
+ 
+qplot ( exprlist, prange, [hvrange]) := 
+    block([optlist, plist],
+      optlist : [ [nticks,100], [legend, false], 
+           [ylabel, " "], [gnuplot_preamble, "set grid; set zeroaxis lw 5;"] ], 
+      optlist : cons ( [style,[lines,5]], optlist ),
+      if length (hvrange) = 0 then plist : [] 
+            else   plist : hvrange, 
+      plist : cons (prange,plist), 
+      plist : cons (exprlist,plist),
+      plist : append ( plist, optlist ),
+      apply (plot2d, plist ) )$
+      
+      
+      
+  /*
+  An example with two different ways to get the same plot:
+  
+  (%i9) plot2d([ u^3,
+               [parametric, cos(t), sin(t), [t,-%pi,%pi],[nticks,200]]],
+               [u,-1,1],[x,-2.1,2.1],[y,-1.5,1.5],
+              [style,[lines,5]],
+            [gnuplot_preamble, "set grid; set zeroaxis lw 5;"],
+             [legend,false],[ylabel, " "])$
+             
+(%i10) load(qplot);
+(%o10)                        c:/work2/qplot.mac
+
+(%i11) qplot(
+            [ u^3,
+               [parametric, cos(t), sin(t), [t,-%pi,%pi],[nticks,200]]],
+               [u,-1,1],[x,-2.1,2.1],[y,-1.5,1.5])$
+               
+  are equivalent.
+  
+  */

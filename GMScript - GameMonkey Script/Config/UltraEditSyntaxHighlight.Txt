@@ -1,0 +1,18 @@
+Game Monkey syntax highlighting for UltraEdit
+Contributed by deadsoul
+
+Copy and paste this into your wordfile.txt and you will get 
+syntax highlighting and function recognition for the side panel.
+
+--------------------- Copy below this line ----------------
+/L12"GameMonkey" Line Comment = // Block Comment On = /* Block Comment Off = */ Escape Char = \ String Chars = "' File Extensions = gm 
+/Delimiters = ~!@%^&*()-+=|\/{}[]:;"'<> ,   .? 
+/Function String = "= function(" 
+/Indent Strings = "{" ":" 
+/Unindent Strings = "}" 
+/C1"Keywords" 
+if else for foreach in and or while dowhile functionreturn continue break null global local member table true false this 
+/C2"Keywords" 
+debug typeId typeName typeRegisterOperator typeRegisterVariable sysCollectGarbage sysGetMemoryUsage sysSetDesiredMemoryUsage sysGetDesiredMemoryUsage sysTime doString globals threadTime threadId threadKill thread yield exit assert sleep signal block stateSet stateSetOnThread stateGet stateGetLast stateSetExitFunction tableCount tableDuplicate print format 
+/C2"Operators" 
++ - = // / % & > < ^ ! |    s    G                                                

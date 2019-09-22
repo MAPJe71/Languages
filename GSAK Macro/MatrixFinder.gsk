@@ -1,0 +1,1464 @@
+# MacVersion = 1.3.4
+# MacDescription = Filter GSAK Grid To Display Caches With D/T Matrix or Month/Year Placed or State/County Combos You Have Not Found Yet
+# MacAuthor = FlyingSyringe
+# MacFileName = MatrixFinder.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=15932&view=getlastpost
+#---------------------------------------------------------------------------------------------------
+#		**VERSION HISTORY**
+#
+#		04.10.2010	v1.3.0	ReWrite of D/T Matrix Algorithm
+#		06.10.2010	v1.3.1	Added "No Found Caches" Error Check
+#		07.10.2010	v1.3.2	Check For "No Found Caches" Error Now Done At DB Selection Time
+#												RETURN commad used instead of CANCEL for compatability when called from another macro
+#		16.10.2010	v1.3.3	Error check routine for Database Name Change
+#		17.10.2010	v1.3.3b	Fix v1.3.3 error 
+#		24.09.2012  v1.3.4  Added User Flagged Option
+#--------------------------------------------------------------------------------------------------
+
+VERCHECK Version=7.7.2.56 (please update GSAK to version 7.7.2.56 to run this macro - see http://gsak.net)
+
+SHOWSTATUS MSG=Setting Up Variables
+
+GOSUB NAME=DeclareVars
+
+GOSUB NAME=OldFile
+
+IF FileExists($_Install + "\Macros\MatrixFinderSettingsv134.xml")
+
+	MACSETTINGS TYPE=R VARS=statechoice,countyChoice,Counties,States,FoundDb,ToFindDb,CountyCheckbox,StateCheckbox,LimitOne,ActiveStatus,IgnoreUserFlag,UseUserFlag,AllUserFlags,DTChkBox,GSNFICheckBox,MYChkBox,TChk,MChk,UChk,RChk,EChk,BChk,AChk,GChk,IChk,LChk,OChk,VChk,WChk,XChk,YChk,ZChk,CitoChk,MinD,MaxD FILE=$_Install\Macros\MatrixFinderSettingsv134.xml
+
+	GOSUB NAME=checkDataBaseExists
+	
+ELSE
+	
+	GOSUB NAME=GetDatabase
+	$DataBases = "Please Choose;"+$DataBases
+	$DTChkBox = TRUE
+
+ENDIF
+
+SHOWSTATUS DISPLAY=OFF
+
+GOSUB NAME=mainForm
+
+BEGINSUB NAME=mainForm
+
+###################################
+##-------------------------------##
+##---------Main Menu Form--------##
+WHILE TRUE
+	$FormExit = form($Form,"")
+
+	BEGINCASE
+
+	CASE $FormExit = "SystemExit"
+
+		RETURN
+
+	CASE $FormExit = "OK"
+		
+		IF $FoundDb = "Please Choose" OR $ToFindDb = "Please Choose"
+			MSGOK MSG="Please Select Databases To Work With"
+			GOSUB NAME=mainForm
+		ENDIF
+
+				GOSUB NAME=StatecountyChoiceRoutine
+				GOSUB NAME=CacheTypeOptions
+				GOSUB NAME=OkBtnOptions
+
+			IF $DTChkBox = TRUE
+
+				GOSUB NAME=DiffTerMatrix
+
+			ENDIF
+
+			IF $GSNFICheckBox = TRUE
+				$MYChkBox = FALSE
+				$DTChkBox = FALSE
+
+				GOSUB NAME=StateCountyRoutine
+				GOSUB NAME=GetCountyNotFoundIn
+
+			ENDIF
+
+			IF $MYChkBox = TRUE
+
+				GOSUB NAME=MonthYearMatrix
+
+			ENDIF
+				SHOWSTATUS MSG=Cleaning Up
+				GOSUB NAME=FinalFilter
+				SHOWSTATUS DISPLAY=OFF
+				RETURN
+
+	CASE $FormExit = "FoundDb"
+
+				GOSUB NAME=checkFoundCaches
+
+	CASE $FormExit = "ToFindDb"
+
+				#GOSUB NAME=checkDataBaseExists
+
+				DATABASE NAME=$ToFindDb ACTION=SELECT
+
+				IF $GSNFICheckBox = TRUE
+
+					DATABASE NAME=$ToFindDb ACTION=SELECT
+					GOSUB NAME=StateCountyRoutine
+
+				ENDIF
+
+					GOSUB NAME=StatecountyChoiceRoutine
+
+	CASE $FormExit = "StateChoice"
+
+			GOSUB NAME=StatecountyChoiceRoutine
+
+	CASE $FormExit = "DTChkBox"
+
+			$CTypeString=""
+			GOSUB NAME=StatecountyChoiceRoutine
+
+	CASE $FormExit = "MYChkBox"
+
+			GOSUB NAME=StatecountyChoiceRoutine
+
+	CASE $FormExit = "GSNFICheckBox"
+
+			DATABASE NAME=$ToFindDb ACTION=SELECT
+			GOSUB NAME=StatecountyChoiceRoutine
+
+	ENDCASE
+
+ENDWHILE
+
+ENDSUB #NAME=mainForm
+##----------End Of Form----------##
+##-------------------------------##
+###################################
+SHOWSTATUS MSG=Calculating
+
+#Send User Choices To Code on "OK"##
+BEGINSUB NAME=OkBtnOptions
+
+		BEGINCASE
+			CASE $LimitOne = TRUE AND $DTChkBox = TRUE
+				$LimitDisplay = "ORDER BY distance"
+			CASE $LimitOne = TRUE AND $GSNFICheckBox = TRUE
+				$LimitDisplay = "GROUP BY county, distance ORDER BY distance LIMIT 1"
+			CASE $LimitOne = TRUE AND $MYChkBox = TRUE
+  			$LimitDisplay = "GROUP BY placeddate, distance ORDER BY distance LIMIT 1"
+			CASE $LimitOne = FALSE
+				$LimitDisplay = ""
+  	ENDCASE
+  	
+		BEGINCASE
+			CASE $UseUserFlag = TRUE			
+	  			$IgnoreDisplay = "AND UserFlag = 1"
+			CASE $IgnoreUserFlag = TRUE
+	  			$IgnoreDisplay = "AND UserFlag = 0"
+			CASE $AllUserFlags = TRUE
+	  			$IgnoreDisplay = ""
+		ENDCASE 		
+  		
+  		IF $ActiveStatus = TRUE
+  			$ActiveDisplay = "AND Status = 'A'"
+  		ELSE
+  			$ActiveDisplay = ""
+  		ENDIF
+
+  		IF VAL($MinD) > 0
+  			$MinDistance = VAL($MinD)
+  			$DistanceQuery = "AND distance >= $MinDistance "
+  		ELSE
+  			$MinDistance = 0
+  		ENDIF
+
+	  	IF VAL($MaxD) > 0
+	  		$MaxDistance = VAL($MaxD)
+	  		$DistanceQuery = "AND distance <= $MaxDistance"
+	  	ELSE
+	  		$MaxDistance = 0
+	  	ENDIF
+
+	  	IF VAL($MinD) > 0 AND VAL($MaxD) > 0
+	  		$MinDistance=VAL($MinD)
+	  		$MaxDistance=VAL($MaxD)
+	  		$DistanceQuery = "AND distance BETWEEN $MinDistance AND $MaxDistance"
+	  	ENDIF
+
+	  	IF VAL($MinD) = 0 AND VAL($MaxD) = 0
+	  		$DistanceQuery = ""
+	  	ENDIF
+
+		IF $StateCheckbox = TRUE
+	  	IF $StateChoice <> ""
+	  		$StateChosen = "AND state LIKE TRIM('$StateChoice')"
+	  	ELSE
+	  		$StateChosen = ""
+	  	ENDIF
+	  ENDIF
+
+		IF $CountyCheckbox = TRUE
+	  	IF $countyChoice <> ""
+	  		$CountyChosen = "AND county LIKE TRIM('$countyChoice')"
+	  	ELSE
+	  		$CountyChosen = ""
+	  	ENDIF
+		ENDIF		
+		
+ENDSUB #NAME=OkBtnOptions
+
+#Send Cache Types To Code on "OK#
+BEGINSUB NAME=CacheTypeOptions
+
+		IF $TChk = TRUE
+			$TraditionalCache = "'T'"
+			$Trigger = TRUE
+		ELSE
+			$TraditionalCache = "''"
+		ENDIF
+
+		IF $MChk = TRUE
+			$MultiCache = "'M'"
+			$Trigger = TRUE
+		ELSE
+			$MultiCache = "''"
+		ENDIF
+
+		IF $UChk = TRUE
+			$MysteryCache = "'U'"
+			$Trigger = TRUE
+		ELSE
+			$MysteryCache = "''"
+		ENDIF
+
+		IF $RChk = TRUE
+			$EarthCache = "'R'"
+			$Trigger = TRUE
+		ELSE
+			$EarthCache = "''"
+		ENDIF
+
+		IF $EChk = TRUE
+			$EventCache = "'E'"
+			$Trigger = TRUE
+		ELSE
+			$EventCache = "''"
+		ENDIF
+
+		IF $BChk = TRUE
+			$LetterboxCache = "'B'"
+			$Trigger = TRUE
+		ELSE
+			$LetterboxCache = "''"
+		ENDIF
+
+		IF $AChk = TRUE
+			$ApeCache = "'A'"
+			$Trigger = TRUE
+		ELSE
+			$ApeCache = "''"
+		ENDIF
+
+		IF $CitoChk = TRUE
+			$CITOCache = "'C'"
+			$Trigger = TRUE
+		ELSE
+			$CITOCache = "''"
+		ENDIF
+
+		IF $GChk = TRUE
+			$BenchCache = "'G'"
+			$Trigger = TRUE
+		ELSE
+			$BenchCache = "''"
+		ENDIF
+
+		IF $IChk = TRUE
+			$WherigoCache = "'I'"
+			$Trigger = TRUE
+		ELSE
+			$WherigoCache = "''"
+		ENDIF
+
+		IF $LChk = TRUE
+			$LocationlessCache = "'L'"
+			$Trigger = TRUE
+		ELSE
+			$LocationlessCache = "''"
+		ENDIF
+
+		IF $OChk = TRUE
+			$OtherCache = "'O'"
+			$Trigger = TRUE
+		ELSE
+			$OtherCache = "''"
+		ENDIF
+
+		IF $VChk = TRUE
+			$VirtualCache = "'V'"
+			$Trigger = TRUE
+		ELSE
+			$VirtualCache = "''"
+		ENDIF
+
+		IF $WChk = TRUE
+			$WebcamCache = "'W'"
+			$Trigger = TRUE
+		ELSE
+			$WebcamCache = "''"
+		ENDIF
+
+		IF $XChk = TRUE
+			$MazeCache = "'X'"
+			$Trigger = TRUE
+		ELSE
+			$MazeCache = "''"
+		ENDIF
+
+		IF $YChk = TRUE
+			$WaymarkCache = "'Y'"
+			$Trigger = TRUE
+		ELSE
+			$WaymarkCache = "''"
+		ENDIF
+
+		IF $ZChk = TRUE
+			$MegaCache = "'Z'"
+			$Trigger = TRUE
+		ELSE
+			$MegaCache = "''"
+		ENDIF
+
+		IF $Trigger = TRUE
+			$CTypeString = "AND cachetype IN ($TraditionalCache,$MultiCache,$MysteryCache,$EarthCache,$EventCache,$LetterboxCache,$ApeCache,$CITOCache,$BenchCache,$WherigoCache,$LocationlessCache,$OtherCache,$VirtualCache,$WebcamCache,$MazeCache,$WaymarkCache,$MegaCache)"
+		ELSE
+			$CTypeString = ""
+		ENDIF
+		
+ENDSUB #NAME=CacheTypeOptions
+
+#Routine For State/County Filter Option#
+BEGINSUB NAME=StateCountyRoutine
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$ToFindDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="CREATE TEMP TABLE IF NOT EXISTS StateCounty AS SELECT DISTINCT code FROM gsakdb.caches WHERE NOT found $StateChosen $CountyChosen $IgnoreDisplay $ActiveDisplay $DistanceQuery $CTypeString $LimitDisplay"
+	$CurrentStates = Sqlite("sql",$_sql)
+	$CurrentStates = RegExReplace("\n|\f|\r",$CurrentStates,",")
+	$CurrentStates = RegExReplace(",,",$CurrentStates,"','")
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=StateCountyRoutine
+
+BEGINSUB NAME=GetCountyNotFoundIn
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$FoundDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="CREATE TEMP TABLE IF NOT exists countyFound AS SELECT DISTINCT TRIM(county) as county FROM gsakdb.caches WHERE found AND state NOT LIKE 'Nil' "
+	$result=Sqlite("sql",$_sql)
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$ToFindDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="CREATE TEMP TABLE IF NOT EXISTS source AS SELECT code FROM gsakdb.caches WHERE TRIM(county) NOT IN (SELECT TRIM(county) FROM countyFound) $StateChosen $CountyChosen $IgnoreDisplay $ActiveDisplay $DistanceQuery $CTypeString  $LimitDisplay"
+	$result=Sqlite("sql",$_sql)
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=GetCountyNotFoundIn
+
+#Routine For State & County Dropdown Boxes#
+#Called Numerously When Changing Database #
+#Or When Changing State/County Choices    #
+BEGINSUB NAME=StatecountyChoiceRoutine
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$ToFindDB\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="SELECT DISTINCT TRIM(state) AS state FROM gsakdb.caches WHERE state <> '' ORDER BY state COLLATE NOCASE ASC"
+	$States = Sqlite("sql",$_sql)
+
+	$_sql="SELECT DISTINCT TRIM(county) AS county FROM gsakdb.caches WHERE state LIKE TRIM('$statechoice')  AND county <> '' ORDER BY county COLLATE NOCASE ASC "
+	$Counties = Sqlite("sql",$_sql)
+
+		IF $Counties=""
+			$UseState = Extract($States,$_NewLine,1)
+			$_sql="SELECT DISTINCT TRIM(county) AS county FROM caches WHERE state LIKE TRIM('$UseState')"
+			$Counties = Sqlite("sql",$_sql)
+		ENDIF
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=StatecountyChoiceRoutine
+
+#Routine To Select Final Grid Display#
+BEGINSUB NAME=FinalFilter
+
+	BEGINCASE
+
+		CASE $DTChkBox = TRUE
+
+			MFILTER WHERE= code IN (SELECT code FROM dtMatrixFilter) AND NOT Found AND NOT IsOwner AND NOT archived
+
+				GOSUB NAME=zeroFilter
+
+		CASE $MYChkBox = TRUE
+			MFILTER WHERE=code IN ( SELECT code FROM MYMatrix ) AND NOT Found AND NOT IsOwner AND NOT archived
+
+				GOSUB NAME=zeroFilter
+
+		CASE $GSNFICheckBox = TRUE
+			GOSUB NAME=GetCountyNotFoundIn
+
+			MFILTER WHERE=code IN (SELECT code FROM source) AND NOT Found AND NOT IsOwner AND NOT archived
+
+				GOSUB NAME=zeroFilter
+
+	ENDCASE
+
+		BEGINSUB NAME=zeroFilter
+
+		GOSUB NAME=saveFile
+
+			IF $_FilterCount = 0
+				RETURN MSG=No Caches Matching Your Filter Were Found
+			ENDIF
+
+		ENDSUB
+
+GOSUB NAME=saveFile
+
+SQLSORT ORDERBY=distance
+
+ENDSUB #NAME=FinalFilter
+
+BEGINSUB NAME=saveFile
+
+MACSETTINGS TYPE=S VARS=statechoice,countyChoice,Counties,States,FoundDb,ToFindDb,CountyCheckbox,StateCheckbox,StateChosen,CountyChosen,LimitOne,ActiveStatus,IgnoreUserFlag,UseUserFlag,AllUserFlags,DTChkBox,GSNFICheckBox,MYChkBox,TChk,MChk,UChk,RChk,EChk,BChk,AChk,GChk,IChk,LChk,OChk,VChk,WChk,XChk,YChk,ZChk,CitoChk,MinD,MaxD FILE=$_Install\Macros\MatrixFinderSettingsv134.xml
+
+ENDSUB #NAME=FinalFilter
+
+#Routine To Calculate Caches With D/T#
+#Combinations Not Yet found				 #
+BEGINSUB NAME=DiffTerMatrix
+
+	GOSUB NAME=GetExistingMatrix
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$ToFindDB\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="CREATE TEMP TABLE IF NOT EXISTS gotmatrix(code,distance);"
+	$CreateTable = Sqlite("sql",$_sql)
+
+WHILE $x <= 81 AND $d <= 9
+
+	$t = 1
+
+	$Dif = RegExData("\d(\s|\.{0,})\d{0,}",$grid,$d)
+
+	WHILE $t <= 9
+
+	$Ter = RegExData("\d(\s|\.{0,})\d{0,}",$grid,$t)
+
+	$data = RegExData("(\d)*",$MatrixSource,$x)
+
+		IF VAL($data) = 0
+			$_sql="INSERT INTO gotmatrix SELECT code,distance FROM gsakdb.caches WHERE difficulty = $Dif AND terrain = $Ter AND NOT isOwner $IgnoreDisplay $ActiveDisplay $DistanceQuery $StateChosen $CountyChosen $CTypeString"
+			$result=Sqlite("sql",$_sql)
+
+		ENDIF
+
+		$x = $x + 1
+		$t = $t + 1
+
+	ENDWHILE
+
+	$d = $d + 1
+
+ENDWHILE
+
+	$_sql="CREATE TEMP TABLE IF NOT EXISTS dtMatrixFilter AS SELECT code FROM gotmatrix $LimitDisplay"
+	$DToutput=Sqlite("sql",$_sql)
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=DiffTerMatrix
+
+#Routine To Determine Existing D/T #
+#Combinations Already Found#
+BEGINSUB NAME=GetExistingMatrix
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$FoundDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+$_sql="SELECT "
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '1' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '1.5' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '2' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '2.5' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '3' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '3.5' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '4' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '4.5' THEN 1 ELSE 0 END) as a,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1' AND terrain = '5' THEN 1 ELSE 0 END) as a,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '1' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '1.5' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '2' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '2.5' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '3' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '3.5' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '4' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '4.5' THEN 1 ELSE 0 END) as b,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '1.5' AND terrain = '5' THEN 1 ELSE 0 END) as b,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '1' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '1.5' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '2' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '2.5' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '3' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '3.5' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '4' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '4.5' THEN 1 ELSE 0 END) as c,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2' AND terrain = '5' THEN 1 ELSE 0 END) as c,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '1' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '1.5' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '2' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '2.5' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '3' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '3.5' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '4' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '4.5' THEN 1 ELSE 0 END) as d,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '2.5' AND terrain = '5' THEN 1 ELSE 0 END) as d,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '1' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '1.5' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '2' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '2.5' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '3' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '3.5' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '4' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '4.5' THEN 1 ELSE 0 END) as e,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3' AND terrain = '5' THEN 1 ELSE 0 END) as e,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '1' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '1.5' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '2' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '2.5' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '3' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '3.5' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '4' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '4.5' THEN 1 ELSE 0 END) as f,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '3.5' AND terrain = '5' THEN 1 ELSE 0 END) as f,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '1' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '1.5' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '2' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '2.5' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '3' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '3.5' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '4' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '4.5' THEN 1 ELSE 0 END) as g,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4' AND terrain = '5' THEN 1 ELSE 0 END) as g,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '1' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '1.5' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '2' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '2.5' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '3' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '3.5' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '4' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '4.5' THEN 1 ELSE 0 END) as h,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '4.5' AND terrain = '5' THEN 1 ELSE 0 END) as h,"
+
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '1' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '1.5' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '2' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '2.5' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '3' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '3.5' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '4' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '4.5' THEN 1 ELSE 0 END) as i,"
+$_sql=$_sql+"SUM(CASE WHEN difficulty = '5' AND terrain = '5' THEN 1 ELSE 0 END) as i"
+
+$_sql=$_sql+" FROM gsakdb.caches WHERE found;"
+
+$MatrixSource = Sqlite("sql",$_sql) 
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=GetExistingMatrix
+
+#Routine To Determine Year/Month Placed#
+#Caches Found & Not Found			  		 #
+BEGINSUB NAME=MonthYearMatrix
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$FoundDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql = "CREATE TEMP TABLE IF NOT EXISTS MY_Found AS SELECT DISTINCT STRFTIME( '%Y-%m' , placeddate ) FROM gsakdb.caches WHERE found"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+	$path = $path + "\$ToFindDb\Sqlite.db3"
+	$sqlInputFile = SqlQuote($path)
+
+	$_sql = "ATTACH $sqlInputFile AS gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+	$_sql="CREATE TEMP TABLE IF NOT EXISTS MYmatrix AS SELECT code FROM gsakdb.caches WHERE STRFTIME('%Y-%m',placeddate) NOT IN (SELECT * FROM MY_Found) AND NOT found AND NOT isowner $IgnoreDisplay $ActiveDisplay $DistanceQuery $StateChosen $CountyChosen $CTypeString $LimitDisplay"
+	$codeselect = Sqlite("sql",$_sql)
+
+	$_sql = "DETACH gsakdb"
+	$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=MonthYearMatrix
+
+#Count Found Caches#
+BEGINSUB NAME=checkFoundCaches
+
+		$path = RegExData(".*(?=.*\\)",$_CurrentDataPath,1)
+		$path = $path + "\$FoundDb\Sqlite.db3"
+		$sqlInputFile = SqlQuote($path)
+
+		$_sql = "ATTACH $sqlInputFile AS foundGsakDb"
+		$status = Sqlite("sql",$_sql)
+
+		$_sql = "SELECT COUNT(code) FROM foundGsakDb.caches WHERE found"
+		$result = Sqlite("sql",$_sql)
+
+		$cacheCount = VAL($result)
+
+		IF $cacheCount = 0
+			$_sql = "DETACH foundGsakDb"
+			$status = Sqlite("sql",$_sql)
+			MSGOK msg=" Selected Found Database - Contains No Found Caches $_NewLine $_NewLine Returning To Menu"
+			GOSUB NAME=mainForm
+		ENDIF
+
+		$_sql = "DETACH foundGsakDb"
+		$status = Sqlite("sql",$_sql)
+
+ENDSUB #NAME=checkFoundCaches
+
+#Declare Variables#
+BEGINSUB NAME=DeclareVars
+
+Option Explicit=Yes
+
+#*******************************************************
+#   Variable declarations for
+#   C:\Users\Sascha\AppData\Roaming\gsak\Macros\MatrixFinder.gsk
+#
+#   Generated 24.09.2012 on GSAKVariables.gsk Rev V0.31
+#
+#*******************************************************
+
+
+Option Explicit=Yes
+
+DECLARE Var=$AChk Type=Boolean
+DECLARE Var=$ActiveDisplay Type=String
+DECLARE Var=$AllUserFlags Type=Boolean
+DECLARE Var=$ApeCache Type=String
+DECLARE Var=$BChk Type=Boolean
+DECLARE Var=$BenchCache Type=String
+DECLARE Var=$cacheCount Type=Numeric
+DECLARE Var=$checkDbName Type=String
+DECLARE Var=$CITOCache Type=String
+DECLARE Var=$CitoChk Type=Boolean
+DECLARE Var=$codeselect Type=String
+DECLARE Var=$counter Type=Numeric
+DECLARE Var=$Counties Type=String
+DECLARE Var=$CountyChosen Type=String
+DECLARE Var=$CreateTable Type=String
+DECLARE Var=$CTypeString Type=String
+DECLARE Var=$CurrentStates Type=String
+DECLARE Var=$d Type=Numeric
+DECLARE Var=$data Type=String
+DECLARE Var=$DataBase1 Type=String
+DECLARE Var=$DataBases Type=String
+DECLARE Var=$dbExists Type=Boolean
+DECLARE Var=$Dif Type=String
+DECLARE Var=$DistanceQuery Type=String
+DECLARE Var=$DTChkBox Type=Boolean
+DECLARE Var=$DToutput Type=String
+DECLARE Var=$EarthCache Type=String
+DECLARE Var=$EChk Type=Boolean
+DECLARE Var=$EventCache Type=String
+DECLARE Var=$FoundDb Type=String
+DECLARE Var=$form Type=String
+DECLARE Var=$FormExit Type=String
+DECLARE Var=$GChk Type=Boolean
+DECLARE Var=$grid Type=String
+DECLARE Var=$i Type=Numeric
+DECLARE Var=$IChk Type=Boolean
+DECLARE Var=$IgnoreDisplay Type=String
+DECLARE Var=$LChk Type=Boolean
+DECLARE Var=$LetterboxCache Type=String
+DECLARE Var=$LimitDisplay Type=String
+DECLARE Var=$LocationlessCache Type=String
+DECLARE Var=$MatrixSource Type=String
+DECLARE Var=$MaxDistance Type=Numeric
+DECLARE Var=$MazeCache Type=String
+DECLARE Var=$MChk Type=Boolean
+DECLARE Var=$MegaCache Type=String
+DECLARE Var=$MinDistance Type=Numeric
+DECLARE Var=$MultiCache Type=String
+DECLARE Var=$MYChkBox Type=Boolean
+DECLARE Var=$MysteryCache Type=String
+DECLARE Var=$OChk Type=Boolean
+DECLARE Var=$OtherCache Type=String
+DECLARE Var=$path Type=String
+DECLARE Var=$RChk Type=Boolean
+DECLARE Var=$result Type=String
+DECLARE Var=$sqlInputFile Type=String
+DECLARE Var=$StateChosen Type=String
+DECLARE Var=$States Type=String
+DECLARE Var=$status Type=String
+DECLARE Var=$t Type=Numeric
+DECLARE Var=$TChk Type=Boolean
+DECLARE Var=$ToFindDb Type=String
+DECLARE Var=$Ter Type=String
+DECLARE Var=$TraditionalCache Type=String
+DECLARE Var=$Trigger Type=Boolean
+DECLARE Var=$UChk Type=Boolean
+DECLARE Var=$UseState Type=String
+DECLARE Var=$VChk Type=Boolean
+DECLARE Var=$VirtualCache Type=String
+DECLARE Var=$WaymarkCache Type=String
+DECLARE Var=$WChk Type=Boolean
+DECLARE Var=$WebcamCache Type=String
+DECLARE Var=$WherigoCache Type=String
+DECLARE Var=$x Type=Numeric
+DECLARE Var=$XChk Type=Boolean
+DECLARE Var=$YChk Type=Boolean
+DECLARE Var=$ZChk Type=Boolean
+
+$x = 1
+$d = 1
+$t = 1
+
+$grid = "1;1.5;2;2.5;3;3.5;4;4.5;5"
+
+$MinDistance = 0
+$MaxDistance = 0
+
+$TChk = FALSE
+$MChk = FALSE
+$UChk = FALSE
+$RChk = FALSE
+$EChk = FALSE
+$BChk = FALSE
+$AChk = FALSE
+$GChk = FALSE
+$IChk = FALSE
+$LChk = FALSE
+$OChk = FALSE
+$VChk = FALSE
+$WChk = FALSE
+$XChk = FALSE
+$YChk = FALSE
+$ZChk = FALSE
+$CitoChk = FALSE
+$Trigger = FALSE
+
+
+
+$AllUserFlags = TRUE
+
+ENDSUB #Name=DeclareVars
+
+BEGINSUB NAME=checkDataBaseExists
+
+	GOSUB NAME=GetDatabase
+
+	$counter = RegExCount("\;",$Databases)
+	$i=0
+	$dbExists = FALSE
+
+	WHILE $i < $counter
+
+		$i = $i + 1
+		$checkDbName = Extract($Databases, ";" ,$i)
+
+		IF $checkDbName = $ToFindDb
+			$dbExists = TRUE
+		ENDIF
+
+	ENDWHILE
+
+		IF $dbExists = TRUE
+			DATABASE NAME=$ToFindDb ACTION=SELECT
+			GOSUB NAME=StatecountyChoiceRoutine
+		ELSE
+				GOSUB NAME=GetDatabase
+				$DataBases = "Please Choose;"+$DataBases
+				$DTChkBox = TRUE
+		ENDIF
+
+ENDSUB #NAME=checkDataBaseExists
+
+#SubRoutine To Determine Existing Databases#
+BEGINSUB NAME=GetDatabase
+$DataBases = SysInfo("DataBases")
+$DataBase1 = Extract($DataBases,";",1)
+ENDSUB #NAME=GetDatabase
+
+#SubRoutine That Updates Setting File From Previous Version"
+BEGINSUB NAME=OldFile
+
+IF FileExists($_Install + "\Macros\MatrixFinderSettingsv133.xml")
+	MACSETTINGS TYPE=R VARS=statechoice,countyChoice,Counties,States,FoundDb,ToFindDb,CountyCheckbox,StateCheckbox,StateChosen,CountyChosen,LimitOne,ActiveStatus,IgnoreUserFlag,DTChkBox,GSNFICheckBox,MYChkBox,TChk,MChk,UChk,RChk,EChk,BChk,AChk,GChk,IChk,LChk,OChk,VChk,WChk,XChk,YChk,ZChk,CitoChk,MinD,MaxD FILE=$_Install\Macros\MatrixFinderSettingsv133.xml
+	FILEERASE FILE=$_Install\Macros\MatrixFinderSettingsv133.xml  OnError=Continue
+ENDIF
+
+ENDSUB #NAME=OldFile
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Mon 24-Sep-2012 16:33:48
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = Matrix Finder
+  Color = 13882323
+  Height = 675
+  Width = 479
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 153
+  Left = 21
+  Top = 152
+  Width = 161
+  Taborder = 1
+
+Name = Groupbox2
+  Type = Groupbox
+  Height = 129
+  Left = 21
+  Top = 432
+  Width = 161
+  Taborder = 2
+
+Name = Groupbox3
+  Type = Groupbox
+  Enabled = Yes
+  Height = 225
+  Left = 264
+  Top = 320
+  Visible = Yes
+  Width = 185
+  Taborder = 3
+
+Name = Groupbox4
+  Type = Groupbox
+  Height = 33
+  Left = 176
+  Top = 592
+  Width = 281
+  Taborder = 4
+
+Name = Groupbox5
+  Type = Groupbox
+  Height = 153
+  Left = 186
+  Top = 152
+  Width = 263
+  Taborder = 5
+
+Name = Groupbox6
+  Type = Groupbox
+  Height = 97
+  Left = 16
+  Top = 320
+  Width = 169
+  Taborder = 8
+
+Name = Label7
+  Type = Label
+  Height = 9
+  Left = 424
+  Size = 6
+  Top = 8
+  Width = 30
+  Caption = v 1.3.4
+
+Name = FoundDb
+  Type = Combobox
+  Color = 7064475
+  Container = Groupbox1
+  Display = 25
+  Exitonchange = Yes
+  Height = 21
+  Left = 5
+  Top = 44
+  Values = $DataBases
+  Width = 145
+  Taborder = 0
+
+Name = ToFindDb
+  Type = Combobox
+  Color = 9816831
+  Container = Groupbox1
+  Display = 25
+  Exitonchange = Yes
+  Height = 21
+  Left = 5
+  Top = 114
+  Values = $DataBases
+  Width = 145
+  Taborder = 1
+
+Name = OK
+  Type = Button
+  Height = 41
+  Left = 56
+  Top = 592
+  Width = 81
+  Taborder = 0
+  Caption = OK
+
+Name = Label1
+  Type = Label
+  Color = 4227072
+  Container = Groupbox1
+  Font = Tekton Pro
+  Height = 19
+  Left = 21
+  Size = 12
+  Top = 21
+  Width = 120
+  Caption = Found Caches DB
+
+Name = Label2
+  Type = Label
+  Color = 33023
+  Container = Groupbox1
+  Font = Tekton Pro
+  Height = 19
+  Left = 18
+  Size = 12
+  Top = 91
+  Width = 126
+  Caption = Caches To Find DB
+
+Name = LimitOne
+  Type = Checkbox
+  Container = Groupbox2
+  Height = 17
+  Left = 24
+  Top = 16
+  Width = 121
+  Taborder = 0
+  Caption = Limit To 1st Closest ?
+
+Name = ActiveStatus
+  Type = Checkbox
+  Container = Groupbox2
+  Height = 17
+  Left = 24
+  Top = 40
+  Width = 129
+  Taborder = 1
+  Caption = Show Active Only ?
+
+Name = Label3
+  Type = Label
+  Color = 10485760
+  Font = Tekton Pro
+  Height = 24
+  Left = 182
+  Size = 15
+  Top = 0
+  Width = 139
+  Caption = MATRIX FINDER
+
+Name = Label4
+  Type = Label
+  Height = 13
+  Left = 186
+  Top = 25
+  Width = 130
+  Caption = Find Caches With Missing
+
+Name = MaxD
+  Type = Edit
+  Container = Groupbox3
+  Enabled = Yes
+  Height = 21
+  Left = 96
+  Top = 72
+  Width = 57
+  Taborder = 1
+
+Name = Label5
+  Type = Label
+  Container = Groupbox3
+  Height = 13
+  Left = 16
+  Top = 76
+  Width = 73
+  Caption = Max Distance
+
+Name = MinD
+  Type = Edit
+  Container = Groupbox3
+  Enabled = Yes
+  Height = 21
+  Left = 96
+  Top = 24
+  Width = 57
+  Taborder = 0
+
+Name = Label6
+  Type = Label
+  Container = Groupbox3
+  Height = 13
+  Left = 16
+  Top = 28
+  Width = 70
+  Caption = Min Distance
+
+Name = StateChoice
+  Type = Combobox
+  Container = Groupbox3
+  Display = 25
+  Enabled = Yes
+  Exitonchange = Yes
+  Height = 21
+  Left = 16
+  Top = 136
+  Values = $States
+  Width = 145
+  Taborder = 3
+
+Name = StateCheckBox
+  Type = Checkbox
+  Container = Groupbox3
+  Enabled = Yes
+  Exitonchange = Yes
+  Height = 25
+  Left = 16
+  Top = 104
+  Width = 113
+  Taborder = 2
+  Caption = Filter By State ?
+
+Name = countyChoice
+  Type = Combobox
+  Container = Groupbox3
+  Enabled = Yes
+  Exitonchange = Yes
+  Height = 21
+  Left = 16
+  Top = 200
+  Values = $Counties
+  Width = 145
+  Taborder = 5
+
+Name = CountyCheckBox
+  Type = Checkbox
+  Container = Groupbox3
+  Enabled = Yes
+  Exitonchange = Yes
+  Height = 25
+  Left = 16
+  Top = 168
+  Width = 113
+  Taborder = 4
+  Caption = Filter By County ?
+
+Name = Label8
+  Type = Label
+  Height = 9
+  Left = 8
+  Size = 6
+  Top = 8
+  Width = 65
+  Caption = by FlyingSyringe
+
+Name = Label12
+  Type = Label
+  Color = 16384
+  Container = Groupbox3
+  Height = 12
+  Left = 109
+  Size = 7
+  Top = 8
+  Width = 37
+  Caption = FROM
+
+Name = Label13
+  Type = Label
+  Color = 16384
+  Container = Groupbox3
+  Height = 12
+  Left = 117
+  Size = 7
+  Top = 56
+  Width = 20
+  Caption = TO
+
+Name = Label15
+  Type = Label
+  Color = 16384
+  Container = Groupbox4
+  Height = 12
+  Left = 8
+  Size = 7
+  Top = 12
+  Width = 102
+  Caption = NOTE: Distance Fields
+
+Name = Label16
+  Type = Label
+  Color = 16384
+  Container = Groupbox4
+  Height = 12
+  Left = 112
+  Size = 7
+  Top = 12
+  Width = 161
+  Caption = Either, Both or Leave Blank For  None
+
+Name = TChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 16
+  Width = 73
+  Taborder = 0
+  Caption = Traditional
+
+Name = MChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 38
+  Width = 57
+  Taborder = 1
+  Caption = Multi
+
+Name = UChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 60
+  Width = 65
+  Taborder = 2
+  Caption = Mystery
+
+Name = RChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 82
+  Width = 57
+  Taborder = 3
+  Caption = Earth
+
+Name = EChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 104
+  Width = 57
+  Taborder = 4
+  Caption = Event
+
+Name = BChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 8
+  Top = 126
+  Width = 73
+  Taborder = 5
+  Caption = Letterbox
+
+Name = OChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 176
+  Top = 14
+  Width = 55
+  Taborder = 6
+  Caption = Other
+
+Name = LChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 176
+  Top = 40
+  Width = 81
+  Taborder = 7
+  Caption = Locationless
+
+Name = IChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 16
+  Width = 79
+  Taborder = 8
+  Caption = WHERIGO
+
+Name = GChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 60
+  Width = 79
+  Taborder = 9
+  Caption = Benchmark
+
+Name = CitoChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 126
+  Width = 71
+  Taborder = 10
+  Caption = CITO
+
+Name = AChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 176
+  Top = 114
+  Width = 81
+  Taborder = 11
+  Caption = Project APE
+
+Name = VChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 40
+  Width = 57
+  Taborder = 12
+  Caption = Virtual
+
+Name = WChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 102
+  Width = 73
+  Taborder = 13
+  Caption = Webcam
+
+Name = XChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 176
+  Top = 92
+  Width = 57
+  Taborder = 14
+  Caption = Maze
+
+Name = YChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 176
+  Top = 66
+  Width = 73
+  Taborder = 15
+  Caption = Waymark
+
+Name = ZChk
+  Type = Checkbox
+  Container = Groupbox5
+  Height = 17
+  Left = 90
+  Top = 80
+  Width = 81
+  Taborder = 16
+  Caption = Mega Event
+
+Name = MYChkBox
+  Type = Radiobutton
+  Container = Groupbox6
+  Exitonchange = Yes
+  Height = 17
+  Left = 5
+  Top = 40
+  Width = 156
+  Taborder = 1
+  Caption = Filter by Month/Year Placed
+
+Name = DTChkBox
+  Type = Radiobutton
+  Container = Groupbox6
+  Exitonchange = Yes
+  Height = 17
+  Left = 5
+  Top = 16
+  Width = 137
+  Taborder = 2
+  Caption = Filter by Difficulty/Terrain
+
+Name = Label17
+  Type = Label
+  Height = 13
+  Left = 205
+  Top = 42
+  Width = 92
+  Caption = Difficulty / Terrain
+
+Name = Label18
+  Type = Label
+  Height = 13
+  Left = 198
+  Top = 60
+  Width = 107
+  Caption = Month / Year Placed
+
+Name = Label19
+  Type = Label
+  Height = 13
+  Left = 216
+  Top = 75
+  Width = 77
+  Caption = State / County
+
+Name = Label14
+  Type = Label
+  Height = 13
+  Left = 216
+  Top = 93
+  Width = 71
+  Caption = Combinations
+
+Name = GSNFICheckBox
+  Type = Radiobutton
+  Container = Groupbox6
+  Exitonchange = Yes
+  Height = 17
+  Left = 5
+  Top = 64
+  Width = 137
+  Taborder = 0
+  Caption = Filter by State/County
+
+Name = Label9
+  Type = Label
+  Color = 16384
+  Height = 13
+  Left = 224
+  Top = 136
+  Width = 203
+  Caption = Enable to show specific cache types only
+
+Name = Label10
+  Type = Label
+  Height = 13
+  Left = 62
+  Top = 136
+  Width = 87
+  Caption = Select Database
+
+Name = IgnoreUserFlag
+  Type = Radiobutton
+  Container = Groupbox2
+  Exitonchange = Yes
+  Height = 20
+  Left = 24
+  Top = 80
+  Width = 129
+  Taborder = 2
+  Caption = Ignore User Flagged ?
+
+Name = AllUserFlags
+  Type = Radiobutton
+  Container = Groupbox2
+  Enabled = Yes
+  Exitonchange = Yes
+  Height = 17
+  Left = 24
+  Top = 64
+  Width = 129
+  Taborder = 3
+  Caption = All Caches In Grid ?
+
+Name = UseUserFlag
+  Type = Radiobutton
+  Container = Groupbox2
+  Exitonchange = Yes
+  Height = 20
+  Left = 24
+  Top = 96
+  Width = 129
+  Taborder = 4
+  Caption = User Flagged Only ?
+
+<enddata>
+
+
+
+
+
+

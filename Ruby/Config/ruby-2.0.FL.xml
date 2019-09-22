@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="36" id="Ruby_function" />
+    </associationMap>
+    <parsers>
+      <parser 
+          id="Ruby_function" 
+          displayName="Ruby" 
+          commentExpr="(?m:[#].*?$)|(?s:(?-i:(?&lt;=^|[\r\n])=begin).*?(?-i:[\r\n]=end))" >
+          
+        <classRange
+            mainExpr="(?m:^[\t ]*(?-i:class)[\t ]+[A-Za-z_]\w*\b)"
+            displayMode="node" >
+          <className>
+            <nameExpr expr="(?-i:class)[\t ]+(?:[A-Za-z_][\w]+?)" />
+            <nameExpr expr="[\t ](?:[A-Za-z_][\w]+?)" />
+          </className>
+          <function
+              mainExpr="(?m:(?-i:def)[\t ]+[A-Za-z_]\w*[\?!=]?(?:[\t ]*\([^)]*?\))?)" >
+            <functionName>
+              <funcNameExpr expr="[\t ]+([A-Za-z_][\w]+[\?!=]?)" />
+            </functionName>
+          </function>
+        </classRange>
+<!--
+        <function
+            mainExpr="^[\t ]*(?i-:def|alias)[\t ]+(?:[A-Za-z_][\w]+[?!=]?|:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]\]=?)(?:[\t ]*\([^)]*?\))?.*?$"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="(?i-:def|alias)[\t ]+(?:[A-Za-z_][\w]+[?!=]?|:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]\]=?)" />
+            <nameExpr expr="[\t ]+(?:[A-Za-z_][\w]+[?!=]?|:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]\]=?)" />
+          </functionName>
+        </function>
+-->
+      </parser>
+    </parsers>
+  </functionList>
+</NotepadPlus>

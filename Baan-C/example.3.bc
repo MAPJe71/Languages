@@ -1,0 +1,26 @@
+before.program:
+    set.synchronized.dialog("fxinh0123s000")
+
+choice.test.123:
+before.choice:
+    funct1(10)
+on.choice:
+    funct1(10)
+
+after.program:
+    set.synchronized.dialog("fxinh0123s000")
+    
+after.update.db.commit:
+    set.synchronized.dialog("fxinh0123s000")
+
+functions:
+function func1(long var1)
+{
+    | Do Something 1.
+}
+
+declaration:                | a section     --> branch
+    func2(10.09, "STR")
+
+on.error:                | a section     --> branch
+    func2(10.09, "STR")

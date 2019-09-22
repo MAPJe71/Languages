@@ -1,0 +1,42 @@
+TextPad syntax definitions for InstallShield script files 
+    Contributed by David Sansom
+    October 1999            
+
+
+Packing list:
+
+    iss.syn  Defines syntax highlighting for InstallShield script files.
+
+
+Installation:
+
+    1. Unzip iss.syn into your TextPad 4 "Samples" or "User" subdirectory.
+    
+    2. Launch TextPad 4.  
+    
+    3. Close any open files.
+    
+    4. From the Configure menu, choose Preferences.  
+           The Preferences dialog box is displayed.
+    
+    5. Select "Document Classes".
+    
+    6. Type a new class name in the empty box at the end of the list 
+        of document classes: "InstallShield".
+        
+    7. Click [Apply] to confirm the changes.
+    
+    8. Click on the new InstallShield selection under Document Classes.
+
+    9. Open the Syntax dialogue.
+    
+   10. Check the "Enable syntax highlighting" box and select the
+           "iss.syn" syntax file from the scroll list.
+           
+
+NB:
+
+	The author suggests the default colours for are changed 
+	for Keywords 3 & 4 to distinguish them from the rest.
+ 
+        

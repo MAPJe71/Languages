@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "html_element"       langID= "8"                             />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ HTML ] -->
+
+			<!--
+			|   https://github.com/notepad-plus-plus/notepad-plus-plus/issues/1142
+			\-->
+			<parser
+				displayName="[UDL] HTML - HyperText Markup Language"
+				id         ="html_element"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:\x3C!--(?:[^\-]|-(?!-\x3E))*--\x3E)                  # Multi Line Comment
+					"
+			>
+				<function
+					mainExpr="\x3C\w[^\x3E]*"
+				>
+					<functionName>
+						<nameExpr expr="[^\x3C]+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,237 @@
+' ==============================================================================
+'
+'   File...... Thermo_Demo.BSE
+'   Purpose... Multi-bank Program Demo
+'   Author.... Jon Williams
+'   E-mail.... jwilliams@parallaxinc.com
+'   Started...
+'   Updated... 02 JUN 2002
+'
+'   {$STAMP BS2e, Thermo_LCD.BSE}
+'
+' ==============================================================================
+
+
+' ------------------------------------------------------------------------------
+' Program Description
+' ------------------------------------------------------------------------------
+'
+' The pupose of these programs is to demonstrate the multi-bank capability of
+' the BS2e, BS2sx and BS2p.  The core program monitors a DS1620 and functions
+' as a simple thermostat control.  Information from the program is displayed
+' on an LCD that is controlled from a different program bank.
+'
+' Tasks:
+'
+'  0    Initialize LCD (code in bank 1)
+'  1    Initialize DS1620
+'  2    Read temperature
+'  3    Get setpoint
+'  4    Update LCD (code in bank 1)
+'
+' Tasks 0 and 1 run only once.
+
+
+' ------------------------------------------------------------------------------
+' Revision History
+' ------------------------------------------------------------------------------
+
+
+' ------------------------------------------------------------------------------
+' I/O Definitions
+' ------------------------------------------------------------------------------
+
+Inputs          VAR     InA                     ' mode and temp change inputs
+DQ              CON     4                       ' DS1620.1 (data I/O)
+Clock           CON     5                       ' DS1620.2
+Reset           CON     6                       ' DS1620.3
+
+
+' ------------------------------------------------------------------------------
+' Constants
+' ------------------------------------------------------------------------------
+
+RdTmp           CON     $AA                     ' read temperature
+WrHi            CON     $01                     ' write TH (high temp)
+WrLo            CON     $02                     ' write TL (low temp)
+RdHi            CON     $A1                     ' read TH
+RdLo            CON     $A2                     ' read TL
+StartC          CON     $EE                     ' start conversion
+StopC           CON     $22                     ' stop conversion
+WrCfg           CON     $0C                     ' write config register
+RdCfg           CON     $AC                     ' read config register
+
+TskInitScr      CON     0                       ' program tasks
+TskInitTmp      CON     1
+TskTemp         CON     2
+TskSetPoint     CON     3
+TskScreen       CON     4
+
+ScreenBank      CON     1                       ' bank that holds output code
+
+ScrInit         CON     0                       ' initialize screen
+ScrClear        CON     1                       ' clear screen
+ScrUpdate       CON     2                       ' update screen
+
+AcOff           CON     0                       ' A/C modes
+AcCool          CON     1
+AcHeat          CON     2
+
+MinTemp         CON     0                       ' valid temp range
+MaxTemp         CON     125
+DefaultSP       CON     75                      ' default setpoint
+
+Yes             CON     1
+No              CON     0
+
+DataStart       CON     2                       ' data block starts at loc 2
+
+
+' ------------------------------------------------------------------------------
+' Variables
+' ------------------------------------------------------------------------------
+
+task            VAR     Nib                     ' current task
+loop            VAR     Nib                     ' loop counter
+btnIns          VAR     Nib                     ' switch and button inputs
+btnUp           VAR     btnIns.Bit2
+btnDn           VAR     btnIns.Bit3
+mode            VAR     Nib
+fanCtrl         VAR     mode.Bit3               ' 1 = run fan
+fan             VAR     bit
+setpoint        VAR     Word                    ' temperature setpoint
+tempIn          VAR     Word                    ' raw temp from DS1620
+sign            VAR     tempIn.Bit8             ' 1 = negative temperature
+tSign           VAR     Bit
+tempC           VAR     Word
+tempF           VAR     Word
+
+
+' ------------------------------------------------------------------------------
+' EEPROM Data
+' ------------------------------------------------------------------------------
+
+
+' ------------------------------------------------------------------------------
+' Initialization
+' ------------------------------------------------------------------------------
+
+Initialize:
+  GET 0, task                                   ' get current task
+  GET (DataStart + 3), setpoint.LowByte         ' get last setpoint
+  GET (DataStart + 4), setpoint.HighByte
+
+  BRANCH task, [Init_Screen, Init_DS1620, Main, Main, Main]
+
+Init_Screen:
+  PUT 0, TskInitTmp                             ' store task for retrun
+  PUT 1, ScrInit                                ' store task for external code
+  RUN ScreenBank                                ' run external code
+
+Init_DS1620:
+  HIGH Reset                                    ' alert the DS1620
+  SHIFTOUT DQ, Clock, LSBFirst, [WrCfg, %10]    ' use with CPU; free-run
+  LOW Reset
+  PAUSE 10
+  HIGH Reset
+  SHIFTOUT DQ, Clock, LSBFirst, [StartC]        ' start conversions
+  LOW Reset
+
+  task = TskTemp
+  setpoint = DefaultSP
+
+
+' ------------------------------------------------------------------------------
+' Program Code
+' ------------------------------------------------------------------------------
+
+Main:
+  btnIns = %1111                                ' enable all four inputs
+  FOR loop = 1 TO 10
+    btnIns = btnIns & ~Inputs                   ' test inputs
+    PAUSE 5                                     ' delay between tests
+  NEXT
+
+  mode = (btnIns & %0011) // 3                  ' isolate mode switch bits
+
+Task_Manager:
+  BRANCH (task - 2), [Get_Temperature, Get_SetPoint, Update_Screen]
+  GOTO Main
+
+
+Get_Temperature:
+  GOSUB Read_DS1620                             ' read current temperature
+  fan = No                                      ' assume fan is off
+  BRANCH mode, [Get_TempX, Check_Cool, Check_Heat]
+
+Check_Cool:                                     ' check for cooling on
+  IF (tempF <= setpoint) THEN Get_TempX
+  fan = Yes
+  GOTO Get_TempX
+
+Check_Heat:                                     ' check for heating on
+  IF (tempF >= setpoint) THEN Get_TempX
+  fan = Yes
+
+Get_TempX:
+  task = TskSetPoint
+  GOTO Main
+
+
+Get_SetPoint:                                   ' check for both pressed
+  IF ((btnIns >> 2) <> %11) THEN Check_Increase
+  setpoint = DefaultSP
+  GOTO SP_Done
+
+Check_Increase:
+  IF (setpoint = MaxTemp) THEN Check_Decrease
+  setpoint = setpoint + btnUp
+
+Check_Decrease:
+  IF (setpoint = MinTemp) THEN SP_Done
+  setpoint = setpoint - btnDn
+
+SP_Done:
+  PAUSE 100                                     ' delay between keys
+  task = TskScreen
+  GOTO Main
+
+
+Update_Screen:
+  PUT 0, TskTemp                                ' save next task
+  PUT 1, ScrUpdate                              ' store task for external code
+
+  fanCtrl = fan                                 ' pass fan control in mode
+  PUT (DataStart + 0), mode                     ' store data packet
+  PUT (DataStart + 1), tempF.LowByte
+  PUT (DataStart + 2), tempF.HighByte
+  PUT (DataStart + 3), setpoint.LowByte
+  PUT (DataStart + 4), setpoint.HighByte
+  RUN ScreenBank                                ' run external code
+
+
+' ------------------------------------------------------------------------------
+' Subroutines
+' ------------------------------------------------------------------------------
+
+Read_DS1620:
+  HIGH Reset                                    ' alert the DS1620
+  SHIFTOUT DQ, Clock, LSBFIRST, [RdTmp]         ' give command to read temp
+  SHIFTIN DQ, Clock, LSBPRE, [tempIn\9]         ' read it in
+  LOW Reset                                     ' release the DS1620
+
+  tSign = sign                                  ' save sign bit
+  tempIn = tempIn / 2                           ' round to whole degrees
+  IF (tSign = 0) THEN No_Neg1
+  tempIn = tempIn | $FF00                       ' extend sign bits for negative
+
+No_Neg1:
+  tempC = tempIn                                ' save Celsius value
+  tempIn = tempIn */ $01CC                      ' multiply by 1.8
+  IF (tSign = 0) THEN No_Neg2                   ' if negative, extend sign bits
+  tempIn = tempIn | $FF00
+
+No_Neg2:
+  tempIn = tempIn + 32                          ' finish C -> F conversion
+  tempF = tempIn                                ' save Fahrenheit value
+  RETURN

@@ -1,0 +1,168 @@
+			<parser
+				displayName="[#4 TODO] JavaScript v3"
+				id         ="javascript_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?s:\x2F\x2A.*?\x2A\x2F)                        # Multi Line Comment
+							|	(?m-s:\x2F{2}.*$)                               # Single Line Comment
+							|	(?s:\x22(?:[^\x22\x5C]|\x5C.)*\x22)             # String Literal - Double Quoted
+							|	(?s:\x27(?:[^\x27\x5C]|\x5C.)*\x27)             # String Literal - Single Quoted
+							"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?-i:var)
+							\s+
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									a(?:bstract|rguments)
+								|	b(?:oolean|reak|yte)
+								|	c(?:ase|atch|har|lass|on(?:st|tinue))
+								|	d(?:ebugger|efault|elete|o(?:uble)?)
+								|	e(?:lse|num|val|xport|xtends)
+								|	f(?:alse|inal(?:ly)?|loat|or|unction)
+								|	goto
+								|	i(?:f|mp(?:lements|ort)|n(?:t(?:erface)?)?|nstanceof)
+								|	l(?:et|ong)
+								|	n(?:ative|ew|ull)
+								|	p(?:ackage|rivate|rotected|ublic)
+								|	return
+								|	s(?:hort|tatic|uper|witch|ynchronized)
+								|	t(?:h(?:is|rows?)|r(?:ansient|ue|y)|ypeof)
+								|	v(?:ar|oid|olatile)
+								|	w(?:hile|ith)
+								|	yield
+								)\b)
+								[A-Za-z_$][\w$]*                                # valid character combination for identifiers
+							)
+							\s*
+							=
+							\s*
+							\{                                                  # start of class body
+						"
+					openSymbole ="\{"
+					closeSymbole="\}"
+				>
+					<className>
+						<nameExpr expr="(?-i:var)\s+\K[A-Za-z_$][\w$]*" />
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									\b(?!(?-i:                                  # keywords (case-sensitive), not to be used as identifier
+										a(?:bstract|rguments)
+									|	b(?:oolean|reak|yte)
+									|	c(?:ase|atch|har|lass|on(?:st|tinue))
+									|	d(?:ebugger|efault|elete|o(?:uble)?)
+									|	e(?:lse|num|val|xport|xtends)
+									|	f(?:alse|inal(?:ly)?|loat|or|unction)
+									|	goto
+									|	i(?:f|mp(?:lements|ort)|n(?:t(?:erface)?)?|nstanceof)
+									|	l(?:et|ong)
+									|	n(?:ative|ew|ull)
+									|	p(?:ackage|rivate|rotected|ublic)
+									|	return
+									|	s(?:hort|tatic|uper|witch|ynchronized)
+									|	t(?:h(?:is|rows?)|r(?:ansient|ue|y)|ypeof)
+									|	v(?:ar|oid|olatile)
+									|	w(?:hile|ith)
+									|	yield
+									)\b)
+									[A-Za-z_$][\w$]*                            # valid character combination for identifiers
+								)
+								\s*:
+								\s*(?-i:function\b)
+								\s*\([^()]*\)                                   # parameters
+								\s*\{                                           # start of function body
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="[A-Za-z_$][\w$]*)" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?:                                                 # a function definition can start...
+								(?:
+									^                                           # ...at SOL / SOF...
+								|	\s+                                         # ...after a whitespace...
+								|	[;}.]                                       # ...after...
+								)
+								(?:                                             #    with optional nested classes
+									[A-Za-z_$][\w$]*                            #    a valid class identifier
+									\.                                          #    class-method identifier separator
+								)*
+								[A-Za-z_$][\w$]*                                #    valid function identifier
+								\s*                                             #    optional whitespace separators
+								[=:]
+							|                                                   # or
+								^                                               # ...at SOL / SOF...
+							|                                                   # or
+								[\s;}]+                                         # ...after...
+							)
+							\s*                                                 # optional whitespace separators
+							(?-i:\bfunction\b)
+							(?:
+								\s+                                             # one whitespace separator required
+								[A-Za-z_$][\w$]*                                # valid identifier
+							)?
+							\s*\([^()]*\)                                       # parameters
+							\s*\{                                               # start of function body
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_$][\w$]*\s*[=:]|[A-Za-z_$][\w$]*\s*\(" />
+						<nameExpr expr="[A-Za-z_$][\w$]*" />
+					</functionName>
+					<className>
+						<nameExpr expr="(?:[A-Za-z_$][\w$]*\.)*[A-Za-z_$][\w$]*\." />
+						<nameExpr expr="(?:[A-Za-z_$][\w$]*\.)*[A-Za-z_$][\w$]*" />
+					</className>
+				</function>
+<!--			<!{1}**
+			|   https://github.com/notepad-plus-plus/notepad-plus-plus/issues/2012
+					mainExpr="((^|[\(\){};:=,\s])function(\s+[$_\w]*|\()|(?:[A-Za-z_$][\w_$]*\s*\.\s*(|prototype\s*\.)\s*[A-Za-z_$][\w_$]*\s*|[A-Za-z_$][\w_$]*\s*)[=:]\s*\(*(?:function(\s+|\()))"
+			\**{1}>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+                            (?:
+                                (?:
+                                    ^
+                                |
+                                    [(){};:=,\s]
+                                )
+                                function
+                                (?:
+                                    \s+
+                                    [\w$]*
+                                |
+                                    \s*\(
+                                )
+                            |
+                                [A-Za-z_$]\w*
+                                \s*
+                                (?:
+                                    \.
+                                    (?:\s*prototype\s*\.)?
+                                    \s*
+                                    [A-Za-z_$]\w*
+                                    \s*
+                                )?
+                                [=:]
+                                \s*
+                                (?:\(*\s*)*
+                                function\b
+                            )
+                        "
+				>
+					<functionName>
+						<nameExpr expr="(?&lt;=function)\s+[A-Za-z_$]\w*|[A-Za-z_$]\w*\s*[=:]" />
+						<nameExpr expr="[A-Za-z_$]\w*" />
+					</functionName>
+					<className>
+						<nameExpr expr="[A-Za-z_$]\w*\s*\.\s*" />
+						<nameExpr expr="[A-Za-z_$]\w*" />
+					</className>
+				</function>
+-->
+			</parser>

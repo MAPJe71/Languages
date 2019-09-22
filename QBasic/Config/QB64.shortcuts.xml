@@ -1,0 +1,9 @@
+<NotepadPlus>
+    <UserDefinedCommands>
+        <Command name="QB64 - Keyword Wiki" Ctrl="yes" Alt="no" Shift="no" Key="117">http://www.qb64.net/wiki/index.php/Special:Search?search=$(CURRENT_WORD)</Command>
+        <Command name="QB64 - Open in IDE" Ctrl="yes" Alt="no" Shift="no" Key="118">&quot;$(NPP_DIRECTORY)\QB64Starter.bat&quot; &quot;OI&quot; &quot;$(CURRENT_DIRECTORY)&quot; &quot;$(FILE_NAME)&quot; &quot;$(NAME_PART)&quot;</Command>
+        <Command name="QB64 - Compile" Ctrl="yes" Alt="no" Shift="no" Key="119">&quot;$(NPP_DIRECTORY)\QB64Starter.bat&quot; &quot;CO&quot; &quot;$(CURRENT_DIRECTORY)&quot; &quot;$(FILE_NAME)&quot; &quot;$(NAME_PART)&quot;</Command>
+        <Command name="QB64 - Compile + Run" Ctrl="yes" Alt="no" Shift="no" Key="120">&quot;$(NPP_DIRECTORY)\QB64Starter.bat&quot; &quot;CR&quot; &quot;$(CURRENT_DIRECTORY)&quot; &quot;$(FILE_NAME)&quot; &quot;$(NAME_PART)&quot;</Command>
+        <Command name="QB64 - Run again" Ctrl="yes" Alt="no" Shift="no" Key="121">&quot;$(NPP_DIRECTORY)\QB64Starter.bat&quot; &quot;RA&quot; &quot;$(CURRENT_DIRECTORY)&quot; &quot;$(FILE_NAME)&quot; &quot;$(NAME_PART)&quot;</Command>
+    </UserDefinedCommands>
+</NotepadPlus>

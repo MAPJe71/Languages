@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "json_mongodb"       langID="57"                             />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ JSON ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/notepad-plus-plus/notepad-plus-plus/issues/2045
+			\-->
+			<parser
+				displayName="[UDL] JSON for MongoDb import"
+				id         ="json_mongodb"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:\x23.*$)                                          # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="\x22_id\x22\s*:\s*\x22\w+\x22\s*"
+				>
+					<functionName>
+						<nameExpr expr=":\s*\x22\K\w+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

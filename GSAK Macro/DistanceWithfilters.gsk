@@ -1,0 +1,857 @@
+#*******************************************
+# MacVersion = 1.0
+# MacDescription = Select all caches within x miles of the currently selected cache
+# MacAuthor = javapgmr
+# MacFileName = DistanceWithFilters.gsk
+# MacUrl =
+#*******************************************
+###########################################################
+# 
+# This macro will allow you to select all caches within x miles of the currently selected cache.
+#
+# 
+###############################################################
+# Version check
+VERCHECK Version=7.5.0.0 
+
+GOSUB Name=Declare
+
+DEBUG Status=off
+$MacLoc=$_Install + "\Macros\distancewithFilters.xml"
+IF FileExists($MacLoc)
+	MacSettings Type=R
+ELSE
+
+$vN=TRUE
+$vNW=TRUE
+$vNE=TRUE
+$vE=TRUE
+$vS=TRUE
+$vSW=TRUE
+$vSE=TRUE
+$vW=TRUE
+
+$vTraditional=TRUE
+$vMulti=TRUE
+$vLetterbox=TRUE
+$vCITO=TRUE
+$vEvent=TRUE
+$vLocationless=FALSE
+$vVirtual=TRUE
+$vWebcam=TRUE
+$vMystery=TRUE
+$vBenchmark=FALSE
+$vOther=TRUE
+$vEarth=TRUE
+$vAPE=TRUE
+$vMega=TRUE
+$vWhereIGo=TRUE
+$vMaze=FALSE
+$vunAvailable=FALSE
+$vDiff="3.5"
+$vTerr="3.0"
+$vDistance="35"
+ENDIF
+
+$ratings="1.0;1.5;2.0;2.5;3.0;3.5;4.0;4.5;5.0"
+
+
+# Un comment the next line if you want to run the macro one line at a time
+#DEBUG Status="on"
+$formexit = form($form, "")
+IF $ok
+GOSUB Name=Main
+ENDIF
+
+BEGINSUB Name=Main
+MACSettings Type=S  Vars=vN,vNW,vNE,vE,vS,vSW,vSE,vW,vTraditional,vMulti,vLetterbox,vCITO,vEvent,vLocationless,vVirtual,vWebcam,vMystery,vBenchmark,vOther,vEarth,vAPE,vMega,vWhereIGo,vMaze,vunAvailable,vDiff,vTerr,vDistance
+ 
+Speedmode status=on
+
+# Keep asking until they enter a valid number
+IF IsEmpty($vDistance) OR RegEx("[^0-9.]", $vDistance)
+	MSGOk Msg="Distance is missing or not numeric."
+	CANCELFILTER
+	EXITSUB
+ENDIF
+
+IF $Bypass
+	$vDiff = "5"
+	$vTerr = "5"
+ENDIF
+
+IF $Bypass2
+	$vN  = TRUE
+	$vNW = TRUE
+	$vNE = TRUE
+	$vE  = TRUE
+	$vS  = TRUE
+	$vSW = TRUE
+	$vSE = TRUE
+	$vW  = TRUE
+ENDIF
+
+# Save the currently selected code and make sure it is part of the cache raid filter
+$CurrentCode = $d_Code
+$diff = (Val($vDiff)* 2) - 2
+$terr = (Val($vTerr)* 2) - 2
+
+$CR=Replace("{distance}",$vDistance,$CR,TRUE)
+$CR=Replace("{N}",BoolToStr($vN,"True","False"),$CR,TRUE)
+$CR=Replace("{NW}",BoolToStr($vNW,"True","False"),$CR,TRUE)
+$CR=Replace("{NE}",BoolToStr($vNE,"True","False"),$CR,TRUE)
+$CR=Replace("{E}",BoolToStr($vE,"True","False"),$CR,TRUE)
+$CR=Replace("{S}",BoolToStr($vS,"True","False"),$CR,TRUE)
+$CR=Replace("{SW}",BoolToStr($vSW,"True","False"),$CR,TRUE)
+$CR=Replace("{SE}",BoolToStr($vSE,"True","False"),$CR,TRUE)
+$CR=Replace("{W}",BoolToStr($vW,"True","False"),$CR,TRUE)
+
+$CR=Replace("{traditional}",BoolToStr($vTraditional,"True","False"),$CR,TRUE)
+$CR=Replace("{multi}",BoolToStr($vMulti,"True","False"),$CR,TRUE)
+$CR=Replace("{letterbox}",BoolToStr($vLetterbox,"True","False"),$CR,TRUE)
+$CR=Replace("{cito}",BoolToStr($vCITO,"True","False"),$CR,TRUE)
+$CR=Replace("{event}",BoolToStr($vEvent,"True","False"),$CR,TRUE)
+$CR=Replace("{locationless}",BoolToStr($vLocationless,"True","False"),$CR,TRUE)
+$CR=Replace("{virtual}",BoolToStr($vVirtual,"True","False"),$CR,TRUE)
+$CR=Replace("{webcam}",BoolToStr($vWebcam,"True","False"),$CR,TRUE)
+$CR=Replace("{mystery}",BoolToStr($vMystery,"True","False"),$CR,TRUE)
+$CR=Replace("{benchmark}",BoolToStr($vBenchmark,"True","False"),$CR,TRUE)
+$CR=Replace("{other}",BoolToStr($vOther,"True","False"),$CR,TRUE)
+$CR=Replace("{earth}",BoolToStr($vEarth,"True","False"),$CR,TRUE)
+$CR=Replace("{ape}",BoolToStr($vAPE,"True","False"),$CR,TRUE)
+$CR=Replace("{megaevent}",BoolToStr($vMega,"True","False"),$CR,TRUE)
+$CR=Replace("{whereigo}",BoolToStr($vWhereIGo,"True","False"),$CR,TRUE)
+$CR=Replace("{maze}",BoolToStr($vMaze,"True","False"),$CR,TRUE)
+$CR=Replace("{terr}",NumToStr($terr),$CR,TRUE)
+$CR=Replace("{diff}",NumToStr($diff),$CR,TRUE)
+$CR=Replace("{unAvailable}",BoolToStr($vunAvailable,"True","False"),$CR,TRUE)
+
+CENTER
+SqlSORT OrderBy="Distance"
+GOTO Position=Top
+	# Set the Filter dialog with the point filter
+	MACROSET Dialog=Filter VarName=$CR
+	
+	# Run the filter
+	FILTER Name=<macro>
+	
+	# If there's no results, say so and exit
+	IF $_FilterCount < 1
+		PAUSE Msg="No records match the filter. Clearing and exiting."
+		CANCEL
+	ENDIF
+
+CANCEL
+
+ENDSUB
+
+#*******************************************************
+#   Variable declarations for
+#   DistanceWithfilters.gsk
+#
+#   Generated 06/27/2008 7:57:23 PM on GSAKVariables.gsk Rev V0.20 B15
+#
+#*******************************************************
+
+
+BEGINSUB Name=Declare
+Option Explicit=Yes
+
+Declare Var=$CR Type=String
+Declare Var=$CurrentCode Type=String
+Declare Var=$diff Type=Numeric
+Declare Var=$form Type=String
+Declare Var=$formexit Type=String
+Declare Var=$MacLoc Type=String
+Declare Var=$ratings Type=String
+Declare Var=$terr Type=Numeric
+Declare Var=$vAPE Type=Boolean
+Declare Var=$vBenchmark Type=Boolean
+Declare Var=$vCITO Type=Boolean
+Declare Var=$vDiff Type=String
+Declare Var=$vDistance Type=String
+Declare Var=$vE Type=Boolean
+Declare Var=$vEarth Type=Boolean
+Declare Var=$vEvent Type=Boolean
+Declare Var=$vLetterbox Type=Boolean
+Declare Var=$vLocationless Type=Boolean
+Declare Var=$vMaze Type=Boolean
+Declare Var=$vMega Type=Boolean
+Declare Var=$vMulti Type=Boolean
+Declare Var=$vMystery Type=Boolean
+Declare Var=$vN Type=Boolean
+Declare Var=$vNE Type=Boolean
+Declare Var=$vNW Type=Boolean
+Declare Var=$vOther Type=Boolean
+Declare Var=$vS Type=Boolean
+Declare Var=$vSE Type=Boolean
+Declare Var=$vSW Type=Boolean
+Declare Var=$vTerr Type=String
+Declare Var=$vTraditional Type=Boolean
+Declare Var=$vunAvailable Type=Boolean
+Declare Var=$vVirtual Type=Boolean
+Declare Var=$vW Type=Boolean
+Declare Var=$vWebcam Type=Boolean
+Declare Var=$vWhereIGo Type=Boolean
+ENDSUB
+
+
+<data> VarName=$CR
+edtDesc=
+cbxDesc=0
+cbxFilter=4
+edtDistance={distance}
+cbxDistance=1
+edtDistance2=
+edtPlacedBy=
+cbxDifficulty=0
+cbxTerrain=0
+cbxDif={diff}
+cbxTer={terr}
+cbxPlacedBy=0
+cbxDif2=8
+cbxTer2=8
+edtUserData=
+cbxUserData=0
+chkReverse=False
+edtTbugName=
+cbxTbugName=0
+cbxSource=0
+edtSource=
+cbxUser2=0
+EdtUser2=
+cbxOwnerName=0
+edtOwnerName=
+edtUserId=
+cbxState=0
+cbxCountry=0
+edtState=
+edtCountry=
+cbxUsort=4
+edtUsort=0
+edtUsort2=0
+edtCode=
+cbxCode=0
+cbxFoundCount=0
+EdtFoundCount=0
+cbxDegrees=0
+edtDegrees=
+chkFound=False
+chkNotFound=True
+chkExclude=False
+chkAvailable=True
+chkArchivedOnly=False
+chkTempUnavailable={UnAvailable}
+chkUserFlag1=True
+chkUserFlag2=True
+chkBugNo=True
+cbxBugs=True
+chkNoteNo=True
+chkNoteYes=True
+edtFull=
+chkFullHighlight=True
+chkRegEx=False
+chkFullNotes=False
+chkFullLogs=False
+chkFullDes=False
+RbtFullAll=True
+rbtFullSelect=False
+chkFtfNo=True
+chkFtfyes=True
+cbxN={N}
+cbxNW={NW}
+cbxNe={NE}
+cbxS={S}
+cbxSW={SW}
+cbxSE={SE}
+cbxE={E}
+cbxW={W}
+cbxMicro=True
+cbxUnknown=True
+cbxRegular=True
+cbxLarge=True
+cbxSmall=True
+chkLockYes=True
+chkLockNo=True
+chkCorrectYes=True
+chkCorrectNo=True
+chkDNFYes=True
+chkDNFNo=True
+chkWatchYes=True
+chkWatchNo=True
+chkChildYes=True
+chkChildNo=True
+
+Traditional={traditional}
+Multi={multi}
+LetterBox={letterbox}
+CITO={cito}
+Event={event}
+Locationless={locationless}
+Virtual={virtual}
+Web Cam={webcam} 
+Mystery={mystery}
+Benchmark={benchmark}
+Other={other}
+Earth={earth}
+Project APE={ape}
+Mega Event={megaevent}
+Wherigo={whereigo}
+<enddata>
+
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Fri 27-Jun-2008 20:06:45
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Delay = 15
+  Height = 485
+  Width = 198
+
+Name = FrmLbl1
+  Type = Label
+  Height = 13
+  Left = 5
+  Style = bold
+  Top = 30
+  Width = 50
+  Caption = Distance
+
+Name = vDistance
+  Type = Edit
+  Height = 21
+  Left = 91
+  Top = 30
+  Width = 84
+  Taborder = 1
+
+Name = FrmLbl30
+  Type = Label
+  Height = 13
+  Left = 10
+  Style = bold
+  Top = 181
+  Width = 9
+  Caption = N
+
+Name = FrmLbl33
+  Type = Label
+  Height = 13
+  Left = 45
+  Style = bold
+  Top = 181
+  Width = 21
+  Caption = NW
+
+Name = FrmLbl35
+  Type = Label
+  Height = 13
+  Left = 91
+  Style = bold
+  Top = 181
+  Width = 17
+  Caption = NE
+
+Name = FrmLbl37
+  Type = Label
+  Height = 13
+  Left = 132
+  Style = bold
+  Top = 181
+  Width = 8
+  Caption = E
+
+Name = FrmLbl39
+  Type = Label
+  Height = 13
+  Left = 10
+  Style = bold
+  Top = 206
+  Width = 8
+  Caption = S
+
+Name = FrmLbl41
+  Type = Label
+  Height = 13
+  Left = 45
+  Style = bold
+  Top = 206
+  Width = 20
+  Caption = SW
+
+Name = FrmLbl43
+  Type = Label
+  Height = 13
+  Left = 91
+  Style = bold
+  Top = 206
+  Width = 16
+  Caption = SE
+
+Name = FrmLbl45
+  Type = Label
+  Height = 13
+  Left = 132
+  Style = bold
+  Top = 206
+  Width = 12
+  Caption = W
+
+Name = vN
+  Type = Checkbox
+  Height = 16
+  Left = 21
+  Top = 179
+  Width = 19
+  Taborder = 0
+
+Name = vNW
+  Type = Checkbox
+  Height = 16
+  Left = 68
+  Top = 179
+  Width = 19
+  Taborder = 2
+
+Name = vNE
+  Type = Checkbox
+  Height = 16
+  Left = 109
+  Top = 179
+  Width = 19
+  Taborder = 3
+
+Name = vE
+  Type = Checkbox
+  Height = 16
+  Left = 148
+  Top = 179
+  Width = 19
+  Taborder = 4
+
+Name = vS
+  Type = Checkbox
+  Height = 16
+  Left = 21
+  Top = 204
+  Width = 20
+  Taborder = 5
+
+Name = vSW
+  Type = Checkbox
+  Height = 16
+  Left = 68
+  Top = 204
+  Width = 20
+  Taborder = 6
+
+Name = vSE
+  Type = Checkbox
+  Height = 16
+  Left = 109
+  Top = 204
+  Width = 20
+  Taborder = 7
+
+Name = vW
+  Type = Checkbox
+  Height = 17
+  Left = 149
+  Top = 204
+  Width = 15
+  Taborder = 8
+
+Name = LB1
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 247
+  Width = 60
+  Caption = Traditional
+
+Name = vTraditional
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 245
+  Width = 19
+  Taborder = 9
+
+Name = LB2
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 247
+  Width = 27
+  Caption = Multi
+
+Name = vMulti
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 245
+  Width = 19
+  Taborder = 10
+
+Name = LB3
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 268
+  Width = 53
+  Caption = Letterbox
+
+Name = vLetterbox
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 266
+  Width = 19
+  Taborder = 11
+
+Name = LB4
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 268
+  Width = 29
+  Caption = CITO
+
+Name = vCITO
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 266
+  Width = 19
+  Taborder = 12
+
+Name = LB5
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 290
+  Width = 33
+  Caption = Event
+
+Name = vEvent
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 288
+  Width = 19
+  Taborder = 13
+
+Name = LB6
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 290
+  Width = 71
+  Caption = Locationless
+
+Name = vLocationless
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 288
+  Width = 19
+  Taborder = 14
+
+Name = LB7
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 312
+  Width = 36
+  Caption = Virtual
+
+Name = vVirtual
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 312
+  Width = 19
+  Taborder = 15
+
+Name = LB8
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 312
+  Width = 49
+  Caption = Webcam
+
+Name = vWebcam
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 312
+  Width = 19
+  Taborder = 16
+
+Name = LB9
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 334
+  Width = 43
+  Caption = Mystery
+
+Name = vMystery
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 334
+  Width = 19
+  Taborder = 17
+
+Name = LB10
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 334
+  Width = 63
+  Caption = Benchmark
+
+Name = vBenchmark
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 334
+  Width = 19
+  Taborder = 18
+
+Name = LB11
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 358
+  Width = 31
+  Caption = Other
+
+Name = vOther
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 356
+  Width = 19
+  Taborder = 19
+
+Name = LB12
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 358
+  Width = 30
+  Caption = Earth
+
+Name = vEarth
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 356
+  Width = 19
+  Taborder = 20
+
+Name = LB13
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 379
+  Width = 22
+  Caption = Ape
+
+Name = vApe
+  Type = Checkbox
+  Height = 17
+  Left = 68
+  Top = 377
+  Width = 19
+  Taborder = 21
+
+Name = LB14
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 379
+  Width = 31
+  Caption = Mega
+
+Name = vMega
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 377
+  Width = 19
+  Taborder = 22
+
+Name = Ok
+  Type = Button
+  Enter = yes
+  Height = 24
+  Left = 12
+  Top = 427
+  Width = 69
+  Taborder = 23
+
+Name = CANCEL
+  Type = Button
+  Height = 24
+  Left = 111
+  Top = 427
+  Width = 69
+  Taborder = 24
+
+Name = Lbl1
+  Type = Label
+  Height = 13
+  Left = 39
+  Style = bold
+  Top = 7
+  Width = 110
+  Caption = DistanceWithFilters
+
+Name = Lbl2
+  Type = Label
+  Color = 255
+  Height = 13
+  Left = 7
+  Style = bold
+  Top = 58
+  Width = 80
+  Caption = Unavailables?
+
+Name = vUnavailable
+  Type = Checkbox
+  Height = 17
+  Left = 91
+  Top = 56
+  Width = 15
+  Taborder = 25
+
+Name = Bypass
+  Type = Checkbox
+  Height = 17
+  Left = 91
+  Top = 78
+  Width = 15
+  Taborder = 34
+
+Name = vDiff
+  Type = Combobox
+  Height = 21
+  Left = 91
+  Top = 99
+  Values = $ratings
+  Width = 49
+  Taborder = 35
+
+Name = vTerr
+  Type = Combobox
+  Height = 21
+  Left = 91
+  Top = 126
+  Values = $ratings
+  Width = 49
+  Taborder = 36
+
+Name = LBBypass
+  Type = Label
+  Height = 13
+  Left = 5
+  Style = bold
+  Top = 79
+  Width = 40
+  Caption = Bypass
+
+Name = FrmLbl6
+  Type = Label
+  Height = 13
+  Left = 5
+  Style = bold
+  Top = 103
+  Width = 20
+  Caption = Diff
+
+Name = FrmLbl5
+  Type = Label
+  Height = 13
+  Left = 5
+  Style = bold
+  Top = 130
+  Width = 23
+  Caption = Terr
+
+Name = Bypass2
+  Type = Checkbox
+  Height = 17
+  Left = 91
+  Top = 157
+  Width = 15
+  Taborder = 37
+
+Name = Label1
+  Type = Label
+  Height = 13
+  Left = 5
+  Style = bold
+  Top = 159
+  Width = 40
+  Caption = Bypass
+
+Name = Label2
+  Type = Label
+  Height = 13
+  Left = 4
+  Style = bold
+  Top = 401
+  Width = 57
+  Caption = WhereIGo
+
+Name = vWhereIGo
+  Type = Checkbox
+  Height = 16
+  Left = 68
+  Top = 399
+  Width = 15
+  Taborder = 38
+
+Name = Label3
+  Type = Label
+  Height = 13
+  Left = 92
+  Style = bold
+  Top = 402
+  Width = 30
+  Caption = Maze
+
+Name = vMaze
+  Type = Checkbox
+  Height = 17
+  Left = 166
+  Top = 400
+  Width = 15
+  Taborder = 39
+
+<enddata>
+
+
+
+

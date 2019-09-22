@@ -1,0 +1,11 @@
+<Language name="Lua" imagelistpath="">
+    <CommList param1='&quot;' param2='&quot;' />
+    <CommList param1="&apos;" param2="&apos;" />
+    <CommList param1="--" param2="" />
+    <CommList param1="--\[\[" param2="\]\]" />
+    <Group name="FUNCTION" subgroup="" icon="0" child="0" autoexp="0" matchcase="1" fendtobbeg="" bbegtobend="\&lt;do\&gt;|\&lt;if\&gt;|\&lt;function\&gt;" keywords="">
+        <Rules regexbeg="^[-\s]*function\s+" regexfunc="[\w_:.]+" regexend="\s*\([\w_,.\s]*\)" bodybegin="" bodyend="\&lt;end\&gt;" sep="" />
+        <Rules regexbeg="^[-\s]*" regexfunc="[\w_:.]+" regexend="\s*=\s*function\s*\([\w_,\s]*\)" bodybegin="" bodyend="\&lt;end\&gt;" sep="" />
+        <Rules regexbeg="^" regexfunc="[\w_]+" regexend="\s*=" bodybegin="\{" bodyend="\}" sep="" />
+    </Group>
+</Language>

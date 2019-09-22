@@ -1,0 +1,3390 @@
+#************************************************************************
+# MacDescription = Export a "Cache Page" to a Garmin Cx/HCx/CSx GPSr
+# MacFileName = 60CSxPOI.gsk
+# MacAuthor = Tigerz
+# MacVersion = 1.24
+# MacUrl = http://gsak.net/board/index.php?act=ST&f=23&t=8932
+#************************************************************************
+# This macro will create a comma delimited file (i.e., .csv) that can be
+# sent to a Garmin 60CSx (or most any other Garmin Cx/HCx/CSx GPS receiver).
+# Garmin's free POI Loader (available at garmin.com) is used to transfer
+# the .csv file to the GPSr.  Although perhaps awkward at first given
+# the number of potential screens, the end result is the user can have
+# essentially the "cache page" resident on their GPSr thereby replacing 
+# their PDA and/or paper printouts.  Advanced features include running
+# the macro without human interaction and using the POI Loader in silent
+# (automactic) mode.
+#************************************************************************
+# Version History
+# 1.24 - 26 Jul 2012
+#   + Removed depracated commands
+# 1.23 - 10 July 2009
+#   + Added user requested option to shown the hint backwards
+# 1.22 - 10 June 2009
+#   + Forced use of GSAK v7.5 or greater
+#   + Reformatted date to drop "20" in current year 2009
+#   + Added fix suggested by Martin_J for European comma/decimal error
+#   + Optimized status message as suggested by kallt_kaffe
+#   + Revised coords on first POI screen to be at posted coords
+#   + Corrected output of child waypoints
+# 1.21 - 7 Dec 2008
+#   + Added HCx to Main and Advanced Menu Titles
+#   + Removed hard coding of CSV file to C:\GSAK
+# 1.20 - 27 Nov 2008
+#   + Added support for new County, User Data 3, and User Data 4 fields
+#     found in GSAK 7.5
+#   + Added optional kluge to properly sequence the page screens when
+#     standing at cache's ground zero ... note this will create a "stack"
+#     of icons on your GPSr starting 60' from ground zero
+#   + Corrected error in the reporting of the current macro version number
+#     when checking for updates
+#   + Noted support for Garmin HCx GPS receivers
+# 1.10 - 25 July 2008
+#   + Reformatted throughout to reduce the number of screens per cache
+#   + Added option to use abbreviations in output to further reduce the 
+#     number of screens per cache
+#   + Corrected issue with selection of full cache name and cache owner's
+#     name
+#   + Corrected the handling of dashes
+#   + Corrected typo in "Requirements" comments
+# 1.04 - 22 July 2008
+#   + Dressed up output of last line when the user selected maximum 
+#     number of screens was reached
+#   + Scrubbed output to allow only known to be "good" characters
+#   + Added Garmin-optional quotes around header and body fields
+# 1.03 - 21 July 2008
+#   + Changed any commas used in difficulty and terrain fields to periods
+# 1.02 - 21 July 2008
+#   + Improved handling of required configuration updates when new options
+#     are added
+#   + Corrected problem with Found, Temp Disabled, and Archived sifting
+# 1.01 - 20 July 2008
+#   + Added the ability to have the Smart Name serve as the primary
+#     screen title (rather than GC Code)
+#   + Changed the csv data file name and added additional scrubbing to
+#     reduce the likelihood of Garmin POI Loader issues
+#   + Corrected an oversight regarding the handling of Found, Temporarily
+#     Disabled, and Archived caches
+# 1.00 - 20 July 2008 - Public Release
+# 0.99 - 12 July 2008 - Beta24 released for initial testing and comments
+# 0.00 - Oct 2006 - Long, long ago in a faraway galaxy spawned by 
+#        ProsperoDK's GarminCsvPoiExport macro
+#************************************************************************
+# Requirements
+# 1)  Some of the features of this macro require GSAK Version 7.5 or 
+#     higher.
+# 2)  To load the resulting .csv file to your Garmin GPSr, Garmin's 
+#     POI Loader is required.  This is a free download at 
+#     http://www8.garmin.com/products/poiloader/.  To load your GPSr, 
+#     point the POI Loader to the POILoader directory within your main 
+#     GSAK folder (typically C:\GSAK\60CSxPOI or C:\Program Files\GSAK\
+#     60CSxPOI, although this setting can be changed under Advanced
+#     Options.
+# 3)  To the extent another macro is writing output files to your 
+#     POILoader folder, these files will also be sent to your GPSr.
+#     For best results, it's suggested the POI Loader folder not contain
+#     any other files.
+#************************************************************************
+# Special thanks to ProsperoDK for the original POI export macro.  Likewise,
+# our appreciation goes to ProsperoDK, Lignumaqua, and Hynr for the snippets 
+# of code and logic re-used within this macro.  Finally, thanks to Clyde,
+# the GSAK development team, beta testers and the many contributors to the 
+# GSAK macro forum for their insight, suggestions, and top-notch support.  
+#************************************************************************
+# Comments and requests for support are encouraged at
+# http://gsak.net/board/index.php?showtopic=8926
+#************************************************************************
+
+# Use of some of the functions in this macro require at least version 7.5 of GSAK
+VerCheck Version=7.5.0.0 (To run this macro, please update to the lastest GSAK version at http://gsak.net)
+
+# Troubleshooting
+DEBUG Status=Off
+SPEEDMODE Status=On
+
+#************************************************************************
+# Declare/Define Variables ... Setup Folders and Images
+#************************************************************************
+GOSUB Name=Declare
+$DBList=SysInfo("Databases")
+$HTMLFilePath = $_Install + "\html"
+$HTMLFile = $HTMLFilePath+"\GetHTML.vbs"
+   IF NOT(FileExists($HTMLFile))
+      $tmpS = PutFile($Htmlfilepath + "\GetHTML.vbs", MimeDecode($GetHTML)) 
+   ENDIF
+$DataFilePath = Sysinfo("MacroPath")
+
+
+#********************************************************************
+# Default configuration values if data file is not present
+#********************************************************************
+$CurrFilter=TRUE
+$IncludeFound=FALSE		
+$IncludeTempDisabled=FALSE		
+$IncludeArchived=FALSE		
+$IncludeName=TRUE		
+$IncludeOwner=TRUE		
+$IncludeHint=TRUE		
+$IncludeTB=TRUE		
+$IncludePlacedDate=FALSE		
+$IncludeLast4=TRUE		
+$IncludeLFDate=TRUE		
+$IncludeUserNotes=FALSE		
+$IncludeUD1=FALSE		
+$IncludeUD2=FALSE		
+$IncludeUD3=FALSE		
+$IncludeUD4=FALSE		
+$IncludeCounty=FALSE		
+$IncludeState=FALSE		
+$IncludeCountry=FALSE		
+$IncludeShortDescription=FALSE		
+$IncludeLongDescription=FALSE		
+$AddDelay=FALSE		
+$MaxLogs="3"
+$IncludeLogs=FALSE		
+$SilentMode=FALSE
+$csvFolder = $_Install+"\60CSxPOI"
+$POILoaderPath="C:\Program Files\Garmin"
+$Chest=TRUE
+$Logo=FALSE
+$MaxScreens="25"
+$MaxAlert=TRUE
+$MaxCount="1000"
+$MacroVer="1.23"
+$PassNo=0
+$SmartName=FALSE
+$Abbrev=TRUE
+$PageSequence=FALSE
+$WantsHintBackwards=FALSE
+
+$Ver=$MacroVer
+
+#********************************************************************
+# Check for an existing data file and read it
+#********************************************************************
+# Set the file path for the data file
+$DataFile = $_Install + "\Macros\60CSxPOI.dat"
+
+IF (FileExists($DataFile))
+
+    FILEREAD File=$DataFile
+
+      $CurrFilter=StrToBool(EXTRACT($line, ";", 1))
+      $IncludeFound=StrToBool(EXTRACT($line, ";", 2))
+      $IncludeTempDisabled=StrToBool(EXTRACT($line, ";", 3))
+      $IncludeArchived=StrToBool(EXTRACT($line, ";", 4))
+      $IncludeName=StrToBool(EXTRACT($line, ";", 5))
+      $IncludeOwner=StrToBool(EXTRACT($line, ";", 6))
+      $IncludeHint=StrToBool(EXTRACT($line, ";", 7))
+      $IncludeTB=StrToBool(EXTRACT($line, ";", 8))
+      $IncludePlacedDate=StrToBool(EXTRACT($line, ";", 9))
+      $IncludeLast4=StrToBool(EXTRACT($line, ";", 10))
+      $IncludeLFDate=StrToBool(EXTRACT($line, ";", 11))
+      $IncludeUserNotes=StrToBool(EXTRACT($line, ";", 12))
+      $IncludeUD1=StrToBool(EXTRACT($line, ";", 13))
+      $IncludeUD2=StrToBool(EXTRACT($line, ";", 14))
+      $IncludeUD3=StrToBool(EXTRACT($line, ";", 15))
+      $IncludeUD4=StrToBool(EXTRACT($line, ";", 16))
+      $IncludeCounty=StrToBool(EXTRACT($line, ";", 17))
+      $IncludeState=StrToBool(EXTRACT($line, ";", 18))
+      $IncludeCountry=StrToBool(EXTRACT($line, ";", 19))
+      $IncludeShortDescription=StrToBool(EXTRACT($line, ";", 20))
+      $IncludeLongDescription=StrToBool(EXTRACT($line, ";", 21))
+      $IncludeLogs=StrToBool(EXTRACT($line, ";", 22))
+      $MaxLogs=EXTRACT($line, ";", 23)
+      $SilentMode=StrToBool(EXTRACT($line, ";", 24))
+      $AddDelay=StrToBool(EXTRACT($line, ";", 25))
+      $Database=EXTRACT($line, ";", 26)
+      $csvFolder=EXTRACT($line, ";", 27)
+      $POILoaderPath=EXTRACT($line, ";", 28)
+      $Chest=StrToBool(EXTRACT($line, ";", 29))
+      $Logo=StrToBool(EXTRACT($line, ";", 30))
+      $MaxScreens=Extract($line, ";", 31)
+      $MaxAlert=StrToBool(EXTRACT($line, ";", 32))
+      $MaxCount=Extract($line, ";", 33)
+      $MacroVer=EXTRACT($line, ";", 34)
+      $SmartName=StrToBool(EXTRACT($line, ";", 35))
+      $Abbrev=StrToBool(EXTRACT($line, ";", 36))
+      $PageSequence=StrToBool(EXTRACT($line, ";", 37))
+      $WantsHintBackwards=StrToBool(EXTRACT($line, ";", 38))
+
+    ENDREAD
+
+ENDIF
+
+#********************************************************************
+# Ensure the user configuration has been updated
+#********************************************************************
+
+  IF Val($MacroVer)<=1.22 
+
+     IF FileExists("$DataFile")
+	FileErase File="$DataFile" OnError="Prompt"
+     ENDIF
+
+     # Reset Defaults before loading configuration menu
+	$CurrFilter=TRUE
+	$IncludeFound=FALSE		
+	$IncludeTempDisabled=FALSE		
+	$IncludeArchived=FALSE		
+	$IncludeName=TRUE		
+	$IncludeOwner=TRUE		
+	$IncludeHint=TRUE		
+	$IncludeTB=TRUE		
+	$IncludePlacedDate=FALSE		
+	$IncludeLast4=TRUE		
+	$IncludeLFDate=TRUE		
+	$IncludeUserNotes=FALSE		
+	$IncludeUD1=FALSE		
+	$IncludeUD2=FALSE		
+	$IncludeUD3=FALSE		
+	$IncludeUD4=FALSE		
+	$IncludeCounty=FALSE		
+	$IncludeState=FALSE		
+	$IncludeCountry=FALSE		
+	$IncludeShortDescription=FALSE		
+	$IncludeLongDescription=FALSE		
+	$AddDelay=FALSE		
+	$MaxLogs="3"
+	$IncludeLogs=FALSE		
+	$SilentMode=FALSE
+	$csvFolder = $_Install+"\60CSxPOI"
+	$POILoaderPath="C:\Program Files\Garmin"
+	$Chest=TRUE
+	$Logo=FALSE
+	$MaxScreens="25"
+	$MaxAlert=TRUE
+	$MaxCount="1000"
+	$SmartName=FALSE
+	$Abbrev=TRUE
+	$PageSequence=FALSE
+        $WantsHintBackwards=FALSE
+
+     Pause Msg="The macro has been updated with new configuration options since the last time you've run it.  You are about to be re-directed to the Main Configuration Menu.  Kindly re-enter and/or double-check your preferences given the new options.  This will only happen when new options are added.  Thanks for your patience and understanding."
+
+        GOSUB Name=ConfigMenu
+
+  ELSE
+
+     # If data file up to date, load the appropriate configuration menu
+     IF NOT($AddDelay)
+        GOSUB Name=ConfigMenu
+     ELSE
+        GOSUB Name=ConfigMenu2
+     ENDIF
+
+  ENDIF
+
+#********************************************************************
+# Save the data input values for the future
+#********************************************************************
+$MacroVer=$Ver
+
+$UserChoices="$CurrFilter;$IncludeFound;$IncludeTempDisabled;$IncludeArchived;$IncludeName;$IncludeOwner;$IncludeHint;$IncludeTB;"
+$UserChoices=$UserChoices + "$IncludePlacedDate;$IncludeLast4;$IncludeLFDate;$IncludeUserNotes;$IncludeUD1;$IncludeUD2;"
+$UserChoices=$UserChoices + "$IncludeUD3;$IncludeUD4;$IncludeCounty;"
+$UserChoices=$UserChoices + "$IncludeState;$IncludeCountry;$IncludeShortDescription;$IncludeLongDescription;$IncludeLogs;"
+$UserChoices=$UserChoices + "$MaxLogs;$SilentMode;$AddDelay;$Database;$csvFolder;$POILoaderPath;$Chest;$Logo;$MaxScreens;$MaxAlert;"
+$UserChoices=$UserChoices + "$MaxCount;$MacroVer;$SmartName;$Abbrev;$PageSequence;$WantsHintBackwards"
+
+$SavedFile=PUTFILE($DataFile, $UserChoices)
+
+IF Left($SavedFile, 7) = "*Error*"
+  CANCEL Msg="Unable to write to $datafile!"
+ENDIF
+
+#********************************************************************
+# Complete the setup and start generating the file to be uploaded
+#********************************************************************
+
+# Ensure the folder is present to write the csv file
+  IF NOT (FolderExists($csvFolder))
+      SHOWSTATUS MSG="Creating your csv folder ... " WIDTH=300
+      $BatFile = $_Install + "\babel.bat"
+      $Result = PutFile($BatFile, "MD " + Quote($csvFolder))
+      FILEOPEN File="$BatFile" Wait=Yes
+  ENDIF
+
+IF $Chest
+   $CacheImage=$60CSxPOI
+ELSE
+   $CacheImage=$GeoLogo2
+ENDIF
+
+# If present, remove old POI icon
+  $CacheImageOld=$csvFolder + "\60CSxPOI.bmp"
+  If FileExists("$CacheImageOld")
+     FileErase File="$CacheImageOld" OnError="Prompt"
+  EndIf
+
+# Place the appropriate POI icon in the csv folder
+  $tmpS = PutFile($csvFolder + "\CSxPOI.bmp", MimeDecode($CacheImage)) 
+
+$FileName = $csvFolder + "\CSxPOI.csv"
+$FileNameOld = $csvFolder + "\60CSxPOI.csv"
+
+   # If CSxPOI.csv or 60CSxPOI.csv exists from an earlier run, it will be deleted
+   # If file is open, you will be given an opportunity to close it
+
+       If FileExists("$FileNameOld")
+         FileErase File="$FileNameOld" OnError="Prompt"
+       EndIf
+
+       If FileExists("$FileName")
+         FileErase File="$FileName" OnError="Prompt"
+       EndIf
+
+  GoTo Position=Top
+
+# Cancel any filter and move to the appropriate database if user has chosen not to export the current filter
+
+  IF NOT($CurrFilter)
+     CANCELFILTER
+     IF $_CurrentDatabase<>$Database
+        DATABASE Name=$Database Action=Select
+     ENDIF
+  ENDIF
+
+# Alert user of exportng a potentially excessive number of waypoints
+
+  IF $MaxAlert AND $_Count > Val($MaxCount)
+     Pause Msg="You're about to export $_Count caches which exceeds your maximum setting of $MaxCount.  You can turn off this alert and reset the maximum amount in Advanced Options.  Depending on your computer and the information selected, processing this many caches may be very slow.  Press Continue to proceed or Stop to reset your filter, database, or settings."
+  ENDIF
+
+# Set up a counter to show status and allow abort $_Count caches."
+
+  $ThisRecord = 0
+
+# Loop to the end of the current filter/database
+  While Not($_eol)
+
+# Set up a counter (continued)
+
+  $ThisRecord = $ThisRecord + 1
+  IF Frac($ThisRecord/10) = 0
+     $Msg = "Now processing " + "$ThisRecord" + " of " + "$_Count" + " waypoints"
+     SHOWSTATUS Msg="$Msg"
+  ENDIF
+
+
+# For features to come in the future
+  $ModifiedCode = "%code"
+
+# Denote Found, Temporarily Disabled, and Archived Caches
+
+    # Add a suffix at the end of the GC Code for found, archived,
+    # and temporarily disabled caches
+    
+    # Previously found caches will have a "-F ... " at the end of the GC Code
+    # There will be a similar A & D designation for Archived and Disabled respectively
+
+    IF $d_Found 
+
+    	$Suffix = "-F"
+	$Prefix = "Found "
+
+	    IF $d_Found and $d_Archived and $IncludeArchived
+    	       $Suffix = "-FA"
+	       $Prefix = "Fnd and Arch "
+	    ENDIF
+
+	    IF $d_Found and $d_TempDisabled and $IncludeTempDisabled
+    	       $Suffix = "-FD"
+               $Prefix = "Fnd and TempDis "
+	    ENDIF
+
+    ELSE
+
+	    IF $d_TempDisabled and $IncludeTempDisabled
+      	       $Suffix = "-D"
+	       $Prefix = "TempDis "
+            ELSE
+	       $Suffix = ""
+	       $Prefix = ""
+	    ENDIF
+
+    ENDIF
+
+    IF $d_Archived and $IncludeArchived
+       $Suffix = "-A"
+       $Prefix = "Arch "
+    ENDIF
+
+
+# Include a "TB" if the cache has Travel Bugs
+
+   If $IncludeTB
+     If "$d_hastravelbug" = "False"
+	$TB = ""
+     EndIf
+     If "$d_hastravelbug" = "True"
+	$TB = " TB"
+     EndIf
+   EndIf
+
+# Form Screen 1 header to be sent to the CSV File
+
+  # If the waypoint is "0ther" then limit the identification to GC Code alone
+  If $d_CacheType <> "O"
+     $Header = "$ModifiedCode" + "$Suffix" + " " + "%Typ=1/%Con=1 $d_Difficulty/$d_terrain $TB"
+     $Header=Replace(",",".",$Header,True)      # Replace European comma with a decimal/period
+     $Header=RegExReplace(",",$Header,".")
+  Else
+     $Header = "%code"
+  EndIf
+
+# Form User-Defined Data Screens
+
+  # Add a prefix if the cache is found, temporarily disabled, or archived
+  $LineOut = $Prefix
+
+  # Placed Date
+
+    If $IncludePlacedDate AND $d_CacheType <> "O"
+      $Date = "$d_PlacedDate"
+      GOSUB Name=ReformatDate
+      $PlacedDate = $Date
+      $LineOut = $LineOut + "PL: " + $PlacedDate + " "
+    EndIf
+
+  # Last 4 Logs Status
+
+    If $IncludeLast4 AND $d_CacheType <> "O" 
+      $LineOut = $LineOut + "%Last4 "
+    EndIf
+
+  # Last Found Date
+
+    If $IncludeLFDate AND $d_CacheType <> "O"
+      $Date = "%datelf"
+      GOSUB Name=ReformatDate
+      $LastFound = $Date
+      $LineOut = $LineOut + "LF: " + $LastFound + "..."
+    EndIf
+  
+  # Full Name of Cache and Owner
+
+    IF $IncludeName
+       $LineOut = $LineOut + $d_name
+    ENDIF
+
+    IF $IncludeOwner
+       $LineOut = $LineOut + " by " + Left($d_placedby,10)
+    ENDIF
+    
+  # Hints
+
+    IF $IncludeHint
+      IF Len($d_hints) > 0
+         IF $WantsHintBackwards
+       	    $BackwardHint = ""
+	    $Chars = Len($d_Hints)
+            WHILE $chars > 0
+               $BackwardHint = $BackwardHint + Substr($d_Hints, $Chars, 1)
+               $Chars = $Chars - 1
+            ENDWHILE
+            $LineOut = $LineOut + "...H: " + $BackwardHint
+	 ELSE	
+            $LineOut = $LineOut + "...H: " + $d_Hints
+         ENDIF
+      ENDIF
+    ENDIF
+
+  # User Notes
+
+   IF $IncludeUserNotes
+      IF Len($d_UserNote) > 0
+         $LineOut = $LineOut + "...N: " + $d_UserNote
+      ENDIF
+   ENDIF
+
+  # UserData fields (User Data 3 and 4 available with GSAK 7.5+)
+
+      IF $IncludeUD1 AND Len($d_UserData) > 0
+	$LineOut = $LineOut + "...U: " + $d_UserData
+      ENDIF
+
+      IF $IncludeUD2 AND Len($d_User2) > 0
+	$LineOut = $LineOut + "...U2: " + $d_User2
+      ENDIF
+
+      IF $IncludeUD3 
+	 # Exporting User Data 3, User Data 4, and County requires at least version 7.5 of GSAK
+	 VerCheck Version=7.5.0.0 (To add User Data 3, User Data 4, and County, please update your GSAK version at http://gsak.net)
+	 IF Len($d_User3) > 0
+	    $LineOut = $LineOut + "...U3: " + $d_User3
+         ENDIF
+      ENDIF
+
+      IF $IncludeUD4
+	 # Exporting User Data 3, User Data 4, and County requires at least version 7.5 of GSAK
+	 VerCheck Version=7.5.0.0 (To add User Data 3, User Data 4, and County, please update your GSAK version at http://gsak.net)
+	 IF Len($d_User4) > 0
+	    $LineOut = $LineOut + "...U4: " + $d_User4
+         ENDIF
+      ENDIF
+
+  # County (Available with GSAK 7.5+)
+
+      IF $IncludeCounty
+	 # Exporting User Data 3, User Data 4, and County requires at least version 7.5 of GSAK
+	 VerCheck Version=7.5.0.0 (To add User Data 3, User Data 4, and County, please update your GSAK version at http://gsak.net)
+	 IF Len($d_County) > 0
+	    $LineOut = $LineOut + "...CO: " + $d_County
+         ENDIF
+      ENDIF
+
+  # State
+
+      IF $IncludeState AND Len($d_State) > 0
+         $LineOut = $LineOut + "...ST: " + $d_State
+      ENDIF
+
+  # Short Description from Cache Page
+
+      IF $IncludeShortDescription AND Len($d_ShortDescription) > 0
+         $LineOut = $LineOut + "...S: " + $d_ShortDescription 
+      ENDIF
+
+  # Long Description from Cache Page
+
+      IF $IncludeLongDescription AND Len($d_LongDescription) > 0
+         $LineOut = $LineOut + "...L: " + $d_LongDescription 
+      ENDIF
+
+  # Obtain the logs
+  
+    IF $IncludeLogs
+
+      # Change to Logs Table
+      Table Active=Logs Scope=Parent
+      $Logs=""
+      $LogCount=0
+
+      While Not($_EOL)
+        $LogCount=$LogCount + 1
+	    
+      # Reformat log date to conserve space
+      $Date = DateFormat($d_ldate)
+      GOSUB Name=ReformatDate
+      $LogDate = $Date
+
+      # Reformat log type to conserve space
+      BEGINCASE
+
+        CASE $d_ltype = "Archive"
+	   $LogType = "A"
+
+        CASE $d_ltype = "Archive (show)"
+	   $LogType = "A"
+
+        CASE $d_ltype = "Attended"
+	   $LogType = "Attd"
+
+        CASE $d_ltype = "Didn't find it"
+	   $LogType = "DNF"
+
+        CASE $d_ltype = "Enable Listing"
+	   $LogType = "Enable"
+
+	CASE $d_ltype = "Found it"
+	   $LogType = "F"
+
+        CASE $d_ltype = "Needs Archived"
+	   $LogType = "SBA"
+
+        CASE $d_ltype = "Needs Maintenance"
+	   $LogType = "NM"
+
+        CASE $d_ltype = "Note"
+	   $LogType = "N"
+
+        CASE $d_ltype = "Other"
+	   $LogType = "Other"
+
+        CASE $d_ltype = "Owner Maintenance"
+	   $LogType = "OM"
+
+        CASE $d_ltype = "Post Reviewer Note"
+	   $LogType = "RvwrNote"
+
+        CASE $d_ltype = "Publish Listing"
+	   $LogType = "P"
+
+        CASE $d_ltype = "Retract Listing"
+	   $LogType = "Retract"
+
+        CASE $d_ltype = "Temporarily Disable Listing"
+	   $LogType = "TempDisable"
+
+        CASE $d_ltype = "Unarchive"
+	   $LogType = "Unarchive"
+
+        CASE $d_ltype = "Unknown"
+	   $LogType = "Unk"
+
+        CASE $d_ltype = "Update Coordinates"
+	   $LogType = "Coords"
+
+        CASE $d_ltype = "Webcam Photo Taken"
+	   $LogType = "Photo"
+
+        CASE $d_ltype = "Will Attend"
+	   $LogType = "WA"
+
+        CASE $d_ltype = "Write Note"
+	   $LogType = "N"
+
+      ENDCASE
+
+      $Logs = $Logs + "  " + $LogType + " " + $LogDate + " by " + Left($d_lby,10) + ": " + $d_ltext + "..."
+
+      # Output a Max # of Logs 
+      If $LogCount > Val($MaxLogs)-1
+  	  Break
+      EndIf
+  	  Goto Position=Next 
+      EndWhile
+
+      # Reinstate Caches Table
+      Table Active=Caches 
+
+      IF Len($Logs) > 12
+         $LineOut = $LineOut + "...Logs: " + $Logs 
+      ENDIF
+
+    ENDIF
+
+    # Insert common abbreviations to conserve space
+    IF $Abbrev
+       GOSUB Name=Abbrev
+    ENDIF
+
+# Remove unruly characters
+
+  # Remove HTML and geocaching.com smilies
+  $LineOut = RegExReplace("(s?)\[/?[a-z][a-z0-9]*[^\[\]]*\]",$LineOut,"")               # HTML
+  $LineOut = RegexReplace("\[.{1,3}?\]",$LineOut,"") 					# geocaching.com smilies
+
+  $LineOut = RegExReplace("< *(br|BR)[ a-zA-Z0-9-!/={}\[\];'#/.,]*>",$LineOut," ")	# Breaks <br>
+  $LineOut = RegExReplace("< *(p|P)[ a-zA-Z0-9-!/={}\[\];'#/.,]*>",$LineOut," ")        # Breaks <p>
+  $LineOut = RegExReplace("&lt;br&gt;",$LineOut," ")                                    # Breaks in gc.com logs
+  $LineOut = RegExReplace("&nbsp",$LineOut," ")
+  $LineOut = RegExReplace("@",$LineOut,"at")
+  $LineOut = RegExReplace("redlight",$LineOut,"red light")
+  $LineOut = RegExReplace("speed",$LineOut,"spd")
+  $LineOut = RegExReplace("camera",$LineOut,"cam")
+  $LineOut = RegExReplace("safety",$LineOut,"safty")
+  $LineOut=Replace(",","",$LineOut,True)
+
+  $LineOut=Replace("&lt;br&gt;"," ",$LineOut,True)
+  $LineOut=Replace($_Quote,"'",$LineOut,true)
+  $LineOut=RegExReplace("$_NewLine",$LineOut," ")
+  $LineOut=RegExReplace("&",$LineOut,"and")
+
+  # Remove all HTML code/tags but ignore the breaks from above
+  $LineOut = RegExReplace("</?[ a-zA-Z][a-zA-Z0-9\-!]*[^<>]*>|</? ?[\!][a-zA-Z0-9\-\ ]*|-*>",$LineOut," ")
+
+  # Remove unnecessary white space
+  $LineOut = RegExReplace("[ \t]+",$LineOut," ")
+  $LineOut = RegExReplace(" \r\n\r\n ",$LineOut,"&lt;br&gt;&lt;br&gt;")
+  $LineOut = RegExReplace(" \r\n ",$LineOut,"&lt;br&gt;")
+  $LineOut = RegExReplace(" \r\n",$LineOut,"&lt;br&gt; ")
+  $LineOut = RegExReplace("\r\n ",$LineOut,"&lt;br&gt; ")
+  $LineOut = RegExReplace(" {2,}",$LineOut," ")
+
+  $LineOut=RegExReplace("(s?)</?[a-z][a-z0-9]*[^<>]*>",$LineOut,"")
+
+# Remove EVERYTHING remaining that is not a letter, number, normal/allowable symbol, or space
+#  $LineOut = RegExReplace("[^a-zA-Z0-9\\\.\?\+\$\(\):;#-'=/%! ]",$LineOut,"")
+  $LineOut = RegExReplace("[^a-zA-Z0-9\\\.\?\+\$\(\):;#\-'=/%! ]",$LineOut,"")
+
+# Sift database/current filter based on Found, TempDisabled, and Archived preferences
+   IF $d_TempDisabled AND NOT($IncludeTempDisabled)
+      $LineOut=""
+   ENDIF
+  
+   IF $d_Archived AND NOT($IncludeArchived)
+      $LineOut=""
+   ENDIF
+
+IF $d_Found AND NOT($IncludeFound)
+
+   $LineOut01=$LineOut
+   $LineOut=""
+
+   IF $d_TempDisabled AND $IncludeTempDisabled
+      $LineOut=$LineOut01
+   ENDIF
+  
+   IF $d_Archived AND $IncludeArchived
+      $LineOut=$LineOut01
+   ENDIF
+
+ENDIF
+
+
+GOSUB Name=FormatScreen
+
+
+IF $SilentMode
+   GOSUB Name=POILoader
+ENDIF
+
+
+CANCEL
+
+
+
+
+
+#********************************************************************
+#
+# Subroutines
+#
+#********************************************************************
+
+#********************************************************************
+# Explicit variable declarations to improve speed
+#********************************************************************
+BEGINSUB Name=Declare
+
+Option Explicit=Yes
+
+Declare Var=$60CSxPOI Type=String
+Declare Var=$Abbrev Type=Boolean
+Declare Var=$Advanced Type=Boolean
+Declare Var=$AdvancedMenu Type=String
+Declare Var=$AddDelay Type=Boolean
+Declare Var=$BackwardHint Type=String
+Declare Var=$Bat Type=String
+Declare Var=$BatFile Type=String
+Declare Var=$CacheImage Type=String
+Declare Var=$CacheImageOld Type=String
+Declare Var=$Chars Type=Numeric
+Declare Var=$Chest Type=Boolean
+Declare Var=$Ck4Update Type=Boolean
+Declare Var=$ConfigForm Type=String
+Declare Var=$ConfigForm2 Type=String
+Declare Var=$Coords Type=String
+Declare Var=$csvFolder Type=String
+Declare Var=$csvName Type=String
+Declare Var=$csvOut Type=String
+Declare Var=$CurrFilter Type=Boolean
+Declare Var=$data Type=String
+Declare Var=$Database Type=String
+Declare Var=$DataFile Type=String
+Declare Var=$DataFilePath Type=String
+Declare Var=$Date Type=String
+Declare Var=$DBList Type=String
+Declare Var=$error Type=String
+Declare Var=$FileError Type=String
+Declare Var=$FileName Type=String
+Declare Var=$FileNameOld Type=String
+Declare Var=$GeoLogo Type=String
+Declare Var=$GeoLogo2 Type=String
+Declare Var=$GetHTML Type=String
+Declare Var=$GPSr Type=String
+Declare Var=$GPSrConnected Type=Boolean
+Declare Var=$Header Type=String
+Declare Var=$HTMLFile Type=String
+Declare Var=$HTMLFilePath Type=String
+Declare Var=$IncludeArchived Type=Boolean
+Declare Var=$IncludeCountry Type=Boolean
+Declare Var=$IncludeCounty Type=Boolean
+Declare Var=$IncludeFound Type=Boolean
+Declare Var=$IncludeHint Type=Boolean
+Declare Var=$IncludeLast4 Type=Boolean
+Declare Var=$IncludeLFDate Type=Boolean
+Declare Var=$IncludeLogs Type=Boolean
+Declare Var=$IncludeLongDescription Type=Boolean
+Declare Var=$IncludeName Type=Boolean
+Declare Var=$IncludeOwner Type=Boolean
+Declare Var=$IncludePlacedDate Type=Boolean
+Declare Var=$IncludeShortDescription Type=Boolean
+Declare Var=$IncludeState Type=Boolean
+Declare Var=$IncludeTB Type=Boolean
+Declare Var=$IncludeTempDisabled Type=Boolean
+Declare Var=$IncludeUD1 Type=Boolean
+Declare Var=$IncludeUD2 Type=Boolean
+Declare Var=$IncludeUD3 Type=Boolean
+Declare Var=$IncludeUD4 Type=Boolean
+Declare Var=$IncludeUserNotes Type=Boolean
+Declare Var=$LastFound Type=String
+Declare Var=$LineOut Type=String
+Declare Var=$LineOut01 Type=String
+Declare Var=$LogCount Type=Numeric
+Declare Var=$LogDate Type=String
+Declare Var=$Logo Type=Boolean
+Declare Var=$Logs Type=String
+Declare Var=$LogType Type=String
+Declare Var=$Longitude Type=Numeric
+Declare Var=$Longitude_str Type=String
+Declare Var=$MacroVer Type=String
+Declare Var=$MaxAlert Type=Boolean
+Declare Var=$MaxCount Type=String
+Declare Var=$MaxLogs Type=String
+Declare Var=$MaxScreens Type=String
+Declare Var=$ModifiedCode Type=String
+Declare Var=$Msg Type=String
+Declare Var=$PageSequence Type=Boolean
+Declare Var=$parms Type=String
+Declare Var=$PartLine Type=String
+Declare Var=$PartLine01 Type=String
+Declare Var=$PassNo Type=Numeric
+Declare Var=$pgm Type=String
+Declare Var=$PlacedDate Type=String
+Declare Var=$POILoaderPath Type=String
+Declare Var=$Prefix Type=String
+Declare Var=$result Type=String
+Declare Var=$SavedFile Type=String
+Declare Var=$ShortSmartName Type=String
+Declare Var=$SilentMode Type=Boolean
+Declare Var=$SmartName Type=Boolean
+Declare Var=$SpacePosition Type=Numeric
+Declare Var=$SplitNumber Type=Numeric
+Declare Var=$Suffix Type=String
+Declare Var=$Support Type=Boolean
+Declare Var=$TB Type=String
+Declare Var=$TempFile Type=String
+Declare Var=$TempForm Type=String
+Declare Var=$ThisRecord Type=Numeric
+Declare Var=$tmpN Type=Numeric
+Declare Var=$tmpN1 Type=Numeric
+Declare Var=$tmpS Type=String
+Declare Var=$tmpS1 Type=String
+Declare Var=$tmpS1 Type=String
+Declare Var=$TreasureChest Type=String
+Declare Var=$Update Type=String
+Declare Var=$UserChoices Type=String
+Declare Var=$Ver Type=String
+Declare Var=$WantsHintBackwards Type=Boolean
+
+ENDSUB
+
+
+
+
+#********************************************************************
+# Reformat/Shorten the date to conserve space
+#********************************************************************
+BEGINSUB Name=ReformatDate
+
+IF $Abbrev
+
+  $Date = Replace("/2009","",$Date, True)
+
+  IF Right($Date,4)="2008"
+     $Date="'08"
+  ENDIF
+
+  IF Right($Date,4)="2007"
+     $Date="'07"
+  ENDIF
+
+  IF Right($Date,4)="2006"
+     $Date="'06"
+  ENDIF
+
+  IF Right($Date,4)="2005"
+     $Date="'05"
+  ENDIF
+
+  IF Right($Date,4)="2004"
+     $Date="'04"
+  ENDIF
+
+  IF Right($Date,4)="2003"
+     $Date="'03"
+  ENDIF
+
+  IF Right($Date,4)="2002"
+     $Date="'02"
+  ENDIF
+
+  IF Right($Date,4)="2001"
+     $Date="'01"
+  ENDIF
+
+  IF Right($Date,4)="2001"
+     $Date="'01"
+  ENDIF
+
+ENDIF
+
+ENDSUB
+
+
+
+#********************************************************************
+# Abbreviate common terms in cache descriptions and logs to conserve space
+#********************************************************************
+BEGINSUB Name=Abbrev
+
+      $LineOut=Replace("first to find","FTF",$LineOut,True)
+      $LineOut=Replace("signed log","SL",$LineOut,True)
+      $LineOut=Replace("took nothing","TN",$LineOut,True)
+      $LineOut=Replace("park and grab","PnG",$LineOut,True)
+      $LineOut=Replace("geocach","cach",$LineOut,True)
+      $LineOut=Replace("travel bug","TB",$LineOut,True)
+      $LineOut=Replace("thanks for the cache","TFTC",$LineOut,True)
+      $LineOut=Replace("thanks for the hide","TFTH",$LineOut,True)
+      $LineOut=Replace("bring your own pen","BYOP",$LineOut,True)
+      $LineOut=Replace("lock and lock","LnL",$LineOut,True)
+      $LineOut=Replace("lock n lock","LnL",$LineOut,True)
+      $LineOut=Replace("lock 'n lock","LnL",$LineOut,True)
+      $LineOut=Replace("did not find it","DNF",$LineOut,True)
+      $LineOut=Replace("didn't find it","DNF",$LineOut,True)
+      $LineOut=Replace("coordinates","coords",$LineOut,True)
+      $LineOut=Replace("waypoint","waypt",$LineOut,True)
+      $LineOut=Replace("point","pt",$LineOut,True)
+      $LineOut=Replace("additional","addl",$LineOut,True)
+      $LineOut=Replace("recommend","rec",$LineOut,True)
+      $LineOut=Replace("transfer","xfr",$LineOut,True)
+      $LineOut=Replace("week","wk",$LineOut,True)
+      $LineOut=Replace("Saturday","Sat",$LineOut,True)
+      $LineOut=Replace("Sunday","Sun",$LineOut,True)
+      $LineOut=Replace("Monday","Mon",$LineOut,True)
+      $LineOut=Replace("Tuesday","Tue",$LineOut,True)
+      $LineOut=Replace("Wednesday","Wed",$LineOut,True)
+      $LineOut=Replace("Thursday","Thur",$LineOut,True)
+      $LineOut=Replace("Friday","Fri",$LineOut,True)
+      $LineOut=Replace("England","Engl",$LineOut,True)
+      $LineOut=Replace("Street","Str",$LineOut,False)
+      $LineOut=Replace("rubbermaid","rbd",$LineOut,True)
+      $LineOut=Replace("brother","bro",$LineOut,True)
+      $LineOut=Replace("sister","sis",$LineOut,True)
+      $LineOut=Replace("mountain","mtn",$LineOut,False)
+      $LineOut=Replace("Mountain","Mtn",$LineOut,False)
+      $LineOut=Replace("population","pop",$LineOut,True)
+      $LineOut=Replace("ammunition","ammo",$LineOut,True)
+      $LineOut=Replace("Favorite","Fav",$LineOut,False)
+      $LineOut=Replace("favorite","fav",$LineOut,False)
+      $LineOut=Replace("husband","husb",$LineOut,True)
+      $LineOut=Replace("bushwhack","BW",$LineOut,True)
+      $LineOut=Replace("grandchildren","grchldrn",$LineOut,True)
+      $LineOut=Replace("35 mm canister","35 mm",$LineOut,True)
+      $LineOut=Replace("35 mm film canister","35 mm",$LineOut,True)
+      $LineOut=Replace("film canister","35 mm",$LineOut,True)
+      $LineOut=Replace("vocabulary","vocab",$LineOut,True)
+      $LineOut=Replace("feet.","ft.",$LineOut,True)
+      $LineOut=Replace("equation","eqn",$LineOut,True)
+      $LineOut=Replace("microcache","micro",$LineOut,True)
+      $LineOut=Replace("satellite","sat",$LineOut,True)
+      $LineOut=Replace("require","req",$LineOut,True)
+      $LineOut=Replace("trailhead","TH",$LineOut,True)
+      $LineOut=Replace("parking","pkg",$LineOut,False)
+      $LineOut=Replace("Parking","Pkg",$LineOut,False)
+      $LineOut=Replace("private","priv",$LineOut,True)
+      $LineOut=Replace("private property","priv prop",$LineOut,True)
+      $LineOut=Replace("no tresspassing","NT",$LineOut,True)
+      $LineOut=Replace("Avenue","Ave",$LineOut,True)
+      $LineOut=Replace("investigate","inves",$LineOut,True)
+      $LineOut=Replace("about","abt",$LineOut,True)
+      $LineOut=Replace("addition","addn",$LineOut,True)
+      $LineOut=Replace("opportunity","oppor",$LineOut,True)
+      $LineOut=Replace("number","#",$LineOut,True)
+      $LineOut=Replace("through","thru",$LineOut,True)
+      $LineOut=Replace("between","betw",$LineOut,True)
+      $LineOut=Replace("reading","rdg",$LineOut,True)
+      $LineOut=Replace("important","imp",$LineOut,True)
+      $LineOut=Replace("replace","repl",$LineOut,False)
+      $LineOut=Replace("Replace","Repl",$LineOut,False)
+      $LineOut=Replace("community","comm",$LineOut,True)
+      $LineOut=Replace("magnetic","magn",$LineOut,True)
+      $LineOut=Replace("weekend","w/e",$LineOut,True)
+      $LineOut=Replace("diameter","dia",$LineOut,True)
+      $LineOut=Replace(" clear "," clr ",$LineOut,True)
+      $LineOut=Replace("environment","envir",$LineOut,False)
+      $LineOut=Replace("Environment","Envir",$LineOut,False)
+      $LineOut=Replace("from","fr",$LineOut,False)
+      $LineOut=Replace("From","Fr",$LineOut,False)
+      $LineOut=Replace("without","w/o",$LineOut,True)
+      $LineOut=Replace(" with "," w/ ",$LineOut,True)
+      $LineOut=Replace("thanks","thx",$LineOut,False)
+      $LineOut=Replace("Thanks","Thx",$LineOut,False)
+      $LineOut=Replace("thankx","thx",$LineOut,True)
+      $LineOut=Replace("maximum","max",$LineOut,True)
+      $LineOut=Replace("minimum","min",$LineOut,True)
+      $LineOut=Replace("before","bef",$LineOut,True)
+      $LineOut=Replace("birthday","bday",$LineOut,True)
+      $LineOut=Replace("construction","const",$LineOut,True)
+      $LineOut=Replace("maintenance","maint",$LineOut,True)
+      $LineOut=Replace("highway","Hwy",$LineOut,True)
+      $LineOut=Replace("railroad","RR",$LineOut,True)
+      $LineOut=Replace("Road","Rd",$LineOut,False)
+      $LineOut=Replace("road","rd",$LineOut,False)
+      $LineOut=Replace(" county "," Co ",$LineOut,True)
+      $LineOut=Replace("province","Prov",$LineOut,True)
+      $LineOut=Replace("by the way","BTW",$LineOut,True)
+      $LineOut=Replace("in my humble opinion","IMHO",$LineOut,True)
+      $LineOut=Replace("necessary","necess",$LineOut,True)
+      $LineOut=Replace("significant","signif",$LineOut,True)
+      $LineOut=Replace("include","incl",$LineOut,True)
+      $LineOut=Replace(" check "," ck ",$LineOut,True)
+      $LineOut=Replace("point","pt",$LineOut,True)
+      $LineOut=Replace("junior","Jr",$LineOut,True)
+      $LineOut=Replace("senior","Sr",$LineOut,True)
+      $LineOut=Replace(" original "," orig ",$LineOut,True)
+      $LineOut=Replace("beautiful","beau",$LineOut,True)
+      $LineOut=Replace("information","info",$LineOut,True)
+      $LineOut=Replace("available","avail",$LineOut,True)
+      $LineOut=Replace("heavy","hvy",$LineOut,True)
+      $LineOut=Replace("forward","fwd",$LineOut,True)
+      $LineOut=Replace("backward","bkwrd",$LineOut,True)
+      $LineOut=Replace("amount","amt",$LineOut,True)
+      $LineOut=Replace("conversation","conv",$LineOut,True)
+      $LineOut=Replace("continue","cont",$LineOut,True)
+      $LineOut=Replace("route","rte",$LineOut,True)
+      $LineOut=Replace("congratulations","congrats",$LineOut,False)
+      $LineOut=Replace("Congratulations","Congrats",$LineOut,False)
+      $LineOut=Replace("conservation","conserv",$LineOut,True)
+      $LineOut=Replace("daughter","dau",$LineOut,True)
+      $LineOut=Replace("distance","dist",$LineOut,True)
+      $LineOut=Replace("Catholic","Cath",$LineOut,True)
+      $LineOut=Replace("Baptist","Bapt",$LineOut,True)
+      $LineOut=Replace("cemetery","Cem",$LineOut,True)
+      $LineOut=Replace("vehicle","veh",$LineOut,True)
+      $LineOut=Replace("condition","cond",$LineOut,True)
+      $LineOut=Replace("Recreation","Rec",$LineOut,True)
+      $LineOut=Replace("although","altho",$LineOut,True)
+      $LineOut=Replace("difficulty","diff",$LineOut,True)
+      $LineOut=Replace("problem","prob",$LineOut,True)
+      $LineOut=Replace("mile.","mi.",$LineOut,True)
+      $LineOut=Replace("miles.","mi.",$LineOut,True)
+      $LineOut=Replace("feet","ft",$LineOut,True)
+      $LineOut=Replace(" foot "," ft ",$LineOut,True)
+      $LineOut=Replace(" yards "," yds ",$LineOut,True)
+      $LineOut=Replace(" mile "," mi ",$LineOut,True)
+      $LineOut=Replace(" miles "," mi ",$LineOut,True)
+      $LineOut=Replace(" one "," 1 ",$LineOut,True)
+      $LineOut=Replace(" two "," 2 ",$LineOut,True)
+      $LineOut=Replace(" three "," 3 ",$LineOut,True)
+      $LineOut=Replace(" four "," 4 ",$LineOut,True)
+      $LineOut=Replace(" five "," 5 ",$LineOut,True)
+      $LineOut=Replace(" six "," 6 ",$LineOut,True)
+      $LineOut=Replace(" seven "," 7 ",$LineOut,True)
+      $LineOut=Replace(" eight "," 8 ",$LineOut,True)
+      $LineOut=Replace(" nine "," 9 ",$LineOut,True)
+      $LineOut=Replace(" ten "," 10 ",$LineOut,True)
+      $LineOut=Replace(" minute "," min ",$LineOut,True)
+      $LineOut=Replace("minutes","min",$LineOut,True)
+      $LineOut=Replace("seconds","sec",$LineOut,True)
+      $LineOut=Replace("easy","EZ",$LineOut,True)
+      $LineOut=Replace("multicache","multi",$LineOut,True)
+      $LineOut=Replace("multistage","multi",$LineOut,True)
+      $LineOut=Replace("stage","stg",$LineOut,True)
+      $LineOut=Replace("challenge","chal",$LineOut,false)
+      $LineOut=Replace("Challenge","Chal",$LineOut,false)
+      $LineOut=Replace("adventure","Adv",$LineOut,True)
+      $LineOut=Replace("DeLorme","DeL",$LineOut,True)
+      $LineOut=Replace(" first "," 1st ",$LineOut,True)
+      $LineOut=Replace(" third "," 3rd ",$LineOut,True)
+      $LineOut=Replace(" fourth "," 4th ",$LineOut,True)
+      $LineOut=Replace(" fifth "," 5th ",$LineOut,True)
+      $LineOut=Replace("eleven","11",$LineOut,True)
+      $LineOut=Replace("twelve","12",$LineOut,True)
+      $LineOut=Replace("thirteen","13",$LineOut,True)
+      $LineOut=Replace("fourteen","14",$LineOut,True)
+      $LineOut=Replace("fifteen","15",$LineOut,True)
+      $LineOut=Replace(" twenty "," 20 ",$LineOut,True)
+      $LineOut=Replace(" fifty "," 50 ",$LineOut,True)
+      $LineOut=Replace(" thirty ","30",$LineOut,True)
+      $LineOut=Replace(" page"," pg",$LineOut,True)
+      $LineOut=Replace("location","loc",$LineOut,True)
+      $LineOut=Replace(" nice hide "," NH ",$LineOut,True)
+      $LineOut=Replace("percent","%",$LineOut,True)
+      $LineOut=Replace(" small "," sm ",$LineOut,True)
+      $LineOut=Replace("plastic","plas",$LineOut,True)
+      $LineOut=Replace("pick up","P/U",$LineOut,True)
+      $LineOut=Replace("follow up","F/U",$LineOut,True)
+      $LineOut=Replace("quick","qck",$LineOut,True)
+      $LineOut=Replace("project","proj",$LineOut,True)
+      $LineOut=Replace("manager","mgr",$LineOut,True)
+      $LineOut=Replace("supervisor","supv",$LineOut,True)
+      $LineOut=Replace("University","Univ",$LineOut,True)
+      $LineOut=Replace("Department","Dept",$LineOut,True)
+      $LineOut=Replace("Administration","Admin",$LineOut,True)
+      $LineOut=Replace("building","bldg",$LineOut,True)
+      $LineOut=Replace("object","obj",$LineOut,True)
+      $LineOut=Replace("communities","comm",$LineOut,True)
+      $LineOut=Replace("picture","pic",$LineOut,True)
+      $LineOut=Replace("rectangular","rect",$LineOut,True)
+      $LineOut=Replace("though","tho",$LineOut,True)
+      $LineOut=Replace("Please","Pls",$LineOut,False)
+      $LineOut=Replace("please","pls",$LineOut,False)
+      $LineOut=Replace("appropriate","appro",$LineOut,True)
+      $LineOut=Replace("equipment","equip",$LineOut,True)
+      $LineOut=Replace("regular","reg",$LineOut,True)
+      $LineOut=Replace("weather","wea",$LineOut,True)
+      $LineOut=Replace("letter","ltr",$LineOut,True)
+      $LineOut=Replace("corresponding","corr",$LineOut,True)
+      $LineOut=Replace("each","ea",$LineOut,False)
+      $LineOut=Replace("Each","Ea",$LineOut,False)
+      $LineOut=Replace("history","hist",$LineOut,False)
+      $LineOut=Replace("History","Hist",$LineOut,False)
+      $LineOut=Replace("historical","hist",$LineOut,True)
+      $LineOut=Replace("historic","hist",$LineOut,True)
+      $LineOut=Replace("doctor","Dr",$LineOut,True)
+      $LineOut=Replace("double","dbl",$LineOut,True)
+      $LineOut=Replace("ground","grnd",$LineOut,True)
+      $LineOut=Replace("Monument","Mnmnt",$LineOut,False)
+      $LineOut=Replace("monument","mnmnt",$LineOut,False)
+      $LineOut=Replace("traditional","trad",$LineOut,True)
+      $LineOut=Replace("moderate","mod",$LineOut,True)
+      $LineOut=Replace("alligators","gators",$LineOut,True)
+      $LineOut=Replace("state park","SP",$LineOut,True)
+      $LineOut=Replace("station","sta",$LineOut,False)
+      $LineOut=Replace("Park","Pk",$LineOut,False)
+      $LineOut=Replace("park","pk",$LineOut,True)
+      $LineOut=Replace("General","Gen",$LineOut,False)
+      $LineOut=Replace("general","gen",$LineOut,False)
+      $LineOut=Replace("???","?",$LineOut,True)
+      $LineOut=Replace("??","?",$LineOut,True)
+      $LineOut=Replace("!!!!","!",$LineOut,True)
+      $LineOut=Replace("!!!","!",$LineOut,True)
+      $LineOut=Replace("!!","!",$LineOut,True)
+      $LineOut=Replace("   "," ",$LineOut,True)
+      $LineOut=Replace("  "," ",$LineOut,True)
+      $LineOut=Replace(" N 2","N2",$LineOut,True)
+      $LineOut=Replace(" N 3","N3",$LineOut,True)
+      $LineOut=Replace(" N 4","N4",$LineOut,True)
+      $LineOut=Replace(" W 0","W",$LineOut,True)
+      $LineOut=Replace(" W 6","W6",$LineOut,True)
+      $LineOut=Replace(" W 7","W7",$LineOut,True)
+      $LineOut=Replace(" W 8","W8",$LineOut,True)
+      $LineOut=Replace("Gulf Shores","GS",$LineOut,True)
+      $LineOut=Replace("Myrtle Beach","MB",$LineOut,True)
+      $LineOut=Replace("Montgomery","MGM",$LineOut,True)
+      $LineOut=Replace("Florence","FLO",$LineOut,True)
+      $LineOut=Replace("Columbia","Cola",$LineOut,True)
+      $LineOut=Replace("Birmingham","BHAM",$LineOut,True)
+      $LineOut=Replace("District of Columbia","DC",$LineOut,True)
+      $LineOut=Replace("New York City","NYC",$LineOut,True)
+      $LineOut=Replace("Los Angeles","LA",$LineOut,True)
+      $LineOut=Replace("San Francisco","SF",$LineOut,True)
+      $LineOut=Replace("Atlanta","ATL",$LineOut,True)
+      $LineOut=Replace("Charlotte","CLT",$LineOut,True)
+      $LineOut=Replace("Jacksonville","JAX",$LineOut,True)
+      $LineOut=Replace("Orlando","ORL",$LineOut,True)
+      $LineOut=Replace("Miami","MIA",$LineOut,True)
+      $LineOut=Replace("Key West","KW",$LineOut,True)
+      $LineOut=Replace("South Beach","SB",$LineOut,True)
+      $LineOut=Replace("Walt Disney World","WDW",$LineOut,True)
+      $LineOut=Replace("Disney World","DW",$LineOut,True)
+      $LineOut=Replace("Alabama","AL",$LineOut,True)
+      $LineOut=Replace("Alaska","AK",$LineOut,True)
+      $LineOut=Replace("Arizona","AZ",$LineOut,True)
+      $LineOut=Replace("Arkansas","AR",$LineOut,True)
+      $LineOut=Replace("California","CA",$LineOut,True)
+      $LineOut=Replace("Colorado","CO",$LineOut,True)
+      $LineOut=Replace("Connecticut","CT",$LineOut,True)
+      $LineOut=Replace("Florida","FL",$LineOut,True)
+      $LineOut=Replace("Georgia","GA",$LineOut,True)
+      $LineOut=Replace("Hawaii","HI",$LineOut,True)
+      $LineOut=Replace("Idaho","ID",$LineOut,True)
+      $LineOut=Replace("Illinois","IL",$LineOut,True)
+      $LineOut=Replace("Indiana","IN",$LineOut,True)
+      $LineOut=Replace("Iowa","IA",$LineOut,True)
+      $LineOut=Replace("Kansas","KS",$LineOut,True)
+      $LineOut=Replace("Kentucky","KY",$LineOut,True)
+      $LineOut=Replace("Louisiana","LA",$LineOut,True)
+      $LineOut=Replace("Maine","ME",$LineOut,True)
+      $LineOut=Replace("Maryland","MD",$LineOut,True)
+      $LineOut=Replace("Massachusetts","MA",$LineOut,True)
+      $LineOut=Replace("Michigan","MI",$LineOut,True)
+      $LineOut=Replace("Minnesota","MN",$LineOut,True)
+      $LineOut=Replace("Mississippi","MS",$LineOut,True)
+      $LineOut=Replace("Missouri","MO",$LineOut,True)
+      $LineOut=Replace("Montana","MT",$LineOut,True)
+      $LineOut=Replace("Nebraska","NE",$LineOut,True)
+      $LineOut=Replace("Nevada","NV",$LineOut,True)
+      $LineOut=Replace("New Hampshire","NH",$LineOut,True)
+      $LineOut=Replace("New Jersey","NJ",$LineOut,True)
+      $LineOut=Replace("New Mexico","NM",$LineOut,True)
+      $LineOut=Replace("New York","NY",$LineOut,True)
+      $LineOut=Replace("North Carolina","NC",$LineOut,True)
+      $LineOut=Replace("N Carolina","NC",$LineOut,True)
+      $LineOut=Replace("North Dakota","ND",$LineOut,True)
+      $LineOut=Replace("Ohio","OH",$LineOut,True)
+      $LineOut=Replace("Oklahoma","OK",$LineOut,True)
+      $LineOut=Replace("Oregon","OR",$LineOut,True)
+      $LineOut=Replace("Pennsylvania","PA",$LineOut,True)
+      $LineOut=Replace("Rhode Island","RI",$LineOut,True)
+      $LineOut=Replace("South Carolina","SC",$LineOut,True)
+      $LineOut=Replace("S Carolina","SC",$LineOut,True)
+      $LineOut=Replace("South Dakota","SD",$LineOut,True)
+      $LineOut=Replace("Tennessee","TN",$LineOut,True)
+      $LineOut=Replace("Texas","TX",$LineOut,True)
+      $LineOut=Replace("Utah","UT",$LineOut,True)
+      $LineOut=Replace("Vermont","VT",$LineOut,True)
+      $LineOut=Replace("Washington","WA",$LineOut,True)
+      $LineOut=Replace("West Virgina","WV",$LineOut,True)
+      $LineOut=Replace("Wisonsin","WI",$LineOut,True)
+      $LineOut=Replace("Wyoming","WY",$LineOut,True)
+      $LineOut=Replace("Virgina","VA",$LineOut,True)
+      $LineOut=Replace("United States","US",$LineOut,True)
+      $LineOut=Replace("America","Amer",$LineOut,True)
+      $LineOut=Replace("American","Amer",$LineOut,True)
+      $LineOut=Replace("United Kingdom","UK",$LineOut,True)
+      $LineOut=Replace("southeast","SE",$LineOut,True)
+      $LineOut=Replace("southwest","SW",$LineOut,True)
+      $LineOut=Replace("northeast","NE",$LineOut,True)
+      $LineOut=Replace("northwest","NW",$LineOut,True)
+      $LineOut=Replace(" east "," E ",$LineOut,True)
+      $LineOut=Replace(" west "," W ",$LineOut,True)
+      $LineOut=Replace(" north "," N ",$LineOut,True)
+      $LineOut=Replace(" south "," S ",$LineOut,True)
+
+ENDSUB
+
+
+
+#********************************************************************
+# Configuration Menu 1
+#********************************************************************
+BEGINSUB Name=ConfigMenu
+
+# $PassNo=$PassNo + 1
+
+# IF ShowForm($ConfigForm)
+WHILE TRUE	# Start Config Form Loop
+
+  $TempForm=Form($ConfigForm,"")
+
+  BeginCase
+
+    Case $Advanced
+    GOSUB Name=AdvancedMenu
+    GOSUB Name=ConfigMenu
+
+    Case $Cancel
+    Cancel Msg="Macro was canceled by user"
+
+    Case $Ck4Update
+    GOSUB Name=CheckUpdates
+    GOSUB Name=ConfigMenu
+
+    Case $Continue
+    # User clicked Continue and all is well
+    BREAK
+
+    Case $Pause
+    GOSUB Name=ConfigMenu2
+
+    Case $Support
+    RunPgm Pgm="http://gsak.net/board/index.php?showtopic=8926"
+    GOSUB Name=ConfigMenu
+
+    Case $TemForm="DelayExit"
+    BREAK
+
+  EndCase
+
+ENDWHILE	# End of Config Form Loop
+
+ENDSUB
+
+
+
+#********************************************************************
+# Configuration Menu 2 (Adds 10 Second Delay)
+#********************************************************************
+BEGINSUB Name=ConfigMenu2
+
+# $PassNo=$PassNo + 1
+
+# IF ShowForm($ConfigForm2)
+WHILE TRUE	# Start Config Form 2 Loop
+
+  $TempForm=Form($ConfigForm2,"")
+
+  BeginCase
+
+    Case $Advanced
+    GOSUB Name=AdvancedMenu
+    GOSUB Name=ConfigMenu
+
+    Case $Cancel
+    Cancel Msg="Macro was canceled by user"
+
+    Case $Ck4Update
+    GOSUB Name=CheckUpdates
+    GOSUB Name=ConfigMenu
+
+    Case $Continue
+    # User clicked Continue and all is well
+    BREAK
+
+    Case $Pause
+    GOSUB Name=ConfigMenu
+
+    Case $Support
+    RunPgm Pgm="http://gsak.net/board/index.php?showtopic=8926"
+    GOSUB Name=ConfigMenu
+
+  EndCase
+
+ENDWHILE	# End Config Form 2 Loop
+
+ENDSUB
+
+
+
+#********************************************************************
+# Advanced Options Menu
+#********************************************************************
+BEGINSUB Name=AdvancedMenu
+
+# IF ShowForm($AdvancedMenu)
+
+  WHILE TRUE 	# Begin Advanced Menu form loop
+
+  $TempForm=Form($AdvancedMenu,"")
+
+  BeginCase
+
+    BeginCase
+
+	Case $Chest
+	$CacheImage=$TreasureChest
+
+	Case $Logo
+	$CacheImage=$GeoLogo
+
+    EndCase
+
+    Case $Cancel
+    Cancel Msg="Macro was canceled by user"
+
+    Case $Continue
+    # User clicked Continue and all is well
+    BREAK
+
+  EndCase
+
+ENDWHILE	# End of Advanced Menu form loop
+
+ENDSUB
+
+
+
+#********************************************************************
+# Check for an updated version of this macro
+#********************************************************************
+# Check for an updated version of the 60CSxPOI macro
+# Credit for this routine goes to Lignumaqua and his FindStat3 macro
+BEGINSUB Name=CheckUpdates
+	SHOWSTATUS msg="Checking for updates, please wait..." Width=350
+	# Use external VBS file to get the HTML file
+	$tmpS = Quote($Htmlfilepath + "\GetHTML.vbs")
+	# Add date/time string to the end to stop caching problems
+	$tmpS1 = "?random=" + DateToString($_Today) + Replace(":","",Time(),TRUE)
+	$result = " " + Quote("http://www.kaynmike.com/GSAK/60CSxPOIVersion.txt" + $tmpS1) + " " + Quote($datafilepath + "\60CSxPOIVersion.txt")
+	RUNPGM pgm=$tmpS parms=$result wait=yes
+	SHOWSTATUS Msg="Done" Display=off
+	
+	$result = GetFile($datafilepath + "\60CSxPOIVersion.txt")
+	IF Left($Result,7) <> "*Error*"
+		$tmpN = 10000*Val(Extract($Result,".",1)) + 100*Val(Extract($Result,".",2)) + Val(Extract($Result,".",3))
+		$tmpN1 = 10000*Val(Extract($MacroVer,".",1)) + 100*Val(Extract($MacroVer,".",2)) + Val(Extract($MacroVer,".",3))
+		# MSGOK msg="$tmpN, $tmpN1"
+		IF $tmpN > $tmpN1
+			$tmpS = "You have version $Ver but $Result is available"
+			$Update = Editform($Update,"UpdateText","caption","$tmpS")
+			WHILE TRUE
+			$tmpS = Form($Update,"")
+				# Reset the screen position of the menu form to where the user left it
+  			$Update = EditForm($Update,"Update","Top",$_FormTop)
+  			$Update = EditForm($Update,"Update","Left",$_FormLeft)
+  			BEGINCASE
+  				CASE $GetUpdate
+    				# open Web page
+    				$FileName = $htmlfilepath + "\60CSxPOIVersion.txt"
+						WEB URL="http://gsak.net/board/index.php?act=ST&f=19&t=8932&view=getnewpost"
+						BREAK
+					CASE $UpdateOK
+						BREAK
+  			ENDCASE
+  		ENDWHILE
+		ELSE
+			MSGOK msg="The macro is up to date."
+		ENDIF
+	ENDIF
+ENDSUB 
+
+
+
+#********************************************************************
+# Run Garmin POI Loader to send file to GPSr
+#********************************************************************
+BEGINSUB Name=POILoader
+
+   IF NOT(FileExists("$POILoaderPath\poiloader.exe"))
+      MSGOK Msg="Garmin POI Loader was not found.  Macro is aborting." Caption="Aborting Macro"
+      Cancel
+   ENDIF	
+
+   SHOWSTATUS msg="Transferring to GPSr ... please wait" WIDTH=300
+   RUNPGM PGM="$POILoaderPath\poiloader.exe" parms=/silent Wait=Yes # Hide=No
+	
+ENDSUB
+ 
+
+
+#********************************************************************
+# Format output to fit on Cx/CSx screens
+#********************************************************************
+BEGINSUB Name=FormatScreen
+
+# Fit output to screen body max of 88 characters
+
+  $Coords =  $d_Longitude + "," + $d_Latitude + ","
+
+  # If the waypoint is "0ther" then limit the identification to GC Code alone
+  If $d_CacheType <> "O"
+     $Header = $_Quote + "$ModifiedCode" + "$Suffix" + " " + "%Typ=1/%Con=1 $d_Difficulty/$d_terrain$TB" + $_Quote
+  Else
+     $Header = $_Quote + "%code" + $_Quote
+  EndIf
+
+  IF $SmartName AND $d_CacheType <> "O"
+     $ShortSmartName = Left($d_SmartName,19)
+     $Header = $_Quote + "$ShortSmartName" + "$Suffix" + " " + "%Typ=1/%Con=1 $d_Difficulty/$d_terrain$TB" + $_Quote
+  EndIf
+
+     $Header=Replace(",",".",$Header,True)      # Replace European comma with a decimal/period
+
+     IF Len($LineOut) <= 88
+
+	   $LineOut = $_Quote + $LineOut + $_Quote
+
+  	   $csvOut = $Coords + $Header + "," + $LineOut + $_NewLine
+
+	   IF Len($LineOut)>0
+	      # Write the line to CSV file
+	      $FileError = Appendfile($FileName, $csvOut)
+                 If Left($FileError,13) = "*** ERROR ***"
+	            $FileError=$FileError+" - Output File is in Use"
+                    Pause Msg="$FileError"
+                    Cancel
+                 EndIf
+           ENDIF
+
+     ELSE
+
+	# As long as there's more than 88 characters keep splitting the output
+
+  	   $SplitNumber=0
+
+  	   WHILE Len($LineOut) > 88 AND $SplitNumber < Val($MaxScreens)+1
+ 	   $SplitNumber = $SplitNumber + 1
+  
+  	# Ideally find a space between character 65 and 88 ... 
+  	   $SpacePosition=88
+    	   WHILE ($SpacePosition>65) AND NOT(SubStr($LineOut,$SpacePosition,1) = " ")
+    	      $SpacePosition = $SpacePosition - 1
+    	   ENDWHILE
+
+	# Assuming no spaces found between 65th and 87th characters split at character 88   #  so we can append " ..."
+	   IF $SpacePosition = 65
+    	      $SpacePosition = 88
+    	   ENDIF
+  
+	# Get the part of the output that's to be written now
+	   $PartLine = SubStr($LineOut,1,$SpacePosition)
+  
+	IF $SplitNumber > 0
+
+	IF $SmartName
+           $csvName = $_Quote + "$d_SmartName" + "-" + "$SplitNumber" + " %code" + $_Quote + ","
+	ELSE
+           $csvName = $_Quote + "%code" + "-" + "$SplitNumber" + " %Smart" + $_Quote + ","
+	ENDIF
+
+	IF $SplitNumber=1 
+	   $csvName = $Header + ","
+	ENDIF
+
+	$PartLine01 = $PartLine
+
+	IF $PageSequence
+
+	   # Adds a distance of 60 feet due S to the 2nd page and then increments 4 feet for subsequent pages  
+
+	   IF $SplitNumber > 1
+              $Longitude = Val($d_Longitude) - 0.000167 - ($SplitNumber*0.000167)
+    
+           # Avoid European comma/decimal error with fix suggested by Martin_J
+	   $Longitude_str = NumToStr($Longitude)
+	   $Longitude_str = Replace(",",".",$Longitude_str,True)
+
+	   $Coords = $Longitude_str + "," + $d_Latitude + ","
+
+	   ENDIF
+
+	ENDIF
+
+	$csvOut = $Coords + $csvName + Quote($PartLine) + $_NewLine
+
+	   IF Len($LineOut)>0 AND NOT($SplitNumber=Val($MaxScreens) +1)
+	     $FileError = Appendfile($FileName, $csvOut)
+	     If Left($FileError,13) = "*** ERROR ***"
+	        $FileError=$FileError + " - Output File is in Use"
+                Pause Msg="$FileError"
+                Cancel
+             EndIf
+	   ENDIF
+
+	# Remove the part of the output just written and return to the start of the loop
+
+	  IF $SplitNumber < Val($MaxScreens)+1	
+	     $LineOut = Replace($PartLine01,"",$LineOut,True)
+	  ELSE
+	     $LineOut = ""
+          ENDIF
+
+          ENDWHILE
+	
+	# Any remaining characters will now total less than 88
+	   If Len($LineOut)>0
+		$SplitNumber = $SplitNumber + 1
+
+	   If $d_CacheType <> "O"
+	      IF $SmartName
+	        $csvName = $_Quote + "%Smart" + "-" + "$SplitNumber" + " %code" + $_Quote + ","
+	      ELSE		
+	        $csvName = $_Quote + "%Code" + "-" + "$SplitNumber" + " %Smart" + $_Quote + ","
+	      ENDIF
+           Else
+	      IF $SmartName
+                $csvName = $_Quote + "%Smart" + "-" + "$SplitNumber" + $_Quote + ","
+	      ELSE
+                $csvName = $_Quote + "%Code" + "-" + "$SplitNumber" + $_Quote + ","
+	      ENDIF
+           EndIf
+
+		$LineOut = $_Quote + $LineOut + $_Quote
+		$csvOut = $Coords + $csvName + $LineOut + $_NewLine
+
+	# Check for and output any child waypoints
+
+	  Table Active=Waypoints Scope=Parent
+
+	     IF $_Count > 0
+        	$csvOut = $d_cLon + "," + $d_cLat + "," + $_Quote + $d_cCode + $_Quote + "," + $_Quote + $d_cType + "    " + $d_cName + $_Quote + $_NewLine
+	     EndIf
+
+	  Table Active=Caches
+
+	# Output
+
+	   If Len($LineOut)>0 
+  	      $FileError = Appendfile($FileName, $csvOut)
+	      If Left($FileError,13) = "*** ERROR ***"
+	         $FileError=$FileError + " - Output File is in Use"
+                 Pause Msg="$FileError"
+                 Cancel
+              EndIf
+            EndIf
+	   EndIf
+
+       EndIf
+       EndIf
+
+# Advance to next record
+
+ Goto Position=Next
+
+ EndWhile
+
+ENDSUB 
+
+
+
+
+#********************************************************************
+#
+# Menus
+#
+#********************************************************************
+
+#********************************************************************
+# Main Configuration Menu
+#********************************************************************
+<Data> VarName=$ConfigForm
+Name = Form1
+  Type = Form
+  Color = 16777215
+  Height = 622
+  Width = 800
+
+Name = Title
+  Type = Label
+  Color = 255
+  Height = 20
+  Left = 225
+  Size = 12
+  Style = bold
+  Top = 24
+  Width = 294
+  Caption = Garmin Handheld Cx/CSx/HCx POI Export
+
+Name = Label1
+  Type = Label
+  Height = 16
+  Left = 32
+  Size = 10
+  Top = 72
+  Width = 38
+  Caption = Export
+
+Name = CurrFilter
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 72
+  Width = 15
+  Taborder = 1
+
+Name = Label2
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 72
+  Width = 386
+  Caption = Current Filter (Overrides if Checked) . . . OR . . . an entire Database
+
+Name = Database
+  Type = Combobox
+  Height = 21
+  Left = 509
+  Top = 69
+  Values = $DBList
+  Width = 145
+  Taborder = 2
+
+Name = Label3
+  Type = Label
+  Height = 18
+  Left = 32
+  Size = 11
+  Top = 104
+  Width = 46
+  Caption = Include
+
+Name = IncludeFound
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 106
+  Width = 15
+  Taborder = 3
+
+Name = Label4
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 106
+  Width = 87
+  Caption = Found Caches
+
+Name = IncludeTempDisabled
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 126
+  Width = 15
+  Taborder = 4
+
+Name = Label5
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 126
+  Width = 143
+  Caption = Temp Disabled Caches
+
+Name = IncludeArchived
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 146
+  Width = 15
+  Taborder = 5
+
+Name = Label6
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 146
+  Width = 102
+  Caption = Archived Caches
+
+Name = IncludeName
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 166
+  Width = 15
+  Taborder = 6
+
+Name = Label28
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 166
+  Width = 79
+  Caption = Cache Name
+
+Name = IncludeOwner
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 186
+  Width = 15
+  Taborder = 7
+
+Name = Label29
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 186
+  Width = 38
+  Caption = Owner
+
+Name = IncludeHint
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 206
+  Width = 15
+  Taborder = 8
+
+Name = Label7
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 206
+  Width = 91
+  Caption = Hint (Decoded)
+
+Name = IncludeTB
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 226
+  Width = 15
+  Taborder = 9
+
+Name = Label8
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 226
+  Width = 106
+  Caption = Travel Bug Status
+
+Name = IncludePlacedDate
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 104
+  Width = 15
+  Taborder = 10
+
+Name = Label9
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 104
+  Width = 75
+  Caption = Placed Date
+
+Name = IncludeLast4
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 124
+  Width = 15
+  Taborder = 11
+
+Name = Label10
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 124
+  Width = 122
+  Caption = Status of Last 4 Logs
+
+Name = IncludeLFDate
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 144
+  Width = 15
+  Taborder = 12
+
+Name = Label11
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 144
+  Width = 98
+  Caption = Last Found Date
+
+Name = IncludeUserNotes
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 164
+  Width = 15
+  Taborder = 13
+
+Name = Label12
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 164
+  Width = 68
+  Caption = User Notes
+
+Name = IncludeUD1
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 184
+  Width = 15
+  Taborder = 14
+
+Name = Label13
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 184
+  Width = 111
+  Caption = User Data Field #1
+
+Name = IncludeUD2
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 204
+  Width = 15
+  Taborder = 15
+
+Name = Label14
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 204
+  Width = 111
+  Caption = User Data Field #2
+
+Name = IncludeUD3
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 224
+  Width = 15
+  Taborder = 50
+
+Name = Label14a
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 224
+  Width = 111
+  Caption = User Data Field #3
+
+Name = IncludeUD4
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 104
+  Width = 15
+  Taborder = 51
+
+Name = Label15a
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 104
+  Width = 111
+  Caption = User Data Field #4
+
+Name = IncludeCounty
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 124
+  Width = 15
+  Taborder = 21
+
+Name = Label15
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 124
+  Width = 131
+  Caption = County
+
+Name = IncludeState
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 144
+  Width = 15
+  Taborder = 16
+
+Name = Label16
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 144
+  Width = 88
+  Caption = State/Province
+
+Name = IncludeCountry
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 164
+  Width = 15
+  Taborder = 17
+
+Name = Label30
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 164
+  Width = 45
+  Caption = Country
+
+Name = IncludeShortDescription
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 184
+  Width = 15
+  Taborder = 18
+
+Name = Label17
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 184
+  Width = 102
+  Caption = Short Description
+
+Name = IncludeLongDescription
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 204
+  Width = 15
+  Taborder = 24
+
+Name = Label18
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 204
+  Width = 101
+  Caption = Long Description
+
+Name = IncludeLogs
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 224
+  Width = 15
+  Taborder = 19
+
+Name = Label19
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 224
+  Width = 30
+  Caption = Logs
+
+Name = Label20
+  Type = Label
+  Height = 16
+  Left = 597
+  Size = 10
+  Top = 224
+  Width = 82
+  Caption = Max # of Logs
+
+Name = MaxLogs
+  Type = Combobox
+  Height = 21
+  Left = 690
+  Top = 223
+  Values = 0;1;2;3;4;5;6;12;24;99
+  Width = 57
+  Taborder = 20
+
+Name = Label35
+  Type = Label
+  Height = 16
+  Left = 32
+  Size = 10
+  Top = 255
+  Width = 713
+  Caption = Notes:  1) The GC Code, Smart Name, Cache Type, Container, Difficulty, and Terrain are included by default.  They will be
+
+Name = Label36
+  Type = Label
+  Height = 16
+  Left = 93
+  Size = 10
+  Top = 273
+  Width = 514
+  Caption = in the form "GC12345 T/R 1.5/1.5" at the top of the first screen and "GC12345-# SmrtName" on the second screen.
+
+Name = Label37
+  Type = Label
+  Height = 16
+  Left = 78
+  Size = 10
+  Top = 294
+  Width = 656
+  Caption = 2) Point your Garmin POI Loader (free download from garmin.com) to the "60CSxPOI" folder inside your main
+
+Name = Label39
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 312
+  Width = 637
+  Caption = GSAK directory (typically C:\GSAK\60CSxPOI or C:\Program Files\GSAK\60CSxPOI).  Follow the program
+
+Name = Label38
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 330
+  Width = 545
+  Caption = screen directions to upload to your GPSr.  This folder may be changed in Advanced Options.
+
+Name = Label40
+  Type = Label
+  Height = 16
+  Left = 76
+  Size = 10
+  Top = 351
+  Width = 622
+  Caption = 3) View the waypoints as "Custom Points of Interest" on your GPSr.  Usually, this is done by selecting Find and
+
+Name = Label41
+  Type = Label
+  Height = 16
+  Left = 93
+  Size = 10
+  Top = 369
+  Width = 223
+  Caption = then scrolling down to the Custom Points of Interest.
+
+Name = Label25
+  Type = Label
+  Height = 16
+  Left = 76
+  Size = 10
+  Top = 390
+  Width = 654
+  Caption = 4) It's suggested you select the minimum waypoints and information needed.  The number of screens per cache, as
+
+Name = Label26
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 408
+  Width = 648
+  Caption = well as the processing time, will increase as you include more information.  This is especially true for User Notes, 
+
+Name = Label21
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 426
+  Width = 239
+  Caption = the Long Description, and the number of logs you choose to export.
+
+Name = GPSr
+  Type = Image
+  File = GPSr.jpg
+  Height = 150
+  Left = 662
+  Source = Macro
+  Top = 21
+  Width = 98
+
+Name = Advanced
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 458
+  Width = 125
+  Taborder = 21
+  Caption = Advanced Options
+
+Name = Ck4Update
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 498
+  Width = 125
+  Taborder = 22
+  Caption = Check for Updates
+
+Name = Support
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 538
+  Width = 125
+  Taborder = 23
+  Caption = Support Forum
+
+Name = Cancel
+  Type = Button
+  Enter = No
+  Escape = Yes
+  Height = 40
+  Left = 256
+  Top = 490
+  Width = 75
+  Taborder = 24
+  Caption = Cancel
+
+Name = Pause
+  Type = Button
+  Height = 40
+  Left = 418
+  Top = 490
+  Width = 75
+  Taborder = 25
+  Caption = Pause
+
+Name = Continue
+  Type = Button
+  Enter = Yes
+  Height = 60
+  Left = 577
+  Top = 478
+  Width = 125
+  Taborder = 26
+  Caption = Continue
+
+<enddata>
+
+
+
+
+
+
+
+
+
+#********************************************************************
+# Main Menu with Time Delay to allow automatic operation
+#********************************************************************
+
+<Data> VarName=$ConfigForm2
+Name = Form2
+  Type = Form
+  Color = 16777215
+  Height = 622
+  Width = 800
+  Delay = 10
+
+Name = Title
+  Type = Label
+  Color = 255
+  Height = 20
+  Left = 225
+  Size = 12
+  Style = bold
+  Top = 24
+  Width = 294
+  Caption = Garmin Handheld Cx/CSx/HCx POI Export
+
+Name = Label1
+  Type = Label
+  Height = 16
+  Left = 32
+  Size = 10
+  Top = 72
+  Width = 38
+  Caption = Export
+
+Name = CurrFilter
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 72
+  Width = 15
+  Taborder = 1
+
+Name = Label2
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 72
+  Width = 386
+  Caption = Current Filter (Overrides if Checked) . . . OR . . . an entire Database
+
+Name = Database
+  Type = Combobox
+  Height = 21
+  Left = 509
+  Top = 69
+  Values = $DBList
+  Width = 145
+  Taborder = 2
+
+Name = Label3
+  Type = Label
+  Height = 18
+  Left = 32
+  Size = 11
+  Top = 104
+  Width = 46
+  Caption = Include
+
+Name = IncludeFound
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 106
+  Width = 15
+  Taborder = 3
+
+Name = Label4
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 106
+  Width = 87
+  Caption = Found Caches
+
+Name = IncludeTempDisabled
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 126
+  Width = 15
+  Taborder = 4
+
+Name = Label5
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 126
+  Width = 143
+  Caption = Temp Disabled Caches
+
+Name = IncludeArchived
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 146
+  Width = 15
+  Taborder = 5
+
+Name = Label6
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 146
+  Width = 102
+  Caption = Archived Caches
+
+Name = IncludeName
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 166
+  Width = 15
+  Taborder = 6
+
+Name = Label28
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 166
+  Width = 79
+  Caption = Cache Name
+
+Name = IncludeOwner
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 186
+  Width = 15
+  Taborder = 7
+
+Name = Label29
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 186
+  Width = 38
+  Caption = Owner
+
+Name = IncludeHint
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 206
+  Width = 15
+  Taborder = 8
+
+Name = Label7
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 206
+  Width = 91
+  Caption = Hint (Decoded)
+
+Name = IncludeTB
+  Type = Checkbox
+  Height = 17
+  Left = 90
+  Top = 226
+  Width = 15
+  Taborder = 9
+
+Name = Label8
+  Type = Label
+  Height = 16
+  Left = 112
+  Size = 10
+  Top = 226
+  Width = 106
+  Caption = Travel Bug Status
+
+Name = IncludePlacedDate
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 104
+  Width = 15
+  Taborder = 10
+
+Name = Label9
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 104
+  Width = 75
+  Caption = Placed Date
+
+Name = IncludeLast4
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 124
+  Width = 15
+  Taborder = 11
+
+Name = Label10
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 124
+  Width = 122
+  Caption = Status of Last 4 Logs
+
+Name = IncludeLFDate
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 144
+  Width = 15
+  Taborder = 12
+
+Name = Label11
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 144
+  Width = 98
+  Caption = Last Found Date
+
+Name = IncludeUserNotes
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 164
+  Width = 15
+  Taborder = 13
+
+Name = Label12
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 164
+  Width = 68
+  Caption = User Notes
+
+Name = IncludeUD1
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 184
+  Width = 15
+  Taborder = 14
+
+Name = Label13
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 184
+  Width = 111
+  Caption = User Data Field #1
+
+Name = IncludeUD2
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 204
+  Width = 15
+  Taborder = 15
+
+Name = Label14
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 204
+  Width = 111
+  Caption = User Data Field #2
+
+Name = IncludeUD3
+  Type = Checkbox
+  Height = 17
+  Left = 300
+  Top = 224
+  Width = 15
+  Taborder = 50
+
+Name = Label14a
+  Type = Label
+  Height = 16
+  Left = 322
+  Size = 10
+  Top = 224
+  Width = 111
+  Caption = User Data Field #3
+
+Name = IncludeUD4
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 104
+  Width = 15
+  Taborder = 51
+
+Name = Label15a
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 104
+  Width = 111
+  Caption = User Data Field #4
+
+Name = IncludeCounty
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 124
+  Width = 15
+  Taborder = 21
+
+Name = Label15
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 124
+  Width = 131
+  Caption = County
+
+Name = IncludeState
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 144
+  Width = 15
+  Taborder = 16
+
+Name = Label16
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 144
+  Width = 88
+  Caption = State/Province
+
+Name = IncludeCountry
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 164
+  Width = 15
+  Taborder = 17
+
+Name = Label30
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 164
+  Width = 45
+  Caption = Country
+
+Name = IncludeShortDescription
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 184
+  Width = 15
+  Taborder = 18
+
+Name = Label17
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 184
+  Width = 102
+  Caption = Short Description
+
+Name = IncludeLongDescription
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 204
+  Width = 15
+  Taborder = 24
+
+Name = Label18
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 204
+  Width = 101
+  Caption = Long Description
+
+Name = IncludeLogs
+  Type = Checkbox
+  Height = 17
+  Left = 510
+  Top = 224
+  Width = 15
+  Taborder = 19
+
+Name = Label19
+  Type = Label
+  Height = 16
+  Left = 532
+  Size = 10
+  Top = 224
+  Width = 30
+  Caption = Logs
+
+Name = Label20
+  Type = Label
+  Height = 16
+  Left = 597
+  Size = 10
+  Top = 224
+  Width = 82
+  Caption = Max # of Logs
+
+Name = MaxLogs
+  Type = Combobox
+  Height = 21
+  Left = 690
+  Top = 223
+  Values = 0;1;2;3;4;5;6;12;24;99
+  Width = 57
+  Taborder = 20
+
+Name = Label35
+  Type = Label
+  Height = 16
+  Left = 32
+  Size = 10
+  Top = 255
+  Width = 713
+  Caption = Notes:  1) The GC Code, Smart Name, Cache Type, Container, Difficulty, and Terrain are included by default.  They will be
+
+Name = Label36
+  Type = Label
+  Height = 16
+  Left = 93
+  Size = 10
+  Top = 273
+  Width = 514
+  Caption = in the form "GC12345 T/R 1.5/1.5" at the top of the first screen and "GC12345-# SmrtName" on the second screen.
+
+Name = Label37
+  Type = Label
+  Height = 16
+  Left = 78
+  Size = 10
+  Top = 294
+  Width = 656
+  Caption = 2) Point your Garmin POI Loader (free download from garmin.com) to the "60CSxPOI" folder inside your main
+
+Name = Label39
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 312
+  Width = 637
+  Caption = GSAK directory (typically C:\GSAK\60CSxPOI or C:\Program Files\GSAK\60CSxPOI).  Follow the program
+
+Name = Label38
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 330
+  Width = 545
+  Caption = screen directions to upload to your GPSr.  This folder may be changed in Advanced Options.
+
+Name = Label40
+  Type = Label
+  Height = 16
+  Left = 76
+  Size = 10
+  Top = 351
+  Width = 622
+  Caption = 3) View the waypoints as "Custom Points of Interest" on your GPSr.  Usually, this is done by selecting Find and
+
+Name = Label41
+  Type = Label
+  Height = 16
+  Left = 93
+  Size = 10
+  Top = 369
+  Width = 223
+  Caption = then scrolling down to the Custom Points of Interest.
+
+Name = Label25
+  Type = Label
+  Height = 16
+  Left = 76
+  Size = 10
+  Top = 390
+  Width = 654
+  Caption = 4) It's suggested you select the minimum waypoints and information needed.  The number of screens per cache, as
+
+Name = Label26
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 408
+  Width = 648
+  Caption = well as the processing time, will increase as you include more information.  This is especially true for User Notes, 
+
+Name = Label21
+  Type = Label
+  Height = 16
+  Left = 92
+  Size = 10
+  Top = 426
+  Width = 239
+  Caption = the Long Description, and the number of logs you choose to export.
+
+Name = GPSr
+  Type = Image
+  File = GPSr.jpg
+  Height = 150
+  Left = 662
+  Source = Macro
+  Top = 21
+  Width = 98
+
+Name = Advanced
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 458
+  Width = 125
+  Taborder = 21
+  Caption = Advanced Options
+
+Name = Ck4Update
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 498
+  Width = 125
+  Taborder = 22
+  Caption = Check for Updates
+
+Name = Support
+  Type = Button
+  Height = 25
+  Left = 40
+  Top = 538
+  Width = 125
+  Taborder = 23
+  Caption = Support Forum
+
+Name = Cancel
+  Type = Button
+  Enter = No
+  Escape = Yes
+  Height = 40
+  Left = 256
+  Top = 490
+  Width = 75
+  Taborder = 24
+  Caption = Cancel
+
+Name = Pause
+  Type = Button
+  Height = 40
+  Left = 418
+  Top = 490
+  Width = 75
+  Taborder = 25
+  Caption = Pause
+
+Name = Continue
+  Type = Button
+  Enter = Yes
+  Height = 60
+  Left = 577
+  Top = 478
+  Width = 125
+  Taborder = 26
+  Caption = Continue
+
+<enddata>
+
+
+
+
+#********************************************************************
+# Menu to check for an updated version of the macro
+#********************************************************************
+
+# Update Menu
+<Data> VarName=$Update
+Name = Update
+  Type = Form
+  Caption = Update Check
+  Height = 219
+  Width = 367
+
+Name = UpdateOK
+  Type = Button
+  Height = 45
+  Left = 48
+  Top = 128
+  Width = 120
+  Taborder = 8
+  Caption = OK
+
+Name = GetUpdate
+  Type = Button
+  Height = 45
+  Left = 184
+  Top = 128
+  Width = 120
+  Taborder = 9
+  Caption = Get Update
+
+Name = UpdateCaption
+  Type = Label
+  Color = 255
+  Height = 25
+  Left = 62
+  Size = 12
+  Style = bold
+  Top = 20
+  Width = 231
+  Caption = New Version Available!!
+
+Name = UpdateText
+  Type = Label
+  Height = 18
+  Left = 32
+  Size = 9
+  Top = 60
+  Width = 320
+  Caption = You have version x.xx and y.yy is available
+
+<enddata>
+
+
+
+#********************************************************************
+# Advanced Options Menu
+#********************************************************************
+<Data> VarName=$AdvancedMenu
+
+Name = AdvancedMenu
+  Type = Form
+  Color = 16777215
+  Height = 559
+  Width = 783
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 33
+  Left = 97
+  Top = 211
+  Width = 420
+  Taborder = 14
+
+Name = Title
+  Type = Label
+  Color = 255
+  Height = 20
+  Left = 32
+  Size = 12
+  Style = bold
+  Top = 24
+  Width = 462
+  Caption = Garmin Handheld Cx/CSx/HCx POI Export -- Advanced Options
+
+Name = MaxAlert
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 315
+  Width = 15
+  Taborder = 16
+
+Name = Label9
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 315
+  Width = 231
+  Caption = Alert me if I'm about to export more than
+
+Name = MaxCount
+  Type = Edit
+  Height = 21
+  Left = 290
+  Top = 313
+  Width = 40
+  Taborder = 17
+
+Name = Label10
+  Type = Label
+  Height = 16
+  Left = 337
+  Size = 10
+  Top = 316
+  Width = 144
+  Caption = caches (Default is 1000).
+
+Name = PageSequence
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 347
+  Width = 15
+  Taborder = 11
+
+Name = Label32a
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 347
+  Width = 669
+  Caption = Sort the GPSr screens in numerical order.  (This will add a stack of icons on your GPSr map screen near ground zero!)
+
+Name = AddDelay
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 378
+  Width = 15
+  Taborder = 11
+
+Name = Label32
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 378
+  Width = 669
+  Caption = Run automatically after a 10 second delay ... properly configured, this option allows the macro to run without human
+
+Name = Label33
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 396
+  Width = 581
+  Caption = interaction with MS Windows Scheduler and other GSAK automation macros like NightlyDBUpdate.
+
+Name = SilentMode
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 434
+  Width = 15
+  Taborder = 8
+
+Name = Label21
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 434
+  Width = 688
+  Caption = Automatically send to GPSr using Garmin POI Loader's "silent" mode.  POI Loader must first be run in "Manual" mode.
+
+Name = Label22
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 452
+  Width = 634
+  Caption = It must then be re-run in "Express" mode.  The "last" settings will be used by POI Loader when in silent mode.
+
+Name = Label2
+  Type = Label
+  Height = 16
+  Left = 398
+  Size = 10
+  Top = 75
+  Width = 182
+  Caption = Location of Garmin POI Loader
+
+Name = POILoaderPath
+  Type = Folder
+  Height = 21
+  Left = 32
+  Top = 73
+  Width = 350
+  Taborder = 12
+
+Name = csvFolder
+  Type = Folder
+  Height = 21
+  Left = 32
+  Top = 110
+  Width = 350
+  Taborder = 13
+
+Name = Label3
+  Type = Label
+  Height = 16
+  Left = 398
+  Size = 10
+  Top = 112
+  Width = 140
+  Caption = Folder to write POI Files
+
+Name = GPSr
+  Type = Image
+  File = GPSr.jpg
+  Height = 150
+  Left = 625
+  Source = Macro
+  Top = 25
+  Width = 98
+
+Name = Label4
+  Type = Label
+  Height = 16
+  Left = 32
+  Size = 10
+  Top = 219
+  Width = 53
+  Caption = POI Icon:
+
+Name = Chest
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 6
+  Top = 11
+  Width = 15
+  Taborder = 0
+
+Name = TreasureChest
+  Type = Image
+  Container = Groupbox1
+  File = treasurechest.jpg
+  Height = 30
+  Left = 22
+  Source = Macro
+  Top = 8
+  Width = 30
+
+Name = Label5
+  Type = Label
+  Container = Groupbox1
+  Height = 16
+  Left = 44
+  Size = 10
+  Top = 10
+  Width = 145
+  Caption = Treasure Chest (Default)
+
+Name = Logo
+  Type = Radiobutton
+  Container = Groupbox1
+  Height = 17
+  Left = 250
+  Top = 11
+  Width = 15
+  Taborder = 1
+
+Name = GeoLogo
+  Type = Image
+  Container = Groupbox1
+  File = geologo.jpg
+  Height = 30
+  Left = 268
+  Source = Macro
+  Top = 10
+  Width = 30
+
+Name = Label48
+  Type = Label
+  Container = Groupbox1
+  Height = 16
+  Left = 288
+  Size = 10
+  Top = 10
+  Width = 107
+  Caption = Geocaching Logo
+
+Name = MaxScreens
+  Type = Edit
+  Height = 21
+  Left = 32
+  Top = 147
+  Width = 41
+  Taborder = 15
+
+Name = Label6
+  Type = Label
+  Height = 16
+  Left = 91
+  Size = 10
+  Top = 150
+  Width = 288
+  Caption = Max number of Screens per Cache (Default is 25)
+
+Name = Label7
+  Type = Label
+  Height = 16
+  Left = 91
+  Size = 10
+  Top = 168
+  Width = 480
+  Caption = Although you can have more screens, the maximum you can easily see are the 25
+
+Name = Label8
+  Type = Label
+  Height = 16
+  Left = 91
+  Size = 10
+  Top = 186
+  Width = 234
+  Caption = "closest."  This is a limit of the GPSr unit.
+
+Name = Cancel
+  Type = Button
+  Enter = No
+  Escape = Yes
+  Height = 25
+  Left = 260
+  Top = 485
+  Width = 75
+  Taborder = 9
+  Caption = Cancel
+
+Name = Continue
+  Type = Button
+  Enter = Yes
+  Height = 25
+  Left = 471
+  Top = 485
+  Width = 75
+  Taborder = 10
+  Caption = Return
+
+Name = SmartName
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 258
+  Width = 15
+  Taborder = 18
+
+Name = Label11
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 258
+  Width = 457
+  Caption = Use the SmartName as the primary title on each screen
+
+Name = Label11A
+  Type = Label
+  Height = 16
+  Left = 502
+  Size = 10
+  Top = 258
+  Width = 457
+  Caption = Show the hint backwards
+
+Name = WantsHintBackwards
+  Type = Checkbox
+  Height = 17
+  Left = 482
+  Top = 258
+  Width = 15
+  Taborder = 19
+
+Name = Abbrev
+  Type = Checkbox
+  Height = 17
+  Left = 32
+  Top = 285
+  Width = 15
+  Taborder = 19
+
+Name = Label12
+  Type = Label
+  Height = 16
+  Left = 52
+  Size = 10
+  Top = 285
+  Width = 439
+  Caption = Use abbreviations to reduce the number of screens per cache
+
+<enddata>
+
+
+
+
+####################
+#
+# Embedded Files/Images
+#
+####################
+
+<data> VarName=$GetHTML
+JyBWQlMgZmlsZSB0byBnZXQgdGhlIHNvdXJjZSBodG1sIG9mIGEgd2ViIHBhZ2UNCicgDQonIFRha2Vz
+IHR3byBjb21tYW5kIGxpbmUgcGFyYW1ldGVyczoNCicgRmlyc3QgaXMgdGhlIGZ1bGwgVVJMIG9mIHRo
+ZSBwYWdlIHRvIGdldA0KJyBTZWNvbmQgaXMgdGhlIGZ1bGwgcGF0aCB0byB0aGUgZmlsZSB0byBzdG9y
+ZSBpdCBpbg0KJyBUaGF0J3MgaXQgLSBubyBmcmlsbHMuDQonIEZyZWUgZm9yIHVzZSB1bmRlciBHTlUg
+R1BMDQonIExpZ251bWFxdWENCicgNC0yOS0wNyBWMC4xIEINCg0KDQoNCg0KU2V0IG9iakFyZ3MgPSBX
+U2NyaXB0LkFyZ3VtZW50cw0KcmVxdWlyZWRVUkwgPSBvYmpBcmdzKDApDQpyZXF1aXJlZEZpbGUgPSBv
+YmpBcmdzKDEpDQoNCkNhbGwgR2V0SFRNTCAocmVxdWlyZWRVUkwscmVxdWlyZWRGaWxlKQ0KDQonLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQoNCkZ1bmN0aW9uIEdldEhUTUwoZmls
+ZVVSTCxoZExvY2F0aW9uKQ0KJ2Nvbm5lY3QgdG8gYSBVUkwgYW5kIGRvd25sb2FkcyB0aGUgZmlsZQ0K
+DQoJU2V0IHhtbEhUVFAgPSBDcmVhdGVPYmplY3QoIk1TWE1MMi5TZXJ2ZXJYTUxIVFRQIikNCg0KCQl4
+bWxIVFRQLm9wZW4gIkdFVCIsIGZpbGVVUkwsIGZhbHNlDQoJICAgIAl4bWxIVFRQLnNlbmQoKQ0KCQkN
+CglzZXQgbXlTdHJlYW0gPSBDcmVhdGVPYmplY3QoIkFET0RCLlN0cmVhbSIpDQoNCgkJbXlTdHJlYW0u
+T3Blbg0KCQlteVN0cmVhbS5UeXBlID0gMSAnYWRUeXBlQmluYXJ5DQoJIA0KCQlteVN0cmVhbS5Xcml0
+ZSB4bWxIVFRQLlJlc3BvbnNlQm9keSAJJ0dpdmUgdGhlIFhNTCBzdHJpbmcgdG8gdGhlIEFETyBTdHJl
+YW0NCgkJbXlTdHJlYW0uUG9zaXRpb24gPSAwICAgIAkJJ1NldCB0aGUgc3RyZWFtIHBvc2l0aW9uIHRv
+IHRoZSBzdGFydA0KDQoJc2V0IEZTTyA9IENyZWF0ZW9iamVjdCgiU2NyaXB0aW5nLkZpbGVTeXN0ZW1P
+YmplY3QiKQ0KDQoJCWlmIGZzby5GaWxlZXhpc3RzKGhkTG9jYXRpb24pIHRoZW4gDQoNCgkJCUZzby5E
+ZWxldGVGaWxlIGhkTG9jYXRpb24NCg0KCQlFbmQgSWYJCQ0KCQ0KCQlteVN0cmVhbS5TYXZlVG9GaWxl
+IGhkTG9jYXRpb24NCgkJbXlTdHJlYW0uQ2xvc2UNCg0KCXNldCBGU08gPSBOb3RoaW5nDQoJU2V0IG15
+U3RyZWFtID0gTm90aGluZw0KCVNldCB4bWxIVFRQID0gTm90aGluZw0KDQpFbmQgRnVuY3Rpb24=
+<enddata>
+
+<data> VarName=$60CSxPOI
+Qk02BQAAAAAAADYEAAAoAAAAEAAAABAAAAABAAgAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAA
+AABBAAAAagAAAIsAAAC0AAAA1QAAAP8AAAAAMAAAIDAAAEEwAABqMAAAizAAALQwAADVMAAA/zAAAABl
+AAAgZQAAQWUAAGplAACLZQAAtGUAANVlAAD/ZQAAAJUAACCVAABBlQAAapUAAIuVAAC0lQAA1ZUAAP+V
+AAAAygAAIMoAAEHKAABqygAAi8oAALTKAADVygAA/8oAAAD/AAAg/wAAQf8AAGr/AACL/wAAtP8AANX/
+AAD//wAAAAA5ACAAOQBBADkAagA5AIsAOQC0ADkA1QA5AP8AOQAAMDkAIDA5AEEwOQBqMDkAizA5ALQw
+OQDVMDkA/zA5AABlOQAgZTkAQWU5AGplOQCLZTkAtGU5ANVlOQD/ZTkAAJU5ACCVOQBBlTkAapU5AIuV
+OQC0lTkA1ZU5AP+VOQAAyjkAIMo5AEHKOQBqyjkAi8o5ALTKOQDVyjkA/8o5AAD/OQAg/zkAQf85AGr/
+OQCL/zkAtP85ANX/OQD//zkAAAB7ACAAewBBAHsAagB7AIsAewC0AHsA1QB7AP8AewAAMHsAIDB7AEEw
+ewBqMHsAizB7ALQwewDVMHsA/zB7AABlewAgZXsAQWV7AGplewCLZXsAtGV7ANVlewD/ZXsAAJV7ACCV
+ewBBlXsAapV7AIuVewC0lXsA1ZV7AP+VewAAynsAIMp7AEHKewBqynsAi8p7ALTKewDVynsA/8p7AAD/
+ewAg/3sAQf97AGr/ewCL/3sAtP97ANX/ewD//3sAAAC9ACAAvQBBAL0AagC9AIsAvQC0AL0A1QC9AP8A
+vQAAML0AIDC9AEEwvQBqML0AizC9ALQwvQDVML0A/zC9AABlvQAgZb0AQWW9AGplvQCLZb0AtGW9ANVl
+vQD/Zb0AAJW9ACCVvQBBlb0AapW9AIuVvQC0lb0A1ZW9AP+VvQAAyr0AIMq9AEHKvQBqyr0Ai8q9ALTK
+vQDVyr0A/8q9AAD/vQAg/70AQf+9AGr/vQCL/70AtP+9ANX/vQD//70AAAD/ACAA/wBBAP8AagD/AIsA
+/wC0AP8A1QD/AP8A/wAAMP8AIDD/AEEw/wBqMP8AizD/ALQw/wDVMP8A/zD/AABl/wAgZf8AQWX/AGpl
+/wCLZf8AtGX/ANVl/wD/Zf8AAJX/ACCV/wBBlf8AapX/AIuV/wC0lf8A1ZX/AP+V/wAAyv8AIMr/AEHK
+/wBqyv8Ai8r/ALTK/wDVyv8A/8r/AAD//wAg//8AQf//AGr//wCL//8AtP//ANX//wD///8A////AObm
+5gDV1dUAxcXFALS0tACkpKQAlJSUAIODgwBzc3MAYmJiAFJSUgBBQUEAMTExACAgIAAQEBAAAAAAAMfH
+x8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHxwAAAAAAAAAAAAAAx8fHx8cAqNjYqNiooKAAoADH
+x8fHANjgsNio2KCgAKigAMfHxwDg4OCwYKiooADYqNgAx8cAqODgYGDYoKAA2NioAMfHAAAAAGBgAAAA
+AODg4ADHxwDYqNio2KigoAAA4KgAx8cAqNjg2KjYqKD+oADYAMfHANjgsODYqNioANioAADHx8cA4ODY
+sNiooP7g4KgAx8fHAODYsNio2KigAODYAMfHx8cAAAAA/gAAAAAAAMfHx8fHx8fHAAAAAMfHx8fHx8fH
+x8fHx8fHx8fHx8fHx8c=
+<enddata>
+
+<data> VarName=$GPSr
+/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdA
+SFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2Nj
+Y2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCACWAJYDASIAAhEBAxEB/8QA
+HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIh
+MUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVW
+V1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG
+x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQF
+BgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAV
+YnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE
+hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq
+8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDv6KKKACiiigAooooAKyr3Xra0maHBd0OGwcAGtWvPdSffqd03
+Yyt/OgDfbxbCrhDbsSemGra0+9jv7YTRgjnBU9jXm+c3i+1dr4SbfpTOO8h/pQBuUUUUAFFFFABRRRQA
+UUUUAFFFFABRRRQAUUUUAFFFFABXmsrl55G5+Z2P616PO2yCRv7qk/pXmYyQDzQBBI+yd3PZCa6vwJdh
+rJ7Vj8ww4/kf6Vxt1l5HQHlhitzSY7nSRbXx2tEW2kr+oNAHoNFMhlSaJZYzlGGQafQAUUUUAFFFFABR
+RRQAUUUUAFFFFABRRRQAUUUUAU9XmWHSrlmYDMZUe5IxXCxJAFALux9hW/rcvm6gyyKpWLhcjOO9UDdR
+xcedEn4qKVwMye1t3JMcLc9yauCZv7NFhjdGHD7icEfSrH9oJgAXaH/gYpy3Zb7rxv8AgpouBa0PUGsl
+8mQs8J9eq10cF1BcD91IrH071yEs4VCTBHn1AKn9KmhtjLbpPFI6Hr1zRcDr6Ko6PcvdWEckhy2MEnvV
+6mAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQB5T4zmkk8SXMe9tqkAKD7Csu3g2bjPZSy56YyMVo+JTnxd
+c+0wH8q6yLRbbzfKaeSJnA3Esvfp784ppLqJnCmG3yD9iuhycj/IqOZExmC3njbPfPSvRJNDg8jzkvPN
+TpuXGAPrVOXw/CRk3MgGcZAHXGfWq5Y9xXfY4ywurqK6jRpJNjsFKuTgj8a77Tm/4l6CuW1/SxpOq2MI
+mMofD5P+9XRWD4tVGaze5RuaB/x4Y9DWnWZoX/Hq/wDvH+ZrTpgFFFFABRRRQAUUUUAFFFFABRRRQAUU
+UUAeSeI/+Rsu/wDrv/hXdXFgl1KtxI08bKEO0YwSvQkd89BXCeJP+Rqu/wDrv/hXfXlsLxEdJTC+xAW2
+5+6Sf600m9hNpbj47JI9GeBSzK7El9gzn/d7iqMOjpboo83cmSf3kPcjAP4c8dKs/ZgmjrZbyzsRh2Qh
+WxzjHfgYqqmlyC18n7SGO/cWDMrYxj35Pf60WYXRg+L4xDq+lxp91YwF4xxvOK1LI4gA96x/FEbxappU
+UknmukShn9TvNatof3QpPcEdJoP/AB6v/vH+ZrTrL0H/AI9G/wB4/wAzWpQMKKKKACiiigAooooAKKKK
+ACiiigAooooA8l8UDb4pu/eUGvQELrGrJAZ9u3KD3rg/GC7fFE/uwNdzGY45IJpZ3iVCDhRkPkdD+VUt
+mQ/iQ2+H2K+0+FRJKvnFySM4yMYH6mr1ygibBZmkYs4OONoxx+GakvlBurE+kx/9Balv3YeWqSqvJLqW
+wWXB/rURbTub1LOEVbp+pwfi3nxBYD/YX/0KtG1GEFZ3igf8VFp4/wBhf/QjWnbj5RVT+Ixh8KOh0H/j
+0b6/1NalZuhD/QQfWtKkUFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAeW+OBt8SyH1Cmu0tr22KxtHcQMw
+HTeDXM+OtNnm1gTxBSpUZycYrkvJEVyI7gFVDDftwTj1FVGViXG56wtxuksg8wl2OWkY9R8pApzM8xzL
+tdlY7ZFGPl9K85EGi8eXqd5F7tDxVAXd1HIVhu5yASFIc8j6UlZO45XasdP4m58T2Q/2B/M1pwDCj6Vy
+dgZ7rVLZ5J5LhlGWLZOwc8ZNdco2xMfRTSk7u4JWVjoNEGNOj+g/lWhVTS122MY9qt0DCiiigAooooAK
+KKKACiiigAooooAKKKKAOT8Zu8U0DKzfPGy4Azj3/WuZDwGwiIiWRk+VfMXlSPWuv8YMYobeZVBILKSV
+yMVx9qm62mlAVz5hLDHAyP6UAD3MyRjzfKniIy0e0cD/ABqWOCwtoRcQxj5x8uXIJz6GoigjXdKvyspI
+5x+NJbokdtb/AGhGddjFVB5GTxQBNBfyRxhEClj1YnPf9frU6yzSyRhpGOXUdfes+JV8xzGpEZb5QeoF
+X4FUzwq5wpbnnoMGgR6FZqVs4Qx3MFGTjGTU1MhXZCijsoFPoGFFFFABRRRQAUUUUAFFFFABRRRQAUUU
+UAZfiOJpNLZljV/LbeQ3pXEW04thczyQkrK4O2PooA5PNelOiyIUdQysMEHvXO3/AIdwsv2V3ETnPlqe
+R6/UUAYD2liYhcuCYiAw5JBz04qC4azuWV2kbywpA2r0OecjjFbBt1hhWALsCABQy5xj2NZF5bC3+csp
+3sSxAwAcAf0pAVLdeoBLKGO0kdRWnpUXnarAioW7tgfhn+dVLOOW5bbaQyTsePkXI/E9K7LQNGbTg89w
+wa4lAyB0QegPemI2aKKKBhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQA140kGHRWHuM1CbCzJybSA
+n3jFFFAE0caRIEiRUUdFUYFOoooAKKKKACiiigAooooAKKKKAP/Z
+<enddata>
+
+<data> VarName=$treasurechest
+/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwg
+JC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIy
+MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAASABIDASIAAhEBAxEB/8QA
+HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIh
+MUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVW
+V1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG
+x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQF
+BgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAV
+YnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE
+hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq
+8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD1zxH4ol0i7gsNPsYr6+kjM7xyXPkpFGCFBZgrkFiTtG3DbH5+
+XB5Sf4o6tbXa28vh7TUPlSTPI2sMqJGmNzEmDpkqOMn5hxjJGZ8RJ7SD4gXBuPEP9jyHRrfyjmICU+bc
+dd4JIGegI69elcLpk0F34wsEa8/t+8a2cRW8DxuPPzFjYE2jA+ZgW4XbuyNu4eHicXio4mdOnslorO97
+d9t/M9CjQpSpKUt/+CfR+k6lDrOjWOqW6yLBe28dxGsgAYK6hgDgkZwfU0VX8NabNo3hXSNLuGjaeyso
+beRoySpZECkjIBxkegor3DzzUooooAKKKKAP/9k=
+<enddata>
+
+<data> VarName=$geologo
+/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcI
+CQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwM
+DAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAAQABADASIAAhEBAxEB/8QA
+HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIh
+MUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVW
+V1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG
+x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQF
+BgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAV
+YnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE
+hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq
+8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7p+F3w++K99+3xr2t2T65L4B0HVrfTW0nVTcQREzRrPNeWx27
+JFRmChTkDL4YdK+Y/jd8H/iHZ/taeO5r7Rdf1TS9W8VXMmkvbaBcjbGZmbazqpVlCjhuAa474W/Gn4ua
+D+0l4bn/AOEk+Juu6frPifToLqzbVbhobOLz0RmCu2ChB+ZfrX1T8XNe+Ltx+3R4hktfiH4l0zwHp0uY
+9EtomIuZfOcH96eiAAfKP5V+L47w/wAL4cYVUqtb2qqpLSCi/wB3G2r15nJtu+m9mfHZBSp+LdCVOinQ
+jRa3tJvmWvZx5WrefQ//2Q==
+<enddata>
+
+<data> VarName=$geologo2
+Qk02BQAAAAAAADYEAAAoAAAAEAAAABAAAAABAAgAAAAAAAABAAATCwAAEwsAAAABAAAAAAAAHA4EABSS
+lACUigwADM7UAMzGrABEjiQANFokAFSW1ADU7rwAbGIEALSmrAAMrrQAvKoEADxyLABsxkwATK4cAOzq
+7AAkLjQAZLo8ACyK1AAE6vQA7Pb8AESq/ACk8vwAFHJ8AGS2/ACsmgQAxLY8ACya9ABUtiQAJG6sABQi
+JAAcZmwAPDosADT+/ABUqvQAxOasADyi/AD88tQABPb8APT+/ACsogQABN7sADyq/AAcOkQAdMJMADye
+9AAsfsQARFpEAJSGDAAEwswAvK4kAMy+TAA0mvQAXLYsAFSy/AD87uwAtKIEABQWHAAUprQABNbcAOzi
+pABsZiQARPb8AFSuLABswkwABPL8AKT+/AAsesQAJB4cALz+/AD8+uwALEJcALSmBACklgQAxNasAESe
+HAAkTlQAbGIUALS6vAAUrrQAbL5EAATu9ADk/vwATLL8ABxyfAB0uvwAxLo8AFS6LAA0apwAzOq0AAT+
+/AAsQiwAxLIcADSe9ABcsvwA/PLkACQaHAAM2uQA7Oa0AET+/ABUsiQALCYkAPz+/AAUmqQAnIoEAESm
+/AAEtsQAvK4MADx2JAD07twAJDZMADSS5ABMqvwArO70AAx6hABstvwArJ4EACya/ABUtiwALG6kACRq
+dABMShQAVK78ADym/AD88twABPr8AATm7AAkPkQAJFpcADSGzAA0erQAvLqsAAy+xABMXkQAzMJcABwW
+FABMniQAHKa0AKz+/ADs/vwALCocALyyJABcuiwAVLb8AET6/ADE2qwAbGYUAHTCVAC0ogwABNbkAOzi
+rAD8+vQAtKYMAGy+TAAE7vwAxLpEAMzqvAA0nvwA/PLsAFSyLAAACegAAAUqAAAAdgB8AQAA6QIAABIA
+AAAAAAAA8QABAJ4AAACgAAAAdQAAAAACAAAAAAAAFgAAAAACAAC08AAAnswAAKAaAAB1AAAA/CIAAFsI
+AAD9LAAAcXYAANhFJADxZaAAGf4wAABxdgA1KAEAngMAAKAAAAB1AAAAAP8CAAAHfwAAAAAAAAAAAGQB
+AAAAAgAAvwAAAAEDAAABxAAAAAAAAAAWAAAAAAAATACCAOkAAAASAAAAAAAAALwArAD3AOcAEgASAAAA
+AAC8sOUA9+6CABIZfwAAAHQAiRCCAOIACQCcAAUAdQAAADgLAgAsAwAATxAAAAQAAAD+sAAA/+4AAP8Z
+AAD/AAAAtOkAAJ6FAACgwAAAdQcAAISvAQDs7gAAQRkAAAAAAABwqrAAz+7nABkZEgAAAAAANQDSAJ4A
++ACgACsAdQB2ACOrggAE7gkAABkFAAAAAACpgoIA5gAAACoAAAB2AAAAAAAAAJYAAACgFgAAdQAAAIcz
+MzMzjl1jKHRxByN7cVYbdXV1OUoJBChxHHg1nhxfnDk5SQJFiIRne3CDfCWeX1cpSQxKkwJjFXsTSIIr
+nl+cOTGTOQw5PSiQRABFWTVfGwx6jXUpGj0oVERvb28eXzSVIT5sDCmXFV8lFmpqLhl9JhA4Jn0mmGcV
+FRUVjBUVRhdPckNDQ1NnnSRaSwqSCCI8H2tbJydDRxIPoEwGTC0/mywLW5Yyi0eaHVh3WKCUP1sYGAMR
+c4tHQQUNoHeglD9+hWEsAUKLnzCIXEA2oJSRYnlNgX9+iziGDaA2d6CUImhQOyA7J0NHQVg2d6CglD8q
+W38UFBSLR5qgoDagoJQ=
+<enddata>
+

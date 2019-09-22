@@ -1,0 +1,143 @@
+#*******************************************
+# MacVersion = 1.2
+# MacDescription = FSGplugin_CacheTypeYear
+# MacAuthor = VeeN
+# MacFileName = FSGplugin_CacheTypeYear.gsk
+# MacUrl = http://gsak.net/board/index.php?act=ST&f=41&t=23447
+#
+#     <plugin>FSGplugin_CacheTypeYear</plugin>
+#
+#*******************************************
+#
+# ver. 1.0  -  N E W
+#
+# ver. 1.1  - order of the columns - to the beginning of the year
+#	      color table - default plugin
+#
+# ver. 1.2  - check of cachetype found by user
+#           - black font for "Total"
+#
+#
+IF $_MacroLevel = 1
+  RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGplugin_FSGplugin_CacheTypeYear</plugin>
+ENDIF
+
+Declare Var=$Types 	 Type=String
+Declare Var=$TypesA 	 Type=String
+Declare Var=$Typenums 	 Type=String
+Declare Var=$TypenumsA 	 Type=String
+Declare Var=$tempN 	 Type=Numeric
+Declare Var=$thistype    Type=String
+Declare Var=$ctype       Type=String
+Declare Var=$line        Type=String
+Declare Var=$n  	 Type=Numeric
+Declare Var=$y  	 Type=Numeric
+Declare Var=$yT  	 Type=Numeric
+Declare Var=$MyOut 	 Type=String
+Declare Var=$st0 	 Type=String
+Declare Var=$st1 	 Type=String
+Declare Var=$fc0 	 Type=String
+Declare Var=$fc1 	 Type=String
+Declare Var=$fcw 	 Type=String
+Declare Var=$fcc 	 Type=String
+Declare Var=$total 	 Type=String
+
+$TypesA = "ABCEGLMRTUVWZXIY123"
+#            "A B  C E  G  L M   R T U V  W   Z    X    I       Y    1    2    3"
+$TypenumsA = "9,5,13,6,27,12,3,137,2,8,4,11,453,2134,1858,waymark,3653,3773,3774"
+$_sql="Select CacheType from AllFinds GROUP BY Cachetype"
+$Types=Sqlite("sql",$_sql)
+$Types=Replace($_NewLine,"",$Types)
+$n=1
+while $n<=Len($Types)
+	$ctype=Substr($Types,$n,1)
+	$tempN = At($CType,$TypesA)
+        $Typenums = $Typenums + Extract($TypenumsA, "," , $tempN) + ","
+	$n=$n+1
+endwhile
+$MyOut = ""
+$st0="width='40' align='right' style='$stTab2cHead'"
+$st1="width='40' align='center' style='$st2c1'"
+$fc0="<font color='gray'>"
+$fcw="<font color='black'>"
+$fcc="<font color='#666699'>"
+$fc1="</font>"
+$_sql = "SELECT lDate from AllFinds ORDER BY lDate LIMIT 1"
+$line = Sqlite("sql",$_sql)
+$DateFirstFind = SqlToDate($line)
+$FirstYear = Val(left(DateToString($DateFirstFind),4))
+$YearNow = Val(left(DateToString($RunDate),4))
+
+SHOWSTATUS msg="FSGPlugin - Finds CacheType Over Years"
+$MyOut = $MyOut + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+$MyOut = $MyOut + "<a name='$Srun'></a>"
+$MyOut = $MyOut + "Finds CacheType Over Years" + $CR + "</div><br />" + $CR
+
+$MyOut = $MyOut+"<center>"+$_CrLf
+$MyOut = $MyOut+"<table border='0' cellpadding='0' cellspacing='1'>"+$_CrLf
+$MyOut = $MyOut+"<tbody><tr style='color: #000000; text-align: center;' align='center' valign='bottom'>"+$_CrLf
+$MyOut = $MyOut+"<td $st0>"+$fcc+"Year"+$fc1+"</td>"+$_CrLf
+	$out = $out + "<tr>" + "$_CrLf" + "<td style='$stTab2cHead'>" + $_CrLf
+$total=""
+$n=1
+while $n<=Len($Types)
+	$ctype=Substr($Types,$n,1)
+	GOSUB Name=StripCodeType
+        $MyOut = $MyOut+"<td $st1>$ctype</td>"+$_CrLf
+	$n=$n+1
+endwhile
+$MyOut = $MyOut+"<td $st0>"+$fcw+"Total"+$fc1+"</td></tr></tbody>"+$_CrLf
+$yT=0
+array(1,0) = "$YearNow"
+while $FirstYear<=$YearNow
+  $MyOut = $MyOut+"<tr style='color: #000000; text-align: center;' align='center' valign='bottom'>"+$_CrLf
+  $MyOut = $MyOut+"<td $st0>"+$fcc+"$FirstYear"+$fc1+"</td>"+$_CrLf
+  $n=1
+  $y=0
+  while $n<=Len($Types)
+	$ctype=Substr($Types,$n,1)
+	$_sql = "Select FoundByMeDate from AllFinds where CacheType='"+$ctype+"' AND FoundByMeDate like '$FirstYear%'"
+	$line = Sqlite("sql",$_sql)
+        $MyOut = $MyOut+"<td $st0>"+$fc0
+        If $_SqlRows > 0
+        	$MyOut = $MyOut+"$_SqlRows"
+        Else
+		$MyOut = $MyOut+"&nbsp;"
+	Endif
+        $MyOut = $MyOut+$fc1+"</td>"+$_CrLf
+	$y=$y+$_SqlRows
+        array(1,$n) = NumToStr($_SqlRows+Val(array(1,$n)))
+	$n=$n+1
+  endwhile
+  $yT=$yT+$y
+  $MyOut = $MyOut+"<td $st0>"+$fcw+"$y"+$fc1+"</td></tr>"+$_CrLf
+  $FirstYear=$FirstYear+1
+endwhile
+while $n>1
+	$n=$n-1
+	$total="<td $st0>"+$fcw+array(1,$n)+$fc1+"</td>"+$total
+endwhile
+$total="<td $st0>&nbsp;</td>"+$total
+$total=$total+"<td $st0>"+$fcw+"$yT"+$fc1+"</td>"+$_CrLf
+$MyOut = $MyOut+$total
+$MyOut = $MyOut+"</table>"
+
+$p_FSGData = $MyOut
+
+BEGINSUB Name=StripCodeType
+	$tempN = At($CType,$TypesA)
+	$thistype = Extract($TypenumsA, "," , $tempN)
+	BEGINCASE
+		CASE $thistype = "Y"
+			$ctype = "<img align='top' title='$name $date' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$ctype = "<img align='top' title='$name $date' src='http://gsak.net/stats/1216.gif' />"
+		OTHERWISE
+			$ctype = "<img align='top' title='$name $date' src='http://www.geocaching.com/images/wpttypes/sm/" + $thistype + ".gif' />"
+	ENDCASE
+ENDSUB
+
+<data> varname=$divstyle
+<div style='width:740px; background: #666699; font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;; background: #CCCCD4; color: black'>
+<enddata>
+

@@ -1,0 +1,11 @@
+# starting a batch file every hour
+0 * * * * * cmd /c "c:\xxx\my.bat"
+# this is  classic mode
+ 
+#( my_task
+\ and this is extended mode already
+\ displaying a message box after each 30 minutes
+Time: */30 * * * * *
+Action:
+    TMSG: "30 minutes have passed" 3
+)#

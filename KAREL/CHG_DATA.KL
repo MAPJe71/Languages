@@ -1,0 +1,83 @@
+-------------------------------------------------------------------------------
+----  CHG_DATA.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about CHG_DATA.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----            FROM                        Sec 2
+----    Conditions:
+----    Data types:
+----            INTEGER                     Sec 2
+----            REAL                        Sec 2
+----    Directives:
+----    Built-in Functions & Procedures:
+----    Statements:
+----            DELAY                       Sec 4
+----            FOR....ENDFOR               Sec 4
+----            REPEAT...UNTIL              Sec 4
+----    Reserve Words:
+----            BEGIN                       Sec 4
+----            END                         Sec 4
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM CHG_DATA
+    %nolockgroup
+    %comment = 'Dynamic Disp2'
+
+-------------------------------------------------------------------------------
+----  Section 2:  Variable Declaration
+-------------------------------------------------------------------------------
+VAR
+    -- IF the following variables did NOT have IN CMOS, the following errors
+    -- would be posted when loading this program:
+    -- VARS-012 Create var -INT1 failed VARS-038 Cannot change CMOS/DRAM type
+    -- VARS-012 Create var -REAL1 failed VARS-038 Cannot change CMOS/DRAM type
+    -- This indicates that there is a discrepancy between DYN_DISP and CHG_DATA.
+    -- One program has specified to create the variables in DRAM the
+    -- other specified CMOS.
+    Int1  IN CMOS FROM dyn_disp : INTEGER    -- dynamically displayed variable
+    Real1 IN CMOS FROM dyn_disp : REAL       -- dynamically displayed variable
+    Bool1 IN CMOS FROM dyn_disp : BOOLEAN    -- dynamically displayed variable
+    Enum1 IN CMOS FROM dyn_disp : INTEGER    -- dynamically displayed variable
+    Str1  IN CMOS FROM dyn_disp : STRING[10] -- dynamically displayed variable
+    indx                        : INTEGER
+    dynd_abrt FROM dyn_disp     : BOOLEAN    -- Set in dyn_disp when dyn_disp
+                                             -- is aborting
+
+-------------------------------------------------------------------------------
+---- Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main program
+-------------------------------------------------------------------------------
+BEGIN -- CHG_DATA
+
+    -- This demonstrates that the variables are changed from this task, CHG_DATA.
+    -- The dynamic display initiated in task DYN_DISP, will continue
+    -- to correctly display the updated values of these variables.
+    -- Do real application processing.
+    -- Simulated here in a FOR loop.
+    REPEAT
+        FOR indx = -9999 to 9999 DO
+            int1  = (indx DIV 2) * 7
+            real1 = (indx DIV 3)* 3.13
+            bool1 = ((indx AND 4) = 0)
+            enum1 = (ABS(indx) DIV 5) MOD 5
+            Str1  = SUB_STR('123456789A', 1, (ABS(indx) DIV 6) MOD 7 + 1)
+            delay 200 -- Delay for 1/5 of a second as if processing is going on.
+        ENDFOR
+    UNTIL (DYND_ABRT) -- This task is aborted from DYN_DISP. However, if
+                      -- DYN_DISP aborts abnormally (ie from a KCL> ABORT), it
+                      -- will set DYND_ABRT, which will allow CHG_DATA to
+                      -- complete execution.
+
+END CHG_DATA

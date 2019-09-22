@@ -1,0 +1,153 @@
+'************************************************************************************
+'**  EventHandler
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		3 January 2012
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub MyOwnToolButton
+Declare Sub WinFocusChangedHandler 'A reserved procedure name, called automatically when the window focus changes
+Declare Sub WinClosedHandler 'A reserved procedure, called automatically when a Map, Browse, Graph, Layout, Redistricting, or MapBasic window is closed
+Declare Sub About
+Declare Sub End_Program
+
+Define AppName "EventHandler Sample Code"
+Define AppNameMenu "&EventHandler"
+Define AppNameToolbar "EventHandler"
+Define AppVersion 0.8
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+	
+	Create ButtonPad AppNameToolbar as
+		ToolButton
+		Icon 8001 File "Bird.dll"
+		HelpMsg "My Own Toolutton\nMy Own Toolutton"
+		DrawMode DM_CUSTOM_POINT
+		Cursor 8001 File "Bird.dll"
+		Calling MyOwnToolButton
+	Show
+	
+	'Here you immediately call the WinFocusChangedHandler procedure to decide whether the ToolButton
+	'should be enabled or disabled
+	Call WinFocusChangedHandler
+	
+End Sub Main
+
+'*********************************************************************************************
+Sub MyOwnToolButton
+'*********************************************************************************************
+
+	'When you click the My Own Toolbutton Button on the EventHandler Toolbar, this button becomes
+	'the active tool until you choose a different tool or until the Map Window is closed or loses
+	'the focus.
+	
+	'TO DO: this procedure should be extended - for testing purposes it now only shows a little
+	'message box
+	Note "Hello!"
+
+End Sub MyOwnToolButton
+
+'*********************************************************************************************
+Sub WinFocusChangedHandler
+'*********************************************************************************************
+
+	Dim iWin as Integer
+	Dim lDisable as Logical
+
+	lDisable = FALSE
+	
+	'The FrontWindow( ) function returns the integer ID of the foremost document window (Map, Browse, Graph, or Layout).
+	'The function will return 0 if there is no foremost document window, i.e. if there is no document window open.
+	iWin = FrontWindow()
+
+	If iWin = 0 Then 'No document window open
+		lDisable = TRUE
+	ElseIf WindowInfo(iWin, WIN_INFO_TYPE) <> WIN_MAPPER Then 'foremost document window is not a Map Window
+		lDisable = TRUE
+	End If
+ 
+    If lDisable Then
+		Alter Button MyOwnToolButton Disable
+    Else
+		Alter Button MyOwnToolButton Enable
+    End If
+
+End Sub WinFocusChangedHandler
+
+'*********************************************************************************************
+Sub WinClosedHandler
+'*********************************************************************************************
+
+'Please note:
+'		- When you close a Map Window while there are still other document windows open, the focus
+'		   will automatically shift to another document window and in this case the WinFocusChangedHandler
+'		  procedure is called.
+'		- When you close a Map Window while there are no other document windows open the WinClosedHandler
+'		  procedure is called. If you omit the WinClosedHandler procedure the ToolButton in this case
+'		  will remain enabled without a Map Window being open/having the focus.
+
+	Dim iWin as Integer
+
+	iWin = FrontWindow()
+
+	If WindowInfo(iWin, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Alter Button MyOwnToolButton Disable
+	End If
+ 
+End Sub WinClosedHandler
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to use the event handlers" Position 3dW, 1dH
+		Control StaticText title "WinFocusChangedHandler and WinClosedHandler." Position 3dW, 2dH
+		Control StaticText title "The My Own Toolbutton Button on the EventHandler Toolbar will be" Position 3dW, 4dH
+		Control StaticText title "enabled or disabled, depending on whether a Map Window has the" Position 3dW, 5dH
+		Control StaticText title "focus or not." Position 3dW, 6dH
+		Control StaticText title Chr$(169) + " 2012 - Egge-Jan Pollé" Position 35dW, 9dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************

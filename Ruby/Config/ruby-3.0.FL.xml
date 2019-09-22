@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+  <functionList>
+    <associationMap>
+      <association langID="36" id="Ruby_function" />
+    </associationMap>
+    <parsers>
+      <parser 
+          id="Ruby_function" 
+          displayName="Ruby" 
+          commentExpr="(?m:#.*?$)|(?s:(?-i:(?&lt;=^|[\r\n])=begin).*?(?-i:[\r\n]=end(?=[\r\n]|$)))" >
+          
+<!--
+            mainExpr="(?m:^[\t ]*(?-i:def|alias)[\t ]+(?:[A-Za-z_]\w*[?!=]?|:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]]=?)(?:[\t ]*\([^)]*?\))?.*?$)"
+            mainExpr="(?m:^[\t ]*(?-i:alias)([\t ]+[A-Za-z_]\w*){2}$)|(?s:(?-i:def).+?(?-i:end))"
+            mainExpr="(?s:\b(?-i:def)[\t ].+?(?-i:end))"
+-->            
+        <function
+            mainExpr="(?s:\b(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\([^)]*\)).+?(?-i:end))"
+            displayMode="$functionName" >
+          <functionName>
+            <nameExpr expr="(?m:\b(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\([^)]*\)))" />
+            <nameExpr expr="(?m:(?&lt;=(?-i:def))[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\([^)]*\)))" />
+            <!--<nameExpr expr=".+" />-->
+            <!--<nameExpr expr="(?m:\b(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[]=?)[\t ]*\([^)]*\)))" /> -->
+            <!--<nameExpr expr="(?m:^[\t ]*(?-i:def)[\t ]+(?:[A-Za-z_]\w*[?!=]?(?:[\t ]*\([^)]*\))?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]]=?)[\t ]*\([^)]*\)))" />-->
+            <!--<nameExpr expr="^[\t ]*(?-i:def|alias)[\t ]+(?:[A-Za-z_]\w*[?!=]?|:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})|[~+\-/%&amp;|\^]|&lt;(?:&lt;|=&gt;?)?|&gt;[&gt;=]?|\[[ ]]=?)" />-->
+            <!--<nameExpr expr="[A-Za-z_]\w*[?!=]?$" />-->
+          </functionName>
+        </function>
+      </parser>
+    </parsers>
+  </functionList>
+</NotepadPlus>

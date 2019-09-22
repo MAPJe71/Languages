@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Author: Julien Marrec
+Email : julien.marrec@gmail.com
+Github: https://github.com/jmarrec
+-->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="equest_full" userDefinedLangName="eQuest" />
+		</associationMap>
+		<parsers>
+			<!-- eQuest Full Function List -->
+			<parser
+				displayName="eQuest Full Function List"
+				id         ="equest_full"
+			>
+				<!-- Find The entire Class using a positive lookahead -->
+				<!-- I'm parsing on "$" followed by a white space... So I can include comments in my files as needed -->
+				<classRange
+					mainExpr    ="\$\x20.*?\R{2}.*?(?=\$\x20)"
+				>
+					<!-- Here we return just the Class name -->
+					<className>
+						<!-- Find only the text, using a negative lookahead to exclude multiple white spaces -->
+						<nameExpr expr="\w(\w|-|/|\x20(?!\x20))+" />
+					</className>
+					<!-- Here we find the "function" - here it's something that starts a line with '"XXXX" = blabla' -->
+					<function
+						mainExpr="^&quot;.*?&quot;\x20=\x20[^\x20]+"
+					>
+						<functionName>
+							<!-- We already have exactly what we want with the above -->
+							<funcNameExpr expr=".*" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="\$.*?\R{2}"
+				>
+					<functionName>
+						<!-- Find only the text, using a negative lookahead to exclude multiple white spaces -->
+						<nameExpr expr="\w(\w|-|/|\x20(?!\x20))+" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

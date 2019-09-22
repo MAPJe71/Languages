@@ -1,0 +1,23 @@
+ BEGINSUB Name=ShowForm
+        $DokufolderForm = EditForm($DokufolderForm,"folder_path","values",$folder_path)
+ endsub
+ 
+ 
+ <Data> VarName=$DokufolderForm
+ 
+ 
+ Name = make_FolderForm
+      Type = Form
+      Caption = Sicher Note als TXT von allen Caches im Filter
+      Height = 406
+      Width = 500
+ 
+ Name = btn_makeOne
+      Type = Button
+       Height = 25
+      Left = 32
+      Top = 104
+      Width = 121
+      Caption = make one
+
+ <enddata>

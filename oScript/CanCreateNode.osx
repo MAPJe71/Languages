@@ -1,0 +1,19 @@
+
+function boolean canCreate(Object prgCtx,DAPINode container,Integer subType)
+ 
+    Boolean retVal=false
+ 
+    // does the user have rights to CREATE objects in the specified container ?
+    Boolean containerPermissionsOK=$LLIAPI.NodeUtil.CheckPermissions(container,{$PCreateNode})
+ 
+    // does the user have the privelidge to create an Object of the specified SubType (based on ?func=admin.adminfactories)
+    Boolean createSubTypePrivOK=$LLIAPI.FactoryUtil.IsCreatable(prgCtx,subType)
+ 
+    // AND the two booleans to produce the overall result
+    retVal=(containerPermissionsOK && createSubTypePrivOK)
+ 
+    // return the result
+    return retVal
+end
+
+Boolean userCanCreateFolderInNode=canCreate(prgCtx,containerDAPINode,$TypeFolder)

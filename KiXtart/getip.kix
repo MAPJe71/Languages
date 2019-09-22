@@ -1,0 +1,29 @@
+;
+; GETIP.KIX
+;
+; Sample script demonstrating the use of Windows Management Instrumentation
+; to enumerate IP information of the local system.
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+
+break on
+
+$IpSet = GetObject("winmgmts:").ExecQuery("select IPAddress,IPSubnet from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+If @error <> 0
+   ? @error + " / " @serror
+else
+   For Each $IPConfig In $IPSet
+
+       ? $IPConfig.IPAddress(0) + " / " + $IPConfig.IPSubnet(0)
+
+   Next
+EndIf
+
+exit 1

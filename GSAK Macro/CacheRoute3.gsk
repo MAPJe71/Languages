@@ -1,0 +1,642 @@
+# MacDescription = Creates an optimized driving route between Caches
+# MacFileName = CacheRoute3.gsk
+# MacAuthor = Lignumaqua
+# MacVersion=2.2
+# MacUrl = 
+
+#==============================================================================#
+#   GSAK Google Maps Cache Route
+#   Lignumaqua
+#   ONLY runs in GSAK V7.7 or above of GSAK
+#
+#==============================================================================#
+#   Cahe Route Version History
+# V0.1 5-11-10 First trial release
+# V0.2 5-12-10 Form, options for one way/round trip, walking/driving, avoid highways
+#              Option to update User Sort column with calculated trip, added code
+#              OrderBy for last cache in One Way trip
+# V0.3 5-13-10 Option to use Parking waypoints, option to use first cache instead of center point.
+#              Improvements to map style. Improvements in IE
+# v0.4 5-13-10 Bug fix for parking
+# v0.5 5-15-10 Improved algorithm for use of parking/trailheads with preference given to any
+#              waypoints of those types with flag set or by user set.
+# v0.6 5-17-10 Last cache doesn't have User Sort set twice in a round trip
+# v0.7 5-18-10 Option to set User Sort starting at 1
+# v0.8 5-27-10 Output csv route coordinates to use in GSAK filter
+# v0.9 5-28-10 Option for GPX or csv file. Option to shrink/expand directions. Add time and distance to each node.
+# v1.0 2-2-12 Add optional tags to output
+# v1.1 2-3-12 Fixed file paths
+# v2.0 12-31-12 Move to V3 of GMaps API - many major changes, danger Will Robinson...
+# v2.1 1-5-13 Update to use current V3 rather than 3.8 explicitly, cycling, avoid tolls
+# v2.2 2-16-13 Added TomTom itinerary file option
+
+
+PREPROCESS Shift=$StartShift
+VERCHECK Version=7.7.0.0 (Note: this macro requires at least  GSAK Version 7.7.0.0, found here:  http://www.gsak.net  Recommended w/ the latest "patch")
+
+$Driving = TRUE
+$Walking = FALSE
+$Cycling = FALSE
+$RoundTrip = TRUE
+$OneWay = FALSE
+$AvoidHighways = FALSE
+$AvoidTolls = FALSE
+$StartCenter = TRUE
+$StartFirst = FALSE
+$UseParking = FALSE
+$OutputTags = "hints"
+
+	MACSETTINGS Type=R File=CacheRoute.xml FileCheck=N
+#	IF Not($Driving)
+#		$Walking = TRUE
+#	ENDIF
+	IF Not($RoundTrip)
+		$OneWay = TRUE
+	ENDIF
+	IF Not($StartCenter)
+		$StartFirst = TRUE
+	ENDIF
+	
+	
+IF $StartShift
+	$errors = TRUE
+	# Get list of valid field names
+	$test = Sqlite("sql","pragma table_info(cachesall)")
+	$x = 1
+	$columnlist = ""
+	WHILE Extract($test,$_NewLine,$x) <> ""
+		$line = Extract($test,$_NewLine,$x)
+		$columnlist = $columnlist +"," + Extract($line,";",2)
+		$x = $x + 1
+	ENDWHILE
+	$columnlist = Lower($columnlist) + ","
+
+	WHILE $errors
+		$errors = FALSE
+		MACSETTINGS Type=R File=CacheRoute.xml FileCheck=N
+		$result = Form($form,"")
+		MACSETTINGS Type=S Vars=Driving,RoundTrip,AvoidHighways,StartCenter,UseParking,OutputTags,AvoidTolls,Walking,Cycling File=CacheRoute.xml FileCheck=N
+		IF $result = "SystemExit"
+			RETURN
+		ENDIF
+
+		# Check field names are valid
+		$y = 1
+		WHILE Extract($OutputTags,",",$y) <> ""
+			$test = "," + AllTrim(Lower(Extract($OutputTags,",",$y))) + ","
+			IF At($test,$columnlist) = 0
+				$errors = TRUE
+				$errormessage = Extract($OutputTags,",",$y) + " is not a valid field name"
+				MSGOK msg=$errormessage
+			ENDIF
+			$y=$y+1
+		ENDWHILE
+		
+	ENDWHILE
+ENDIF
+
+
+# Write out Update UserSort macro
+$tmpS = PutFile($_Install + "\macros\updateusersort.gsk", $UpdateUserSort)
+
+$limit = 99
+
+# directions(!!mode!!, '!!walking!!', !!avoid!!, !!avoidtolls!!);
+
+IF $Driving
+	$walkingtext = "driving"
+ENDIF
+
+IF $Walking
+	$walkingtext = "walking"
+ENDIF
+
+IF $Cycling
+	$walkingtext = "cycling"
+ENDIF
+
+IF $RoundTrip
+	$modetext = "0"
+ELSE
+	$modetext = "1"
+ENDIF
+
+IF $AvoidHighways
+	$avoidtext = "true"
+ELSE
+	$avoidtext = "false"
+ENDIF
+
+IF $AvoidTolls
+	$avoidtolltext = "true"
+ELSE
+	$avoidtolltext = "false"
+ENDIF
+
+
+# SQLite query for caches
+
+# addWaypointWithLabel(new GLatLng(30.1, -98.1),'Home','Code');
+#	addWaypointWithLabel(new GLatLng(30.2, -98.2),'Point 2','Code');
+
+
+# addWaypointWithLabel(new google.maps.LatLng(30.1, -98.1),'Home','Code');
+#	addWaypointWithLabel(new google.maps.LatLng(30.2, -98.2),'Point 2','Code');
+
+
+
+$lat = SysInfo("gsakini;LastCenter;Lat")
+$lon = SysInfo("gsakini;LastCenter;Lon")
+
+IF $UseParking
+#	$latitude = "CASE WHEN EXISTS(SELECT clat FROM Wayall WHERE cType like('%parking%') AND cParent=code) THEN (SELECT clat FROM Wayall WHERE cType like('%parking%') AND cParent=code LIMIT 1) ELSE latitude END"
+	$latitude = "CASE WHEN EXISTS(SELECT clat FROM Wayall WHERE (cType like('%parking%') OR cType like ('%trailhead%')) AND cParent=code) THEN (SELECT clat FROM Wayall WHERE (cType like('%parking%') OR cType like ('%trailhead%')) AND cParent=code ORDER BY cType Asc, cFlag + cByuser DESC LIMIT 1) ELSE latitude END"
+#	$longitude = "CASE WHEN EXISTS(SELECT clon FROM Wayall WHERE cType like('%parking%') AND cParent=code) THEN (SELECT clon FROM Wayall WHERE cType like('%parking%') AND cParent=code LIMIT 1) ELSE longitude END"
+	$longitude = "CASE WHEN EXISTS(SELECT clon FROM Wayall WHERE (cType like('%parking%') OR cType like ('%trailhead%')) AND cParent=code) THEN (SELECT clon FROM Wayall WHERE (cType like('%parking%') OR cType like ('%trailhead%')) AND cParent=code ORDER BY cType Asc, cFlag + cByuser DESC LIMIT 1) ELSE longitude END"
+#	$parking = "CASE WHEN EXISTS(SELECT clat FROM Wayall WHERE cType like('%parking%') AND cParent=code) THEN ' (Parking)' ELSE '' END"
+	$parking = "CASE WHEN EXISTS(SELECT clat FROM Wayall WHERE cType like('%parking%') AND cParent=code) THEN ' (Parking)' ELSE CASE WHEN EXISTS(SELECT clat FROM Wayall WHERE cType like('%trailhead%') AND cParent=code) THEN ' (Trailhead)' ELSE '' END END"
+ELSE
+	$latitude = "latitude"
+	$longitude = "longitude"
+	$parking = "''"
+ENDIF
+
+$Extras = "' '"
+
+$y = 1
+WHILE Extract($OutputTags,",",$y) <> ""
+	$tagname = Upper(Left(AllTrim(Lower(Extract($OutputTags,",",$y))),1)) + Substr(AllTrim(Lower(Extract($OutputTags,",",$y))),2,0)
+	$Extras = $Extras + "|| ' " + $tagname + ": ' ||" + AllTrim(Lower(Extract($OutputTags,",",$y)))
+	$y=$y+1
+ENDWHILE
+
+$_sql = "SELECT "
+$_sql = $_sql + "'addWaypointWithLabel(new google.maps.LatLng(' || $latitude || ',' || $longitude || '), !&!' || replace(name,'" + $_Quote + "','''') || $parking || '!&! , !&!' || code || '!&!, !&!' || replace($Extras,'" + $_Quote + "','''') || '!&!);'"
+$_sql = $_sql + " FROM cachesall WHERE $_Where ORDER BY $_OrderBy LIMIT $Limit"
+
+#CLIP data=$_sql
+
+$caches = Sqlite("sql",$_sql, "delim=%%delim%%")
+
+IF $StartCenter
+	$caches = "addWaypointWithLabel(new google.maps.LatLng($lat, $lon),'Home','Start Point');" + $_NewLine + $caches
+ENDIF
+
+$caches = Replace("!&!",$_Quote,$caches)
+
+$html = $MapHtml
+
+$html = Replace("!!CachesGoHere!!",$caches,$html)
+
+$html = Replace("!!mode!!",$modetext,$html)
+$html = Replace("!!walking!!",$walkingtext,$html)
+$html = Replace("!!avoid!!",$avoidtext,$html)
+$html = Replace("!!toll!!",$avoidtolltext,$html)
+$html = Replace("!!latstart!!",$lat,$html)
+$html = Replace("!!lonstart!!",$lon,$html)
+
+$Filename = $_install + "\macros\" + $_CurrentDatabase + "_route.html"
+
+$tmpS = PutFile($FileName,$html)
+IF Left($tmpS ,4) <> "*OK*"
+	CANCEL Msg="Sorry! For some reason I couldn't generate the outputfile"
+ENDIF
+WEB URL="$FileName"
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#  HTML Header Data
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+<data> VarName=$MapHtml 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"> 
+<head> 
+<!-- saved from url=(0014)about:internet -->
+<title>Google Maps TSP Solver Interface</title> 
+<style type="text/css"> 
+    v\:* {
+      behavior:url(#default#VML);
+    }
+    </style> 
+<link rel="stylesheet" href="http://gsak.net/stats/tspsolver/routestyle.css" type="text/css" media="screen">
+<link rel="stylesheet" href="http://gsak.net/stats/tspsolver/print.css" type="text/css" media="print">
+<link rel="stylesheet" type="text/css" href="http://gsak.net/stats/tspsolver/progressbar.css" />
+
+
+<script type="text/javascript" src="http://gsak.net/stats/tspsolver/progressbar.js"></script>
+<script type="text/javascript" src="http://gsak.net/stats/tspsolver/BpTspSolverV3.js"></script> 
+<script type="text/javascript" src="http://gsak.net/stats/tspsolver/tspV3.js?012"></script>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+
+
+<script type="text/javascript">
+
+function onBodyLoad() {
+    google.load("maps", "3", {callback: init, other_params:"sensor=false"});
+    initialize_progressbar();
+  }
+
+
+function init() {
+  loadAtStart(!!latstart!!, !!lonstart!!, 8);
+}
+
+function loadRoute() {
+
+!!CachesGoHere!!
+
+	directions(!!mode!!, '!!walking!!', !!avoid!!, !!toll!!);
+}
+
+
+</script>  
+</head> 
+<body onload='onBodyLoad()' onunload='GUnload()'>
+	<div id='logostrip'>
+  <a href='http://gsak.net/board/index.php?' title='Board Home'><img src='http://gsak.net/board/style_images/1/logo4.gif' border="0" /></a>
+  <span class="logotitle">Geocaching Fastest Route Calculator</span>
+</div>
+<p>&nbsp;</p>
+<table class="round">
+  <tr class="roundborder">
+    <td class="ul"></td>
+    <td class="u"></td>
+    <td class="ur"></td>
+  </tr>
+
+  <tr>
+    <td class="l"></td>
+    <td class="m">
+      <h2>Fastest Route</h2>
+<div id="loading">
+<span id="loadingMessage"><b>Calculating Route<br />Please Wait</b></span>
+<div id="progress_bar"></div>
+</div>
+
+
+<div id="map" class="myMap"></div><br><br>
+<!--
+ <div id="buttonArea">
+    <div align="center"><form name="address" onSubmit="clickedAddAddress(); return false;"> 
+    Add Location by Address: <input name="addressStr" type="text"> 
+    <input type="button" value="Add!" onClick="clickedAddAddress()"> 
+    </form>
+</div>  
+-->
+<!--
+<form name="travelOpts"> 
+<table class="optionsTable"> 
+  <tr> 
+  <td><input id="walking" type="checkbox">Walking</input><br></td> 
+  <td><input id="avoidHighways" type="checkbox">Avoid highways</input><br></td> 
+  </tr> 
+</table> 
+</form> 
+-->
+
+<table class="buttonTable"> 
+  <tr> 
+  <td><input id="button1" type="button" value="Calculate Roundtrip" onClick="directions(0, '!!walking!!', !!avoid!!, !!toll!!)"></td> 
+  <td><input id="button2" type="button" value="Calculate One Way Trip" onClick="directions(1, '!!walking!!', !!avoid!!, !!toll!!)"></td> 
+  <td><input id="button3" type="button" value="Reverse Route" onClick="reverseRoute()"></td>
+  <td><input id="button4" type="button" value="Edit Route" onClick="drawMarkers(false)"></td>
+  </tr>
+  <tr>
+  	<td colspan='4'>Right-click on map to add additional user 'Via' points. <br><i>Maximum 100 points in total</i> </td>
+  </tr>
+</table>
+
+</td>
+    </div>
+    <td class="r"></td>
+  </tr>
+
+  <tr class="roundborder">
+    <td class="ll"></td>
+    <td class="lower"></td>
+    <td class="lr"></td>
+  </tr>
+</table> 
+<p>&nbsp;</p>
+<table class="round">
+  <tr class="roundborder">
+    <td class="ul"></td>
+    <td class="u"></td>
+    <td class="ur"></td>
+  </tr>
+  <tr>
+    <td class="l"></td>
+    <td class="m">
+      <h2>Route Data - !!walking!!</h2>
+
+<div id="path"></div> 
+<div id="exportData"></div> 
+<div id="durationsData"></div>
+<div id="codelist"></div>
+<div id="my_textual_div"></div><br> 
+</td>
+    <td class="r"></td>
+
+  </tr>
+  <tr class="roundborder">
+    <td class="ll"></td>
+    <td class="lower"></td>
+    <td class="lr"></td>
+    </tr>
+
+<tr class="roundborder">
+    <td class="ul"></td>
+    <td class="u"></td>
+    <td class="ur"></td>
+  </tr>
+ <tr>
+	<td class="l"></td>
+	<td class="m">
+	<h2>Route Coordinate Data</h2>
+	<p><i>(Cut and paste data below into a text file)</i></p>
+	<form name="pointsform">
+	<input type="radio" name="outputMode" id="outputMode_csv" value="csv" onclick="getPolylineCsv();" checked="checked"/>
+<label for="outputMode_csv">CSV File</label>
+<input type="radio" name="outputMode" id="outputMode_gpx" value="gpx" onclick="getPolylineXml();"/>
+<label for="outputMode_gpx">GPX Route</label>
+<input type="radio" name="outputMode" id="outputMode_tomtom" value="tomtom" onclick="getPolylineTomtom();"/>
+<label for="outputMode_tomtom">TomTom Itinerary</label>
+</form>
+		
+	<textarea id="polyline" rows="10" cols="80" onclick="autoSelect(this);">
+	</textarea>
+
+    </td>
+
+    
+    <td class="r"></td>
+
+  </tr>
+  <tr class="roundborder">
+    <td class="ll"></td>
+    <td class="lower"></td>
+    <td class="lr"></td>
+    </tr>
+    
+    
+</table>
+<p>&nbsp;</p>
+</div>
+
+<div id="thankBox">
+<table class="round">
+  <tr class="roundborder">
+    <td class="ul"></td>
+    <td class="u"></td>
+    <td class="ur"></td>
+  </tr>
+  <tr>
+    <td class="l"></td>
+
+    <td class="m">
+      <h2>Thanks to</h2>
+      <p><a href="http://gebweb.net/optimap/">OptiMap</a> - for doing all the hard work. All TSP code written by Geir K. Engdahl. <br>
+      <a href="http://code.google.com/p/google-maps-icons/">Nicolas Mollet</a> - for the map icons</p>
+      <p>The solver <a href="http://code.google.com/p/google-maps-tsp-solver/"> source code </a> is available under the MIT license.</p>
+      <p>Version 2.1</p>
+    </td>
+
+    <td class="r"></td>
+  </tr>
+  <tr class="roundborder">
+    <td class="ll"></td>
+    <td class="lower"></td>
+    <td class="lr"></td>
+  </tr>
+</table>
+</div>
+
+</body> 
+</html>
+<enddata>
+
+<data> VarName=$UpdateUserSort
+
+# Get User Sort values
+$count = RegExCount(";",$_MacroParms) + 1
+$i = 2
+$SortIncrement = Usersort("I")
+$SortCurrent = Usersort("C")
+
+IF Extract($_MacroParms,";",1) = "true"
+	$SortCurrent = 0
+ENDIF
+
+TRANSACTION action=begin
+WHILE $i <= $count
+	$code = Extract($_MacroParms,";",$i)
+	IF Seek($code)
+		IF NOT($code = Extract($_MacroParms,";",2) AND $i = $count)
+			$SortCurrent = Usersort("C",$SortCurrent + $SortIncrement)
+			$d_UserSort = $SortCurrent
+		ENDIF
+	ENDIF
+	$i = $i + 1
+ENDWHILE
+TRANSACTION action=end
+SQLSORT OrderBy=Usersort Asc
+
+<enddata>
+
+<Data> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Sat 05-Jan-2013 15:35:36
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Caption = CacheRoute TSP
+  Height = 280
+  Width = 400
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 55
+  Left = 27
+  Top = 35
+  Width = 160
+  Taborder = 1
+
+Name = GroupBox2
+  Type = Groupbox
+  Height = 74
+  Left = 27
+  Top = 95
+  Width = 160
+  Taborder = 2
+
+Name = GroupBox3
+  Type = Groupbox
+  Height = 74
+  Left = 197
+  Top = 95
+  Width = 160
+  Taborder = 3
+
+Name = Groupbox4
+  Type = Groupbox
+  Height = 55
+  Left = 197
+  Top = 35
+  Width = 160
+  Taborder = 4
+
+Name = AvoidHighways
+  Type = Checkbox
+  Captionposition = Left
+  Container = GroupBox3
+  Height = 17
+  Left = 9
+  Top = 10
+  Width = 141
+  Taborder = 0
+  Caption = Avoid Highways
+
+Name = Label1
+  Type = Label
+  Color = 16744448
+  Height = 20
+  Left = 139
+  Size = 12
+  Style = bold
+  Top = 12
+  Width = 113
+  Caption = Cache Route
+
+Name = OK
+  Type = Button
+  Height = 25
+  Left = 154
+  Top = 215
+  Width = 75
+  Taborder = 0
+  Caption = OK
+
+Name = RoundTrip
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox1
+  Height = 17
+  Left = 9
+  Top = 10
+  Width = 141
+  Taborder = 0
+  Caption = Round Trip
+
+Name = OneWay
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox1
+  Height = 17
+  Left = 9
+  Top = 29
+  Width = 141
+  Taborder = 1
+  Caption = One Way
+
+Name = Driving
+  Type = Radiobutton
+  Captionposition = Left
+  Container = GroupBox2
+  Height = 17
+  Left = 9
+  Top = 10
+  Width = 141
+  Taborder = 0
+  Caption = Driving
+
+Name = Walking
+  Type = Radiobutton
+  Captionposition = Left
+  Container = GroupBox2
+  Height = 17
+  Left = 9
+  Top = 48
+  Width = 141
+  Taborder = 1
+  Caption = Walking
+
+Name = StartCenter
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox4
+  Height = 17
+  Left = 9
+  Top = 10
+  Width = 141
+  Taborder = 0
+  Caption = Start at Center Point
+
+Name = StartFirst
+  Type = Radiobutton
+  Captionposition = Left
+  Container = Groupbox4
+  Height = 17
+  Left = 9
+  Top = 29
+  Width = 141
+  Taborder = 1
+  Caption = Start at First Cache
+
+Name = UseParking
+  Type = Checkbox
+  Captionposition = Left
+  Container = GroupBox3
+  Height = 17
+  Left = 9
+  Top = 29
+  Width = 141
+  Taborder = 1
+  Caption = Use Parking Waypoints
+
+Name = OutputTags
+  Type = Edit
+  Height = 21
+  Left = 197
+  Top = 180
+  Width = 160
+  Taborder = 7
+
+Name = Label2
+  Type = Label
+  Height = 17
+  Left = 27
+  Top = 184
+  Width = 164
+  Caption = Tags to add to cache description
+
+Name = AvoidTolls
+  Type = Checkbox
+  Captionposition = Left
+  Container = GroupBox3
+  Height = 17
+  Left = 9
+  Top = 48
+  Width = 141
+  Taborder = 2
+  Caption = Avoid Tolls
+
+Name = Cycling
+  Type = Radiobutton
+  Captionposition = Left
+  Container = GroupBox2
+  Height = 17
+  Left = 9
+  Top = 29
+  Width = 141
+  Taborder = 2
+  Caption = Cycling
+
+<enddata>
+
+
+
+
+

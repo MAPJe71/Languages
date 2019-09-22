@@ -1,0 +1,222 @@
+/* file vcalcdem.mac
+    Edwin L Woollett, 2008,
+    woollett@charter.net
+    http://www.csulb.edu/~woollett
+*/
+     
+
+" vcalcdem.mac: sample calculations and derivations"$
+
+" default coordinates are cartesian (x,y,z)"$
+
+" gradient and laplacian of a scalar field "$
+
+depends(f,[x,y,z]);
+grad(f);
+lap(f);
+
+" divergence and curl of a vector field"$
+
+avec : [ax,ay,az];
+depends(avec,[x,y,z]);
+
+div(avec);
+curl(avec);
+
+" vector identities true in any coordinate system"$
+
+curl( grad(f) );
+div( curl(avec) );
+
+" laplacian of a vector field "$
+
+aa : [x^3*y, x*y^3*z, x^2*y*z^3];
+lap(aa);
+
+" vector cross product "$
+bvec : [bx,by,bz];
+lcross(avec,bvec);
+
+" cylindrical coordinates using (rho,phi,z) "$
+
+setcoord( cy(rho,phi,z) );
+
+" gradient and laplacian of a scalar field "$
+
+depends(g,[rho,phi,z]);
+
+grad(g);
+
+lap(g);
+
+" divergence and curl of a vector field"$
+
+bvec : [brh,bp,bz];
+depends(bvec,[rho,phi,z]);
+
+div(bvec);
+
+curl(bvec);
+
+" change from cylindrical coordinate label rho to r on the fly: "$
+
+bvec : [0,1/r,0]$
+
+div(bvec, cy(r,phi,z) );
+
+" change to spherical polar coordinates on the fly "$
+
+cvec : [0,0,sin(theta)/r^2]$
+
+div(cvec, s(r,theta,phi) );
+
+" coordinate system remains spherical unless explicitly changed "$
+
+cvec : [0,0,r*sin(theta)]$
+
+div(cvec );
+
+" example of div(vec) = 0 everywhere except r = 0 "$
+
+div([1/r^2,0,0] );
+
+
+/*
+
+(%i1) load(vcalc);
+                vcalc.mac:   for syntax, type: vcalc_syntax(); 
+
+ CAUTION: global variables set and used in this package:
+       hhh1, hhh2, hhh3, uuu1, uuu2, uuu3, nnnsys, nnnprint, tttsimp 
+
+(%o1)                         c:/work2/vcalc.mac
+(%i2) batch(vcalcdem);
+batching #pc:/work2/vcalcdem.mac
+(%i3)          vcalcdem.mac: sample calculations and derivations
+(%i4)              default coordinates are cartesian (x,y,z)
+(%i5)              gradient and laplacian of a scalar field 
+(%i6)                        depends(f, [x, y, z])
+(%o6)                            [f(x, y, z)]
+(%i7)                               grad(f)
+cartesian  [x, y, z] 
+                                  df  df  df
+(%o7)                            [--, --, --]
+                                  dx  dy  dz
+(%i8)                               lap(f)
+cartesian  [x, y, z] 
+                                 2     2     2
+                                d f   d f   d f
+(%o8)                           --- + --- + ---
+                                  2     2     2
+                                dz    dy    dx
+(%i9)                divergence and curl of a vector field
+(%i10)                        avec : [ax, ay, az]
+(%o10)                           [ax, ay, az]
+(%i11)                     depends(avec, [x, y, z])
+(%o11)              [ax(x, y, z), ay(x, y, z), az(x, y, z)]
+(%i12)                             div(avec)
+cartesian  [x, y, z] 
+                                daz   day   dax
+(%o12)                          --- + --- + ---
+                                dz    dy    dx
+(%i13)                            curl(avec)
+cartesian  [x, y, z] 
+                        daz   day  dax   daz  day   dax
+(%o13)                 [--- - ---, --- - ---, --- - ---]
+                        dy    dz   dz    dx   dx    dy
+(%i14)          vector identities true in any coordinate system
+(%i15)                           curl(grad(f))
+cartesian  [x, y, z] 
+cartesian  [x, y, z] 
+(%o15)                             [0, 0, 0]
+(%i16)                          div(curl(avec))
+cartesian  [x, y, z] 
+cartesian  [x, y, z] 
+(%o16)                                 0
+(%i17)                    laplacian of a vector field 
+                                3       3     2    3
+(%i18)                   aa : [x  y, x y  z, x  y z ]
+                              3       3     2    3
+(%o18)                      [x  y, x y  z, x  y z ]
+(%i19)                              lap(aa)
+cartesian  [x, y, z] 
+                                            3      2
+(%o19)                [6 x y, 6 x y z, 2 y z  + 6 x  y z]
+(%i20)                       vector cross product 
+(%i21)                        bvec : [bx, by, bz]
+(%o21)                           [bx, by, bz]
+(%i22)                        lcross(avec, bvec)
+(%o22)           [ay bz - az by, az bx - ax bz, ax by - ay bx]
+(%i23)             cylindrical coordinates using (rho,phi,z) 
+(%i24)                     setcoord(cy(rho, phi, z))
+(%o24)                               true
+(%i25)             gradient and laplacian of a scalar field 
+(%i26)                     depends(g, [rho, phi, z])
+(%o26)                         [g(rho, phi, z)]
+(%i27)                              grad(g)
+cylindrical  [rho, phi, z] 
+                                       dg
+                                      ----
+                                 dg   dphi  dg
+(%o27)                         [----, ----, --]
+                                drho  rho   dz
+(%i28)                              lap(g)
+cylindrical  [rho, phi, z] 
+                                   2
+                                  d g
+                           dg    -----
+                          ----       2    2      2
+                          drho   dphi    d g    d g
+(%o28)                    ---- + ----- + --- + -----
+                          rho       2      2       2
+                                 rho     dz    drho
+(%i29)               divergence and curl of a vector field
+(%i30)                       bvec : [brh, bp, bz]
+(%o30)                           [brh, bp, bz]
+(%i31)                   depends(bvec, [rho, phi, z])
+(%o31)       [brh(rho, phi, z), bp(rho, phi, z), bz(rho, phi, z)]
+(%i32)                             div(bvec)
+cylindrical  [rho, phi, z] 
+                                  dbp
+                                  ----
+                            brh   dphi   dbz   dbrh
+(%o32)                      --- + ---- + --- + ----
+                            rho   rho    dz    drho
+(%i33)                            curl(bvec)
+cylindrical  [rho, phi, z] 
+                 dbz                        dbrh
+                 ----                       ----
+                 dphi   dbp  dbrh   dbz     dphi   bp    dbp
+(%o33)          [---- - ---, ---- - ----, - ---- + --- + ----]
+                 rho    dz    dz    drho    rho    rho   drho
+(%i34)   change from cylindrical coordinate label rho to r on the fly: 
+                                          1
+(%i35)                         bvec : [0, -, 0]
+                                          r
+(%i36)                     div(bvec, cy(r, phi, z))
+cylindrical  [r, phi, z] 
+(%o36)                                 0
+(%i37)         change to spherical polar coordinates on the fly 
+                                         sin(theta)
+(%i38)                     cvec : [0, 0, ----------]
+                                              2
+                                             r
+(%i39)                    div(cvec, s(r, theta, phi))
+spherical polar  [r, theta, phi] 
+(%o39)                                 0
+(%i40)   coordinate system remains spherical unless explicitly changed 
+(%i41)                    cvec : [0, 0, r sin(theta)]
+(%i42)                             div(cvec)
+spherical polar  [r, theta, phi] 
+(%o42)                                 0
+(%i43)          example of div(vec) = 0 everywhere except r = 0 
+                                     1
+(%i44)                          div([--, 0, 0])
+                                      2
+                                     r
+spherical polar  [r, theta, phi] 
+(%o44)                                 0
+(%o45)                       c:/work2/vcalcdem.mac
+
+*/
+

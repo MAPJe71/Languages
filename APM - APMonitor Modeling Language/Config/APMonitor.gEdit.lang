@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Authors: Daniel Koch
+ Copyright (C) 2013 Daniel Koch
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public
+ License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ Boston, MA 02111-1307, USA.
+
+-->
+<language id="apm" _name="APMonitor" version="2.0" _section="Scripts">
+
+	<metadata>
+		<property name="mimetypes">text/x-apm</property>
+		<property name="globs">*.apm</property>
+		<property name="line-comment-start">!</property>
+	</metadata>
+	
+	<styles>
+		<style id="comment" _name="Comment" map-to="def:comment"/>
+		<style id="keyword" _name="Keyword" map-to="def:keyword"/>
+		<style id="objective" _name="Objective" map-to="def:keyword"/>
+		<style id="function" _name="Function" map-to="def:function"/>
+		<style id="special-character" _name="Special Character" map-to="def:special-char"/>
+	</styles>
+	
+	<default-regex-options case-sensitive="false"/>
+	
+	<definitions>
+		
+		<context id="apm">
+			<include>
+				<context id="comment1" style-ref="comment">
+					<start>!</start>
+					<end>$</end>
+				</context>
+				
+				<context id="comment2" style-ref="comment">
+					<start>#</start>
+					<end>$</end>
+				</context>
+				
+				<context id="comment3" style-ref="comment">
+					<start>%</start>
+					<end>$</end>
+				</context>
+				
+				<context id="keyword" style-ref="keyword">
+					<keyword>Model</keyword>
+					<keyword>Constants</keyword>
+					<keyword>Parameters</keyword>
+					<keyword>Variables</keyword>
+					<keyword>Intermediates</keyword>
+					<keyword>Equations</keyword>
+					<keyword>Objects</keyword>
+					<keyword>Compounds</keyword>
+					<keyword>Connections</keyword>
+					<keyword>File</keyword>
+					<keyword>End</keyword>
+				</context>
+				
+				<context id="objective" style-ref="objective">
+					<keyword>minimize</keyword>
+					<keyword>maximize</keyword>
+				</context>
+				
+				<context id="function" style-ref="function">
+					<keyword>abs</keyword>
+					<keyword>exp</keyword>
+					<keyword>log10</keyword>
+					<keyword>log</keyword>
+					<keyword>sqrt</keyword>
+					<keyword>sinh</keyword>
+					<keyword>cosh</keyword>
+					<keyword>tanh</keyword>
+					<keyword>sin</keyword>
+					<keyword>cos</keyword>
+					<keyword>tan</keyword>
+					<keyword>asin</keyword>
+					<keyword>acos</keyword>
+					<keyword>atan</keyword>
+					<keyword>erf</keyword>
+					<keyword>erfc</keyword>
+				</context>
+				
+				<context id="special-character" style-ref="special-character">
+					<prefix/>
+					<suffix/>
+					<keyword>\$</keyword>
+					<keyword>&amp;</keyword>
+				</context>
+				
+				<context ref="def:decimal"/>
+				<context ref="def:float"/>
+			</include>
+		</context>
+	</definitions>
+	
+</language>

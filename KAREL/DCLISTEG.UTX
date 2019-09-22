@@ -1,0 +1,42 @@
+.kl dclist
+*
+$-,TPTSSP_TITLE &home &reverse "Karel DISCTRL_LIST Example
+"
+&standard
+$-,TPTSSP_CLRSC &home &clear_2_eow
+$-,TPTSSP_FK1 &home" [TYPE] "
+$-,TPTSSP_FK2 &home" YES NO "
+$-,TPTSSP_INSTR &home "Press ’ENTER’ or number key to select." &clear_2_eol
+* Add menu options here, "Exit" must be last option
+* TPTSSP_NUM specifies the number of menu options
+$-,TPTSSP_NUM "14"
+$-,TPTSSP_MENU
+" 1 Test Cycle 1" &new_line
+" 2 Test Cycle 2" &new_line
+" 3 Test Cycle 3" &new_line
+" 4 Test Cycle 4" &new_line
+" 5 Test Cycle 5" &new_line
+" 6 Test Cycle 6" &new_line
+" 7 Test Cycle 7" &new_line
+" 8 Test Cycle 8" &new_line
+" 9 Test Cycle 9" &new_line
+" 10 Test Cycle 10" &new_line
+" 11 Test Cycle 11" &new_line
+" 12 Test Cycle 12" &new_line
+" 13 Test Cycle 13" &new_line
+" 14 EXIT"
+* Confirmations must be in order
+$-,TPTSSP_CNF1 &home"Perform test cycle 1? [NO]" &clear_2_eol
+$-,TPTSSP_CNF2 &home"Perform test cycle 2? [NO]" &clear_2_eol
+$-,TPTSSP_CNF3 &home"Perform test cycle 3? [NO]" &clear_2_eol
+$-,TPTSSP_CNF4 &home"Perform test cycle 4? [NO]" &clear_2_eol
+$-,TPTSSP_CNF5 &home"Perform test cycle 5? [NO]" &clear_2_eol
+$-,TPTSSP_CNF6 &home"Perform test cycle 6? [NO]" &clear_2_eol
+$-,TPTSSP_CNF7 &home"Perform test cycle 7? [NO]" &clear_2_eol
+$-,TPTSSP_CNF8 &home"Perform test cycle 8? [NO]" &clear_2_eol
+$-,TPTSSP_CNF9 &home"Perform test cycle 9? [NO]" &clear_2_eol
+$-,TPTSSP_CNF10 &home"Perform test cycle 10? [NO]" &clear_2_eol
+$-,TPTSSP_CNF11 &home"Perform test cycle 11? [NO]" &clear_2_eol
+$-,TPTSSP_CNF12 &home"Perform test cycle 12? [NO]" &clear_2_eol
+$-,TPTSSP_CNF13 &home"Perform test cycle 13? [NO]" &clear_2_eol
+$-,TPTSSP_CNF14 &home"Exit? [NO]" &clear_2_eol

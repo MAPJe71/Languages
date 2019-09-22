@@ -1,0 +1,1971 @@
+#*******************************************
+# MacVersion = 5.2.1
+# MacDescription = Exporting it all and go caching
+# MacAuthor = jeanpaul
+# MacFileName = macro_exports.gsk
+# MacUrl = http://www.jeepees.net/JeanPaul/geocache/tools/macros/macro_exports.gsk
+#*******************************************
+VERCHECK Version=7.2.3.35 (Note: this macro has been created under GSAK Version 7.2.3, see: http://gsak.net/cgi-bin/count/download.pl?file=GSAK723g)
+#*********************************************************
+#  CHANGE LOG
+#*********************************************************
+# Version | Changes
+#=========================================================
+# x.x     | Lost track of previous changes 
+# 4.2     | Enabled Event type cache as TomTom POI export
+# 4.3     | Add of a welcome field, it gets your configured name from GSAK
+#         | Add of Button to call macro to copy folder to SD card (copy_to_sd)
+#         | Add of help button
+# 4.4     | bug, filterb found and not used.. + Made SpoilerSync variable and detect if not installed.
+# 4.5     | Speed improved by changing IF's by Case statements
+# 4.6     | Added export for mapsource (gdb)
+# 4.7     | Vista by default hides .ini files, so the spoilersync.ini is not found... copy it to other name than .ini first
+# 4.8     | Changed TomTom Export ALL to use the std macro http://gsak.net/board/index.php?showtopic=6378
+#         | write back the last loaded settings file as a default (defaultsettings)
+# 4.8.1   | Enabled ESCAPE for exit, Return for OK and other hotkeys for the buttons
+# 4.9     | Included signature and logo pictures. Changed version field
+# 5.0     | included individual settings comboboxes, remove welcome field (overhead)
+# 5.1     | changed GPS export allowing the user a choice to use defined settings or call another GPS-send macro  
+#         | (i.e. for oregon/colorado specific macro calling)
+# 5.1.1   | corrected error in button loadpq and removed Macrolevel > 1; return into simple return statement. Changed MacUrl in header
+# 5.2     | Added ZIP file creation for HTML files
+# 5.2.1   | Corrected error in picfile hardcoded location, now changed to same folder as SPOILERSYNCFOLDER
+#         | + when spoilersync is installed but never ran, create an initial .ini file, else macro would abort
+# 5.2.2   | Added "Central location" to choose from
+#=========================================================
+$Version = "5.2.2"
+#---------------------------------------------------------
+#
+# For proper installation and/or meaning of the variables, pls go online at 
+#            http://www.jeepees.net/JeanPaul/geocache/tools/macros/export_it_all/how_to_install/HELP_how_to_install.htm
+#---------------------------------------------------------------
+# YOU HAVE TO CREATE FOLLOWING SETTINGS IN GSAK BELOW !!!!!!!!!!
+#---------------------------------------------------------------
+# 
+# The Various export commands REQUIRE you to CREATE ONCE MANUALLY the following filter/export settings in GSAK if you want to use the exports
+#
+# ** EXPORT SETTINGS ** (via menu File -> Export -> the type of export mentionned)
+#	- Settings name: "export_ozi" 		: how you want to export waypoints for ozi (use Ctrl-E to create it)
+#	- Settings name: "export_tomtom"	: how you want to export TOMTOM poi files (use menu File -> Export -> TOMTOM poi file)
+#	- Settings name: "export_gpx"		: how you want to export/create a new GPX file, MAKE SURE to use %code as WP name field!! (Ctrl-G)
+#	- Settings name: "export_html" 		: how you want to create html files (Ctrl-H)
+#	- Settings name: "export_mps" 		: how you want to export to mapsource gdb file (Ctrl-U)
+# ** GPS Settings ** (via menu GPS -> send waypoints)
+#	- Settings name: "gpsmap60C"	 	: how you want to send wps to your GPSr (Menu GPS -> send waypoints) 
+# ** FILTER SETTINGS ** (via menu Search -> Filter  / or Ctrl-F)
+#	- Filter name: 	"tradi" 		: how you filterout only the traditional caches
+#	- Filter name:	"multi"			: .......................... multi       ......
+#	- Filter name:	"virtual"		: .......................... virtual     ......
+#	- Filter name:	"mystery"		: .......................... mystery     ......
+#	- Filter name:	"letterbox"		: .......................... letterbox   ......
+#	- Filter name:	"earth"			: .......................... earth       ......
+#	- Filter name:	"event"			: .......................... event       ......
+#	- Filter name:	"webcam"		: .......................... webcam      ......
+#	- Filter name:	"other"			: .......................... other       ......
+
+#************************************************************************************************* 
+
+#---------------------------------------------------------------
+# CHECK AND MODIFY FOLLOWING VARIABLES BELOW !!!!!!!!!!!!!!!!!!!
+#          (it's no problem if you don't change it here, you will be able to change it in the form once it starts)
+#---------------------------------------------------------------
+#	- PCPATH:	This is a directory where geocaching files reside but are not used for a PDA or so (temporary if you like)
+#	- PDAPATH:	Is more important, this is preferably the folder that gets 'synchronised' with your PocketPC /PDA (i.e. oziCE wpt file, htmls)
+#                       or a folder to copy the whole lot later onto an SD card in a card reader for your PDA (this is my example below)
+#                       or it can point directly to the drive of the SD card reader (i.e. J:\) 
+#              
+$PCPATH="C:\Users\jeanpaul\Documents\My Geocaching"
+$PDAPATH="C:\Users\jeanpaul\Documents\My Geocaching\geo-sdcard"
+
+#********************************************** TOMTOM files (modify according needs.. how you name your tomtom POI files
+#                                               don't forget the same .bmp icon file per cache type must exist)
+#                                               NOTE: This only applies when you export filtered caches for TOMTOM (not ALL caches)
+$poitradi	="geo_tradi.ov2"
+$poimulti	="geo_multi.ov2"
+$poivirtual	="geo_virtual.ov2"
+$poimystery	="geo_mystery.ov2"
+$poiletterbox	="geo_letterbox.ov2"
+$poiearth	="geo_earth.ov2"
+$poievent	="geo_event.ov2"
+$poiwebcam	="geo_webcam.ov2"
+$poiother	="geo_other.ov2"
+
+#********************************************** CHECK AND MODIFY these 
+#						Change $SPOILERSYNCFOLDER to where you installed SpoilerSync
+#                                               Change $warnspoiler so you get WARNED you when you have more than this # of caches 
+#                                               for SpoilerSync to process!! It may get late in the evening if > 50 to process !
+#						IF you don't want these warnings, then set $warnforspoiler to False
+$SPOILERSYNCFOLDER="C:\Program Files\SpoilerSync"
+$warnforspoiler = False
+$warnspoiler = 50
+
+#----------------------------------------------------------------               
+# END -- CHECK AND MODIFY FOLLOWING VARIABLES !!!!!!!!!!!!!!!!!!!
+#----------------------------------------------------------------
+
+#===============================================================================================================
+
+#********************************************** SpoilerSync files -- DO NOT MODIFY 
+$SPOILERSYNC="$SPOILERSYNCFOLDER\spoilersync.exe"
+$SSINIA="$SPOILERSYNCFOLDER\spoilersync.ini"
+$SSINIB="$SPOILERSYNCFOLDER\ssyncini_B.ini"
+$SSINIC="$SPOILERSYNCFOLDER\ssyncini_C.ini"
+
+#********************************************** Exported files/folders (you can modify these later in the form when run. 
+#                                               DO NOT modify the $picfile filename !!!)
+$ozifile="$PDAPATH\*"
+$gpxfile="$PDAPATH\*"
+$htmlfile="$PDAPATH\"
+$poifolder="$PDAPATH\"
+$poifoldernew="Folder is set in the tomtom.gsk macro -> run macro first time and save settings as tomtom"
+$tomtomsavedsettings="tomtom"
+$picfolder="$PCPATH\"
+#$picfile="$PCPATH\for_pic.gpx"
+$picfile="$SPOILERSYNCFOLDER\for_pic.gpx"
+
+#************************************************************************************************* 
+#************************************************************************************************* 
+#                                                               MAIN START OF MACRO AS OF HERE ...
+#************************************************************************************************* 
+#************************************************************************************************* 
+
+## first initialize some files and folders variables
+GOSUB Name=Initialize
+GOSUB Name=GETSETTINGS
+
+#debug status=on
+
+while  True
+$FormExit = form($exportform,"")
+ BeginCase
+  Case $FormExit="ok"
+	GOSUB Name=OK_PRESSED
+
+#****************************************************************  Cancel BUTTON
+  Case ($FormExit = "cancel") or ($FormExit = "SystemExit")
+		return
+#****************************************************************  Save Settings BUTTON
+  Case $FormExit="savesettings"
+	GOSUB Name=SAVESETTINGS
+  
+#****************************************************************  Load Settings BUTTON
+  Case $FormExit="loadsettings"
+	$asksettings = true
+	GOSUB Name=GETSETTINGS
+
+#****************************************************************  LOAD BUTTON
+  Case $FormExit="load"
+    	IF NOT(FileExists("$_Install\macros\macro_loads.gsk"))
+	  	$msg = "Oops, I can't find the file $_newline" 
+		$msg = $msg + "$_Install\macros\macro_loads.gsk $_newline"
+		$msg = $msg + "If you need that file, check with the author to receive a copy... $_newline"
+		$msg = $msg + "$_newline"
+		$msg = $msg + "Drop a mail to jeepees@geocacher.com $_newline"
+		$msg = $msg + "or check on: http://www.jeepees.net/JeanPaul/geocache/tools/macros/gsak_macro_examples.htm $_newline"
+		$msg = $msg + "Note!  I copied the above url adress in your mouse clipboard.."
+		clip data="http://www.jeepees.net/JeanPaul/geocache/tools/macros/gsak_macro_examples.htm"
+		msgok msg=$msg Caption="Oops, I miss a file..."
+	Else    
+		MACRO FILE="$_Install\macros\macro_loads.gsk"
+	Endif
+
+#****************************************************************  Copy To SD BUTTON
+  Case $FormExit="copytosd"
+    	IF NOT(FileExists("$_Install\macros\macro_copy_sd.gsk"))
+	  	$msg = "Oops, I can't find the file $_newline" 
+		$msg = $msg + "$_Install\macros\macro_copy_sd.gsk $_newline"
+		$msg = $msg + "If you need that file, check with the author to receive a copy... $_newline"
+		$msg = $msg + "$_newline"
+		$msg = $msg + "Drop a mail to jeepees@geocacher.com $_newline"
+		$msg = $msg + "or check on: http://www.jeepees.net/JeanPaul/geocache/tools/macros/gsak_macro_examples.htm $_newline"
+		$msg = $msg + "Note!  I copied the above url adress in your mouse clipboard.."
+		clip data="http://www.jeepees.net/JeanPaul/geocache/tools/macros/gsak_macro_examples.htm"
+		msgok msg=$msg Caption="Oops, I miss a file..."
+	Else
+		MACRO FILE="$_Install\macros\macro_copy_sd.gsk"	
+	Endif
+
+#****************************************************************  Help BUTTON
+  Case $FormExit="helpbutton"
+    FILEOPEN File="$helpfile" wait=no
+
+  EndCase
+Endwhile
+ 
+
+#************************************************************************************************* 
+#************************************************************************************************* 
+#                                                                                END OF MAIN MACRO 
+#************************************************************************************************* 
+#************************************************************************************************* 
+
+#*****************************************************************************
+#**************************************                  SUBROUTINE OK Pressed
+#*****************************************************************************
+# Processing of code when OK is pressed or ENTER
+BEGINSUB Name=OK_PRESSED
+     Speedmode status=on
+     IF not($usecurrentdb)
+	IF NOT ($_Currentdatabase = $expdb)
+		DATABASE Name=$expdb ACTION=select
+	ENDIF
+	IF not (isempty($explocation))
+		$loc=extract($explocation,",",1)
+		CENTER LOCATION=$loc
+	ENDIF
+     Endif
+
+#****************************************************************  OZI
+     IF $expozi
+	if $Chkfiltera
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filtera
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Exporting OZI file....." Height=150 Width=300 Left=15 TOP=15
+   		EXPORT Type=OZI SETTINGS=$cmb_ozisettings File=$ozifile
+	Else
+       		PAUSE msg="No Caches found in DB $expdb within specified filter $filtera !!"
+		$MacroFilter = False
+	Endif
+     ENDIF
+#****************************************************************  TOMTOM SELECT
+     IF $exptom
+	if $Chkfiltera 
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filtera
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		RUNPGM PGM="$_Install\macros\MakeDir.bat" parms="$poifolder" Wait=Yes
+		SHOWSTATUS Msg="Exporting TOMTOM POI files....." Height=150 Width=300 Left=15 TOP=15
+		GOSUB Name=TOMTOM
+	Else
+ 		PAUSE msg="No Caches found in DB $expdb within specified filter $filtera !!"
+		$MacroFilter = False
+	Endif
+     ENDIF
+
+#****************************************************************  TOMTOM  ALL 
+      IF $exptomall
+	IF NOT(FileExists("$_Install\macros\tomtom.gsk"))
+	  	$msg = "Oops, I can't find the file $_newline" 
+		$msg = $msg + "$_Install\macros\tomtom.gsk $_newline"
+		$msg = $msg + "If you need that file, check with the author to receive a copy... $_newline"
+		$msg = $msg + "$_newline"
+		$msg = $msg + "Drop a mail to jeepees@geocacher.com $_newline"
+		$msg = $msg + "or get it at http://gsak.net/board/index.php?showtopic=6378 $_newline"
+		$msg = $msg + $_newline
+		$msg = $msg + "Note!  I copied the above http url in your mouse clipboard.."
+		clip data="http://gsak.net/board/index.php?showtopic=6378"
+		msgok msg=$msg Caption="Oops, I miss a file..."
+	Else    
+		GOSUB Name=TOMTOMNEW
+        ENDIF
+      ENDIF
+
+#****************************************************************  GPXSONAR
+     IF $expgpx
+	If $Chkfilterc
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filterc
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Generating GPX File for GPXSONAR....." Height=150 Width=300 Left=15 TOP=15
+		EXPORT Type=GPX Settings=$cmb_gpxsettings file=$gpxfile		
+	Else
+       		PAUSE msg="No Caches found in DB $expdb within specified filter $filterc !!"
+		$MacroFilter = False
+	Endif
+     ENDIF
+#****************************************************************  GDB Mapsource
+     IF $expgdb
+	If $Chkfilterc
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filterc
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Generating GDB File for MAPSOURCE....." Height=150 Width=300 Left=15 TOP=15
+		EXPORT Type=MPS Settings=$cmb_gdbsettings file=$gdbfile		
+	Else
+       		PAUSE msg="No Caches found in DB $expdb within specified filter $filterc !!"
+		$MacroFilter = False
+	Endif
+     ENDIF
+#****************************************************************  SPOILERPICS
+     IF $exppic
+      If FileExists($SPOILERSYNC)
+
+	if $Chkfilterc
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filterc
+		$MacroFilter = True
+	Endif
+	If ($warnforspoiler) and ($_FilterCount > $warnspoiler or $_count > $warnspoiler)
+		$messg="WARNING! WARNING! WARNING! WARNING! WARNING! " + $_Newline + $_Newline + $_Newline
+		$messg=$messg + "Are you sure SpoilerSync to process $_count caches ??" + $_Newline + $_Newline + $_Newline + $_Newline
+		$messg=$messg + $_Newline + $_Newline + $_Newline + $_Newline + $_Newline + $_Newline + $_Newline
+		$messg=$messg + "Click CONTINUE to proceed, else ABORT macro now"
+		PAUSE msg=$messg
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Creating $picfile for SpoilerSync....." Height=150 Width=300 Left=15 TOP=15
+		MACROSET Dialog=GPX Varname=$EXPORTGPX
+		EXPORT Type=GPX Settings=<macro> file=$picfile
+		IF $spoilincl
+			IF $picsd
+				GOSUB Name=SSTARGET
+				SHOWSTATUS Msg="Running Spoilersync, and waiting for it to complete....." Height=150 Width=300 Left=15 TOP=15
+				RUNPGM pgm="$SPOILERSYNC" parms="$SSINIC -a" WAIT=YES
+			Else
+				SHOWSTATUS Msg="Running Spoilersync, and waiting for it to complete....." Height=150 Width=300 Left=15 TOP=15
+				RUNPGM pgm="$SPOILERSYNC" parms="-a" WAIT=YES
+			Endif
+		Else
+			IF $picsd
+				SHOWSTATUS Msg="Running Spoilersync....." Height=150 Width=300 Left=15 TOP=15
+				GOSUB Name=SSTARGET
+				RUNPGM pgm="$SPOILERSYNC" parms="$SSINIC -a"
+			Else
+				SHOWSTATUS Msg="Running Spoilersync....." Height=150 Width=300 Left=15 TOP=15
+				RUNPGM pgm="$SPOILERSYNC" parms="-a"
+			Endif
+		
+		Endif
+	Else
+		PAUSE msg="No Caches found in DB $expdb within specified filter $filterc !!"
+		$MacroFilter = False
+	Endif
+      ELSE
+        #Cannot locate $SPOILERSYNC
+	$msg="I cannot locate SpoilerSync at $SPOILERSYNC !! $_Newline $_Newline"
+	$msg=$msg + "Either you have not installed SpoilerSync, $_Newline"
+	$msg=$msg + "or $_Newline"
+	$msg=$msg + "you have not set the correct path in the macro_exports.gsk $_Newline"
+	$msg=$msg + "for SPOILERSYNCFOLDER variable !, $_Newline $_Newline"
+	$msg=$msg + "I will not run Spoilersync until you correct it."
+	msgOK msg=$msg
+      Endif
+     ENDIF
+#****************************************************************  HTML
+     IF $spoilincl
+	GOSUB Name=Spoilersync
+     ENDIF
+
+     IF $exphtm
+	if $Chkfilterc
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filterc
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Creating your html subdir ....." Height=150 Width=300 Left=15 TOP=15
+		RUNPGM PGM="$_Install\macros\MakeDir.bat" parms="$htmlfile" Wait=Yes
+		SHOWSTATUS Msg="Exporting your HTML Files ....." Height=150 Width=300 Left=15 TOP=15
+		EXPORT Type=HTML Settings=$cmb_htmsettings File=$htmlfile
+	Else
+       		PAUSE msg="No Caches found in DB $expdb within specified filter $filterc !!"
+		$MacroFilter = False
+	Endif
+     ENDIF     
+     IF not($SavedFilter=" ")
+	IF RestoreFilter($SavedFilter,True) = 0
+	   Pause msg="Error in restoring filter"
+     	ENDIF
+     Endif
+
+     IF $expzip and not($zipfile="")
+	# Check if the user entered a file ending on .zip
+	$testzipext=upper(right($zipfile,4))
+	IF NOT($testzipext=".ZIP")
+		PAUSE Msg="Your ZIP file should end on .ZIP extension!!"
+	ELSE
+		SHOWSTATUS Msg="Creating ZIP File of your HTML Files ....." Height=150 Width=300 Left=15 TOP=15
+		$zipsource = $htmlfile + "\*.*"
+		$zipstatus = ZipFile("zip",$zipfile,$zipsource)
+		# error check
+		If left($zipstatus,7) = "*Error*"
+			Pause Msg=$Status
+		EndIf
+	ENDIF
+     Endif
+
+#****************************************************************  GPS
+     IF $expgps
+	If $Chkfiltera
+		$SavedFilter = SaveFilter()
+		FILTER NAME=$filtera
+		$MacroFilter = True
+	Endif
+	If ($MacroFilter and $_FilterCount > 0) or (not($MacroFilter) and $_count > 0)
+		$MacroFilter = False
+		SHOWSTATUS Msg="Sending the WPs to your GPSr ....." Height=150 Width=300 Left=15 TOP=15
+		IF $rb_gpssettings
+			EXPORT Type=GPS settings=$cmb_gpssettings
+		ENDIF
+		IF $rb_gpsmacro
+ 		   	IF NOT(FileExists("$gpsmacrofile"))
+	  			$msg = "Oops, I can't find the macro file !! $_newline" 
+				$msg = $msg + "$gpsmacrofile $_newline"
+				$msg = $msg + "If you need that macro; $_newline"
+				$msg = $msg + "** check with the author to receive a copy... or.. $_newline"
+				$msg = $msg + "** Drop a mail to jeepees@geocacher.com ...or..    $_newline"
+				$msg = $msg + "** check the online macro library: http://gsak.net/board/MacroIndex.php $_newline"
+				$msg = $msg + "$_newline"
+				$msg = $msg + "Note!  I copied the above url adress in your mouse clipboard.."
+				clip data="http://gsak.net/board/MacroIndex.php"
+				msgok msg=$msg Caption="Oops, I miss a file..."
+			Else    
+				MACRO FILE="$gpsmacrofile"
+			Endif
+		Endif
+			
+	Else
+       		PAUSE msg="No Caches found in DB $expdb within specified filter $filterc !!"
+		$MacroFilter = False
+	Endif
+     ENDIF
+
+  Speedmode status=off
+  SHOWSTATUS Msg="xx" Height=150 Width=300 Left=15 TOP=15 DISPLAY=off
+
+ENDSUB
+
+#*****************************************************************************
+#**************************************  SUBROUTINE Initialize
+#*****************************************************************************
+# Check if some necessary files exist and initialize variables for comboboxes etc..
+BEGINSUB Name=Initialize
+
+#********************************************** (DO NOT MODIFY)
+$expdblist = SysInfo("databases")
+$explocations = SysInfo("locations")
+$filist = SysInfo("Filters")
+$cmbval_ozisettings  = SysInfo("S_OziExplorer")
+$cmbval_ozisettings=RegExReplace("<macro>", $cmbval_ozisettings, "Choose from list")
+$cmbval_htmsettings = SysInfo("S_HTML")
+$cmbval_htmsettings=RegExReplace("<macro>", $cmbval_htmsettings, "Choose from list")
+$cmbval_gpxsettings  = SysInfo("S_GPX")
+$cmbval_gpxsettings=RegExReplace("<macro>", $cmbval_gpxsettings, "Choose from list")
+$cmbval_gdbsettings  = SysInfo("S_MapSource")
+$cmbval_gdbsettings=RegExReplace("<macro>", $cmbval_gdbsettings, "Choose from list")
+$cmbval_tomsettings  = SysInfo("S_TomTom")
+$cmbval_tomsettings=RegExReplace("<macro>", $cmbval_tomsettings, "Choose from list")
+$cmbval_gpssettings  = SysInfo("S_GPS")
+$cmbval_gpssettings=RegExReplace("<macro>", $cmbval_gpssettings, "Choose from list")
+
+$helptext = "-> To save settings, select file and click SAVE" + $_Newline 
+$helptext = $helptext + "-> To load settings, choose a file and press LOAD" + $_Newline 
+$helptext = $helptext + "=================================================" 
+$fileconfig=$_Install + "\Macros\exports_settings.dat"
+$defaultsettings = $_Install + "\Macros\exports_settingsfiles.dat"
+$asksettings = false
+$MacroFilter = False
+$SavedFilter = " "
+$helpfile = "http://www.jeepees.net/JeanPaul/geocache/tools/macros/export_it_all/HELP_export_it_all.htm"
+
+#       Check if the user has a makedir.bat file to create folders
+$BatFile = $_Install + "\macros\makedir.bat"
+IF NOT(FileExists($BatFile))
+  $result = PutFile($BatFile, "MD " + "%1")
+  IF Left($result,7) = "*Error*"
+	Pause Msg="$Error"
+	Cancel
+  EndIf
+Endif
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE GETSETTINGS
+#*****************************************************************************
+# See if the fileconfig exists, that contains the last used folders/filenames...
+# If it exists, initialize the file and folder vars with what is in the file
+
+BEGINSUB Name=GETSETTINGS
+
+#DEBUG status=on
+If not($asksettings)
+  If FileExists($defaultsettings)
+	$fileconfig = GetFile($defaultsettings)
+	IF Left($fileconfig,7) = "*Error*"
+	  Pause Msg="$fileconfig"
+	  Cancel
+	EndIf 
+  Endif 
+Endif
+
+If FileExists($fileconfig)
+	FILEREAD file=$fileconfig
+	#PAUSE Msg="LINE: $line"
+	IF Left($line,7) = "*Error*"
+	  Pause Msg="$Error"
+	  Cancel
+	EndIf
+	$TYPE = EXTRACT($line, "=", 1)
+	$FLE = EXTRACT($line, "=", 2)
+	BeginCase
+		Case $TYPE = "OZIFILE"
+			$ozifile=$FLE
+		Case $TYPE = "POIFOLDER"
+			$poifolder=$FLE
+		Case $TYPE = "GPXFILE"
+			$gpxfile=$FLE
+		Case $TYPE = "GDBFILE"
+			$gdbfile=$FLE
+		Case $TYPE = "SPOILERFOLDER"
+			$picfolder=$FLE
+		Case $TYPE = "HTMFOLDER"
+			$htmlfile=$FLE
+		Case $TYPE = "DATABASE"
+			$expdb=$FLE
+		Case $TYPE = "EXPOZI"
+			$expozi=StrToBool($FLE)
+		Case $TYPE = "EXPTOM"
+			$exptom=StrToBool($FLE)
+		Case $TYPE = "EXPTOMALL"
+			$exptomall=StrToBool($FLE)
+		Case $TYPE = "EXPPIC"
+			$exppic=StrToBool($FLE)
+		Case $TYPE = "PICSD"
+			$PICSD=StrToBool($FLE)
+		Case $TYPE = "EXPGPS"
+			$expgps=StrToBool($FLE)
+		Case $TYPE = "EXPGPX"
+			$expgpx=StrToBool($FLE)
+		Case $TYPE = "EXPGDB"
+			$expgdb=StrToBool($FLE)
+		Case $TYPE = "SPOILINCL"
+			$spoilincl=StrToBool($FLE)
+		Case $TYPE = "DELPREVPICS"
+			$delprevpics=StrToBool($FLE)
+		Case $TYPE = "EXPHTM"
+			$exphtm=StrToBool($FLE)
+		Case $TYPE = "EXPZIP"
+			$expzip=StrToBool($FLE)
+		Case $TYPE = "USECURRENTDB"
+			$usecurrentdb=StrToBool($FLE)
+		Case $TYPE = "CHKFILTERA"
+			$Chkfiltera=StrToBool($FLE)
+		Case $TYPE = "CHKFILTERC"
+			$Chkfilterc=StrToBool($FLE)
+		Case $TYPE = "FILTERA"
+			$filtera=$FLE
+		Case $TYPE = "FILTERC"
+			$filterc=$FLE
+		Case $TYPE = "CMB_GDBSETTINGS"
+			$cmb_gdbsettings=$FLE
+		Case $TYPE = "CMB_GPSSETTINGS"
+			$cmb_gpssettings=$FLE
+		Case $TYPE = "CMB_GPXSETTINGS"
+			$cmb_gpxsettings=$FLE
+		Case $TYPE = "CMB_HTMSETTINGS"
+			$cmb_htmsettings=$FLE
+		Case $TYPE = "CMB_OZISETTINGS"
+			$cmb_ozisettings=$FLE
+		Case $TYPE = "CMB_TOMSETTINGS"
+			$cmb_tomsettings=$FLE
+		Case $TYPE = "RB_GPSSETTINGS"
+			$rb_gpssettings=StrToBool($FLE)
+		Case $TYPE = "RB_GPSMACRO"
+			$rb_gpsmacro=StrToBool($FLE)
+		Case $TYPE = "GPSMACROFILE"
+			$gpsmacrofile=$FLE
+		Case $TYPE = "ZIPFILE"
+			$zipfile=$FLE
+
+		Case $TYPE = "LOCATION"
+			$explocation=$FLE	
+	EndCase
+	ENDREAD
+Endif
+# Write back the last used settings file into the default file
+$error = Putfile($defaultsettings, $fileconfig)
+IF Left($Error,7) = "*Error*"
+  Pause Msg="$Error"
+  Cancel
+EndIf  
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE SAVESETTINGS
+#*****************************************************************************
+# Write the choosen files and folders to a file for re-use
+
+BEGINSUB Name=SAVESETTINGS
+	$error = Putfile($defaultsettings, $fileconfig)
+	IF Left($Error,7) = "*Error*"
+	  Pause Msg="$Error"
+	  Cancel
+	EndIf  
+
+	$error = PutFile($fileconfig,"OZIFILE=" + $ozifile + $_Newline)  
+	$error = APPENDFILE($fileconfig,"POIFOLDER=" 		+ "$poifolder" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"GPXFILE=" 		+ "$gpxfile" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"GDBFILE=" 		+ "$gdbfile" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"SPOILERFOLDER=" 	+ "$picfolder" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"HTMFOLDER=" 		+ "$htmlfile" 		+ $_Newline)  	
+	$error = APPENDFILE($fileconfig,"DATABASE=" 		+ "$expdb" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPOZI=" 		+ "$expozi" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPTOM=" 		+ "$exptom" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPTOMALL=" 		+ "$exptomall" 		+ $_Newline)   
+	$error = APPENDFILE($fileconfig,"EXPPIC=" 		+ "$exppic" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"PICSD=" 		+ "$picsd" 		+ $_Newline)   
+	$error = APPENDFILE($fileconfig,"DELPREVPICS=" 		+ "$delprevpics" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPGPS=" 		+ "$expgps" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPGPX=" 		+ "$expgpx" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPGDB=" 		+ "$expgdb" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"SPOILINCL=" 		+ "$spoilincl" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPHTM=" 		+ "$exphtm" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"EXPZIP=" 		+ "$expzip" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"USECURRENTDB=" 	+ "$usecurrentdb" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CHKFILTERA=" 		+ "$Chkfiltera" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CHKFILTERC=" 		+ "$Chkfilterc" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"FILTERA=" 		+ "$filtera" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"FILTERC=" 		+ "$filterc" 		+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_GDBSETTINGS=" 	+ "$cmb_gdbsettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_GPSSETTINGS=" 	+ "$cmb_gpssettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_GPXSETTINGS=" 	+ "$cmb_gpxsettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_HTMSETTINGS=" 	+ "$cmb_htmsettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_OZISETTINGS=" 	+ "$cmb_ozisettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"CMB_TOMSETTINGS=" 	+ "$cmb_tomsettings" 	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"RB_GPSSETTINGS="  	+ "$rb_gpssettings"  	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"RB_GPSMACRO="     	+ "$rb_gpsmacro"     	+ $_Newline)  
+	$error = APPENDFILE($fileconfig,"GPSMACROFILE="    	+ "$gpsmacrofile"    	+ $_Newline)
+	$error = APPENDFILE($fileconfig,"ZIPFILE="    		+ "$zipfile"    	+ $_Newline)
+	$error = APPENDFILE($fileconfig,"LOCATION="    		+ "$explocation"    	+ $_Newline)
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE SSTARGET
+#*****************************************************************************
+# Copy & change spoilersync.ini file, changing the source gpx file and target spoiler folder
+
+BEGINSUB Name=SSTARGET
+
+IF FileExists($SSINIA)
+  FILECOPY FROM=$SSINIA TO=$SSINIB
+  FILEERASE File=$SSINIC OnError=Continue
+  FILEREAD file=$SSINIA
+ #PAUSE Msg="LINE: $line"
+  IF Left($line,7) = "*Error*"
+    Pause Msg="$Error"
+    Cancel
+  EndIf
+  $INIVAR = EXTRACT($line, "=", 1)
+  IF $INIVAR = "delunused"
+	IF $delprevpics
+	   $line="delunused=" + "1"
+	ELSE
+	   $line="delunused=" + "0"
+	Endif
+  Endif
+  IF $INIVAR = "Spoilerfolder"
+    $line="Spoilerfolder=" + "$picfolder"
+  Endif
+  IF $INIVAR = "Waypointfile"
+    $line="Waypointfile=" + "$picfile"
+  Endif
+  $line = $line + $_Newline
+  $error = APPENDFILE($SSINIC,$line)  
+  IF Left($Error,7) = "*Error*"
+    Pause Msg="$Error"
+    Cancel
+  EndIf  
+  ENDREAD
+ELSE
+        #Cannot locate $SSINIA -- means the user never ran SpoilerSync for the first time !!
+	$msg="I cannot locate the spoilersync.ini file at $SPOILERSYNC !! $_Newline $_Newline"
+	$msg=$msg + "Either you have not run SpoilerSync for the first time, $_Newline"
+	$msg=$msg + "or $_Newline"
+	$msg=$msg + "you have not set the correct path in the macro_exports.gsk $_Newline"
+	$msg=$msg + "for SPOILERSYNCFOLDER variable !, $_Newline $_Newline"
+	$msg=$msg + "I will now try to run Spoilersync .. if that fails, you have to run it manually..."
+	msgOK msg=$msg
+	GOSUB Name=SSCREATEDEFAULTINI
+	RUNPGM pgm="$SPOILERSYNC" parms="$SSINIA -a" WAIT=YES
+ENDIF
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE SSCREATEDEFAULTINI
+#*****************************************************************************
+# If the SpoilerSync ini is not found in the first place or the user has installed spoilersync but not run it initially.. there is no initial .ini file
+
+BEGINSUB Name=SSCREATEDEFAULTINI
+
+IF not(FileExists($SSINIA))
+	$error = Putfile($SSINIA, "[Settings]"  	+ $_Newline)
+	IF Left($Error,7) = "*Error*"
+	  Pause Msg="$Error"
+	  Cancel
+	EndIf  
+	$error = APPENDFILE($SSINIA,"forcegc=0" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"ignorewords=" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"onlywords=" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"delay=2" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"onlysummary=1" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"dohtml=1" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"recheck=0" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"shrinkwidth=300" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"shrinkheight=300" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"shrinkpics=1" 	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"ignorenospoiler=0"	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"onlyspoiler=0"	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"delunused=0"	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"Spoilerfolder=" + "$picfolder"	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"Waypointfile="  + "$picfile"	+ $_Newline) 
+	$error = APPENDFILE($SSINIA,"autoupdate=1"	+ $_Newline) 
+Endif
+ENDSUB
+###################
+
+
+#*****************************************************************************
+#**************************************  SUBROUTINE Spoilersync
+#*****************************************************************************
+# Copied Spoilersync macro from original GSAK program, 
+# adapted to use the picfolder as input and commented out interactive stuff
+
+BEGINSUB Name=Spoilersync
+
+###########################################################
+#
+# Transfer SpoilerSync picture to GSAK user notes
+#
+# 1. Run spoiler sync (make sure you check the box "create web pages for spoilers and index"
+# 2. Run this macro, and enter the folder where you spoilersync files are
+#
+# Change History:
+#  29th Jan, 2006 - Updated code to be compatible with the upcoming new release of the macro engine
+#
+############################################################
+
+#Debug Status=on
+###################################
+# COMMENTED OUT by Jeepees
+#
+# get folder from saved settings if file exists 
+#If FileExists($_Install + "\Macros\SpoilerSync.dat")
+#  $pics = GetFile($_Install + "\Macros\SpoilerSync.dat")
+#  # Just in case file permission error or something test for error
+#  IF Left($Pics,7) = "*Error*"
+#    Pause Msg="$Pics"
+#    Cancel
+#  EndIf 
+#else
+#  $pics = " "
+#EndIf
+
+# get the folder where the spoilers pics are
+#Input Msg="Enter the folder where the spoilder pics can be found"  Default=$Pics VarName=$pics Browse="Folder"
+#If .not. FolderExists($pics)
+#  Pause Msg="Error: Folder does not exist, Macro will now abort"
+#  Cancel
+#Endif
+
+# Save the folder so don't have to key if same next time
+#$error = PutFile($_Install + "\Macros\SpoilerSync.dat",$pics)  
+# Just in case file permission error or something test for error
+#IF Left($Error,7) = "*Error*"
+#  Pause Msg="$Error"
+#  Cancel
+#EndIf   
+#
+# END COMMENTED OUT by Jeepees
+###################################
+
+###################################
+# INSERTED by Jeepees
+#
+$pics = $picfolder
+SHOWSTATUS Msg="Including the pictures in GSAK notes....." Height=150 Width=300 Left=15 TOP=15
+#
+# END INSERTED by Jeepees
+###################################
+
+$ThisRecord = 0
+$NumberFound = 0
+$NumberPics = 0
+Goto Position=Top
+
+# now loop through the current subset to find corresponding spoilder HTML files
+While .not. $_EOL
+  # set up totals to show status to user
+  $ThisRecord = $ThisRecord + 1
+  $status = "Now processing: " + "$ThisRecord" + " of " + "$_Count"
+###################################
+# COMMENTED OUT by Jeepees
+#
+#  ShowStatus msg="$status"  
+#
+# END COMMENTED OUT by Jeepees
+###################################
+
+  $HtmFile = $Pics + "\" + $d_Code + ".html" 
+  If FileExists($HtmFile)
+    # we have found a matching spoiler file so interrogate the HTML for pictures 
+    $data = GetFile($HtmFile)
+    # remove all double quotes from data
+    $data = replace($_Quote,"",$data,false)
+    # get the number of pictures in the file
+    $Images = RegExCount("<img src=.*?>",$data)
+    $x = 0
+    $NumberFound = $NumberFound + 1
+    $Link = " "
+    While $Images > $x
+      $NumberPics = $NumberPics + 1 
+      $x = $x + 1
+      $Image = RegExData("<img src=.*?>",$data,$x)
+      # Get everthing after the =
+      $image = Extract($Image,"=",2)
+      # remove the terminating > tag 
+      $image = Extract($Image,">",1)
+      # genrate the required URL syntax to add to GSAK user notes
+      $image = $image + $_NewLine + "<img src='file://" + $pics + "\" + $image + "'><br><br>"  
+      $Link = $link + $image + $_NewLine
+    EndWhile
+    $Link = "*Spoiler Pictures*" + $_NewLine + $Link + "*End Spoilers*"
+    $UserNote = $d_UserNote
+    
+    # now if alredy spoiler pictures in user notes we must remove them and replace
+    # with he ones just found
+    if RegEx("\*Spoiler Pictures\*",$UserNote)
+      # preserve any notes before the spoilers
+      $Part1 = Extract($d_UserNote,"*Spoiler Pictures*",1)
+      # preserve any notes after the spoilers
+      $Part2 = Extract($d_UserNote,"*End Spoilers*",2)
+      # now insert then new spoiler links
+      $UserNote = $Part1 + $Link + $Part2
+    Else
+      # else part - No spoiler pictures, but we must put them in before the User logs
+      If RegEx("\$~",$UserNote)
+        # User losgs found, so seperate the user notes from the logs
+        $User = Extract($UserNote,"$~",1)
+        $Log = Extract($UserNote,"$~",2)
+        # now put in the spoiler links between the two
+        $UserNote = $User + $link + "$~" + $Log
+      else
+        # else there are no user logs, so just add the spoilers to any user notes
+        $UserNote =  $UserNote + $Link
+      EndIf
+    EndIf
+    $d_UserNote = $UserNote
+  EndIf 
+  Goto Position=Next
+EndWhile
+###################################
+# COMMENTED OUT by Jeepees
+#
+#Goto Position=Top
+#$Message = "$NumberFound" + " caches updated from spoiler sync folder." + $_NewLine + "$NumberPics" + " pictures found in total. "  
+#Pause msg=$Message
+#
+# END COMMENTED OUT by Jeepees
+###################################
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE TOMTOM
+#*****************************************************************************
+# Filter out per cache-type and create tomtom ov2 files
+BEGINSUB Name=TOMTOM
+	$SavedFilter = SaveFilter()
+	#Pause msg="SavedFilter=$SavedFilter"
+
+	FILTER name="tradi" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poitradi"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="multi" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poimulti"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="virtual" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poivirtual"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="mystery" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poimystery"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="letterbox" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poiletterbox"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="earth" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poiearth"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="event" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poievent"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="webcam" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poiwebcam"
+	EndIf
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+	FILTER name="other" Join=and
+	If $_FilterCount <> 0
+		EXPORT Type=POI SETTINGS=$cmb_tomsettings file="$poifolder\$poiother"
+	ENDIF
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  SUBROUTINE TOMTOMNEW
+#*****************************************************************************
+# Filter out per cache-type and create tomtom ov2 files, but for all caches
+BEGINSUB Name=TOMTOMNEW
+	#debug status=on
+	$SavedFilter = SaveFilter()
+	#Pause msg="SavedFilter=$SavedFilter"
+
+	CANCELFILTER
+
+	$_global="tomtom;$tomtomsavedsettings"
+	MACRO FILE="$_Install\macros\tomtom.gsk"
+	IF RestoreFilter($SavedFilter,True) = 0
+		Pause msg="Error in restoring filter"
+	ENDIF
+
+ENDSUB
+###################
+
+#*****************************************************************************
+#**************************************  EXPORT SETTINGS FOR GPX FILE FOR SPOILERSYNC
+#*****************************************************************************
+# Below is the export settings to export a GPX file by %code (Ctrl-G), used as input for Spoilersync 
+
+<data> VarName=$EXPORTGPX
+[TfmExportGpx]
+fnmTo.Text=C:\temp\for_pic.gpx
+cbxLimit.Text=0
+cbxUserNotes.Checked=False
+chkActual.Checked=False
+chkChild.Checked=False
+chkDefault.Checked=False
+chkExtra.Checked=False
+chkFlag.Checked=False
+chkMyLogs.Checked=False
+chkSymbol.Checked=False
+edtFormat.Text=%Name by %By  (%smart)
+edtMax.Text=
+edtMaxGps.Text=10
+edtWaypoint.Text=%code
+rbtGpx.Checked=True
+rbtLoc.Checked=False
+edtProblem.Text=
+edtExtra.Text=
+chkChild.Checked=False
+chkOnlyChild.Checked=False
+rbtAllChildren.Checked=True
+rbtOnlyFlagged.Checked=False
+rbtOnlyUnFlagged.Checked=False
+chkApplyName.Checked=False
+chkForce.Checked=True
+cbxVersion.Text=Ver 1.0
+[TfmExportGpx.cbxRecent.Items]
+Count=7
+Item0=File=xx Path=xx
+Item1=File=xx Path=xx
+Item2=File=xx Path=xx
+Item3=File=xx Path=xx
+Item4=File=xx Path=xx
+Item5=File=xx Path=xx
+Item6=File=xx Path=xx
+<enddata>
+
+#****************************************************************************
+#                                           Some graphical images
+#****************************************************************************
+
+<data> VarName=$compas
+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
+YII=
+<enddata>
+
+<data> VarName=$jeepees_sig
+AAABAAEAORMAAAEAIACsEQAAFgAAACgAAAA5AAAAJgAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AQD//wEA//8BAP//AgD//wIA//8BAP//AgD//wIA//8CAP//AgAABD4AK1UMAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CDQADUAMA
+Dl4DABBdBgAVVwoAGk8DABNQBgAXTwoAHU4HABtLBAAcQAgADH8AAB86DwAiNAAAITYQACUwCwAtLQYA
+HioSACorDAAqKwAAGjEFACI1BQAaMQoAJDIFACA3AAAUMwAAHDcLACEvDQAuJxsANxwNACgTAAA3DjMA
+ZgUA//8BAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA/4ACMCAAEAAPABEPHgARAA4AEg0N
+ABQXDAAWCwAAGBsAABwhAAAfMwsALQYACHwXAAYsFwAGLBMABikXAAwsFwARLRQABycWAA8jDwAIIRoA
+AB4aAAAeGwkAHAoAABkaAAgeGgAJHR0AACMcAAclFgAGLhMAEzUbAA9CHQANTxUAD1cLAAteBgAJUwAH
+DUwAIiItADs7DQD//wEA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AQD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CLQcAIgAJG1YA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wJVAFUDQAAgCEoAABgoCABADxIAYwAK
+B2gAACw0AID/AgD//wIA//8CAP//AgD//wIA//8CKwAADA8AG0MLABpZCAAWXAAAKCAA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CGwgAQgAP
+GTIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AXR0AAsYFQBgBgAfWwCA
+/wIA//8CAP//AgCAgAIJAAU3BAAPRAAAGCBAAEAELQAPEQACCWwAgIACAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CDgMAXQAMPRUA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AkAAAAQjEQA7BAAKfQBmmQUA//8CAAAAAg8A
+CEIAFB0aAP//AQD//wIA//8CAP//AQMABWAAAFUDAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8BAgAFcACA/wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD/AAEACwAXEQMASgsABngAAAtbAA0oEwD//wIA//8CAAAANg0AGxMAAP8BAP+AAgD/
+/wIA//8CAICAAgUACW4A//8BAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wKAQAAEAAALdAD//wEA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AQD/
+/wIA//8CAP//AgD//wIA//8CAP//AQD//wIA//8CAP//AgD//wIA//8CAP//AgAkJAcAGxAvAAsLWwAE
+BngQAAluIQAONhwAHAkA//8BAP//AgD//wIA//8CLR4AMwUAAGAJABhWCgAcSg0AGk4HABpOCAAUWgAC
+EHEAAEYhABxxCQAA/wEA//8CAICAAhIANw4LAEoYABJbDgBAgAQA//8CAACAAgAAgAQAAKoDAP//AQD/
+/wJiJwANBgAGhAkAHFMEACE9CwAeQwAFKjYAEkAcAABVBgAAOQkLACJDBwATagMAGF8EAC05AA5VEhsA
+LhwLABVfAAAPaQYAFFgEACI8AA1NFAAAQAQJACA4CQAQcQQEAH8OCwBaGxsAL1UqAAYA//8BAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgCAAAJVRAAPISEAFxwcABsrIgAeCAIAeAkNADwLAARGBgAVVwAE
+C0MQAAUxBAAJcgIAC3IFAAthBQAQYAAADWAGAANTBAAGdwUACXECAAlyAAAIYQAADCw8EQAeAAADYCcW
+AC4TEwA3GBgANgsLAEYDAAlUAwANZAUAApAAAgluHBUAJDMsACMaDQA7BQAFagYAA6IAAwdJLCEAFygo
+ABMzKQAZGAwAFQoAA2MAAwhlFRUAJSpVAAYA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wJAIAAQAwALXwD//wIA//8CAP//AS0WACICAAKYAAgQPgCA
+gAIA//8BAP//AScKADQCAAZ7AAAONwBAAAQAIAAIDQ0AEwAAAD0JAABwAAAMVgD//wIA//8CAP//AgD/
+/wIA//8CPhUAJQACBncAAAheAICAAgD//wIA//8CIAsASAAGCVYDAAhdAP//AQD//wIA//8CRi4ACwQA
+AogAACAIAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wITAABCAAAfMgD//wIA//8CAP//AigLAC0ACA5cBgAATwAUOw0A//8CAP//AiMA
+ADsAAw5KAICAAgD//wIA//8CAP//AgD//wIaCQB1AAQdPQD//wIA//8CAP//AgD//wIA//8CQCAAEA0C
+AHkKAAdqAICAAgD//wIA//8CIwkAHQ4AAH8JAAdvAP//AQD//wIA//8CAP//AhkAADMNAAJ2ABYNOgBt
+bQcA//8BAICABABVqgMA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIIAANiABQ7DQD//wIA//8CAP//AjMAAAUbAABWEgAJUwCAgAIA//8CAP//AgD//wJVADkJAP//AgD/
+/wIA//8CAP//AgD//wIvAAwrJAAkBwD//wIA//8CAP//AgD//wIA//8CAP//AkkAJAeAAEAEAP//AgD/
+/wIA//8CAP//AmAAIAhVACoGAP//AgD//wIA//8CAP//AgD//wJtAAAHJgAASQUJAG8AEw5cAAgCZgAK
+KRkA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgAAAAEKAAVrAID/AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AmZmAAU5OQAkIysAJACAgAIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wEKAABpACBgCAD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIAgP8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIMAANUAA0UJgD//wIA//8CAID/AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIAJAAHGAwAFSIGAC0cCQBTAgAAig0AByYA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AioLABgFAAVvBQAHawYA
+DU8NABE7EgAJOQMADFQA//8BAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgCAgAIAAIACAP//AQD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD//wIA//8CAP//AgD/
+/wIA//8CAP//AgD//wL/////////gP////////+A/////////4D/////////gP////////+A////////
+/4D/////////gP////////+A////v////4D/////ff//gP/3////9/+A/////////4D/////////gP//
+//////+A/////////4D/////////gP7///////+A/////////4D/////////gA==
+<enddata>
+
+#*****************************************************************************
+#**************************************  THE MAIN FORM
+#*****************************************************************************
+# Below is the data fields to build up the form
+
+<data> VarName=$exportform
+
+Name = Form1
+  Type = Form
+  Caption = Exporting all you need to go caching..
+  Height = 562
+  Width = 904
+
+Name = groupa
+  Type = Groupbox
+  Caption = Export all waypoints
+  Height = 168
+  Left = 3
+  Top = 97
+  Width = 890
+  Taborder = 1
+
+Name = groupc
+  Type = Groupbox
+  Caption = Download and Include Spoiler Pictures via spoilersync
+  Height = 192
+  Left = 3
+  Top = 268
+  Width = 890
+  Taborder = 2
+
+Name = Grp3
+  Type = Groupbox
+  Height = 59
+  Left = 3
+  Top = 464
+  Width = 151
+  Taborder = 3
+
+Name = Grp1
+  Type = Groupbox
+  Height = 61
+  Left = 158
+  Top = 464
+  Width = 737
+  Taborder = 4
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 64
+  Left = 3
+  Top = 30
+  Width = 890
+  Taborder = 5
+
+Name = Groupbox2
+  Type = Groupbox
+  Container = groupa
+  Height = 64
+  Left = 330
+  Top = 99
+  Width = 556
+  Taborder = 11
+
+Name = heading
+  Type = Label
+  Color = 255
+  Height = 20
+  Left = 3
+  Size = 12
+  Style = bold
+  Top = 2
+  Width = 247
+  Caption = Export it all and GO caching...
+
+Name = Chkfiltera
+  Type = Checkbox
+  Container = groupa
+  Height = 17
+  Left = 677
+  Top = 8
+  Width = 15
+  Taborder = 0
+
+Name = Filtlabla
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 696
+  Top = 10
+  Width = 74
+  Caption = Filter To apply
+
+Name = Filtera
+  Type = Combobox
+  Color = 10354665
+  Container = groupa
+  Height = 21
+  Left = 765
+  Top = 9
+  Values = $filist
+  Width = 121
+  Taborder = 1
+
+Name = Alabelozi
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 23
+  Top = 41
+  Width = 312
+  Caption = OZI   - Create OziExplorer waypoint file ........................................
+
+Name = expozi
+  Type = Checkbox
+  Container = groupa
+  Height = 17
+  Left = 7
+  Top = 39
+  Width = 15
+  Taborder = 2
+
+Name = ozifile
+  Type = File
+  Container = groupa
+  Height = 21
+  Left = 330
+  Top = 34
+  Width = 333
+  Taborder = 3
+
+Name = Alabeltom
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 23
+  Top = 59
+  Width = 311
+  Caption = TOM - Create TomTom POI file for filtered caches into folder.......
+
+Name = exptom
+  Type = Checkbox
+  Container = groupa
+  Height = 17
+  Left = 7
+  Top = 57
+  Width = 15
+  Taborder = 4
+
+Name = poifolder
+  Type = Folder
+  Container = groupa
+  Height = 21
+  Left = 331
+  Top = 55
+  Width = 332
+  Taborder = 5
+
+Name = Lbl5
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 23
+  Top = 107
+  Width = 311
+  Caption = GPS  - Send caches to your GPSr device ..................................:
+
+Name = expgps
+  Type = Checkbox
+  Container = groupa
+  Height = 17
+  Left = 7
+  Top = 105
+  Width = 15
+  Taborder = 6
+
+Name = Blabelpic
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 23
+  Top = 17
+  Width = 245
+  Caption = PIC - Run Spoilersync to download spoiler pictures
+
+Name = exppic
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 4
+  Top = 15
+  Width = 15
+  Taborder = 0
+
+Name = delprevious
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 66
+  Top = 35
+  Width = 177
+  Caption = Delete prev. pics not in this GPX file
+
+Name = delprevpics
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 50
+  Top = 33
+  Width = 15
+  Taborder = 1
+
+Name = Chkfilterc
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 677
+  Top = 13
+  Width = 15
+  Taborder = 2
+
+Name = Filterc
+  Type = Combobox
+  Color = 10354665
+  Container = groupc
+  Height = 21
+  Left = 765
+  Top = 11
+  Values = $filist
+  Width = 121
+  Taborder = 3
+
+Name = Filtlablc
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 696
+  Top = 15
+  Width = 74
+  Caption = Filter To apply
+
+Name = spoilersd
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 66
+  Top = 50
+  Width = 282
+  Caption = Place spoilerpictures into a folder  (Folder or SD card)........
+
+Name = picsd
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 50
+  Top = 48
+  Width = 15
+  Taborder = 4
+
+Name = picfolder
+  Type = Folder
+  Container = groupc
+  Height = 21
+  Left = 332
+  Top = 47
+  Width = 554
+  Taborder = 5
+
+Name = LblSettings
+  Type = Label
+  Container = Grp1
+  Height = 13
+  Left = 5
+  Top = 36
+  Width = 49
+  Caption = Settings:
+
+Name = fileconfig
+  Type = File
+  Container = Grp1
+  Height = 21
+  Left = 47
+  Top = 33
+  Width = 404
+  Taborder = 3
+
+Name = exptomall
+  Type = Checkbox
+  Container = groupa
+  Height = 17
+  Left = 7
+  Top = 77
+  Width = 15
+  Taborder = 7
+
+Name = Alabeltomall
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 23
+  Top = 79
+  Width = 313
+  Caption = TOM - Create TomTom POI file for ALL your caches into folder ...
+
+Name = poifoldernew
+  Type = Edit
+  Color = 9830399
+  Container = groupa
+  Enabled = No
+  Height = 21
+  Left = 331
+  Top = 75
+  Visible = Yes
+  Width = 554
+  Taborder = 8
+
+Name = expgpx
+  Type = Checkbox
+  Container = groupc
+  Height = 16
+  Left = 4
+  Top = 140
+  Width = 15
+  Taborder = 6
+
+Name = Blabelgpx
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 20
+  Top = 144
+  Width = 322
+  Caption = GPX - Create a GPX file for gpxsonar ..............................................
+
+Name = gpxfile
+  Type = File
+  Container = groupc
+  Height = 21
+  Left = 332
+  Top = 137
+  Width = 332
+  Taborder = 7
+
+Name = expgdb
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 4
+  Top = 166
+  Width = 15
+  Taborder = 11
+
+Name = Label1
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 20
+  Top = 168
+  Width = 319
+  Caption = GDB -  Create mapsource file .........................................................
+
+Name = gdbfile
+  Type = File
+  Container = groupc
+  Height = 21
+  Left = 332
+  Top = 162
+  Width = 332
+  Taborder = 12
+
+Name = exphtm
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 4
+  Top = 84
+  Width = 15
+  Taborder = 8
+
+Name = BlabelHTM
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 20
+  Top = 87
+  Width = 317
+  Caption = HTM - Create html files into a folder (i.e. folder to sync with pda)....
+
+Name = spoilincl
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 50
+  Top = 63
+  Width = 15
+  Taborder = 9
+
+Name = Lbl4
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 66
+  Top = 65
+  Width = 105
+  Caption = Include Pics in html?
+
+Name = htmlfile
+  Type = Folder
+  Container = groupc
+  Height = 21
+  Left = 332
+  Top = 82
+  Width = 332
+  Taborder = 10
+
+Name = usecurrentdb
+  Type = Checkbox
+  Container = Groupbox1
+  Height = 17
+  Left = 475
+  Top = 10
+  Width = 15
+  Taborder = 0
+
+Name = Lbl2
+  Type = Label
+  Container = Groupbox1
+  Height = 13
+  Left = 496
+  Top = 15
+  Width = 236
+  Caption = Or, instead, Use the current displayed DB as is...
+
+Name = Expdb
+  Type = Combobox
+  Color = 10354665
+  Container = Groupbox1
+  Height = 21
+  Left = 125
+  Top = 12
+  Values = $expdblist
+  Width = 185
+  Taborder = 1
+
+Name = helptext
+  Type = Memo
+  Color = 9830399
+  Container = Grp1
+  Enabled = No
+  Height = 49
+  Left = 456
+  Style = italic
+  Top = 9
+  Visible = Yes
+  Width = 277
+  Taborder = 4
+
+Name = ok
+  Type = Button
+  Container = Grp3
+  Enter = Yes
+  Height = 18
+  Left = 5
+  Top = 11
+  Width = 60
+  Taborder = 0
+  Caption = &OK
+
+Name = cancel
+  Type = Button
+  Container = Grp3
+  Escape = Yes
+  Height = 18
+  Left = 85
+  Top = 11
+  Width = 56
+  Taborder = 1
+  Caption = &Cancel
+
+Name = savesettings
+  Type = Button
+  Container = Grp1
+  Height = 20
+  Left = 5
+  Top = 9
+  Width = 86
+  Taborder = 0
+  Caption = &Save Settings
+
+Name = loadsettings
+  Type = Button
+  Container = Grp1
+  Height = 20
+  Left = 99
+  Top = 9
+  Width = 86
+  Taborder = 1
+  Caption = &Load Settings
+
+Name = load
+  Type = Button
+  Container = Grp1
+  Height = 20
+  Left = 362
+  Top = 12
+  Width = 86
+  Taborder = 2
+  Caption = LOAD &PQs
+
+Name = copytosd
+  Type = Button
+  Container = Grp3
+  Height = 21
+  Left = 4
+  Top = 32
+  Width = 61
+  Taborder = 2
+  Caption = Copy to S&D
+
+Name = helpbutton
+  Type = Button
+  Container = Grp3
+  Height = 21
+  Left = 84
+  Top = 32
+  Width = 57
+  Taborder = 3
+  Caption = &Help
+
+Name = compas
+  Type = Image
+  Autosize = No
+  File = compas.png
+  Height = 22
+  Left = 803
+  Resize = Yes
+  Source = Macro
+  Top = 3
+  Width = 22
+
+Name = jeepees_sig
+  Type = Image
+  Autosize = No
+  File = jeepees_sig.ico
+  Height = 20
+  Left = 826
+  Resize = Yes
+  Source = Macro
+  Top = 6
+  Visible = Yes
+  Width = 58
+
+Name = Label24
+  Type = Label
+  Height = 15
+  Left = 717
+  Size = 9
+  Top = 9
+  Width = 49
+  Caption = Version
+
+Name = Version
+  Type = Edit
+  Color = 65535
+  Enabled = No
+  Height = 21
+  Left = 762
+  Top = 6
+  Width = 39
+  Taborder = 0
+
+Name = cmb_htmsettings
+  Type = Combobox
+  Color = 10354665
+  Container = groupc
+  Directinput = No
+  Exitonchange = No
+  Height = 21
+  Left = 765
+  Top = 82
+  Values = $cmbval_htmsettings
+  Width = 121
+  Taborder = 13
+
+Name = Label2
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 672
+  Top = 87
+  Width = 98
+  Caption = html export settings
+
+Name = cmb_gpxsettings
+  Type = Combobox
+  Color = 10354665
+  Container = groupc
+  Directinput = No
+  Height = 21
+  Left = 765
+  Top = 137
+  Values = $cmbval_gpxsettings
+  Width = 121
+  Taborder = 14
+
+Name = Label3
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 669
+  Top = 144
+  Width = 101
+  Caption = GPX export settings
+
+Name = cmb_gdbsettings
+  Type = Combobox
+  Color = 10354665
+  Container = groupc
+  Directinput = No
+  Height = 21
+  Left = 765
+  Top = 162
+  Values = $cmbval_gdbsettings
+  Width = 121
+  Taborder = 15
+
+Name = Label4
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 686
+  Top = 168
+  Width = 84
+  Caption = Mapsrc Settings
+
+Name = cmb_ozisettings
+  Type = Combobox
+  Color = 10354665
+  Container = groupa
+  Directinput = No
+  Height = 21
+  Left = 765
+  Top = 34
+  Values = $cmbval_ozisettings
+  Width = 121
+  Taborder = 9
+
+Name = cmb_tomsettings
+  Type = Combobox
+  Color = 10354665
+  Container = groupa
+  Directinput = No
+  Height = 21
+  Left = 765
+  Top = 55
+  Values = $cmbval_tomsettings
+  Width = 121
+  Taborder = 10
+
+Name = Label5
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 672
+  Top = 41
+  Width = 98
+  Caption = OZI Export settings
+
+Name = Label6
+  Type = Label
+  Container = groupa
+  Height = 13
+  Left = 666
+  Top = 59
+  Width = 103
+  Caption = TOM export settings
+
+Name = cmb_gpssettings
+  Type = Combobox
+  Color = 10354665
+  Container = Groupbox2
+  Directinput = No
+  Height = 21
+  Left = 141
+  Top = 6
+  Values = $cmbval_gpssettings
+  Width = 406
+  Taborder = 1
+
+Name = rb_gpsmacro
+  Type = Radiobutton
+  Container = Groupbox2
+  Height = 17
+  Left = 9
+  Top = 41
+  Width = 15
+  Taborder = 2
+
+Name = rb_gpssettings
+  Type = Radiobutton
+  Container = Groupbox2
+  Height = 17
+  Left = 9
+  Top = 11
+  Width = 15
+  Taborder = 0
+
+Name = Label7
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 27
+  Top = 13
+  Width = 98
+  Caption = using your settings:
+
+Name = gpsmacrofile
+  Type = File
+  Container = Groupbox2
+  Height = 21
+  Left = 141
+  Top = 36
+  Width = 406
+  Taborder = 3
+
+Name = Label8
+  Type = Label
+  Container = Groupbox2
+  Height = 13
+  Left = 27
+  Top = 43
+  Width = 76
+  Caption = or run a macro
+
+Name = zipfile
+  Type = File
+  Container = groupc
+  Height = 21
+  Left = 333
+  Top = 108
+  Width = 331
+  Taborder = 16
+
+Name = Label9
+  Type = Label
+  Container = groupc
+  Height = 13
+  Left = 66
+  Top = 116
+  Width = 270
+  Caption = Create a .ZIP file from the html files above.....................:
+
+Name = expzip
+  Type = Checkbox
+  Container = groupc
+  Height = 17
+  Left = 50
+  Top = 112
+  Width = 15
+  Taborder = 17
+
+Name = Label10
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 12
+  Top = 15
+  Width = 99
+  Caption = Choose Database :
+
+Name = explocation
+  Type = Combobox
+  Color = 10354665
+  Container = Groupbox1
+  Height = 21
+  Left = 125
+  Top = 36
+  Values = $explocations
+  Width = 185
+  Taborder = 2
+
+Name = Label11
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 12
+  Top = 39
+  Width = 105
+  Caption = Choose Center Point
+
+<enddata>
+
+

@@ -1,0 +1,65 @@
+;  agent.kix
+;
+;  Demonstrates the use of COM automation to program a Microsoft Agent.
+;
+;  Note :  This code sample is provided for demonstration purposes only.
+;          Microsoft makes no warranty, either express or implied,
+;          as to its usability in any given situation.
+;
+;   Copyright (C) 2001 Ruud van Velsen.
+;   All rights reserved.
+;
+break on
+
+
+; first, try for the default agent (the wizard 'Merlin')
+
+if exist( "%WinDir%\msagent\chars\merlin.acs" )
+   $agentname = "merlin"
+else
+   ;
+   ; merlin doesn't live on this PC, try for any other MS Agent
+   ;
+   $agentname = dir( "%WinDir%\msagent\chars\*.acs" )
+   if len( $agentname )
+      $agentname = substr($agentname,1, len($agentname)-4)  ; remove .acs extension from name
+   endif
+endif
+
+
+if len( $agentname )
+   $agentpath = "%WinDir%\msagent\chars\" + $agentname + ".acs"
+
+   $agent = CreateObject ("agent.control.2")
+
+   if @error = 0
+      $agent.connected = "1"
+      $=$agent.characters.load($agentname,$agentpath)
+      $char = $agent.characters.character($agentname)
+
+      $=$char.show()
+      $=$char.moveto(400, 300)
+      while $char.status = 4
+         sleep 1  ; give him time to catch up...
+      loop
+
+      $=$char.play("read")
+      while $char.status = 4
+         sleep 1  ; give him time to catch up...
+      loop
+
+
+      $req=$char.speak("Hello, " + @fullname + ". Thank you for logging on to the " + @LDOMAIN + " domain.")
+
+      while $char.status = 4
+         sleep 1  ; give him time to catch up...
+      loop
+
+      $=$char.play("readreturn")
+      gets $x
+   else
+      ? "Microsoft Agent not installed, or failed to start. " + @error + " / " + @serror
+   endif
+else
+   ? "Microsoft Agent not installed."
+endif

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "wiki_syntax"        userDefinedLangName="Wiki"              />
+			<association id=        "wiki_syntax"        ext=".wik"                              />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ Wiki ] -->
+
+			<!--
+			|   Based on:
+			|       https://notepad-plus-plus.org/community/topic/13399/function-list-need-help-with-regular-expression
+			\-->
+			<parser
+				displayName="[UDL] Wiki"
+				id         ="wiki_syntax"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^
+							(={1,6})
+							\h+
+							\K                                                  # discard text matched so far
+							[\w\x20]+
+							(?=
+								\h+
+								\1
+							)
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

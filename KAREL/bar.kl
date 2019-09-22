@@ -1,0 +1,22 @@
+PROGRAM bar     
+TYPE
+        STRUCTURE test
+               a : INTEGER
+        ENDSTRUCTURE
+VAR
+        var2: test
+        var3: INTEGER
+
+ROUTINE do_something_too () : Integer
+
+BEGIN
+
+END bar
+
+ROUTINE do_something_too
+CONST
+  a = 1
+BEGIN
+    print(a)
+    return (a)
+END do_something_too

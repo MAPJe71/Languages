@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<AutoComplete language="AVISynth">
+		<Environment ignoreCase="yes" startFunc='(' stopFunc=')' paramSeparator="," terminal="" additionalWordChar=""/>
+        <KeyWord name="AddBorders" func="yes">
+          <Overload retVal="" descr="Adds colored borders around the image" >
+              <Param name="clip" />
+              <Param name="int left" />
+              <Param name="int top" />
+              <Param name="int right" />
+              <Param name="int bottom" />
+              <Param name="int &quot;color&quot;" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="AlignedSplice" func="yes">
+          <Overload retVal="" descr="Join two or more video clips end to end" >
+              <Param name="Clip1, Clip2, ... , ClipN" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Amplify" func="yes">
+          <Overload retVal="" descr="Multiplies the audio samples by amount. You can specify different factors for each channel" >
+              <Param name="clip, float amount1 [, ...]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="AmplifydB" func="yes">
+          <Overload retVal="" descr="Multiplies the audio samples by amount. You can specify different factors for each channel" >
+              <Param name="clip, float amount1 [, ...]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Animate" func="yes">
+          <Overload retVal="" descr="Meta-filter which evaluates its parameter filter with continuously varying arguments" >
+              <Param name="clip" />
+              <Param name="int start_frame" />
+              <Param name="int end_frame" />
+              <Param name="string filtername" />
+              <Param name="start_args" />
+              <Param name="end_args" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Apply" />
+        <KeyWord name="ApplyRange" />
+        <KeyWord name="Assert" />
+        <KeyWord name="AssumeBFF" />
+        <KeyWord name="AssumeFieldBased" />
+        <KeyWord name="AssumeFPS" />
+        <KeyWord name="AssumeFrameBased" />
+        <KeyWord name="AssumeSampleRate" />
+        <KeyWord name="AssumeTFF" />
+        <KeyWord name="Audiobits" />
+        <KeyWord name="Audiochannels" />
+        <KeyWord name="AudioDub" />
+        <KeyWord name="AudioDubEx" />
+        <KeyWord name="Audiolength" />
+        <KeyWord name="AudiolengthF" />
+        <KeyWord name="Audiorate" />
+        <KeyWord name="AverageChromaU" />
+        <KeyWord name="AverageChromaV" />
+        <KeyWord name="AverageLuma" />
+        <KeyWord name="AVIFileSource" func="yes">
+          <Overload retVal="" descr="Takes as argument one or more file name in quotes, and reads in the file(s) using Video-for-Windows &quot;AVIFile&quot; interface" >
+              <Param name="string filename [, ...]" />
+              <Param name="bool &quot;audio&quot; = true" />
+              <Param name="string &quot;pixel_type&quot; = YV12" />
+              <Param name="[string fourCC]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="AVISource" func="yes">
+          <Overload retVal="" descr="Takes as argument one or more file name in quotes, and reads in the file(s) using Video-for-Windows &quot;AVIFile&quot; interface, or AviSynth's built-in OpenDML code" >
+              <Param name="string filename [, ...]" />
+              <Param name="bool &quot;audio&quot; = true" />
+              <Param name="string &quot;pixel_type&quot; = YV12" />
+              <Param name="[string fourCC]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="BicubicResize" />
+        <KeyWord name="BilinearResize" />
+        <KeyWord name="Blackness" />
+        <KeyWord name="BlankClip" func="yes">
+          <Overload retVal="" descr="Produces a solid color, silent video clip of the specified length (in frames)" >
+              <Param name="clip" />
+              <Param name="int &quot;length&quot;" />
+              <Param name="int &quot;width&quot;" />
+              <Param name="int &quot;height&quot;" />
+              <Param name="string &quot;pixel_type&quot;" />
+              <Param name="float &quot;fps&quot;" />
+              <Param name="int &quot;fps_denominator&quot;" />
+              <Param name="int &quot;audio_rate&quot;" />
+              <Param name="int &quot;channels&quot;" />
+              <Param name="string &quot;sample_type&quot;" />
+              <Param name="int &quot;color&quot;" />
+              <Param name="int &quot;color_yuv&quot;" />
+          </Overload>
+        </KeyWord>        
+        <KeyWord name="Blur" />
+        <KeyWord name="Bob" />
+        <KeyWord name="ChangeFPS" />
+        <KeyWord name="Chr" />
+        <KeyWord name="ChromaUDifference" />
+        <KeyWord name="ChromaVDifference" />
+        <KeyWord name="ColorBars" />
+        <KeyWord name="ColorKeyMask" />
+        <KeyWord name="ColorYUV" />
+        <KeyWord name="Compare" />
+        <KeyWord name="ComplementParity" />
+        <KeyWord name="ConditionalFilter" />
+        <KeyWord name="ConditionalReader" />
+        <KeyWord name="ConvertAudioTo16bit" />
+        <KeyWord name="ConvertAudioTo24bit" />
+        <KeyWord name="ConvertAudioTo32bit" />
+        <KeyWord name="ConvertAudioTo8bit" />
+        <KeyWord name="ConvertAudioToFloat" />
+        <KeyWord name="ConvertBackToYUY2" />
+        <KeyWord name="ConvertFPS" />
+        <KeyWord name="ConvertToMono" />
+        <KeyWord name="ConvertToRGB" />
+        <KeyWord name="ConvertToRGB24" />
+        <KeyWord name="ConvertToRGB32" />
+        <KeyWord name="ConvertToYUY2" />
+        <KeyWord name="ConvertToYV12" />
+        <KeyWord name="Crop" />
+        <KeyWord name="CropBottom" />
+        <KeyWord name="Default" />
+        <KeyWord name="Defined" />
+        <KeyWord name="DelayAudio" />
+        <KeyWord name="DeleteFrame" />
+        <KeyWord name="DirectShowSource" func="yes">
+          <Overload retVal="" descr="Reads the file 'filename' using DirectShow, the same multimedia playback system which Windows Media Player uses" >
+              <Param name="string filename" />
+              <Param name="float &quot;fps&quot;" />
+              <Param name="bool &quot;seek&quot;" />
+              <Param name="bool &quot;audio&quot;" />
+              <Param name="bool &quot;video&quot;" />
+              <Param name="bool &quot;convertfps&quot;" />
+              <Param name="bool &quot;seekzero&quot;" />
+              <Param name="int &quot;timeout&quot;" />
+              <Param name="string &quot;pixel_type&quot;" />
+              <Param name="int &quot;framecount&quot;" />
+              <Param name="string &quot;logfile&quot;" />
+              <Param name="int &quot;logmask&quot;" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Dissolve" />
+        <KeyWord name="DoubleWeave" />
+        <KeyWord name="DuplicateFrame" />
+        <KeyWord name="EnsureVBRMP3Sync" />
+        <KeyWord name="Eval" />
+        <KeyWord name="Exist" />
+        <KeyWord name="FadeIn" />
+        <KeyWord name="FadeIn0" />
+        <KeyWord name="FadeIn2" />
+        <KeyWord name="FadeIO" />
+        <KeyWord name="FadeIO0" />
+        <KeyWord name="FadeIO2" />
+        <KeyWord name="FadeOut" />
+        <KeyWord name="FadeOut0" />
+        <KeyWord name="FadeOut2" />
+        <KeyWord name="Findstr" />
+        <KeyWord name="FixBrokenChromaUpsampling" />
+        <KeyWord name="FixLuminance" />
+        <KeyWord name="FlipHorizontal" />
+        <KeyWord name="FlipVertical" />
+        <KeyWord name="Framecount" />
+        <KeyWord name="FrameEvaluate" />
+        <KeyWord name="Framerate" />
+        <KeyWord name="FramerateDenominator" />
+        <KeyWord name="FramerateNumerator" />
+        <KeyWord name="FreezeFrame" />
+        <KeyWord name="GeneralConvolution" />
+        <KeyWord name="GetChannel" />
+        <KeyWord name="GetParity" />
+        <KeyWord name="global" />
+        <KeyWord name="Greyscale" />
+        <KeyWord name="HasAudio" />
+        <KeyWord name="HasVideo" />
+        <KeyWord name="Height" />
+        <KeyWord name="HexValue" />
+        <KeyWord name="Histogram" />
+        <KeyWord name="HorizontalReduceBy2" />
+        <KeyWord name="ImageReader" />
+        <KeyWord name="ImageSource" />
+        <KeyWord name="Imagewriter" func="yes">
+          <Overload retVal="" descr="Writes frames as images to your hard disk" >
+              <Param name="clip" />
+              <Param name="string &quot;file&quot;" />
+              <Param name="int &quot;start&quot;" />
+              <Param name="int &quot;end&quot;" />
+              <Param name="string &quot;type&quot;" />
+              <Param name="bool &quot;info&quot;" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Import" />
+        <KeyWord name="Import" />
+        <KeyWord name="Info" />
+        <KeyWord name="Interleave" />
+        <KeyWord name="Invert" />
+        <KeyWord name="IsAudioFloat" />
+        <KeyWord name="IsAudioInt" />
+        <KeyWord name="IsBool" />
+        <KeyWord name="IsClip" />
+        <KeyWord name="IsFieldBased" />
+        <KeyWord name="IsFloat" />
+        <KeyWord name="IsFrameBased" />
+        <KeyWord name="IsInt" />
+        <KeyWord name="IsInterleaved" />
+        <KeyWord name="IsPlanar" />
+        <KeyWord name="IsRGB" />
+        <KeyWord name="IsRGB24" />
+        <KeyWord name="IsRGB32" />
+        <KeyWord name="IsString" />
+        <KeyWord name="IsYUV" />
+        <KeyWord name="IsYUY2" />
+        <KeyWord name="IsYV12" />
+        <KeyWord name="KillAudio" />
+        <KeyWord name="KillVideo" />
+        <KeyWord name="Lanczos4Resize" />
+        <KeyWord name="LanczosResize" />
+        <KeyWord name="Layer" />
+        <KeyWord name="LCase" />
+        <KeyWord name="LeftStr" />
+        <KeyWord name="Letterbox" />
+        <KeyWord name="Levels" />
+        <KeyWord name="Limiter" />
+        <KeyWord name="LoadCPlugin" />
+        <KeyWord name="LoadPlugin" />
+        <KeyWord name="LoadVFAPIPlugin" />
+        <KeyWord name="LoadVirtualDubPlugin" />
+        <KeyWord name="Load_Stdcall_Plugin" />
+        <KeyWord name="Loop" />
+        <KeyWord name="LumaDifference" />
+        <KeyWord name="Mask" />
+        <KeyWord name="Merge" />
+        <KeyWord name="MergeARGB" />
+        <KeyWord name="MergeChannels" />
+        <KeyWord name="MergeChroma" />
+        <KeyWord name="MergeLuma" />
+        <KeyWord name="MergeRGB" />
+        <KeyWord name="MessageClip" />
+        <KeyWord name="MidStr" />
+        <KeyWord name="MixAudio" />
+        <KeyWord name="NOP" />
+        <KeyWord name="Normalize" />
+        <KeyWord name="OpenDMLSource" func="yes">
+          <Overload retVal="" descr="Takes as argument one or more file name in quotes, and reads in the file(s) using AviSynth's built-in OpenDML code" >
+              <Param name="string filename [, ...]" />
+              <Param name="bool &quot;audio&quot; = true" />
+              <Param name="string &quot;pixel_type&quot; = YV12" />
+              <Param name="[string fourCC]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Overlay" />
+        <KeyWord name="PeculiarBlend" />
+        <KeyWord name="PointResize" />
+        <KeyWord name="Pulldown" />
+        <KeyWord name="ReduceBy2" />
+        <KeyWord name="ResampleAudio" />
+        <KeyWord name="ResetMask" />
+        <KeyWord name="Return" />
+        <KeyWord name="Reverse" />
+        <KeyWord name="RevStr" />
+        <KeyWord name="RGBAdjust" />
+        <KeyWord name="RGBDifference" />
+        <KeyWord name="RGBDifferenceFromPrevious" />
+        <KeyWord name="RGBDifferenceToNext" />
+        <KeyWord name="ScriptClip" />
+        <KeyWord name="SegmentedAVISource" />
+        <KeyWord name="SegmentedDirectShowSource" />
+        <KeyWord name="Select" />
+        <KeyWord name="SelectEven" />
+        <KeyWord name="SelectEvery" />
+        <KeyWord name="SelectOdd" />
+        <KeyWord name="SelectRangeEvery" />
+        <KeyWord name="SeparateFields" />
+        <KeyWord name="SetMemoryMax" />
+        <KeyWord name="SetWorkingDir" />
+        <KeyWord name="Sharpen" />
+        <KeyWord name="ShowAlpha" />
+        <KeyWord name="ShowBlue" />
+        <KeyWord name="ShowFiveVersions" />
+        <KeyWord name="ShowFrameNumber" />
+        <KeyWord name="ShowGreen" />
+        <KeyWord name="ShowRed" />
+        <KeyWord name="ShowSMPTE" />
+        <KeyWord name="SpatialSoften" />
+        <KeyWord name="Spline" />
+        <KeyWord name="SSRC" />
+        <KeyWord name="StackHorizontal" />
+        <KeyWord name="StackVertical" />
+        <KeyWord name="String" />
+        <KeyWord name="StrLen" />
+        <KeyWord name="Subtitle" />
+        <KeyWord name="Subtract" />
+        <KeyWord name="SuperEQ" />
+        <KeyWord name="SwapFields" />
+        <KeyWord name="SwapUV" />
+        <KeyWord name="TCPDeliver" />
+        <KeyWord name="TemporalSoften" />
+        <KeyWord name="Time" />
+        <KeyWord name="TimeStretch" />
+        <KeyWord name="Tone" />
+        <KeyWord name="Trim" />
+        <KeyWord name="Turn180" />
+        <KeyWord name="TurnLeft" />
+        <KeyWord name="TurnRight" />
+        <KeyWord name="Tweak" />
+        <KeyWord name="UCase" />
+        <KeyWord name="UDifferenceFromPrevious" />
+        <KeyWord name="UDifferenceToNext" />
+        <KeyWord name="UnalignedSplice" func="yes">
+          <Overload retVal="" descr="Join two or more video clips end to end" >
+              <Param name="Clip1, Clip2, ... , ClipN" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="UPlaneMax" />
+        <KeyWord name="UPlaneMedian" />
+        <KeyWord name="UPlaneMin" />
+        <KeyWord name="UPlaneMinMaxDifference" />
+        <KeyWord name="UToY" />
+        <KeyWord name="Value" />
+        <KeyWord name="VDifferenceFromPrevious" />
+        <KeyWord name="VDifferenceToNext" />
+        <KeyWord name="Version" />
+        <KeyWord name="VersionNumber" />
+        <KeyWord name="VersionString" />
+        <KeyWord name="VerticalReduceBy2" />
+        <KeyWord name="VPlaneMax" />
+        <KeyWord name="VPlaneMedian" />
+        <KeyWord name="VPlaneMin" />
+        <KeyWord name="VPlaneMinMaxDifference" />
+        <KeyWord name="VToY" />
+        <KeyWord name="WAVSource" func="yes">
+          <Overload retVal="" descr="Used to open a WAV file, or the audio stream from an AVI file" >
+              <Param name="string filename [, ...]" />
+          </Overload>
+        </KeyWord>
+        <KeyWord name="Weave" />
+        <KeyWord name="Width" />
+        <KeyWord name="WriteFile" />
+        <KeyWord name="WriteFileEnd" />
+        <KeyWord name="WriteFileIf" />
+        <KeyWord name="WriteFileStart" />
+        <KeyWord name="YDifferenceFromPrevious" />
+        <KeyWord name="YDifferenceToNext" />
+        <KeyWord name="YPlaneMax" />
+        <KeyWord name="YPlaneMedian" />
+        <KeyWord name="YPlaneMin" />
+        <KeyWord name="YPlaneMinMaxDifference" />
+        <KeyWord name="YToUV" />
+	</AutoComplete>
+</NotepadPlus>

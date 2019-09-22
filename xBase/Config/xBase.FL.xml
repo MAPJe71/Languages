@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="xbase_syntax" userDefinedLangName="xBase" />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="xBase"
+				id         ="xbase_syntax"
+			>
+				<function
+					mainExpr="^[\t\x20]*(?:(?:func(?:tion)?|proc(?:edure)?)\s+)?\w+(\s+|\*\s+|\s+\*|\s+\*\s+)(\w+\s*::)?(?-i:(?!if|while|for)\b)\w+\s*\([^()]*\)(\s*static\s*)?[\n\s]"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_]\w*\s*=|[A-Za-z_]?\w*\s*\(" />
+						<nameExpr expr="[A-Za-z_]?\w*" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

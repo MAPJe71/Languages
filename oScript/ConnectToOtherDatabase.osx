@@ -1,0 +1,19 @@
+
+dynamic cnctVal1 // dynamic storing the database connection
+ 
+// This code assumes that the DB is the same type as the Livelink DB
+// Parameters are as follows :
+//  ConnectionType  Integer Constant
+//  Server Name     String e.g. myOracleServer
+//  Database Name   String e.g. myDB
+//  Username    String e.g. myUser
+//  Password    String e.g. myPassword
+cnctVal1 = $DBWizAPI.ConnectPkg.Connect(\
+    $LLIAPI.DbInfoPkg.MapServerType($LLIAPI.DbInfoPkg.Findrec($Kernel.SystemPreferences.GetPrefGeneral( 'dftConnection' ))),\
+    'myOracleServer',\
+    'myDB',\
+    'myUser',\
+    'myPassword' )
+    
+// disconnect from the DB<br>
+$DBWizAPI.ConnectPkg.Disconnect(cnctVal1.connect)

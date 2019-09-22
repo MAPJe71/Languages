@@ -1,0 +1,1469 @@
+/*  mbe5.mac loads eigen.mac, linearalgebra.mac, and diag.mac   */
+
+/* functions defined in this file:
+
+gschmidt (M)
+inner_prod (v,u)
+normed(v)
+normal(A)
+diagp(A)
+modal_matrix(A)
+mJordan(A)
+jordan_chain (A, eival)
+Mexp(A)
+eAt_diag(A)
+eAt_jordan(A)
+eAt_FSS(A)
+eAt_CH(A)
+exp_taylor(A, n)
+to_solve(Ab,xL)
+solve_aug(Ab,xL)
+mcol_solve(known_col, unknown_col, uk_varL)
+echelon_test1(e,q)
+echelon_test2(e1, q)
+triangularize_test1(e,q)
+cvec(xL)
+nullity(A)
+mtrace(A)
+multiplicity(A)
+vrank_num(B, k)
+vrank_max(B, Mult)
+vrank_numbers(B, Mult)
+vrank(B, v)
+chained (v1, B, v2)
+vL_rank(B, [v1,v2,....,vn])
+mcombine( [v1,v2,...,vn] )
+row_vector(alist)
+FSS_sector(A,eival,mult)
+FM_sector(A,eival,mult)
+FSS(A)
+gauss_jordan(A, bL, xL)
+NZero_rows(Ab)
+NZero_rows1(A)
+rinverse(A)
+Jrow(k)
+dorow(k,r)
+Mexp_block(k)
+expJ(k,lambda)
+
+
+*/
+
+alias(lme, list_matrix_entries)$
+
+
+gschmidt(Mm) := ratsimp (expand ( gramschmidt(Mm)))$
+
+inner_prod(Vv,Uu) := ratsimp (expand ( transpose (conjugate (Vv)) . Uu))$
+
+normed(Vv):= (Vv/sqrt(inner_prod(Vv,Vv)))$
+
+/* normal(A) returns true if matrix A is normal, otherwise
+    returns false
+	
+	 A is "normal" if A . AH = AH . A , where
+	AH = "hermitian conjugate" of A (physics language) or 
+	           "hermitian transpose" (Bronson) or "complex conjugate transpose".
+	Maxima:		   AH : transpose (conjugate (A)).
+	"normal" matrices are diagonalizable.	
+*/
+
+normal(Amatrix) :=
+block([AH],
+     AH : transpose (conjugate (Amatrix)),
+     is (equal ( expand(Amatrix . AH), expand (AH . Amatrix))))$
+
+/* 		diagp(A) looks at the return value of jordan(A), and is
+	only lightly tested.	
+	 returns true if A is diagonalizable
+*/	 
+diagp(Amatrix) :=
+block([jn, jnk, dans : true  ],
+    jn : jordan(Amatrix),
+	for k thru length (jn) do (
+	     if not dans then return(),
+	     jnk : rest (jn[k]),
+		 for h thru length (jnk) do 
+		     if jnk[h] > 1 then (
+			      dans : false,
+			      return())),
+	dans)$
+	
+
+/*
+(%i1) load(mbe5);
+(%o1) "c:/work9/mbe5.mac"
+(%i2) A : matrix([7,1,2],[0,7,1],[0,0,7]);
+(%o2) matrix([7,1,2],[0,7,1],[0,0,7])
+(%i3) normal(A);
+(%o3) false
+(%i4) diagp(A);
+(%o4) false
+(%i5) jordan(A);
+(%o5) [[7,3]]
+
+
+(%i6) A : matrix([1,0,1],[0,1,0],[0,0,2]);
+(%o6) matrix([1,0,1],[0,1,0],[0,0,2])
+(%i7) normal(A);
+(%o7) false
+(%i8) diagp(A);
+(%o8) true
+(%i9) jordan(A);
+(%o9) [[1,1,1],[2,1]]
+
+(%i10) A : matrix([1,1],[0,1]);
+(%o10) matrix([1,1],[0,1])
+(%i11) normal(A);
+(%o11) false
+(%i12) diagp(A);
+(%o12) false
+(%i13) jordan(A);
+(%o13) [[1,2]]
+
+(%i24) A : matrix([8,-5,10],[2,1,2],[-4,4,-6]);
+(%o24) matrix([8,-5,10],[2,1,2],[-4,4,-6])
+(%i25) normal(A);
+(%o25) false
+(%i27) diagp(A);
+(%o27) true
+(%i28) jn : jordan(A);
+(%o28) [[-2,1],[2,1],[3,1]]
+(%i29) [a1,a2,a3] : map ('first, jn);
+(%o29) [-2,2,3]
+(%i30) [v1] : map ('cvec, jordan_chain(A,a1));
+(%o30) [matrix([1],[0],[-1])]
+(%i31) [v2] : map ('cvec, jordan_chain(A,a2));
+(%o31) [matrix([0],[1],[1/2])]
+(%i32) [v3] : map ('cvec, jordan_chain(A,a3));
+(%o32) [matrix([1],[1],[0])]
+(%i33) S : mcombine([v1,v2,v3]);
+(%o33) matrix([1,0,1],[0,1,1],[-1,1/2,0])
+(%i34) A_diag : invert(S) . A . S;
+(%o34) matrix([-2,0,0],[0,2,0],[0,0,3])
+(%i35) mJordan(A);
+(%o35) matrix([-2,0,0],[0,2,0],[0,0,3])
+(%i36) modal_matrix(A);
+(%o36) matrix([1,0,1],[0,1,1],[-1,1/2,0])
+
+(%i18) A : matrix ( [1, g], [g, 1] );
+(%o18) matrix([1,g],[g,1])
+(%i19) declare(g,real);
+(%o19) done
+(%i20) conjugate(g);
+(%o20) g
+(%i21) normal(A);
+(%o21) true
+(%i22) diagp(A);
+(%o22) true
+(%i23) jordan(A);
+(%o23) [[1-g,1],[g+1,1]]
+
+*/
+	
+/*  The columns of modal_matrix(A) are a canonical basis */	
+
+modal_matrix(Aa) := ModeMatrix(Aa, jordan(Aa))$
+
+/* mJordan(A) either returns a diagonalized matrix with eigenvalues
+   on the diagonal (if A is diagonalizable) or returns the Jordan canonical
+   form (an almost diagonal matrix)
+*/
+   
+mJordan(Aa) := dispJordan( jordan(Aa) )$
+
+/*  jordan_chain (A, eival)   returns a list of a set of generalized eigenvectors
+    of A corresponding to eigenvalue eival, as a set of lists of their elements.
+    The returned vectors will belong to one or more  chains.	*/
+
+jordan_chain(Aa, Ee) := 
+block( [MA, eL, mL, Nc : 0, mult, Nbegin, vecL:[]  ],
+    MA : modal_matrix(Aa),
+	
+	[eL, mL] : eigenvalues(Aa),
+	
+	if lfreeof(eL, Ee) then (
+	    print(" eigenvalue ", Ee," not found"),
+	    return('jordan_chain(Aa, Ee))),
+	for j thru length (eL) do 
+            if eL[j] = Ee then Nc : j,
+	
+	mult : mL[Nc],
+	
+	Nbegin : 1 + sum ( mL[j], j, 1, (Nc - 1) ),	
+	
+	for j : Nbegin thru (Nbegin + mult -1) do  
+	              vecL : cons( lme (col(MA,j)), vecL),
+	reverse(vecL))$
+
+/*  5 x 5 matrix example
+  jordan_chain(A) returns one chain for each eigenvalue in
+  this example.  lambda = 1, m = 2
+                        lambda = 2, m = 3
+
+(%i1) load(mbe5);
+(%o1) "c:/work9/mbe5.mac"
+(%i2) A : matrix([1,0,0,0,0],[3,1,0,0,0], [6,3,2,0,0],[10,6,3,2,0],[15,10,6,3,2]);
+(%o2) matrix([1,0,0,0,0],[3,1,0,0,0],[6,3,2,0,0],[10,6,3,2,0],[15,10,6,3,2])
+
+(%i4) eigenvalues(A);
+(%o4) [[1,2],[2,3]]
+(%i32) multiplicity(A);
+(%o32) [[1,2],[2,3]]
+(%i33) jordan(A);
+(%o33) [[1,2],[2,3]]
+
+(%i34) [x1,x2] : map('cvec, jordan_chain(A,1));
+(%o34) [matrix([0],[3],[-9],[9],[-3]),matrix([1],[0],[-15],[44],[-60])]
+
+(%i35) [y1,y2,y3] : map('cvec, jordan_chain(A,2));
+(%o35) [matrix([0],[0],[0],[0],[9]),matrix([0],[0],[0],[3],[6]),
+        matrix([0],[0],[1],[0],[0])]
+	   
+(%i9) I5 : ident(5);
+(%o9) matrix([1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,1])
+(%i10) B1 : A - I5;
+(%o10) matrix([0,0,0,0,0],[3,0,0,0,0],[6,3,1,0,0],[10,6,3,1,0],[15,10,6,3,1])
+(%i40) vL_rank(B1,[x1,x2]);
+(%o40) [1,2]
+(%i41) vrank(B1,x2);
+(%o41) 2
+(%i42) chained(x1,B1,x2);
+(%o42) true
+(%i43) vrank(B1,x1);
+(%o43) 1
+(%i13) B1^^2 . x2;
+(%o13) matrix([0],[0],[0],[0],[0])
+
+(%i14) B2 : A - 2*I5;
+(%o14) matrix([-1,0,0,0,0],[3,-1,0,0,0],[6,3,0,0,0],
+                        [10,6,3,0,0],[15,10,6,3,0])
+(%i45) vL_rank(B2, [y1,y2,y3]);
+(%o45) [1,2,3]
+(%i46) vrank(B2,y3);
+(%o46) 3
+(%i47) chained(y2,B2,y3);
+(%o47) true
+(%i48) chained(y1,B2,y2);
+(%o48) true												
+*/
+
+/*  interface to diag.mac's mat_function(f,A) for the case f = exp  */
+
+Mexp(Aa) := (expand (mat_function(exp, Aa)))$
+
+/* eAt_diag(A)  returns the matrix exponential of t*A if A is diagonalizable */
+
+eAt_diag(Amatrix) :=
+block ( [mJ,mJL:[],D,S  ],
+     if not diagp(Amatrix) then (
+	     print (" not diagonalizable "),
+		 return(false)),
+     mJ :  mJordan(Amatrix),
+	 for k thru length(mJ) do mJL : cons(mJ[k,k],mJL),
+	 mJL : exp ( t*reverse (mJL)),
+	 D : apply ('diag_matrix, mJL),
+	 S : modal_matrix(Amatrix),
+	 S . D . invert(S))$
+	   
+
+
+/*** foll 2 funcs  not needed for this chapter  ***/
+row_partial_L (Ab1,Nn1,Mm1) :=  (rest (lme (row (Ab1, Nn1)), -Mm1))$
+
+row_partial (Ab,Nn,Mm) := ( matrix ( row_partial_L (Ab,Nn,Mm)))$
+
+
+/*
+(%i1) load(mbe5);
+(%o1) "c:/work9/mbe5.mac"
+(%i2) Cd : matrix([1,1,2],[0,1,1]);
+(%o2) matrix([1,1,2],[0,1,1])
+(%i18) row_partial_L (Cd,1,1);
+(%o18) [1,1]
+(%i19) row_partial (Cd,1,1);
+(%o19) matrix([1,1]) 
+(%i20) row_partial_L (Cd,2,1);
+(%o20) [0,1]
+(%i21) row_partial (Cd,2,1);
+(%o21) matrix([0,1])
+*/
+
+/* 
+   to_solve(Ab,xL)
+  generate list of n equations from augmented matrix Ab with n rows
+   and n+1 columns, given n-element list xL
+   */
+
+to_solve(Ab1, xL1) := 
+block( [rL, eqn1, eqn_list : [], j],
+     for j thru length(xL1) do (
+	     rL : lme (row (Ab1,j)),
+         eqn1 : rest(rL,-1) . xL1 = last(rL),
+		 eqn_list : cons (eqn1, eqn_list)),
+	reverse (eqn_list))$ 
+	
+/*
+(%i26) xL;
+(%o26) [x1,x2]
+(%i27) Cd;
+(%o27) matrix([1,1,2],[0,1,1])
+(%i28) to_solve(Cd, xL);
+(%o28) [x2+x1 = 2,x2 = 1]
+*/
+
+solve_aug(Bc1,zL1) := 
+block([ssL],
+    ssL : to_solve(Bc1,zL1),	
+	ssL : solve(ssL, zL1),
+	if length(ssL) = 1 then first(ssL)
+	   else ssL)$
+	   
+	
+/*
+(%i31) xL;
+(%o31) [x1,x2]
+(%i32) Cd;
+(%o32) matrix([1,1,2],[0,1,1])
+(%i33) solve_aug(Cd,xL);
+(%o33) [[x1 = 1,x2 = 1]]
+*/
+
+
+mcol_solve(known_col, unknown_col, uk_varL) :=
+block([eqns:[], ssL ],
+     if not matrixp(known_col) then (
+	     print(" need column matrices on both sides"),
+		 return(done)),
+	 if not matrixp(unknown_col) then (
+	     print(" need column matrices on both sides"),
+		 return(done)),	 
+     for j thru length (unknown_col) do 
+         if unknown_col [j,1] # 0 then eqns : cons(known_col[j,1] = unknown_col[j,1], eqns),
+	 ssL : solve ( eqns, uk_varL),
+	 if length(ssL) = 1 then first(ssL)
+	   else ssL)$
+	
+	
+echelon_test1(e,q) :=
+block([Ab,Cd,R1,R2,xL,x1,x2,eq2,eq1,eqns,
+         X1, X2, solns],
+    print("----------------------------------------------"),
+    print(" e = ",e),
+    if q = "no" then (
+          print("test echelon with numerical e and no partial pivot"),
+          Ab : matrix([e,1,1+e],[1,1,2]))
+    else ( print(" test echelon with numerical e and with partial pivot"),
+            	Ab : matrix( [1,1,2], [e,1,1+e])),
+	R1 : lme(row(Ab,1)),
+    R2 : lme(row(Ab,2)),
+	print(" start with: "),
+    print("  R1 = ",R1),
+	print("  R2 = ",R2),
+    Cd : echelon(Ab),
+    R1 : lme(row(Cd,1)),
+    R2 : lme(row(Cd,2)),
+    print(" after echelon "),
+	print("  R1 = ",R1),
+	print("  R2 = ",R2),
+	xL : [x1,x2],
+	print(" ------------------------------------------------"),
+	print(" method 1:  use  solve_aug(Cd, xL) "),
+	solns : solve_aug(Cd,xL),
+	print("solns = ",solns),
+	print(" float(solns) = ", float(solns)),
+	print(" ------------------------------------------------"),
+	print(" method 2:   solve by hand "),
+	eq1 : rest(R2,-1) . xL = R2[3],
+	solns : solve(eq1,x2),
+	X2 : rhs(solns[1]),
+	eq2 : ev ( rest(R1,-1) . xL = R1[3], x2 = X2),
+	solns : solve(eq2,x1),
+	X1 : rhs(solns[1]),
+	print( " x1 = ", X1),
+    print("  x2 = ", X2 ),	
+   	print( " float(x1) = ", float(X1), " float( x2) = ", float(X2) ),	
+	print(" ------------------------------------------------"),
+	print(" Method 3:    use function:    to_solve(Cd, xL) "),
+	eqns : to_solve(Cd,xL),
+	eq2 : solve(eqns[2]),
+	X2 : rhs(eq2[1]),
+	eq1 : ev(eqns[1], x2 = X2),
+	solns : solve(eq1),
+	X1 : rhs(solns[1]),
+	print( " x1 = ", X1),
+    print("  x2 = ", X2 ),
+	print( " float(x1) = ", float(X1), " float( x2) = ", float(X2) ),
+	print(" ------------------------------------------------"))$
+	
+	
+echelon_test2(e1, q) :=
+block([Ab,Cd,R1,R2,xL,x1,x2,eq2,eq1,eqns,
+         X1, X2, solns],
+    print("----------------------------------------------"),
+    print(" e1 = ",e1),
+    if q = "no" then (
+          print("test echelon with symbolic e and no partial pivot"),
+          Ab : matrix([e,1,1+e],[1,1,2]))
+    else ( print(" test echelon with symbolic e and with partial pivot"),
+            	Ab : matrix( [1,1,2], [e,1,1+e])),
+	R1 : lme(row(Ab,1)),
+    R2 : lme(row(Ab,2)),
+	print(" start with: "),
+    print("  R1 = ",R1),
+	print("  R2 = ",R2),
+    Cd : echelon(Ab),
+    R1 : lme(row(Cd,1)),
+    R2 : lme(row(Cd,2)),
+    print(" after echelon "),
+	print("  R1 = ",R1),
+	print("  R2 = ",R2),
+	xL : [x1,x2],
+	print(" ------------------------------------------------"),
+	print(" method 1:  use  solve_aug(Cd, xL) "),
+	solns : solve_aug(Cd,xL),
+	print("symbolic solns = ",solns),
+	solns : ev (solns, e = e1),
+	print(" numerical solns = ", solns),
+	print(" ------------------------------------------------"),
+	print(" method 2:   solve by hand "),
+	eq1 : rest(R2,-1) . xL = R2[3],
+	solns : solve(eq1,x2),
+	X2 : rhs(solns[1]),
+	eq2 : ev ( rest(R1,-1) . xL = R1[3], x2 = X2),
+	solns : solve(eq2,x1),
+	X1 : rhs(solns[1]),
+	print( " symbolic  x1 = ", X1),
+    print(" symbolic  x2 = ", X2 ),	
+	X1 : ev(X1, e=e1),
+	X2 : ev(X2, e=e1),
+   	print( " numerical x1 = ", X1, " numerical  x2 = ", X2 ),	
+	print(" ------------------------------------------------"),
+	print(" Method 3:    use function:    to_solve(Cd, xL) "),
+	eqns : to_solve(Cd,xL),
+	eq2 : solve(eqns[2]),
+	X2 : rhs(eq2[1]),
+	eq1 : ev(eqns[1], x2 = X2),
+	solns : solve(eq1),
+	X1 : rhs(solns[1]),
+	print( " symbolic  x1 = ", X1),
+    print("  symbolic  x2 = ", X2 ),
+	X1 : ev(X1, e=e1),
+	X2 : ev(X2, e=e1),
+	print( " numerical x1 = ", X1, " numerical  x2 = ", X2 ),
+	print(" ------------------------------------------------"))$
+	
+	
+	
+	
+	
+triangularize_test1(e,q) :=
+block([Ab,Cd,R1,R2,xL,x1,x2,eq2,eq1,eqns,
+         X1, X2, solns],
+    print("----------------------------------------------"),
+    print(" e = ",e),
+    if q = "no" then (
+          print("test triangularize with numerical e and no partial pivot"),
+          Ab : matrix([e,1,1+e],[1,1,2]))
+    else ( print(" test triangularize with numerical e and with partial pivot"),
+            	Ab : matrix( [1,1,2], [e,1,1+e])),
+	R1 : lme(row(Ab,1)),
+    R2 : lme(row(Ab,2)),
+	print(" start with: "),
+    print("  R1 = ",R1),
+	print("  R2 = ",R2),
+    Cd : triangularize(Ab),
+    R1 : lme(row(Cd,1)),
+    R2 : lme(row(Cd,2)),
+    print(" after triangularize "),
+	print("  R1 = ",R1),
+	print("  R2 = ",R2),
+	xL : [x1,x2],
+	print(" ------------------------------------------------"),
+	print(" method 1:  use  solve_aug(Cd, xL) "),
+	solns : solve_aug(Cd,xL),
+	print("solns = ",solns),
+	print(" float(solns) = ", float(solns)),
+	print(" ------------------------------------------------"),
+	print(" method 2:   solve by hand "),
+	eq1 : rest(R2,-1) . xL = R2[3],
+	solns : solve(eq1,x2),
+	X2 : rhs(solns[1]),
+	eq2 : ev ( rest(R1,-1) . xL = R1[3], x2 = X2),
+	solns : solve(eq2,x1),
+	X1 : rhs(solns[1]),
+	print( " x1 = ", X1),
+    print("  x2 = ", X2 ),	
+   	print( " float(x1) = ", float(X1), " float( x2) = ", float(X2) ),	
+	print(" ------------------------------------------------"),
+	print(" Method 3:    use function:    to_solve(Cd, xL) "),
+	eqns : to_solve(Cd,xL),
+	eq2 : solve(eqns[2]),
+	X2 : rhs(eq2[1]),
+	eq1 : ev(eqns[1], x2 = X2),
+	solns : solve(eq1),
+	X1 : rhs(solns[1]),
+	print( " x1 = ", X1),
+    print("  x2 = ", X2 ),
+	print( " float(x1) = ", float(X1), " float( x2) = ", float(X2) ),
+	print(" ------------------------------------------------"))$
+
+	
+cvec(zzL) := 
+    ( if not listp(zzL) then (
+	    print(" arg of cvec should be a list"),
+		return()),
+	transpose (matrix (zzL) ))$
+	
+	
+
+/*  rank-nullity theorem  says: 
+           rank(A) + nullity(A) = n for a m x n matrix (m rows and n columns)
+  where nullity(A) = dim Null A = dimension of Null A, and
+  Null A is the nullspace of A.
+    
+*/	
+	
+nullity(BB)  := ( length(transpose(BB))  -  rank(BB) )$
+
+
+/*  trace of a square matrix  */
+
+mtrace(Mat) :=
+block([num_rows,num_cols],
+    num_rows : length(Mat),
+	num_cols : length(transpose(Mat)),
+	if num_rows # num_cols then (
+	    print("  mtrace(M) assumes a square matrix"),
+		return()),
+	sum(Mat[j,j], j, 1, num_rows))$
+	
+/*
+(%i1) A : genmatrix(a,3,3);
+(%o1) matrix([a[1,1],a[1,2],a[1,3]],[a[2,1],a[2,2],a[2,3]],[a[3,1],a[3,2],
+                                                            a[3,3]])
+(%i7) mtrace(A);
+(%o7) a[3,3]+a[2,2]+a[1,1]
+
+*/
+
+multiplicity(MA) :=
+block( [vals,mvals,rlist:[ ] ],
+   [vals,mvals] : eigenvalues(MA),
+   for j thru length(vals) do
+        rlist : cons([vals[ j ], mvals[ j ] ], rlist),
+	reverse (rlist))$
+
+/*   vrank_num(B,k) is the number of generalized eigenvectors of rank k
+     associated with a matrix A and eigenvalue lambda,
+   that will appear in the canonical basis, also called the  eigenvalue rank
+   number N_k ,  where B = (A - lambda*I) and k = positive integer.     
+	*/	
+	
+vrank_num(BB,kk) := (rank(BB^^(kk-1)) - rank(BB^^kk))$	
+
+/*  vrank_max(B, m) returns  p = smallest integer such that the dimension
+          of the nullspace of B^^p equals the multiplicity m of the eigenvalue
+		  eival assoc. with matrix A, provided B = (A - eival*I).
+		  This is equivalent to  rank(B^^p) = nrows - m, using the rank-nullity
+		  theorem.		  
+	  */
+
+vrank_max(Bb,Mult) :=
+block([j:1, Pp : 0],
+      do ( if nullity(Bb^^j) = Mult then (
+	            Pp : j,
+				return()),
+			j : j + 1,
+			if j > 20 then (
+			    print(" j > 20: abort "),				
+				return())),
+	Pp)$
+	
+/* vrank_numbers(B,m) returns the list
+   [ [1,n1], [2,n2],...[p,np] ], in which nj is the
+   number of generalized eigenvectors (assoc. 
+   with the matrix A and eigenvalue lambda with multiplicity m) which
+   have rank j, and p = maximum vector rank, in which
+   B = (A - lambda*I).
+   */
+	
+vrank_numbers(Bb,Mm) :=
+block( [Pp, rn_list : []  ],
+   Pp : vrank_max(Bb,Mm),
+   print(" maximum vector rank = ",Pp),
+	for j thru Pp do rn_list : cons( [j, vrank_num(Bb,j)], rn_list),
+	reverse(rn_list))$
+	
+/* vrank(B,v) returns the vector rank of the generalized
+   eigenvector v assoc with the matrix A and eigenvalue lambda
+    if  B = (A - lambda*I).
+	*/
+	
+vrank(Bb, Vv) :=
+block( [Zero_row , j : 1, Rr : 0 ],
+    	Zero_row : lme (zeromatrix (1, length(Bb) )),
+		do (
+		    if  lme( expand (Bb^^j . Vv) ) = Zero_row then (
+			         Rr : j,
+					 return()),
+			j : j + 1,
+            if j > 20 then (
+                print("  j > 20: abort "),
+                return()) ),				
+		Rr)$
+		
+/* chained (v1, B, v2) returns true if v1 = B . v2,
+    where 	B = (A - lambda*I), and v1 and v2 are generalized
+	eigenvectors corresponding to the matrix A and
+	eigenvalue lambda, otherwise returns false.
+	*/
+		
+chained(Vv1, Bb, Vv2) :=
+  ( if lme (Vv1) = lme ( expand( Bb . Vv2)) then true else false )$
+  
+/* vL_rank(B, [v1,v2,....,vn]) returns the list of the vector
+    ranks of the generalized eigenvectors [v1,v2,....,vn]
+	corresponding to the matrix A and eigenvalue lambda,
+	with 	B = (A - lambda*I).
+	*/
+	
+	
+
+vL_rank(Bb,VL) := ( map ( lambda ([x], vrank(Bb,x)),VL) )$
+	
+
+/*
+Bronson prob 9.10
+
+(%i1) load(mbe5);
+(%o1) "c:/work9/mbe5.mac"
+(%i2) A : matrix([4,2,1,0,0,0],[0,4,-1,0,0,0],[0,0,4,0,0,0],[0,0,0,4,2,0],[0,0,0,0,4,0],[0,0,0,0,0,7]);
+(%o2) matrix([4,2,1,0,0,0],[0,4,-1,0,0,0],[0,0,4,0,0,0],[0,0,0,4,2,0],
+             [0,0,0,0,4,0],[0,0,0,0,0,7])
+			 
+(%i7) eigenvalues(A);
+(%o7) [[4,7],[5,1]]
+(%i10) multiplicity(A);
+(%o10) [[4,5],[7,1]]
+(%i11) jordan(A);
+(%o11) [[4,3,2],[7,1]]
+
+(%i3) I6 : ident(6);
+(%o3) matrix([1,0,0,0,0,0],[0,1,0,0,0,0],[0,0,1,0,0,0],[0,0,0,1,0,0],
+             [0,0,0,0,1,0],[0,0,0,0,0,1])
+			 
+ /* case lambda = 4, m = 5  */
+ 
+(%i5) B4 : (A - 4*I6);
+(%o5) matrix([0,2,1,0,0,0],[0,0,-1,0,0,0],[0,0,0,0,0,0],[0,0,0,0,2,0],
+             [0,0,0,0,0,0],[0,0,0,0,0,3])
+(%i6) vrank_max(B4,5);
+(%o6) 3
+(%i7) vrank_numbers(B4,5);
+ maximum vector rank =  3 
+(%o7) [[1,2],[2,2],[3,1]]
+(%i55) nullity(B4);
+(%o55) 2
+
+(%i25) [vals,vecs] : eigenvectors(A);
+(%o25) [[[4,7],[5,1]],[[[1,0,0,0,0,0],[0,0,0,1,0,0]],[[0,0,0,0,0,1]]]]
+(%i32) [v1,v2] : map ('cvec,vecs[1]);
+(%o32) [matrix([1],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[1],[0],[0])]
+(%i34) vL_rank(B4,[v1,v2]);
+(%o34) [1,1]
+
+(%i42) nspc : nullspace(B4);
+(%o42) span(matrix([-12],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[-12],[0],
+                                                     [0]))
+(%i43) [u1,u2] : nspc, span = "[";
+(%o43) [matrix([-12],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[-12],[0],[0])]
+(%i44) vL_rank(B4,[u1,u2]);
+(%o44) [1,1]
+
+/*
+   so dimension of the nullspace(B4) is 2 and we get two ordinary rank 1
+    eigenvectors corresponding to lambda = 4.
+
+ so geometric multiplicity of (lambda = 4) case is 2, algebraic multiplicity m = 5,
+    so we need 3 generalized eigenvectors with rank > 1. Start with two
+	eigenvectors of rank 1, then add 3 generalized eigenvectors of rank > 1.
+*/	
+	
+(%i8) [v1,v2,v3,v4,v5] : map('cvec,jordan_chain(A,4));
+(%o8) [matrix([-2],[0],[0],[0],[0],[0]),matrix([1],[-1],[0],[0],[0],[0]),
+       matrix([0],[0],[1],[0],[0],[0]),matrix([0],[0],[0],[2],[0],[0]),
+       matrix([0],[0],[0],[0],[1],[0])]
+(%i11) vL_rank(B4, [v1,v2,v3,v4,v5]);
+(%o11) [1,2,3,1,2]
+
+(%i13) vrank(B4,v3);
+(%o13) 3
+(%i14) B4^^3 . v3;
+(%o14) matrix([0],[0],[0],[0],[0],[0])
+
+(%i15) chained (v2,B4,v3);
+(%o15) true
+(%i16) chained (v1,B4,v2);
+(%o16) true
+(%i20) vrank(B,v5);
+(%o20) 2
+(%i18) B4^^2 . v5;
+(%o18) matrix([0],[0],[0],[0],[0],[0])
+(%i19) chained (v4,B4,v5);
+(%o19) true
+
+compare with vectors produced by nullspace
+
+(%i36) nspc : nullspace(B4^^3);
+(%o36) span(matrix([0],[0],[0],[0],[27],[0]),matrix([0],[0],[0],[27],[0],[0]),
+            matrix([0],[0],[27],[0],[0],[0]),matrix([0],[27],[0],[0],[0],[0]),
+            matrix([27],[0],[0],[0],[0],[0]))
+(%i37) [u1,u2,u3,u4,u5] : nspc, span = "[";
+(%o37) [matrix([0],[0],[0],[0],[27],[0]),matrix([0],[0],[0],[27],[0],[0]),
+        matrix([0],[0],[27],[0],[0],[0]),matrix([0],[27],[0],[0],[0],[0]),
+        matrix([27],[0],[0],[0],[0],[0])]
+(%i38) vL_rank(B4,[u1,u2,u3,u4,u5]);
+(%o38) [2,1,3,2,1]
+
+here we conclude that nullspace(B4^^3) returns vectors
+  of the needed set of ranks, but they are not chained vectors.
+  they are simply a set of basis vectors for the nullspace of B4^^3.
+  
+(%i43) [u1,u2,u3,u4,u5] : [u1,u2,u3,u4,u5]/27;
+(%o43) [matrix([0],[0],[0],[0],[1],[0]),matrix([0],[0],[0],[1],[0],[0]),
+        matrix([0],[0],[1],[0],[0],[0]),matrix([0],[1],[0],[0],[0],[0]),
+        matrix([1],[0],[0],[0],[0],[0])]
+(%i44) vL_rank(B4,[u1,u2,u3,u4,u5]);
+(%o44) [2,1,3,2,1]
+(%i45) [v1,v2,v3,v4,v5] : map('cvec,jordan_chain(A,4));
+(%o45) [matrix([-2],[0],[0],[0],[0],[0]),matrix([1],[-1],[0],[0],[0],[0]),
+        matrix([0],[0],[1],[0],[0],[0]),matrix([0],[0],[0],[2],[0],[0]),
+        matrix([0],[0],[0],[0],[1],[0])]
+(%i46) v3;
+(%o46) matrix([0],[0],[1],[0],[0],[0])
+(%i47) u3;
+(%o47) matrix([0],[0],[1],[0],[0],[0])
+(%i48) vrank(B4,u3);
+(%o48) 3
+(%i49) vrank(B4,u4);
+(%o49) 2
+(%i50) chained(u4,B4,u3);
+(%o50) false
+(%i51) vrank(B4,u1);
+(%o51) 2
+(%i52) chained(u1,B4,u3);
+(%o52) false
+(%i53) chained(v2,B4,v3);
+(%o53) true
+
+the two rank 1 vectors produced by nullspace(B4) are,
+  after dividing by (-12), the same as returned by eigenvectors.
+  
+(%i60) nspc : nullspace(B4);
+(%o60) span(matrix([-12],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[-12],[0],
+                                                     [0]))
+(%i61) [w1,w2] : nspc, span="[";
+(%o61) [matrix([-12],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[-12],[0],[0])]
+(%i62) vL_rank(B4,[w1,w2]);
+(%o62) [1,1]
+(%i63) [w1,w2] : [w1,w2]/(-12);
+(%o63) [matrix([1],[0],[0],[0],[0],[0]),matrix([0],[0],[0],[1],[0],[0])]
+(%i64) vL_rank(B4,[w1,w2]);
+(%o64) [1,1]
+(%i65) B4 . w1;
+(%o65) matrix([0],[0],[0],[0],[0],[0])
+(%i66) B4 . w2;
+(%o66) matrix([0],[0],[0],[0],[0],[0])
+(%i67) eigenvectors(A);
+(%o67) [[[4,7],[5,1]],[[[1,0,0,0,0,0],[0,0,0,1,0,0]],[[0,0,0,0,0,1]]]]
+
+/* case lambda = 7, m = 1  */
+
+(%i20) B7 : (A - 7*I6);
+(%o20) matrix([-3,2,1,0,0,0],[0,-3,-1,0,0,0],[0,0,-3,0,0,0],[0,0,0,-3,2,0],
+              [0,0,0,0,-3,0],[0,0,0,0,0,0])
+(%i21) nullity(B7);
+(%o21) 1
+(%i22) vrank_max(B7,1);
+(%o22) 1
+(%i23) vrank_numbers(B7,1);
+ maximum vector rank =  1 
+(%o23) [[1,1]]
+
+(%i26) [v6] : map('cvec,jordan_chain(A,7));
+(%o26) [matrix([0],[0],[0],[0],[0],[1])]
+(%i27) v6;
+(%o27) matrix([0],[0],[0],[0],[0],[1])
+(%i28) vrank(B7,v6);
+(%o28) 1
+(%i29) B7 . v6;
+(%o29) matrix([0],[0],[0],[0],[0],[0])
+
+end of Bronson prob. 9.10
+
+*/			 
+	
+
+	
+	
+/* convert matrix A to list AL using subst
+
+(standard way is to use
+  list_matrix_entries (Amatrix)
+  or, since we have defined the alias lme,
+    lme (Amatrix)
+  )
+(%i6) A : matrix([a,b,c],[d,e,f],[g,h,i]);
+(%o6) matrix([a,b,c],[d,e,f],[g,h,i])
+(%i8) AL : subst("[",'matrix,A);
+(%o8) [[a,b,c],[d,e,f],[g,h,i]]
+(%i9) part(AL,1);
+(%o9) [a,b,c]
+(%i10) length(AL);
+(%o10) 3
+(%i11) AL[1];
+(%o11) [a,b,c]
+
+(%i13) A : genmatrix(a,3,3);
+(%o13) matrix([a[1,1],a[1,2],a[1,3]],[a[2,1],a[2,2],a[2,3]],[a[3,1],a[3,2],
+                                                             a[3,3]])
+(%i14) AL : subst("[",'matrix,A);
+(%o14) [[a[1,1],a[1,2],a[1,3]],[a[2,1],a[2,2],a[2,3]],[a[3,1],a[3,2],a[3,3]]]
+(%i15) AL[1];
+(%o15) [a[1,1],a[1,2],a[1,3]]
+(%i16) length(AL);
+(%o16) 3
+*/
+
+/* mcombine(L) creates a matrix from a list L of column vectors */
+
+mcombine(L) :=
+block([ mL:[] ],
+    for j thru length(L) do  mL : cons( list_matrix_entries(L[j]), mL),
+	mL : reverse (mL),
+	transpose ( apply('matrix, mL)))$
+	
+/*
+(%i21) v1 : transpose(matrix([v11,v12,v13]));
+(%o21) matrix([v11],[v12],[v13])
+(%i27) v2 : transpose(matrix([v21,v22,v23]));
+(%o27) matrix([v21],[v22],[v23])
+(%i29) v3 : transpose(matrix([v31,v32,v33]));
+(%o29) matrix([v31],[v32],[v33])
+(%i41) mcombine([v1,v2,v3]);
+(%o41) matrix([v11,v21,v31],[v12,v22,v32],[v13,v23,v33])
+
+*/
+
+
+/*
+  columnvector defined in package eigen.mac
+  our file here defines cvec ([a,b,c...]) as an alternative with a shorter name.
+(%i1) cL : columnvector ([aa, bb, cc, dd]);
+(%o1) columnvector([aa,bb,cc,dd])
+(%i2) load(eigen);
+(%o2) "C:/Program Files/Maxima-sbcl-5.36.1/share/maxima/5.36.1/share/matrix/eigen.mac"
+(%i3) cL : columnvector ([aa, bb, cc, dd]);
+(%o3) matrix([aa],[bb],[cc],[dd])
+(%i4) rL : transpose(cL);
+(%o4) matrix([aa,bb,cc,dd])
+(%i5) rL . cL;
+(%o5) dd^2+cc^2+bb^2+aa^2
+(%i6) cL . cL;
+(%o6) dd^2+cc^2+bb^2+aa^2
+
+*/
+/* convert column vector to a row vector  */
+
+row_vector(alist) := ( transpose ( columnvector( alist )) )$
+
+/*
+(%i7) row_vector(alist) := ( transpose ( columnvector( alist )) )$
+(%i8) aL : [a,b,c,d]$
+(%i9) cL : columnvector(aL);
+(%o9) matrix([a],[b],[c],[d])
+(%i10) rL : row_vector(aL);
+(%o10) matrix([a,b,c,d])
+(%i11) rL . cL;
+(%o11) d^2+c^2+b^2+a^2
+(%i12) cL . rL;  /* outer product */
+(%o12) matrix([a^2,a*b,a*c,a*d],[a*b,b^2,b*c,b*d],[a*c,b*c,c^2,c*d],
+              [a*d,b*d,c*d,d^2])
+			  
+*/
+
+
+
+/*
+(%i1) A : matrix( [0.5, 1], [0, 0.6] );
+(%o1) matrix([0.5,1],[0,0.6])
+(%i2) B : A;
+(%o2) matrix([0.5,1],[0,0.6])
+(%i3) f : ident(2);
+(%o3) matrix([1,0],[0,1])
+(%i4) for i thru 10 do (
+         f : f + B,
+         B : A . B /(i+1))$
+(%i5) f;
+(%o5) matrix([1.648721270687366,1.733975296074915],[0.0,1.822118800294857])
+(%i6) A . A;
+(%o6) matrix([0.25,1.1],[0.0,0.36])
+(%i7) A ^^ 2;
+(%o7) matrix([0.25,1.1],[0.0,0.36])
+*/
+
+/* 
+  exp_taylor(A,n) appropriate for a numerical matrix A
+
+     assume A is a square matrix */
+
+exp_taylor(%A, %n) := 
+block([%nr, %nc, %B, %M, numer], numer:true,
+     %nr : length(%A),
+	 %nc : length( transpose(%A)),
+	 if %nr # %nc then (
+	     print(" not a square matrix "),
+		 return()),
+     %B : %A,
+	 %M : ident(%nc),
+	 for i thru %n do (
+	     %M : %M + %B,
+		 %B : %A . %B/(i+1)),
+	 %M )$
+
+	 
+/*
+(%i1) load(mbe5);
+(%o1) "c:/work9/mbe5.mac"
+(%i2) A : matrix( [0.5, 1], [0, 0.6] );
+(%o2) matrix([0.5,1],[0,0.6])
+(%i3) exp_taylor(A,10);
+(%o3) matrix([1.6487213,1.7339753],[0.0,1.8221188])
+
+*/
+
+/* Cayley-Hamilton method  */
+
+eAt_CH(Am) :=
+block([ns,eivals,eimult,ls,rs,Mc,fv,av,avL,fL,cfL, acL  ],
+    local(CH_sector,aac),
+
+     CH_sector(nv,eival, mv) := 
+     block([z, expv,  LS, RS,leq ],        
+         expv : exp(eival*t),
+	     RS : [expv],      
+         leq : sum(aac[i]*z^i, i, 0, nv-1 ),    
+         LS : [subst (eival, z, leq = 0)],
+         if mv = 1 then return( [ LS, RS ] ),
+         for i thru mv-1 do (
+             expv : t*expv,
+	         RS : cons (expv,RS),
+             leq : diff(leq,z),	 
+	         LS : cons ( subst (eival, z, leq = 0), LS)),
+	 LS : reverse (LS),
+	 RS : reverse (RS),
+	 [ LS,  RS ]),
+	 
+    ns : length(Am),
+	[eivals,eimult] : eigenvalues(Am),
+	[ls,rs] : CH_sector(ns,eivals[1], eimult[1]),
+	
+	acL : [aac[0]],
+	for j thru ns-1 do acL : cons (aac[j], acL),
+	acL : reverse (acL),
+	
+	if length(eivals) = 1 then (		
+	     Mc : coefmatrix (ls,acL),	
+		 fv : transpose (matrix (rs)),			 
+		 av : invert (Mc) . fv, 
+		 avL : list_matrix_entries (av),	
+		 return (expand (sum(avL[j+1]*Am^^j, j, 0, ns-1)))),
+		 
+    /* case length(eivals) > 1 */	
+    fL : rs,
+    cfL : ls,
+	for j:2 thru length(eivals) do (
+	    [ls,rs] : CH_sector(ns,eivals[j], eimult[j]),
+		fL : append (fL,rs),
+		cfL : append (cfL,ls)),
+	Mc : coefmatrix (cfL, acL),
+	fv : transpose (matrix (fL)),
+    av : invert (Mc) . fv,
+	avL : list_matrix_entries (av),
+	expand (sum (avL[j+1] * A^^j, j, 0, ns-1)))$
+	
+/*
+
+2 x 2 matrix A with one eigenvalue 
+
+(%i4) load(diag);
+(%o4) "C:/Program Files/Maxima-sbcl-5.36.1/share/maxima/5.36.1/share/contrib/diag.mac"
+(%i36) A : matrix([1,4],[-1,-3]);
+(%o36) matrix([1,4],[-1,-3])
+(%i37) eigenvalues(A);
+(%o37) [[-1],[2]]
+(%i38) eAt : eAt_CH(A);
+(%o38) matrix([2*t*%e^-t+%e^-t,4*t*%e^-t],[-t*%e^-t,%e^-t-2*t*%e^-t])
+(%i39) eAt2 : expand (mat_function(exp,t*A));
+(%o39) matrix([2*t*%e^-t+%e^-t,4*t*%e^-t],[-t*%e^-t,%e^-t-2*t*%e^-t])
+(%i40) is(equal(eAt,eAt2));
+(%o40) true
+(%i41) eAt - eAt2;
+(%o41) matrix([0,0],[0,0])
+
+-----------------------------------------------------------------------------
+
+3 x 3 A example
+ lam = 2, m = 1; lam = -1, m = 2
+
+(%i12) A : matrix([0,1,1],[1,0,1],[1,1,0]);
+(%o12) matrix([0,1,1],[1,0,1],[1,1,0])
+(%i31) eigenvalues(A);
+(%o31) [[2,-1],[1,2]]
+(%i32) eAt : eAt_CH(A);
+(%o32) matrix([%e^(2*t)/3+(2*%e^-t)/3,%e^(2*t)/3-%e^-t/3,%e^(2*t)/3-%e^-t/3],
+              [%e^(2*t)/3-%e^-t/3,%e^(2*t)/3+(2*%e^-t)/3,%e^(2*t)/3-%e^-t/3],
+              [%e^(2*t)/3-%e^-t/3,%e^(2*t)/3-%e^-t/3,%e^(2*t)/3+(2*%e^-t)/3])
+(%i33) eAt2 : expand (mat_function(exp,t*A));
+(%o33) matrix([%e^(2*t)/3+(2*%e^-t)/3,%e^(2*t)/3-%e^-t/3,%e^(2*t)/3-%e^-t/3],
+              [%e^(2*t)/3-%e^-t/3,%e^(2*t)/3+(2*%e^-t)/3,%e^(2*t)/3-%e^-t/3],
+              [%e^(2*t)/3-%e^-t/3,%e^(2*t)/3-%e^-t/3,%e^(2*t)/3+(2*%e^-t)/3])
+(%i34) is(equal(eAt,eAt2));
+(%o34) true
+(%i35) eAt - eAt2;
+(%o35) matrix([0,0,0],[0,0,0],[0,0,0])
+-------------------------------------------------
+3 x 3 matrix A with three distinct eigenvalues
+
+(%i42) A : matrix([8,-5,10],[2,1,2],[-4,4,-6]);
+(%o42) matrix([8,-5,10],[2,1,2],[-4,4,-6])
+(%i43) eigenvalues(A);
+(%o43) [[-2,2,3],[1,1,1]]
+(%i44) eAt : eAt_CH(A);
+(%o44) matrix([2*%e^(3*t)-%e^-(2*t),%e^-(2*t)-%e^(3*t),
+               2*%e^(3*t)-2*%e^-(2*t)],
+              [2*%e^(3*t)-2*%e^(2*t),2*%e^(2*t)-%e^(3*t),
+               2*%e^(3*t)-2*%e^(2*t)],
+              [%e^-(2*t)-%e^(2*t),%e^(2*t)-%e^-(2*t),2*%e^-(2*t)-%e^(2*t)])
+(%i45) eAt2 : expand (mat_function(exp,t*A));
+(%o45) matrix([2*%e^(3*t)-%e^-(2*t),%e^-(2*t)-%e^(3*t),
+               2*%e^(3*t)-2*%e^-(2*t)],
+              [2*%e^(3*t)-2*%e^(2*t),2*%e^(2*t)-%e^(3*t),
+               2*%e^(3*t)-2*%e^(2*t)],
+              [%e^-(2*t)-%e^(2*t),%e^(2*t)-%e^-(2*t),2*%e^-(2*t)-%e^(2*t)])
+(%i46) is(equal(eAt,eAt2));
+(%o46) true
+(%i47) eAt - eAt2;
+(%o47) matrix([0,0,0],[0,0,0],[0,0,0])
+----------------------------------------------
+ 3 x 3 matrix with one eigenvalue
+ 
+(%i3) A : matrix([7,1,2],[0,7,1],[0,0,7]);
+(%o3) matrix([7,1,2],[0,7,1],[0,0,7])
+(%i4) jordan(A);
+(%o4) [[7,3]]
+(%i5) eigenvalues(A);
+(%o5) [[7],[3]]
+(%i6) eAt : eAt_CH(A);
+(%o6) matrix([%e^(7*t),t*%e^(7*t),(t^2*%e^(7*t))/2+2*t*%e^(7*t)],
+             [0,%e^(7*t),t*%e^(7*t)],[0,0,%e^(7*t)])
+(%i7) eAt2 : expand (mat_function(exp,t*A));
+(%o7) matrix([%e^(7*t),t*%e^(7*t),(t^2*%e^(7*t))/2+2*t*%e^(7*t)],
+             [0,%e^(7*t),t*%e^(7*t)],[0,0,%e^(7*t)])
+(%i8) is(equal(eAt,eAt2));
+(%o8) true
+*/
+	
+
+
+
+
+
+
+
+
+
+
+
+/* Fundamental Sets of Solutions and Fundamental Matrix method */
+
+/* FSS_sector(A,lambda,m) returns a list of time dependent
+    linearly independent solutions xj(t) (as matrix column vectors)
+	of the equation dxj(t)/dt = A . xj(t) for the sector eival = lambda, 
+	multiplicity = m, given the square matrix A .
+	
+	calls nullspace (B^^p) where p is the smallest positive
+	integer such that nullity(B^^p) = m, ie., the
+	dimension of Null B^^p is equal to the multiplicity
+	of the eigenvalue lambda.
+	*/
+
+FSS_sector(Amatrix,eival,multiplicity) :=
+block([Nn,In,Bb,xxL:[ ], Pp, eBbt, nspc  ],
+    local(vv),
+    Nn : length(Amatrix),
+	In : ident(Nn),
+	Bb : Amatrix - eival*In,
+	Pp : vrank_max(Bb, multiplicity),
+	eBbt : sum( (t^j/j!) * Bb^^j, j,0, Pp - 1),
+
+	nspc : nullspace(Bb^^Pp),
+	for j thru multiplicity do  vv[j] : part( nspc,j ),
+		 
+	for j thru multiplicity do (	 
+    	vv[j] : ratsimp ( exp( eival*t ) * eBbt . vv[j] ),
+       xxL : cons(vv[j], xxL)),
+	reverse (xxL))$
+	
+/* example1:
+bronson prob 9.10 matrix
+
+%i61) A : matrix([4,2,1,0,0,0],[0,4,-1,0,0,0],[0,0,4,0,0,0],[0,0,0,4,2,0],[0,0,0,0,4,0],[0,0,0,0,0,7]);
+(%o61) matrix([4,2,1,0,0,0],[0,4,-1,0,0,0],[0,0,4,0,0,0],[0,0,0,4,2,0],
+              [0,0,0,0,4,0],[0,0,0,0,0,7])
+(%i62) eigenvalues(A);
+(%o62) [[4,7],[5,1]]
+(%i98) FSS_sector(A,4,5);
+(%o98) [matrix([0],[0],[0],[54*t*%e^(4*t)],[27*%e^(4*t)],[0]),
+        matrix([0],[0],[0],[27*%e^(4*t)],[0],[0]),
+        matrix([(27*t-27*t^2)*%e^(4*t)],[-27*t*%e^(4*t)],[27*%e^(4*t)],[0],
+               [0],[0]),matrix([54*t*%e^(4*t)],[27*%e^(4*t)],[0],[0],[0],[0]),
+        matrix([27*%e^(4*t)],[0],[0],[0],[0],[0])]
+		
+(%i100) FSS_sector(A,7,1);
+ (%o100) [matrix([0],[0],[0],[0],[0],[-243*%e^(7*t)])]
+---------------------------------------------------------------------------
+Example 2:
+2 by 2 matrix
+
+(%i102) A : matrix([1,4],[-1,-3]);
+(%o102) matrix([1,4],[-1,-3])
+(%i103) eigenvalues(A);
+(%o103) [[-1],[2]]
+(%i104) FSS_sector(A,-1,2);
+ (%o104) [matrix([4*t*%e^-t],[-(2*t-1)*%e^-t]),matrix([(2*t+1)*%e^-t],
+                                                     [-t*%e^-t])]		
+*/
+
+/* 			FM_sector(A,lambda,m) is the same as FSS_sector(A,lambda,m)
+             and returns the same matrix, but prints out intermediate values
+*/			 
+			
+FM_sector(Amatrix,eival,multiplicity) :=
+block([Nn,In,Bb,xxL:[ ], Pp, eBbt, nspc  ],
+    local(vv),
+    Nn : length(Amatrix),
+	In : ident(Nn),
+	Bb : Amatrix - eival*In,
+	Pp : vrank_max(Bb, multiplicity),
+	eBbt : sum( (t^j/j!) * Bb^^j, j,0, Pp - 1),
+	print(" Pp = ", Pp),
+	print(" eBbt = ", eBbt),
+	nspc : nullspace(Bb^^Pp),
+	for j thru multiplicity do (
+	     vv[j] : part( nspc,j ),
+		 print(j, vv[j]) ),
+	for j thru multiplicity do (	 
+    	vv[j] : ratsimp ( exp( eival*t ) * eBbt . vv[j] ),
+       xxL : cons(vv[j], xxL)),
+	reverse (xxL))$			
+	
+/*  FSS(A) calls FSS_sector(A,eival,mult) for each distinct eigenvalue eival
+    and returns the list [x1[t], x2[t], ..., xn[t] ] implied by the n x n matrix A
+*/
+	
+	
+FSS(Amatrix) :=
+block( [ eivals, mvals, xjtL : [ ]  ],
+    
+	[eivals, mvals] : eigenvalues(Amatrix),
+	
+	for j thru length(eivals) do (	     
+		 xtL : FSS_sector(Amatrix,eivals[j],mvals[j]),
+		 for k thru length(xtL) do xjtL : cons(xtL[k], xjtL)),
+	reverse(xjtL))$
+	
+eAt_FSS(A) :=
+block([XXt, XX0],
+    XXt : mcombine (FSS(A)),
+	XX0 : ev (XXt, t = 0),
+	XXt . invert(XX0) )$
+	
+
+
+/*
+   gauss_jordan(Aa,BbL, XxL)  uses echelon and then normally reduces the echelon form further
+     to get not only 1's on the coefficient side diagonal but also 0's above the diagonal 1's, so
+	 the coefficient side is reduced to a unit matrix. The elements of the solution vector
+	 are then the last elements of  the reduced augented matrix rows.
+ Aa is square matrix of coefficients, BbL is a list of the elements of the  given column vector, the right hand side
+   of the  eqn Aa . x = Bb ; XxL is list of unknown variable names.  
+*/
+
+gauss_jordan(Aa,BbL, XxL) :=
+block([nrows, ncols, AaBb,CcDd, nzero_rows, ssL:[] ],
+    local(RL),   /* local hashed array  */
+	/* print(" Aa = ",Aa),
+	print(" BbL = ",BbL),
+	*/
+     nrows : length(Aa),  /* coefficient matrix  */
+	 /* print( " nrows = ",nrows), */
+	 ncols : length( transpose(Aa)),
+	 /* print ( " ncols = ", ncols), */
+	 
+	 if nrows # ncols then (
+	    print(" need square matrix Aa "),
+		return(done)),
+     if length(BbL) # nrows then (
+         print(" length of BbL should be equal to number of rows of Aa"),
+         return(done)),
+	
+    AaBb : addcol(Aa, BbL),   /* augmented matrix  */
+	if rank(Aa) # rank(AaBb) then (
+	    print(" inconsistent problem: no solution "),
+		return(done)),
+	
+	CcDd : echelon(AaBb),
+	/* print( "  CcDd = ", CcDd), */		
+	
+/*	nzero_rows : NZero_rows(CcDd),
+	/* print(" nzero_rows = " , nzero_rows), */
+	
+	if nzero_rows = nrows then (
+	     print(" all zero rows: no solution "),
+		 return(done)),
+*/
+		 
+/*    if nzero_rows > 0 then (
+        print(" solution depends on ", nzero_rows," arbitrary parameters"),
+        return( solve_aug(CcDd, XxL))),
+*/		
+		
+	if rank(Aa) < length(Aa) then (
+        print(" solution depends on ", length(Aa) - rank(Aa)," arbitrary parameter(s)"),
+		print(" transfer to solve "),
+        return( solve_aug(CcDd, XxL))),
+		
+    /*  case:  rank(Aa) = length(Aa) = number of unknowns:
+     	assume we have 1's on the diagonal and no 0's on the
+		diagonal, replace elements above 1's with 0's  		*/		
+		 
+    for j thru nrows do   RL[j] : lme (row (CcDd, j)),
+	/* print(" rows  of  CcDd "), */
+	/* for j thru nrows do print(j, RL[j]),  */
+	/********************************/
+	for j:2 thru nrows do 
+	      for k thru (j-1) do RL[k] : RL[k]  - RL[k][j] * RL[j],
+		  
+     /* collect last element of rows in a list ssL */
+	 for j thru nrows do  ssL : cons( last(RL[j]), ssL),
+	 ssL : reverse (ssL),
+	 map ("=", XxL, ssL))$
+
+
+/*  2 x 2 example:
+
+(%i22) A : matrix([1,2],[4,9]);
+(%o22) matrix([1,2],[4,9])
+(%i23) rank(A);
+(%o23) 2
+(%i24) Ab : addcol(A,[3,7]);
+(%o24) matrix([1,2,3],[4,9,7])
+(%i25) rank(Ab);
+(%o25) 2
+(%i26) Cd : echelon(Ab);
+(%o26) matrix([1,2,3],[0,1,-5])
+(%i27) solve_aug(Cd,[x1,x2]);
+(%o27) [x1 = 13,x2 = -5]
+
+(%i38) gauss_jordan(A, [3,7], [x1,x2]);
+ (%o38) [x1 = 13,x2 = -5]
+
+4 x 4 example
+
+(%i45) A : matrix([1,1,2,0],[2,-1,0,1],[1,-1,-1,-2],[2,-1,2,-1]);
+(%o45) matrix([1,1,2,0],[2,-1,0,1],[1,-1,-1,-2],[2,-1,2,-1])
+(%i46) gauss_jordan(A,[1,-2,4,0], [x1,x2,x3,x4]);
+(%o46) [x1 = 1,x2 = 2,x3 = -1,x4 = -2]
+(%i47) solns : map('rhs,%);
+(%o47) [1,2,-1,-2]
+(%i48) xcol : cvec(solns);
+(%o48) matrix([1],[2],[-1],[-2])
+(%i49) A . xcol;
+(%o49) matrix([1],[-2],[4],[0])
+
+3 x 3 example
+
+(%i5) A : matrix([0,4,1],[2,6,-2],[4,8,-5]);
+(%o5) matrix([0,4,1],[2,6,-2],[4,8,-5])
+(%i6) gauss_jordan(A,[2,3,4], [x1,x2,x3]);
+ solution depends on  1  arbitrary parameter(s) 
+ transfer to solve  
+
+solve: dependent equations eliminated: (3)
+(%o6) [x1 = (7*%r2)/4,x2 = -(%r2-2)/4,x3 = %r2]
+
+*/	 
+	 
+	 
+/*******************************************************/
+
+
+/*  NZero_rows(Zz) returns the number of zero rows in
+   the augmented matrix Zz of size (m, m+1)  */
+
+NZero_rows(Zz) := 
+block ([Zero_row,Num_zero:0 ],   
+    Zero_row : lme (zeromatrix (1, length(Zz) + 1)),		
+   for j thru length(Zz)  do if  lme (row (Zz, j)) = Zero_row then Num_zero : Num_zero + 1,
+   Num_zero)$
+   
+/*
+(%i24) NZero_rows(matrix([0,0,0,0],[0,0,0,0],[3,4,5,b3]));
+(%o24) 2
+(%i25) NZero_rows( matrix([1,2,3,b1],[2,3,4,b2],[3,4,5,b3]) );
+(%o25) 0
+
+*/
+
+/*  NZero_rows1(Zz) returns the number of zero rows in
+   the  matrix square matrix Zz  */
+
+NZero_rows1(Zz) := 
+block ([Zero_row,Num_zero:0 ],   
+    Zero_row : lme (zeromatrix (1, length(Zz) )),		
+   for j thru length(Zz)  do if  lme (row (Zz, j)) = Zero_row then Num_zero : Num_zero + 1,
+   Num_zero)$
+
+/* rinverse(M) uses echelon and elementary row operations to derive inverse of M.
+    The function mat_unblocker is from linearalgebra.mac, which loads automatically */
+
+rinverse(M) := 
+block([nrows,ncols, MI , M_inv ],   
+      local(RL),	  /* local hashed array */
+	 nrows : length(M), 
+	 ncols : length( transpose(M)),
+	 
+	 if nrows # ncols then (
+	    print(" need square matrix M "),
+		return(done)), 
+		
+	 if rank(M) < nrows then (
+	     print(" the inverse does not exist"),
+		 return(done)),			
+			
+     MI : mat_unblocker( matrix ( [ M, ident(nrows) ] ) ),
+     MI : echelon (MI),
+     		 
+     for j thru nrows do   RL[j] : lme (row (MI, j)),
+	
+     /* create 0's above 1's   */	
+	for j:2 thru nrows do 
+	      for k thru (j - 1) do RL[k] : RL[k]  - RL[k][j] * RL[j],	 		  
+	 
+	/* right hand of partitioned matrix should now be M_inverse */
+	
+	for j thru nrows do RL[j] : rest ( RL[j], ncols ),	
+    	
+     M_inv : matrix(RL[1]),
+	 for j:2 thru nrows do M_inv : addrow(M_inv, RL[j] ),
+	 M_inv)$
+	 
+/* set of functions to construct the matrix exponential of a k x k  Jordan block
+    matrix J_k(lambda) corresponding to a specific eigenvalue  (bottom up programming).
+*/
+	
+Jrow(k) := 
+block( [uk,Lk:[] ],
+    uk : taylor ( exp(t), t, 0, k-1 ),
+    for j thru k do Lk : cons (part (uk,j), Lk),
+    ev(Lk, t = 1)   )$
+
+dorow(k,r) := 
+  block([dL ],
+     dL : Jrow(k-r+1),
+     for i thru r-1 do  dL :  cons(0, dL),
+	 dL)$
+
+Mexp_block(kk) := 
+block( [Mm],
+    Mm : matrix (dorow (kk,1)),
+	for rr:2 thru kk do Mm : addrow(Mm,dorow(kk,rr)),
+	Mm)$
+
+/*
+(%i2) Mexp_block(1);
+(%o2) matrix([1])
+(%i43) Mexp_block(2);
+(%o43) matrix([1,1],[0,1])
+(%i44) Mexp_block(3);
+(%o44) matrix([1,1,1/2],[0,1,1],[0,0,1])
+(%i45) Mexp_block(4);
+(%o45) matrix([1,1,1/2,1/6],[0,1,1,1/2],[0,0,1,1],[0,0,0,1])
+*/
+	
+	
+	
+	
+/*  expJ(k ,lambda)
+  
+  constructs k x k matrix exp (JA(k,lambda) ), defined as
+  ident(k) + JA(k,lambda) + (1/2)*JA(k,lambda)^^2 + (1/6)*JA(k,lambda)^^3 + ...,
+  where JA(k,lambda) is the the k x k Jordan block matrix J_k(lambda)
+    
+   JA(1,a) = J_1(a) =  a,
+   JA(2,a) = J_2(a) =  matrix([a,1],[0,a]),
+   JA(3,a) = J_3(a) =  matrix ([a,1,0],[0,a,1],[0,0,a])
+   etc
+*/  
+	
+expJ(kv,eival) := exp(eival)*Mexp_block(kv)$
+
+/* 
+
+(%i47) expJ(2,a);
+(%o47) matrix([%e^a,%e^a],[0,%e^a])
+(%i48) expJ(3,a);
+(%o48) matrix([%e^a,%e^a,%e^a/2],[0,%e^a,%e^a],[0,0,%e^a])
+(%i49) expJ(4,a);
+(%o49) matrix([%e^a,%e^a,%e^a/2,%e^a/6],[0,%e^a,%e^a,%e^a/2],[0,0,%e^a,%e^a],
+              [0,0,0,%e^a])
+
+*/			 
+
+/*  eAt_jordan(A) computes the matrix function exp(t*A) via a route similar to
+    diag.mac (  mat_function(exp,t*A)   ), but the code is more transparent.
+	calls expJ(k,lambda), modal_matrix, jordan, and diag.
+	
+	exp(t*A) = ident(length(A)) + t*A + (t*A)^^2 / 2 + (t*A)^^3 / 6 + ...
+*/	
+
+eAt_jordan(Amatrix) :=
+block([Bb,jBnL,jnL,eivalB,chainsL, exp_JBcL:[],MB],
+    Bb : t*Amatrix,
+	jBnL : jordan(Bb),
+	for j thru length(jBnL) do (
+	     jnL : jBnL[j],
+		 eivalB : jnL[1],
+		 chainsL : rest(jnL),
+		 for jj thru length(chainsL) do 
+		     exp_JBcL : cons (expJ (chainsL[jj],eivalB), exp_JBcL)),
+	exp_JBcL : reverse (exp_JBcL),
+	MB : modal_matrix (Bb),
+	expand ( MB . diag ( exp_JBcL ) . invert (MB)))$
+	
+	
+	 
+	 
+/* 
+  note:   diag.mac loads eigen.mac 
+*/
+
+load("linearalgebra.mac")$   
+load("diag.mac")$
+
+
+fpprintprec:8$
+ratprint:false$
+display2d:false$

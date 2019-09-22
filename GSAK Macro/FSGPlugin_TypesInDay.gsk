@@ -1,0 +1,171 @@
+#*******************************************
+# MacVersion = 1.1
+# MacDescription = Generates a table of the max finds of each cache type in a day
+# MacAuthor = Lignumaqua
+# MacFileName = FSGPlugin_TypesInDay.gsk
+#*******************************************
+
+# 1-6-13 Version 1.0
+# 1-7-13 Version 1.1 - Sorted, Number of Times found
+
+#*******************************************
+# Note that this is a FindStatGen Plugin
+# and can only be run through that macro
+# To use, add this line to one of your Notes sections
+# and enable that Section
+# (Without the preceding #)
+#
+# <plugin>FSGPlugin_TypesInDay</plugin>
+#
+#*******************************************
+
+#TIMER Status=On Msg=No
+
+IF $_MacroLevel = 1
+	RETURN msg=This macro is a FindStatGen plug-in and cannot be run directly.
+ENDIF
+
+GOSUB name=TypeByDay
+
+RETURN
+
+Declare Var=$pluginout Type=String
+
+
+BEGINSUB Name=TypeByDay
+	# Initialise Section variables
+
+	$text = $LangStatus24
+	SHOWSTATUS msg="$text" Width=350
+
+	$Types = "A,B,C,E,L,M,R,T,U,V,W,Z,X,I,F,H,D,P,O"
+	$Typenums = "9,5,13,6,12,3,137,2,8,4,11,453,2134,1858,3653,3773,3774,4738,other"
+	# 10 year is 3653, HQ is 3773, Lost and Found is 3774, O is other, P is Block Party
+	#TypeImageBase = "http://www.geocaching.com/images/wpttypes/sm/???.gif"
+	$Names = "Project Ape,Letterbox,CITO,Event,Locationless,Multi,Earth,Traditional,Mystery,Virtual,Webcam,Mega Event,GPS Adventures Exhibit,Wherigo,10 Years! Event,Groundspeak HQ,Lost and Found Celebration,Block Party,Other"
+	$GCIDs = "tx=2555690d-b2bc-4b55-b5ac-0cb704c0b768,tx=4bdd8fb2-d7bc-453f-a9c5-968563b15d24,tx=57150806-bc1a-42d6-9cf0-538d171a2d22,tx=69eb8534-b718-4b35-ae3c-a856a55b0874,"
+	$GCIDs = $GCIDs + "tx=8f6dd7bc-ff39-4997-bd2e-225a0d2adf9d,tx=a5f6d0ad-d2f2-4011-8c14-940a9ebf3c74,tx=c66f5cf3-9523-4549-b8dd-759cd2f18db8,tx=32bc9333-5e52-4957-b0f6-5a2c8fc7b257,"
+	$GCIDs = $GCIDs + "tx=40861821-1835-4e11-b666-8d41064d03fe,tx=294d4360-ac86-4c83-84dd-8113ef678d7e,tx=31d2ae3c-c358-4b5f-8dcd-2185bf472d3d,tx=69eb8535-b718-4b35-ae3c-a856a55b0874,"
+	$GCIDs = $GCIDs + "tx=72e69af2-7986-4990-afd9-bc16cbbb4ce3,tx=0544fa55-772d-4e5c-96a9-36a51ebcf5c9,tx=3ea6533d-bb52-42fe-b2d2-79a3424d4728,tx=416f2494-dc17-4b6a-9bab-1a29dd292d8c,tx=af820035-787a-47af-b52b-becc8b0c0c88,tx=bc2f3df2-1aab-4601-b2ff-b5091f6c02e3,other"
+	$GCIDPrefix = "<a href='http://www.geocaching.com/seek/nearest.aspx?"
+	$GCIDSuffix = "&ul=" + HttpEncode($user) + "'>"
+
+
+	#Make best guess at OwnerID
+	$_sql = "SELECT lOwnerid FROM (SELECT lOwnerid, Count(lOwnerID) AS c FROM Allfinds GROUP BY lownerid ORDER BY c DESC LIMIT 1)"
+	$OwnerID = Sqlite("sql",$_sql)
+
+	$pluginout = "<table width='$maxtablewidth' style='text-align: left;'>" + $CR
+	# Column Heads
+	$text1 = "<b></b>"
+	$text2 = "<b>Found in a Day</b>"
+	$text3 = "<b>Date</b>"
+	$text4 = "<b>Number of Times</b>"
+
+
+	$pluginout = $pluginout + "<tr>" + "$CR" + "<td style='$stTab2cHead'>" + $CR
+	$pluginout = $pluginout + "$text1</td>" + $CR
+	$pluginout = $pluginout + "<td style='$stTab2cHead'>$text2</td>" + $CR
+	$pluginout = $pluginout + "<td style='$stTab2cHead'>$text3</td>" + $CR
+	$pluginout = $pluginout + "<td style='$stTab2cHead'>$text4</td>" + $CR + "</tr>" + $CR
+
+
+
+	$NumItems = RegExCount(",",$Types )
+	$index = 0
+	$maxnum =0
+	$result = ""
+	WHILE $index <= $NumItems
+		$index = $index + 1
+		$thistype	= Extract($Types, "," , $Index)
+		$text	= Extract($Names, "," , $Index)
+		$text1 = $text
+		$GCID = Extract($GCIDs, ",", $Index)
+		$text2	= Extract($Typenums, "," , $Index)
+		BEGINCASE
+		CASE $thistype = "Y"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/wm16.gif' />"
+		CASE $thistype = "L"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/1216.gif' />"
+		CASE $thistype = "O"
+			$TypeImage = "<img align='top' src='http://gsak.net/stats/othersmall.gif' />"
+		OTHERWISE
+			$TypeImage = "<img align='top' src='http://www.geocaching.com/images/wpttypes/sm/" + $text2 + ".gif' />"
+		ENDCASE
+
+		#$text1 = $TypeImage + " " + "<a href='http://www.geocaching.com/mark/nearest.aspx?a=" + $OwnerID + "'>" + $text + "</a>"
+		$text1 = $TypeImage + " " + $GCIDPrefix + $GCID + $GCIDSuffix + $text + "</a>"
+
+		$_sql = "SELECT count(Code) as count, foundbymedate from AllFinds WHERE CacheType='$thistype' group by foundbymedate order by count desc limit 1"
+
+		$tmpS = Sqlite("sql",$_sql)
+		IF $tmpS <> ""
+			$text2 = Extract($tmpS,";",1)
+
+			$text3 = DateFormat(SqlToDate(Extract($tmpS,";",2)))
+
+			$_sql = "SELECT count(c) from (select count(Code) as c from AllFinds WHERE CacheType='$thistype' group by foundbymedate having c = $text2)"
+			$text4 = Sqlite("sql",$_sql)
+
+			$text5 = "<tr>" + "$CR" + "<td style='$st2c1'>" + $CR
+			$text5 = $text5 + "$text1</td>" + $CR
+			$text5 = $text5 + "<td style='$st2c2'>$text2</td>" + $CR
+			$text5 = $text5 + "<td style='$st2c2'>$text3</td>" + $CR
+			$text5 = $text5 + "<td style='$st2c2'>$text4</td>" + $CR + "</tr>" + $CR
+
+			$result = $result + "$text5,$text2%*%"
+		ENDIF
+	ENDWHILE
+
+
+
+	GOSUB name=SortResult
+
+
+
+
+	$NumItems = RegExCount("%*%",$result)
+	$index = 0
+	WHILE $index <= $NumItems
+		$index = $index + 1
+		$pluginout = $pluginout + Extract(Extract($result,"%*%",$index),",",1)
+	ENDWHILE
+	$pluginout = $pluginout + "</table>" + $CR + "<br />"
+
+	$p_FSGData = $pluginout
+
+ENDSUB #Type
+
+BEGINSUB Name=SortResult
+	$numitems = RegExCount("%*%",$result)
+	$Sorted   = ""
+	WHILE $numitems > 0
+		#find largest
+		$index   = 1
+		$max     = 0
+		$maxitem = 1
+		$tmpS    = ""
+		WHILE $index<=$numitems
+			$key = Val(Extract(Extract($result,"%*%",$index),",",2))
+			IF $key > $max
+				$max = $key
+				$maxitem = $index
+			ENDIF
+			$index=$index+1
+		ENDWHILE
+		$Sorted = $Sorted + Extract($result,"%*%",$maxitem) + "%*%"
+		$index = 1
+		WHILE $index < $maxitem
+			$tmpS = $tmpS + Extract($result,"%*%",$index) + "%*%"
+			$index=$index+1
+		ENDWHILE
+		$index = $maxitem + 1
+		WHILE $index <= $numitems
+			$tmpS = $tmpS + Extract($result,"%*%",$index) + "%*%"
+			$index=$index+1
+		ENDWHILE
+		$result = $tmpS
+		$numitems = $numitems - 1
+	ENDWHILE
+	$result = $Sorted
+ENDSUB #SortResult

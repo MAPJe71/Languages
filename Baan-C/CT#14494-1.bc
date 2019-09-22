@@ -1,0 +1,24 @@
+|
+| https://notepad-plus-plus.org/community/topic/14494/functionlist-classrange-question
+|
+
+declaration:                | a section     --> branch
+    func2(10.09, "STR")
+
+before.program:             | a section     --> branch
+    func1(10)
+
+functions:                  | a section     --> branch
+
+function func1(long var1)   | a function    --> leave
+{
+    | Do Something 1.
+}
+
+function string func2(      | a function    --> leave
+            double var2,
+            string var2_1
+            )
+{
+    | Do Something 2.
+}

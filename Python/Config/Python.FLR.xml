@@ -1,0 +1,12 @@
+<Language name="Python" imagelistpath="">
+    <CommList param1="#" param2="" />
+    <Group name="GlobalFunction" subgroup="Function" icon="0" child="0" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^def\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="" sep="" />
+    </Group>
+    <Group name="Class" subgroup="Function" icon="0" child="0" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^class\s+" regexfunc="[\w_]+" regexend="" bodybegin="" bodyend="" sep="" />
+    </Group>
+    <Group name="Function" subgroup="" icon="0" child="0" autoexp="4" matchcase="1" fendtobbeg="" bbegtobend="" keywords="">
+        <Rules regexbeg="^[\s\t]+def\s+" regexfunc="[\w_]+" regexend="" bodybegin=":" bodyend="$" sep="" />
+    </Group>
+</Language>

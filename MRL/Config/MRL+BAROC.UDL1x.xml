@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="MRL" ext="mrl baroc">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="yes" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&apos;&quot;0&apos;&quot;0</Keywords>
+            <Keywords name="Folder+"></Keywords>
+            <Keywords name="Folder-"></Keywords>
+            <Keywords name="Operators">- ! &amp; ( ) * , / : ; [ \ ] ^ { | } + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 2 0#</Keywords>
+            <Keywords name="Words1">abs acos action_requester action_return add_to_list asin atan atan2 cellinfo clear_manual_status concat cond cos drop_new decr exp execute float generate_event gcd get_env get_external int inttostring incr listappend listdelete len log list disjoint listgetelt list_get_slot listlen listintersect listmember listremdup listsubstract listunion listwalk log10 lower mapslots max match_regex min new_data next ntadd ntcnt ntget ntset opadd opcnt opget opget_action opget_args opget_author opget_time opset perform pointertostring pow prev random real realtostring rem_from_list remove_data reset_default round set_manual_status send_to send_to_ext set_timer set_timer_at sign sin sqrt str_to_time_stamp strextract string stringtoint stringtopointer stringtoreal strip strlen strmatch strnpart strpart strtolist substring substring tan tf_active tf_current_end tf_current_interval tf_current_start tf_duration tf_next_end tf_next_interval tf_next_start tf_prev_end tf_prev_interval tf_prev_start time_extract time_stamp time_stamp_to_cim time_stamp_to_str tolowercase touppercase trunc upper unset_cause </Keywords>
+            <Keywords name="Words2">refine filter regulate new correlate execute timer threshold propagate delete DEFINES ISA END collector key read_only parse representation hidden default dup_detect where using using_policy triggers updates duplicate AND OR NOT delete when within if then else hold send unless with matches outside subclass_of superclass_of ip_matches ip_greater_or_equals ip_smaller_or_equals contains_one_of equals CatchAll STRING ENUM INTEGER REAL POINTER STATUS SEVERITY LIST_OF MC_EV_CLASS MC_DATA_CLASS MC_INTERFACE OPEN ACK ASSIGNED CLOSED BLACKOUT UNKNOWN OK INFO WARNING MINOR MAJOR CRITICAL</Keywords>
+            <Keywords name="Words3">$</Keywords>
+            <Keywords name="Words4"></Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="FF0000" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="FF0000" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="FF6600" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF0000" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="00FFFF" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="FF0000" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="00FF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="00FF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF6600" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="FFCC00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="00FF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="00FF00" bgColor="000000" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="00FF00" bgColor="000000" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

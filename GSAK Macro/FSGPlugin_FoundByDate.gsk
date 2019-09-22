@@ -1,0 +1,386 @@
+#**************************************************************************************
+# MacDescription = FSG Plugin - Displays the well known "Found by Date" stats for just one year
+# MacFileName = FSGPlugin_FoundByDate.gsk
+# MacAuthor = hulmgulm
+# MacVersion=1.0.2
+# MacUrl=http://gsak.net/board/index.php?showtopic=23436
+#**************************************************************************************
+# Usage:
+#   Add the following code to a FindStatsGen annotation section:
+#   <plugin>FSGPlugin_FoundByDate</plugin>
+#   to display the stats for the current year
+#   or
+#   <plugin>FSGPlugin_FoundByDate?year=<YYYY></plugin>
+#   to display the stats for a predefined year
+#
+#   As this plugin does not generate a head line, you might want to add 
+#   <subhead>This is a list</subhead>
+#   to the annotation too.
+#
+# Parameters:
+# *	Year
+#   The year to select (current year if empty or missing)
+#**************************************************************************************
+
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_FoundByDate[?AdditionalParameters]</plugin>"
+ENDIF
+
+GOSUB Name=DeclareVariables
+
+# initialize parameter variables
+$selectedyear = Left(DateToSql($_Today),4)
+
+# parse parameters
+if $_MacroParms <> ""
+	$count = RegExCount("&",$_MacroParms)
+	$i = 1
+	while $i <= $count+1
+		$Text1 = extract($_MacroParms,"&",$i)
+		$Text2 = upper($Text1)
+		
+		if (AT("YEAR", $Text2) <> 0)
+			$Text2 = extract($Text1,"=",2)
+			if $Text2 <> ""
+				$selectedyear = AllTrim($Text2)
+			else
+				#RETURN msg="$CRLangNameError $_CrLf $Text1"
+			endif
+		endif
+
+		$i = $i+1
+	endwhile
+endif
+
+$pluginoutput = addstr(1,"clear")
+
+SHOWSTATUS msg="Generating Found by Date for $selectedyear ..." Width=350
+
+GOSUB Name=FindsByFoundDate
+
+$p_FSGData = addstr(1,"get")
+
+BEGINSUB Name=FindsByFoundDate
+	$_sql = "DROP TABLE IF EXISTS FindsByDay_2"
+	$status = Sqlite("sql",$_sql)
+
+	# Initialise Variables
+	$day = 1
+	$month = 1
+	$maxcellF = 0                              # maximum value of found cell
+	$numcombF = 0                              # number of found Month/Day Combinations
+	$monthday = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,;"
+
+	$_sql = "CREATE table FindsByDay_2 as Select cast(strftime('%m',lDate) as integer) as Month, cast(strftime('%d',lDate) as integer) as Day, Count(code) as Count, Sum(FTF) as FTF from AllFinds where FoundByMeDate like '$selectedyear-%' group by strftime('%m',lDate), strftime('%d',lDate)"
+	$status = Sqlite("sql",$_sql)
+
+	WHILE $month <= 12
+		WHILE $day <= 31
+			$_sql = "SELECT Count from FindsByDay_2 where Month=$month AND Day=$day"
+			$num = Val(Sqlite("sql",$_sql))
+			$_sql = "SELECT CASE WHEN FTF>0 THEN 'F' ELSE '' END from FindsByDay_2 where Month=$month AND Day=$day"
+			$tmpS = Sqlite("sql",$_sql)
+			$monthday = $monthday  + "$num" + $tmpS + ","
+			IF $num > 0  # found cell
+				$numcombF = $numcombF + 1
+  			IF $num > $maxcellF
+  				$maxcellF = $num
+  			ENDIF
+			ENDIF
+			$day = $day + 1
+		ENDWHILE
+		$monthday = $monthday + ";"
+		$month = $month + 1
+		$day  = 1
+	ENDWHILE
+	
+	# Max month count
+	$_sql = "select Sum(Count) as sum from FindsByDay_2 group by Month order by sum desc limit 1"
+	$max = Val(Sqlite("sql",$_sql))
+	
+	# Max Day count
+	$_sql = "select Sum(Count) as sum from FindsByDay_2 group by Day order by sum desc limit 1"
+	$maxitem = Val(Sqlite("sql",$_sql))
+	
+	$colspan = 1
+
+	$pluginoutput = AddStr(1,"add","<table  cellspacing ='1'cellpadding = '0' width='$maxtablewidth' style='text-align: left; font-size: 9px;'>" + $CR)
+
+	$cellwidth = Int($maxtablewidth/33)
+	$headerwidth = $maxtablewidth - (32 * $cellwidth)
+
+	# Go through the data, one record at a time
+	$indexd = 0
+	$indext = 0
+	$day  = 1
+	$month = 1
+	
+	# Title row
+	$pluginoutput = AddStr(1,"add","<tr><td height='16' style='$stTab2cHead' colspan='32' align='center'><B>$selectedyear</B></td></tr>" + $CR)
+	$pluginoutput = AddStr(1,"add","<tr>" + $CR)
+
+	$pluginoutput = AddStr(1,"add","<td height='16' style='$st2c1'></td>")
+	# Get one data line
+	$data = Extract($monthday, ";" , $indexd)
+	WHILE $indext < 31
+		$indext = $indext + 1
+		# Get one result
+		$text = Extract($data, ",", $indext)
+		$tmpB = FALSE
+		$_sql = "select count(distinct substr(ldate,6)) from allfinds where cast (substr(ldate,9) as integer) = $text and ldate like '$selectedyear-%'"
+		$tmpN = Val(Sqlite("sql",$_sql))
+		BEGINCASE
+			CASE ($indext <= 29)
+				$tmpB = $tmpN = 12
+			CASE ($indext = 30)
+				$tmpB = $tmpN = 11
+			CASE ($indext = 31)
+				$tmpB = $tmpN = 7
+			ENDCASE
+		IF $tmpB
+			$pluginoutput = AddStr(1,"add","<td style='$st2c1' width='$cellwidth' align='center'><B><font color='green'>$text</font></B></td>" + $CR)
+		ELSE
+			$pluginoutput = AddStr(1,"add","<td style='$st2c1' width='$cellwidth' align='center'><B>$text</B></td>" + $CR)
+		ENDIF
+	ENDWHILE
+	
+	# Row Total
+	$pluginoutput = AddStr(1,"add","<td width='$cellwidth'></td>" + $CR)
+	$pluginoutput = AddStr(1,"add","</tr>" + $CR)
+	
+	# Month language string
+	$tmpS = $Lang13 + ";" + $Lang14 + ";" + $Lang15 + ";" + $Lang16 + ";" + $Lang17 + ";" + $Lang18 + ";" + $Lang19 + ";" + $Lang20 + ";" + $Lang21 + ";" + $Lang22 + ";" + $Lang23 + ";" + $Lang24
+
+	$indext = 0
+	$indexd = 1
+
+	WHILE $indexd < 13
+		$indexd = $indexd + 1
+		# Get one data line
+		$data = Extract($monthday, ";" , $indexd)
+		#$tindexd = replace(",",".",numtoStr($month),true)
+		$tindexd = Extract($tmpS,";",$month)
+		
+		$tmpB = FALSE
+		$_sql = "select count(distinct substr(ldate,9)) from allfinds where cast (substr(ldate,6,2) as integer) = $month and ldate like '$selectedyear-%'"
+		$tmpN = Val(Sqlite("sql",$_sql))
+		BEGINCASE
+			CASE ($month=2)
+				$tmpB = $tmpN = 29
+			CASE ($month=4 OR $month=6 OR $month = 9 OR $month=11)
+				$tmpB = $tmpN = 30
+			OTHERWISE
+				$tmpB = $tmpN = 31
+			ENDCASE
+		IF $tmpB
+			$pluginoutput = AddStr(1,"add","<tr><td height='16' style='$st2c1' width='$cellwidth'><b><font color='green'> $tindexd</font></b></td>" + $CR)
+		ELSE
+			$pluginoutput = AddStr(1,"add","<tr><td height='16' style='$st2c1' width='$cellwidth'><b> $tindexd</b></td>" + $CR)
+		ENDIF
+		$tmpN = 0
+		WHILE $indext < 31
+			$indext = $indext + 1
+			# Get one result
+			$text = Extract($data, ",", $indext)
+			# Set $x > 0 to shade green showing has FTF on this date
+			$x = At("F",$text)
+			$text = Extract($text,"F", 1)			
+			$num = Val($text)
+			IF ($indexd = 3 AND $indext > 29) OR ($indexd = 10 AND $indext > 30) OR ($indexd = 5 AND $indext > 30) OR ($indexd = 7 AND $indext > 30) OR ($indexd = 12 AND $indext > 30)
+				$Skipflag = TRUE
+			ELSE
+				$Skipflag = FALSE
+			ENDIF
+			$tmpN = $tmpN + $num
+			GOSUB Name=OutputFoundChartLine
+			$day = $day + 1
+		ENDWHILE
+				
+		# Output Row Total
+		$num = $tmpN
+		$text = NumToStr($num)
+		# Max count?
+		
+		IF $num >= $max
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		
+		$pluginoutput = AddStr(1,"add","<td style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$indext = 0
+		$pluginoutput = AddStr(1,"add","</tr>" + $CR)
+		$month = $month + 1
+		$day  = 1
+	ENDWHILE
+
+	$pluginoutput = AddStr(1,"add","<tr><td></td>" + $CR)
+	$day  = 1
+	# Column Totals
+	WHILE $day <= 31
+		$_sql = "SELECT sum(Count) from FindsByDay_2 where Day=$day"
+  	$num = Val(Sqlite("sql",$_sql))
+  	$text = NumToStr($num)
+  	
+  	IF $num >= $maxitem
+			$Bold = "<B>"
+			$boldoff = "</B>"
+			$cellstyle = $stTab2cHead + " color: red;"
+		ELSE
+			$bold = ""
+			$boldoff = ""
+			$cellstyle = $stTab2cHead
+		ENDIF
+		
+		$pluginoutput = AddStr(1,"add","<td height='16' style='$cellstyle' width='$cellwidth' align='center'>$bold<i>$text</i>$boldoff</td>" + $CR)
+		$day = $day + 1
+	ENDWHILE
+
+	$pluginoutput = AddStr(1,"add","</table>" + $CR + "<br />")
+	
+	$tmpN = Int(1000*$numcombF/366)/10
+
+	# Found statistics
+  $pluginoutput = AddStr(1,"add","<i><b>$numcombF</b> $Lang155 <b>366</b> ($tmpN" + "%) </i>" + $CR)
+  
+  # Number of FTF days
+  
+  $_sql = "SELECT count(*) from findsbyday_2 where FTF"
+  $numcombF = Val(Sqlite("sql",$_sql))
+  $tmpN = Int(1000*$numcombF/366)/10
+  $pluginoutput = AddStr(1,"add","<br/><i><b>$numcombF</b> FTF $Lang155 <b>366</b> ($tmpN" + "%) </i>" + $CR)
+    
+  $pluginoutput = AddStr(1,"add","<br/><span style='$stSmall'><i>$Lang177</i></span>" + $CR)
+	
+ENDSUB # Name=FindsByFoundDate
+
+BEGINSUB Name=OutputFoundChartLine
+	$bold = ""
+	$boldoff = ""
+	
+  BEGINCASE
+  CASE $Skipflag
+  	$cellstyle = $st2c1
+  	$text = "X"
+	CASE $num > 0  # number of found caches
+		
+		IF $UseHeatMap
+			$heatnum = $num
+	  	$heatmax = $maxcellF
+	  	GOSUB Name=GetHeatColor
+	  ENDIF
+	  
+	  IF $num = $maxcellF
+	  	# Check if also a FTF this date
+	  	IF $x > 0
+	  		$cellstyle = $stDiffTerrhi
+	  		$cellstyle = Replace("#B00000","url(" +$Imageurl + "foundftf.gif)",$cellstyle)
+	  	ELSE
+	  		IF $UseHeatMap
+	  			$cellstyle = $heatstyle
+	  		ELSE
+		  		$cellstyle = $stDiffTerrhi
+		  	ENDIF
+			ENDIF
+		  $bold = "<b>"
+			$boldoff = "</b>"
+	  ELSE
+	  	# Check if have any FTFs this date - $x > 0
+	  	IF $UseHeatMap
+	  			$cellstyle = $heatstyle
+	  	ELSE
+		  		$cellstyle = $stDiffTerr
+		  ENDIF
+	  	IF $x > 0
+	  		IF $UseHeatMap
+	  			$cellstyle = $cellstyle + "font-style:italic;font-weight:bold;"
+	  			$cellstyle = Replace("color: #FFFFFF;","color: #000000;",$cellstyle)
+	  		ELSE
+	  			$cellstyle = $cellstyle + "font-style:italic;font-weight:bold;"
+		  		$cellstyle = Replace("005BB7","488E48",$cellstyle)
+		  	ENDIF
+		  ENDIF
+			
+		ENDIF
+	OTHERWISE
+		$cellstyle = $stTab2cHead
+		$text = " "
+	ENDCASE
+	IF $indext = 1
+		$pluginoutput = AddStr(1,"add","    <td style='$cellstyle' width='$cellwidth' align='center'>$bold$text$boldoff</td>" + $CR)
+	ELSE
+		$pluginoutput = AddStr(1,"add","    <td style='$cellstyle' align='center'>$bold$text$boldoff</td>" + $CR)
+	ENDIF
+ENDSUB
+
+BEGINSUB Name=GetHeatColor
+	$begRed = 20
+	$redChange = 180
+	$begGreen = 50
+	$greenChange = 150
+	$begBlue = 0
+	$blueChange = 0
+
+	IF $heatmax > 0 AND $heatnum > 0
+		# Use log scale to enhance color differences
+		IF $heatmax = 1 AND $heatnum = 1
+			$heatx = 1
+		ELSE
+			$heatx = Log($heatmax,$heatnum)
+		ENDIF
+		
+		$heaty = 1-($heatnum/$heatmax)
+		# Scale so one color is always at full intensity
+		IF $heatx >= $heaty
+			$heaty = $heaty/$heatx
+			$heatx = 1
+		ELSE
+			$heatx = $heatx/$heaty
+			$heaty = 1
+		ENDIF
+	ELSE
+		$heatx = 0
+		$heaty = 0
+	ENDIF
+	$red=$begRed+($redChange*$heatx)
+	$dec=$red
+	GOSUB Name=dectohex
+	$redhex=$hex
+	$green=$begGreen+($greenChange*$heaty)
+	$dec=$green
+	GOSUB Name=dectohex
+	$greenhex=$hex
+	$blue=$begBlue+($blueChange*$heatx)
+	$dec=$blue
+	GOSUB Name=dectohex
+	$bluehex=$hex
+	$heatcolor = $redhex + $greenhex + $bluehex
+	$heatstyle = "background: #" + $redhex + $greenhex + $bluehex + "; color: #FFFFFF;"
+
+ENDSUB #GetHeatColor
+
+BEGINSUB name=dectohex
+	# Takes input from 0-255 as a decimal number in $dec
+	# and returns it as a two character hex string in $hex
+
+	$hexlookup="0123456789ABCDEF"
+	$c_d = Int($dec)
+	$c_q = Int($c_d/16)
+	$c_r = $c_d - ($c_q*16)
+	$hex = SubStr($hexlookup,$c_q+1,1) + SubStr($hexlookup,$c_r+1,1)
+ENDSUB
+
+
+BEGINSUB name=DeclareVariables
+	Option Explicit=Yes
+
+	Declare Var=$pluginoutput Type=String
+	Declare Var=$selectedyear Type=String
+ENDSUB
+
+
+

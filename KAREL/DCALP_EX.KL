@@ -1,0 +1,164 @@
+-------------------------------------------------------------------------------
+----  DCALP_EX.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about DCALP_EX.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----    Conditions:
+----    Data types:
+----            INTEGER                     Sec 2
+----            STRING                      Sec 2
+----    Directives:
+----            COMMENT                     Sec 1
+----            INCLUDE                     Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            ADD_DICT                    Sec 4-C
+----            CHR                         Sec 4-A,B,C
+----            DISCTRL_ALPH                Sec 4-A,B,C
+----            FORCE_SPMENU                Sec 4-A,B,C
+----            POST_ERR                    Sec 4-A,B,C
+----            SET_CURSOR                  Sec 4-A,B,C
+----            SET_LANG                    Sec 4-C
+----    Statements:
+----            READ Sec                    4-A,B
+----            WRITE Sec                   4-A,B,C
+----            IF...THEN...ENDIF           Sec 4-A,B,C
+----    Reserve Words:
+----            BEGIN                       Sec 4
+----            CONST                       Sec 2
+----            CR                          Sec 4-A,B,C
+----            END                         Sec 4-C
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+----    Predefined File Names:
+----            OUTPUT                      Sec 4-C
+----            TPDISPLAY                   Sec 4-A,B
+----    Predefined Windows:
+----            T_FU                            Sec 4-A,B
+----            C_FU                        Sec 4-C
+
+-------------------------------------------------------------------------------
+----  Section 1:  Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM DCALP_EX
+    %COMMENT = 'Display Alpha'
+    %NOLOCKGROUP
+    %INCLUDE KLEVKEYS -- Necessary for the KY_ENTER
+    %INCLUDE DCALPH -  - Necessary for the ALPH_PROG Element, see section 4-C
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant and Variable Declarations
+-------------------------------------------------------------------------------
+CONST
+    cc_home      = 137
+    cc_clear_win = 128
+    cc_warn      = 0 -- Value passed to POST_ERR to display warning only.
+    cc_pause     = 1 -- value passed to POST_ERR to pause program.
+VAR
+    status      : INTEGER
+    device_stat : INTEGER
+    term_char   : INTEGER
+    window_name : STRING[4]
+    prog_name   : STRING[12]
+    comment     : STRING[40]
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- DCALP_EX
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Enter a program name from the teach pendant USER menu
+-------------------------------------------------------------------------------
+    WRITE (CHR(cc_home), CHR(cc_clear_win)) -- Clear TP USER menu
+    FORCE_SPMENU(tp_panel, SPI_TPUSER, 1)   -- Force TP USER menu to be
+                                            -- visible
+    SET_CURSOR(TPDISPLAY, 12, 1, status)    -- reposition cursor
+    WRITE ('prog_name: ')
+    prog_name = ''                          -- initialize program name
+    DISCTRL_ALPH('t_fu', 12, 12, prog_name, 'PROG', 0, term_char, status)
+    IF status <> 0 THEN
+        POST_ERR(status, '', 0, cc_warn)
+    ENDIF
+    IF term_char = ky_enter THEN            -- User pressed the ENTER key
+        WRITE (CR, 'prog_name was changed:', prog_name, CR)
+    ELSE
+        WRITE (CR, 'prog_name was not changed')
+    ENDIF
+    WRITE (CR, 'Press enter to continue')
+    READ (CR)
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Enter a comment from the teach pendant
+-------------------------------------------------------------------------------
+    WRITE (CHR(cc_home) + CHR(cc_clear_win)) -- Clear TP USER menu
+    SET_CURSOR(TPDISPLAY, 12, 1, status)     -- reposition cursor
+    comment = ' '                            -- Initialize the comment
+    WRITE ('comment: ')                      -- Display message
+    DISCTRL_ALPH('t_fu', 12, 10, comment, 'COMM', 0, term_char, status)
+    IF status <> 0 THEN                      -- Verify DISCTRL_ALPH was successful
+        POST_ERR(status, '', 0, cc_warn)     -- Post the status as a warning
+    ENDIF
+    IF term_char = ky_enter THEN
+        WRITE (CR, 'comment was changed:', comment, CR) -- Display new comment
+    ELSE
+        WRITE (CR, 'comment was not changed', CR)
+    ENDIF
+    WRITE (CR, 'Press enter to continue')
+    READ (CR)
+
+-------------------------------------------------------------------------------
+----  Section 4-C:  This section will perform program name entry from the
+----                    CRT/KB. The dictionary name and element values are
+----                explicitly stated here, instead of using the available
+----                default values.
+-------------------------------------------------------------------------------
+    -- Set the dictionary language to English
+    -- This is useful if you want to use this same code for multiple
+    -- languages. Then any time you load in a dictionary you check
+    -- to see what the current language, $language, is and load the
+    -- correct dictionary.
+    -- For instance you could have a DCALPHJP.TX file which
+    -- would be the Japanese dictionary. If the current language, $language,
+    -- was set to Japanese you would load this dictionary.
+    SET_LANG ( dp_english, status)
+    IF (status <> 0) THEN
+        POST_ERR (status, '', 0,cc_warn) -- Post the status as a warning
+    ENDIF
+    -- Load the dcalpheg.tx file, using ALPH as the dictionary name,
+    -- to the English language, using DRAM as the memory storage device.
+    ADD_DICT ('DCALPHEG', 'ALPH', dp_english, dp_dram, status)
+    IF (status <> 0 ) THEN
+        POST_ERR (status, '', 0, cc_pause)  -- Post the status and pause the
+                                            -- program, since the dictionary
+    ENDIF                                   -- must be loaded to continue.
+    device_stat = crt_panel -- Give control to the CRT/KB
+    WRITE OUTPUT (CHR(cc_home) + CHR(cc_clear_win)) -- Clear CRT/KB USER menu
+    FORCE_SPMENU (device_stat, SPI_TPUSER, 1) -- Force the CRT/KB USER menu
+                                              -- to be visible
+    SET_CURSOR(OUTPUT, 12, 1, status) -- Reposition the cursor
+    WRITE OUTPUT ('prog_name: ')
+    prog_name = ' ' -- Initialize program name
+    DISCTRL_ALPH('c_fu',12,12,prog_name,'ALPH',alph_prog,term_char,status)
+    --DISCTRL_ALPHA uses the ALPH dictionary and ALPH_PROG dictionary element
+    IF status <> 0 THEN                     -- Verify DISCTRL_ALPH was
+                                            -- successful.
+        POST_ERR(status, '', 0, cc_warn)    -- Post returned status to the
+    ENDIF                                   -- error ('err') window.
+    IF term_char = ky_enter THEN
+        WRITE (CR, 'prog_name was changed:', prog_name, CR)
+    ELSE
+        WRITE (CR, 'prog_name was NOT changed.', CR)
+    ENDIF
+    device_stat = tp_panel -- Make sure to reset
+
+END DCALP_EX

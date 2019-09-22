@@ -1,0 +1,15 @@
+!     Hello world in Tandem TAL (Transaction Application Language)
+      proc Hello^World main;
+            begin
+            int    .term[0:12] := [ 12 * [ "  " ] ],
+ .out [0:19];
+            string .sout := @out << 1, .sp;
+ 
+            call myterm ( term[1] );
+            call open ( term[1], term );
+if <> then call abend;
+ 
+sout := "Hello World" -> @sp;
+            call write ( term, out, @sp-@sout );
+if <> then call abend;
+end;

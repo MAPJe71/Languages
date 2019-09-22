@@ -1,0 +1,16 @@
+
+Example file…well at least one procedure …
+
+;***************************************************************************
+;
+; header that is coments etc.
+;***************************************************************************
+$PROCEDURE DoSomething
+$DEFINE TEMPVAR LVar
+; Comment
+If<= LVar 0 Value 1
+Begin
+;if lvar 0 is true
+End
+;do some things
+Return ; may not always be here…at the end of the file, we will bail and don’t need the return

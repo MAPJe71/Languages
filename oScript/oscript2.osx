@@ -1,0 +1,50 @@
+function ListExpansionVsAllocate
+ Integer max, start, duration, items
+ Real rate
+ 
+ max = 10000
+ 
+ start = Date.Tick()
+ items = AllocateExample(max)
+ duration = Date.Tick() - start
+ rate = (items*1.0)/duration
+ echo("Allocate Example:")
+ echo("  ", items,    " Items")
+ echo("  ", duration, " Ticks")
+ echo("  ", rate,     " Items/Tick")
+ echo()
+ 
+ start = Date.Tick()
+ items = ExpansionExample(max*10)
+ duration = Date.Tick() - start
+ rate = (items*1.0)/duration
+ echo("Expand Example:")
+ echo("  ", items,    " Items")
+ echo("  ", duration, " Ticks")
+ echo("  ", rate,     " Items/Tick")
+end
+
+function Integer AllocateExample(Integer size) 
+ List allocate = List.Allocate(size)
+ Integer i
+ for i = 1 to size
+  allocate[i] = GetAssoc()
+ end
+ return Length(allocate)
+end
+
+function Integer ExpansionExample(Integer size)
+ List expand = {}
+ Integer i
+ for i = 1 to size
+  expand = {@expand, GetAssoc()}
+ end
+ return Length(expand)
+end
+
+function Assoc GetAssoc()
+ Assoc item = Assoc.CreateAssoc()
+ item.id = 0
+ item.name = "My Item"
+ return item
+end

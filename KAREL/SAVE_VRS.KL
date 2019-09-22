@@ -1,0 +1,120 @@
+-------------------------------------------------------------------------------
+----  SAVE_VRS.KL
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 0:  Detail about SAVE_VRS.KL
+-------------------------------------------------------------------------------
+----  Elements of KAREL Language Covered:   In Section:
+----    Actions:
+----    Clauses:
+----    Conditions:
+----    Data types:
+----            BOOLEAN                     Sec 2
+----            INTEGER                     Sec 2
+----            STRING                      Sec 2
+----    Directives:
+----            COMMENT                     Sec 1
+----            ENVIRONMENT                 Sec 1
+----            NOLOCKGROUP                 Sec 1
+----    Built-in Functions & Procedures:
+----            DELETE_FILE                 Sec 4-B
+----            SAVE                        Sec 4-B
+----    Statements:
+----            IF, THEN, ENDIF             Sec 4-B
+----            SELECT, CASE, ENDSELECT     Sec 4-A
+----            WRITE                       Sec 4-B
+----    Reserve Words:
+----            BEGIN                       Sec 4
+----            CONST                       Sec 2
+----            CR                          Sec 4-B
+----            END                         Sec 4-B
+----            PROGRAM                     Sec 1
+----            VAR                         Sec 2
+
+-------------------------------------------------------------------------------
+---- Section 1: Program and Environment Declaration
+-------------------------------------------------------------------------------
+PROGRAM SAVE_VRS
+    %NOLOCKGROUP
+    %COMMENT = 'Save .vr, .tp, .sv'
+    %ENVIRONMENT MEMO
+    %ENVIRONMENT FDEV
+
+-------------------------------------------------------------------------------
+----  Section 2:  Constant, Variable and Type Declarations
+-------------------------------------------------------------------------------
+CONST
+    DO_VR   = 1 -- Save variable file(s)
+    DO_TP   = 2 -- Save TP program(s)
+    DO_SYS  = 3 -- Save system variables
+    SUCCESS = 0 -- The value expected from all built-in calls.
+VAR
+    sav_type  : INTEGER    -- Specifies the type of save to perform
+    prog_name : STRING[12] -- The program name to save
+    status    : INTEGER    -- The status returned from the built-in calls
+    file_spec : STRING[30] -- The created file specification for SAVE
+    dev       : STRING[5]  -- The device to save to specify whether to
+    del_vr    : BOOLEAN    -- delete file_spec before performing the SAVE.
+
+-------------------------------------------------------------------------------
+----  Section 3:  Routine Declaration
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+----  Section 4:  Main Program
+-------------------------------------------------------------------------------
+BEGIN -- SAVE_VRS
+
+-------------------------------------------------------------------------------
+----  Section 4-A:  Create the file_spec, which contains the device, file
+----                name and type to be saved.
+-------------------------------------------------------------------------------
+    SELECT (sav_type) OF
+        CASE (DO_VR):
+            -- If prog_name is '*' then all PC variables will be saved with the
+            -- correct program name, irregardless of the file name part of
+            -- file_spec.
+            file_spec = dev+prog_name+'.VR' -- Create the variable file name
+
+        CASE (DO_TP):
+            -- If prog_name is '*' then all TP programs will be saved with the
+            -- correct TP program name, irregardless of the prog_name part of
+            -- file_spec.
+            file_spec = dev+prog_name+'.TP' -- Create the TP program name
+
+        CASE (DO_SYS):
+            prog_name = '*SYSTEM*'
+            file_spec = dev+'ALLSYS.SV' -- All system variables will be
+                                        -- saved into this one file.
+    ENDSELECT
+
+-------------------------------------------------------------------------------
+----  Section 4-B:  Decide whether to delete the file before saving
+----                and then perform the SAVE.
+-------------------------------------------------------------------------------
+    -- If the user specified to delete the file before saving, then
+    -- delete the file and verify that the delete was successful.
+    -- It is possible that the delete will return a status of:
+    -- 10003 : "file does not exist", for the FLPY: device
+    -- OR
+    -- 85014 : "file not found", for all RD: and FR: devices
+    -- We will disregard these errors since we do not care if the
+    -- file did not previously exist.
+    IF (del_vr = TRUE) THEN
+        DELETE_FILE (file_spec, FALSE, status) -- Delete the file.
+        IF (status <> SUCCESS) AND (status <> 10003) AND
+                                   (status <> 85014) THEN
+            WRITE ('Error ', status,' in attempt to delete ',cr, file_spec,cr)
+        ENDIF
+    ENDIF
+
+    -- If prog_name is specified as an '*' for either .tp or .vr files then
+    -- the SAVE builtin will save the appropriate files/programs with the
+    -- correct names.
+    SAVE (prog_name, file_spec, status) -- Save the variable/program
+    IF (status <> SUCCESS) THEN -- Verify SAVE was successful
+        WRITE ('error saving ', file_spec, 'variables', status, cr)
+    ENDIF
+
+END SAVE_VRS

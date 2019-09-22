@@ -1,0 +1,8 @@
+
+Method Blah()
+    'Single line comment
+End Method
+
+'Commented out method:
+'Method Blah2()
+'End Method

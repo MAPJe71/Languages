@@ -1,0 +1,13 @@
+a=readfromfile('edc_dd1.txt',col=6,ign=1)
+
+b=readfromfile('vostok_deutnat1.txt',ign=1,col=4)
+
+!p.multi=[0,1,2]
+
+ep=reform(a(5,*))
+vo=reform(b(2,*))
+
+plot,a(4,*),ep,title='delta-o18 vs age',/xs,xr=[0,40000],ymarg=[2,5],yr=makerang
+e([ep,vo]),th=3
+oplot,col=3,b(1,*),vo,th=3
+add_key,/rig,['EPICA','Vostok'],[!p.color,3],th=3,/top

@@ -1,0 +1,7 @@
+# application 'chime.exe' is started at  12:15 every week day
+15 12 * * 1-5 * c:\xxx\chime.exe
+# the  pdf file named in the task is opened daily 
+# at 12:00 ad at  17:00
+0 12,17 * * * * cmd /c "e:\home\re.pdf"
+# the command file named in the task is executed every 5 minutes
+*/5 * * * * * d:\fido\bat\blstbbs.cmd

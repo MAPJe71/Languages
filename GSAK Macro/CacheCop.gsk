@@ -1,0 +1,853 @@
+###################################################################################
+# MacFileName    = CacheCop.gsk
+# MacVersion     = 3.01 
+# MacDescription = Select caches with Dnf's and Maintenance or Archive requests.
+# MacAuthor      = Wayne (Team Red Roo)
+# MacUrl         = http://gsak.net/board/index.php?act=ST&f=15&t=7323
+###################################################################################
+# Changes in this version...
+#
+# Corrected a code error that could cause the macro to fail at line 213 if only 
+# MacroFlag was checked
+#
+###################################################################################
+# Programming rules and read priority ...
+#
+# If ChkDis and TempDisabled and Log(Disabled) - get log age and report it.
+# If ChkDis And TempDisabled and No Disabled log found, report it.
+#
+# If ChkNA or ChkNM and Log(Owner Maintenance) - get the next cache and start again.
+#
+# If ChkNM and Log(Needs Maintenanace) comes first - get logdate and report it.
+# If ChkNA and Log(Needs Archiving)    comes first - get logdate and report it.
+#
+# If ChkDnf - Count DNF's and report if over $ReportMin.
+#
+###################################################################################
+
+  VERCHECK Version=7.5.0.0 (A free update can be downloaded at http://gsak.net)
+  OPTION Explicit=YES
+
+  GOSUB Name=Initialise
+
+  IF $DisplayTheForm
+     WHILE TRUE
+        $FormExit=form($Form,"")
+        BEGINCASE 
+           CASE $FormExit="Scorpio" OR $FormExit="SystemExit"
+              RETURN 
+           CASE $FormExit="DirtyHarry"
+              GOSUB Name=CheckOptions
+              IF Not($Err)
+                 BREAK 
+              ENDIF 
+        ENDCASE 
+     ENDWHILE 
+  ELSE 
+     GOSUB Name=CheckOptions
+  ENDIF 
+
+  SPEEDMODE Status=On
+  GOSUB Name=CheckFlags
+  $Limit=Val($LimitBox)
+  GOSUB Name=Preselect
+
+  GOTO Position=Top
+  SORT By="distance" Sequence=A
+  $Total=$_FilterCount
+  $CacheCntr=0
+  WHILE Not($_Eol)
+     $CacheCntr=$CacheCntr+1
+     IF Frac($CacheCntr/25)=0
+        SHOWSTATUS Title= $_CurrentDataBase Database Msg="Checking $CacheCntr of $Total" Top=10 Width=300
+     ENDIF 
+     GOSUB Name=CheckCache
+     GOTO Position=Next
+  ENDWHILE 
+  GOSUB Name=DisplayResults
+  GOSUB Name=SaveSettings
+
+  RETURN 
+###################################################################################
+############################  **** End of Macro ****  #############################
+###################################################################################
+  BEGINSUB Name=CheckOptions
+     $Err=False
+     IF (Val($DisDays)>0)
+        $ChkDis=True
+     ENDIF 
+     IF Val($ReportMin) <> 0
+        $ChkDNF=True
+     ENDIF 
+     IF Not($ChkNA) AND NOT($ChkNM) AND NOT($ChkDnf) AND NOT($ChkDis)
+        $Msg="You have not made a Selection "+$_Newline+"Please choose your selection options from the top box"
+        MSGOK Msg=$Msg Caption="I tried being reasonable - I didn't like it"
+        $Err=True
+     ENDIF 
+     IF Not($ChkUF) And Not($ChkUD) AND Not($ChkUd2) AND Not($ChkUd3) AND Not($ChkUd4)
+        $Msg="You have not selected a Display Option."+$_NewLine+"Please choose an option from the Display Options box"
+        MSGOK Msg=$Msg Caption="Men must know their limitations"
+        $Err=True
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=PreSelect
+     SHOWSTATUS Msg="Preselecting records for interrogation" Top=10 Width=300
+#     IF $CurrFil
+        MFILTER Expression=$d_MacroFlag
+#        MFilter Where=MacroFlag
+#     ELSE 
+#        MFILTER Expression= Not Status='Z'
+#     ENDIF 
+     IF $ChkNA Or $ChkNM Or $ChkDnf                      # Needs Archiving / Needs Maintenance / ChkDnf=($ReportMin>0)
+        IF NOT($CurrFil)
+#           MFILTER Where= Not Status='T' And Not Status='X' Join=OR
+            MFILTER Expression= Not($d_TempDisabled) AND Not($d_Archived) Join=OR
+       ENDIF 
+     ENDIF 
+     IF $ChkDis                                          # DisDis = $DisDays <> 0
+        IF $_FilterCount > 0
+#           MFILTER Where= Status='T' And Not Status='X' Join=OR
+           MFILTER Expression= $d_TempDisabled AND Not $d_Archived Join=OR
+        ELSE 
+#           MFILTER Where= Status='T' And Not Status='X'
+           MFILTER Expression= $d_TempDisabled AND Not $d_Archived
+        ENDIF 
+     ENDIF 
+     IF $NoFinds
+#        MFILTER Where=Not Found Join=AND
+        MFILTER Expression=Not($d_Found) Join=AND
+     ENDIF 
+     GOTO Position=Top
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckCache                        # Do this for every preselected cache
+     $CntDnf=0
+     $CntNA=0
+     $CntNM=0
+     $CntDis=0
+     $Age=0
+     $LogCntr=0
+     TABLE Active=Logs Scope=Parent
+     GOTO Position=Top
+     WHILE Not($_Eol)
+        $LogCntr=$LogCntr+1
+        IF $d_TempDisabled
+#        IF $d_Status="T"
+           IF RegEx("Disable",$d_lType)
+              $Age=DateDiff($d_lDate,$_Today)
+              IF $Age >= Val($DisDays)
+                 $CntDis=$CntDis+1
+              ENDIF 
+              $ActionStr="Disabled"
+              BREAK 
+           ENDIF 
+        ELSE 
+           $BREAKCmd=FALSE
+           BEGINCASE 
+# Running the following may cause false results if both
+# Needs Maintenance and Needs Archiving are selected.
+#              CASE ($ChkNA) And (Regex("Found",$d_LType))
+#                 $BREAKCmd=TRUE        # Because it's still there.
+
+              CASE $d_Archived
+                 $BREAKCmd=True				# Because it's of no interest here
+
+              CASE ($ChkNM Or $ChkNA) AND (RegEx("Owner Maintenance",$d_LType))
+                 $BREAKCmd=TRUE				# Because Maintenance has been carried out.
+
+              CASE ($ChkNM) And (Regex("Needs Maintenance",$d_LType)) And $Age=0
+                 $Age=DateDiff($d_lDate,$_Today)
+                 $CntNM=$CntNM+1
+                 $ActionStr="Maint Request"
+                 $BREAKCmd=TRUE  			# We've found what we're looking for.
+
+              CASE ($ChkNA) And (Regex("Needs Archived",$d_LType)) And $Age=0
+                 $Age=DateDiff($d_lDate,$_Today)
+                 $CntNA=$CntNA+1
+                 $ActionStr="Arc Request"
+                 $BREAKCmd=TRUE				# We've found what we're looking for.
+
+              CASE $ChkDnf AND $FlcDnf AND (Regex("Found",$d_LType))
+                 $BREAKCmd=TRUE 			# A Found log cancels the DNF check.
+
+              CASE $ChkDnf AND $OmcDnf AND (Regex("Owner Maintenance",$d_LType))
+                 $BREAKCmd=TRUE 			# A Owner Maint log cancels the DNF check.
+
+              CASE $ChkDnf AND ($d_LType="Didn't find it")
+                 $CntDnf=$CntDnf+1		# Add to the Dnf count and continue
+                 $ActionStr="Did Not Find"
+
+           ENDCASE 
+           IF $BreakCmd
+              BREAK 
+           ENDIF 
+           IF $LogCntr=$Limit
+              BREAK 
+           ENDIF 
+        ENDIF 
+        GOTO Position=Next
+     ENDWHILE 
+     TABLE Active=Caches
+     IF $d_TempDisabled And $CntDis=0 And $Age=0
+        $Age=-1
+        $CntDis=1
+     ENDIF 
+     $Score = $CntDnf + $CntNA + $CntNM + $CntDis
+     IF $Score > 0
+        GOSUB Name=SetScore
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SetScore
+     IF ($CntDis>0) Or ($CntNA>0) Or ($CntNM>0) AND ($Age<>0)
+        $Score=$Age
+        $ResultMsg="Days ago"
+        GOSUB Name=SetDisplayMethod
+     ENDIF 
+     IF $ChkDnf AND $CntDnf>=Val($ReportMin)
+        $ResultMsg="logs"
+        GOSUB Name=SetDisplayMethod
+     ENDIF 
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SetDisplayMethod             # Only called from Sub.SetScore
+     TRANSACTION Action=Begin
+     IF $ChkUf
+        $d_UserFlag=True
+     ENDIF 
+     IF $ChkUd Or $ChkUd2 OR $ChkUd3 OR $ChkUd4
+        $ScoreStr=Str($Score,3,0)
+        IF $Score=-1
+           $ScoreStr=""
+           $ActionStr="Disabled"
+           $ResultMsg="  * No Log found"
+        ENDIF 
+        BEGINCASE 
+           CASE $ChkUd
+              $d_UserData="$ActionStr $ScoreStr $ResultMsg"
+           CASE $ChkUd2
+              $d_User2="$ActionStr $ScoreStr $ResultMsg"
+           CASE $ChkUd3
+              $d_User3="$ActionStr $ScoreStr $ResultMsg"
+           CASE $ChkUd4
+              $d_User4="$ActionStr $ScoreStr $ResultMsg"
+         ENDCASE 
+     ENDIF 
+     TRANSACTION Action=End
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=DisplayResults                                     # Pre V7.7 code
+     BEGINCASE 
+        CASE $ChkUd
+           MFILTER Expression=$d_UserData = "" Reverse=Yes
+           SORT By="Userdata" Sequence=D
+        CASE $ChkUd2
+           MFILTER Expression=$d_User2 = "" Reverse=Yes
+           SORT By="User2" Sequence=D
+        CASE $ChkUd3
+           MFILTER Expression=$d_User3 = "" Reverse=Yes
+           SORT By="User3" Sequence=D
+        CASE $ChkUd4
+           MFILTER Expression=$d_User4 = "" Reverse=Yes
+           SORT By="User4" Sequence=D
+        CASE $ChkUf
+           MFILTER Expression=$d_USERFLAG
+           SORT By="Distance" Sequence=A
+     ENDCASE 
+     SPLITSCREEN Display=On
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=CheckFlags
+     TRANSACTION Action=Begin
+     IF $ChkUd
+        SHOWSTATUS Msg="Clearing the User Data field" Top=10 Width=300
+        MFILTER Expression=$d_UserData <> ""
+        WHILE Not($_Eol)
+           $d_UserData=""
+           GOTO Position=Next
+        ENDWHILE
+     ENDIF 
+     IF $ChkUd2
+        SHOWSTATUS Msg="Clearing the User2 Data field" Top=0 Width=300
+        MFILTER Expression=$d_User2 <> ""
+        WHILE Not($_Eol)
+           $d_User2=""
+           GOTO Position=Next
+        ENDWHILE 
+     ENDIF 
+     IF $ChkUd3
+        SHOWSTATUS Msg="Clearing the User3 Data field" Top=0 Width=300
+        MFILTER Expression=$d_User3 <> ""
+        WHILE Not($_Eol)
+           $d_User3=""
+           GOTO Position=Next
+        ENDWHILE 
+     ENDIF 
+     IF $ChkUd4
+        SHOWSTATUS Msg="Clearing the User4 Data field" Top=0 Width=300
+        MFILTER Expression=$d_User4 <> ""
+        WHILE Not($_Eol)
+           $d_User4=""
+           GOTO Position=Next
+        ENDWHILE 
+     ENDIF 
+     IF $ChkUf
+        SHOWSTATUS Msg="Clearing the User Flag" Top=0 Width=300
+        MFILTER Expression=$d_UserFlag 
+        WHILE Not($_Eol)
+           $d_UserFlag=False 
+           GOTO Position=Next
+        ENDWHILE 
+     ENDIF 
+     SHOWSTATUS Msg="" Display=No
+     TRANSACTION Action=End
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=SaveSettings
+     MACSETTINGS Type=S Vars=LimitBox,ChkNM,ChkNA,DisDays,ReportMin,ChkUf,ChkUd,ChkUd2,ChkUd3,ChkUd4,OmcDnf,FlcDnf,CurrFil,NoFinds,DisplayTheForm
+  ENDSUB 
+###################################################################################
+  BEGINSUB Name=Initialise
+
+     $ChkNA=TRUE
+     $ChkNM=FALSE
+     $ChkDnf=FALSE
+     $ChkDis=FALSE
+     $DisplayTheForm=TRUE
+
+# Get previous configuration
+     MACSETTINGS Type=R FileCheck=N
+     IF $_CtrlKey OR $_ShiftKey                             # Check for Control or Shift pressed at startup
+        $DisplayTheForm=TRUE
+     ENDIF 
+
+# Set the Plod image
+     $Image=MimeDecode($Plod)
+     $ResultStr=Putfile ($_Install+"\Temp\Plod.Png",$Image)
+     $PlodFile=$_Install + "\Temp\Plod.Png"
+     $Form=EditForm($Form,"Image1","File",$PlodFile)
+
+# Set the macro name and version at the top of the form (without using variables).
+     $Form=EditForm($Form,"Form1","Caption",Left(SysInfo("Macrofile"),AT(".",SysInfo("Macrofile"))-1)+" - "+" v"+AllTrim(RegExSub("macversion *=(.*?)(#|\r\n)",GetFile(SysInfo("MacroPath") + "\" + SysInfo("Macrofile")),1,1)))
+
+     SHOWSTATUS Msg="Clearing MacroFlag" Top=10
+     MACROFLAG Type=Clear Range=All
+     MACROFLAG Type=SET Range=FILTER
+
+# Checking for a filter at startup
+     SHOWSTATUS Msg="Checking for a filter" Top=10
+     $FilterActive=$_Count<>$_DbCount
+     IF NOT($FilterActive)
+        $Form=EditForm($Form,"CurrFil","Enabled","No")
+        $Form=EditForm($Form,"Label3","Caption","No Filter available - Using the full Database")
+        $Form=EditForm($Form,"Label3","Color","8421631")
+        $CurrFil=FALSE
+        CANCELFILTER 
+     ENDIF 
+
+     SPLITSCREEN Display=Off
+     SORT By="Distance"
+     SHOWSTATUS Msg="" Display=NO
+
+  ENDSUB 
+###################################################################################
+
+  DECLARE Var=$DevelopmentVersion Type=Boolean
+  DECLARE Var=$ChkNA Type=Boolean
+  DECLARE Var=$ChkNM Type=Boolean
+  DECLARE Var=$ChkDnf Type=Boolean
+  DECLARE Var=$ChkDis Type=Boolean
+  DECLARE Var=$ChkUF Type=Boolean
+  DECLARE Var=$ChkUD Type=Boolean
+  DECLARE Var=$ChkUd2 Type=Boolean
+  DECLARE Var=$ChkUd3 Type=Boolean
+  DECLARE Var=$ChkUd4 Type=Boolean
+
+  DECLARE Var=$ActionStr Type=String
+  DECLARE Var=$Age Type=Numeric
+  DECLARE Var=$BREAKCmd Type=Boolean
+  DECLARE Var=$CacheCntr Type=Numeric
+  DECLARE Var=$ChkDis Type=Boolean
+  DECLARE Var=$ChkDnf Type=Boolean
+  DECLARE Var=$ChkUd Type=Boolean
+  DECLARE Var=$ChkUd2 Type=Boolean
+  DECLARE Var=$ChkUd3 Type=Boolean
+  DECLARE Var=$ChkUf Type=Boolean
+  DECLARE Var=$CntDis Type=Numeric
+  DECLARE Var=$CntDnf Type=Numeric
+  DECLARE Var=$CntNA Type=Numeric
+  DECLARE Var=$CntNM Type=Numeric
+  DECLARE Var=$CurrFil Type=Boolean
+  DECLARE Var=$DisDays Type=String
+  DECLARE Var=$Err Type=Boolean
+  DECLARE Var=$FilterActive Type=Boolean
+  DECLARE Var=$FlcDnf Type=Boolean
+  DECLARE Var=$DisplayTheForm Type=Boolean
+  DECLARE Var=$FormExit Type=String
+  DECLARE Var=$Form Type=String
+  DECLARE Var=$Image Type=String
+  DECLARE Var=$Limit Type=Numeric
+  DECLARE Var=$LimitBox Type=String
+  DECLARE Var=$LogCntr Type=Numeric
+  DECLARE Var=$LogList Type=String
+  DECLARE Var=$Msg Type=String
+  DECLARE Var=$PlodFile Type=String
+  DECLARE Var=$OmcDnf Type=Boolean
+  DECLARE Var=$Period Type=String
+  DECLARE Var=$Plod Type=String
+  DECLARE Var=$ReportMin Type=String
+  DECLARE Var=$ResultMsg Type=String
+  DECLARE Var=$ResultStr Type=String
+  DECLARE Var=$Score Type=Numeric
+  DECLARE Var=$ScoreStr Type=String
+  DECLARE Var=$Total Type=Numeric
+
+###################################################################################
+<DATA> Varname=$LogList
+0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;
+<ENDDATA>
+###################################################################################
+<DATA> Varname=$Period
+0;15;30;60;90;180;270;365;
+<ENDDATA>
+###################################################################################
+<DATA> VarName=$Plod
+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
+/GMzLdsAAAAEZ0FNQQAAsY58+1GTAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAX
+b5JfxUYAAAMAUExURf///8zMzAAAAJmZmTMzZgAAM2ZmZv/MmWZmM8yZZjMzAGZmAP/MAJlmAMyZAJlm
+ZmZmmZmZZpmZzJkzM5kAAMwzM8wAAMxmZsyZmZlmM2YAAJmZM////////////////wAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AHQHAGwAAAABdFJOUwBA5thmAAAJ90lEQVR42uxdf3fauBK9M7aAUrLJNtuX7//xcnqSl23YBJA9s3/Y
+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
+BQAAAABJRU5ErkJggg==
+<ENDDATA>
+###################################################################################
+<DATA> VarName=$form
+#********************************************************************
+# Form generated by GSAK form designer on Mon 22-Feb-2010 07:20:54
+#********************************************************************
+
+Name = Form1
+  Type = Form
+  Color = 14412274
+  Height = 500
+  Top = 15
+  Width = 395
+
+Name = Groupbox2
+  Type = Groupbox
+  Caption = Display Options
+  Height = 80
+  Left = 16
+  Top = 312
+  Width = 341
+  Taborder = 0
+
+Name = Groupbox1
+  Type = Groupbox
+  Height = 192
+  Left = 16
+  Top = 117
+  Width = 341
+  Taborder = 1
+
+Name = Lbl22
+  Type = Label
+  Color = 255
+  Font = Comic Sans MS
+  Height = 35
+  Left = 177
+  Size = 19
+  Style = bold
+  Top = 14
+  Width = 122
+  Caption = Cache Cop
+
+Name = Lbl24
+  Type = Label
+  Color = 32896
+  Height = 13
+  Left = 233
+  Style = bold
+  Top = 71
+  Width = 113
+  Caption = Number of past logs
+
+Name = LimitBox
+  Type = Combobox
+  Height = 21
+  Left = 165
+  Top = 75
+  Values = $LogList
+  Width = 56
+  Taborder = 2
+
+Name = DirtyHarry
+  Type = Button
+  Enter = Yes
+  Height = 30
+  Left = 16
+  Top = 417
+  Width = 198
+  Taborder = 3
+  Caption = Go Ahead - Make My Day
+
+Name = Scorpio
+  Type = Button
+  Escape = Yes
+  Height = 30
+  Left = 250
+  Top = 416
+  Width = 105
+  Taborder = 4
+  Caption = Get out of Dodge
+
+Name = Label1
+  Type = Label
+  Color = 32896
+  Container = Groupbox1
+  Height = 13
+  Left = 15
+  Style = bold
+  Top = 100
+  Width = 192
+  Caption = Select caches disabled more than
+
+Name = DisDays
+  Type = Combobox
+  Container = Groupbox1
+  Display = 10
+  Height = 21
+  Left = 212
+  Top = 97
+  Values = $Period
+  Width = 45
+  Taborder = 0
+
+Name = Label2
+  Type = Label
+  Color = 32896
+  Container = Groupbox1
+  Height = 13
+  Left = 265
+  Style = bold
+  Top = 101
+  Width = 55
+  Caption = days ago.
+
+Name = Image1
+  Type = Image
+  File = C:\Program Files\GSAK\temp\Plod.Gif
+  Height = 103
+  Left = 20
+  Resize = Yes
+  Source = File
+  Top = 9
+  Width = 99
+
+Name = ChkNM
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 60
+  Width = 321
+  Taborder = 1
+  Caption = Select caches with recent Needs Maintenance logs
+
+Name = ChkNA
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 80
+  Width = 317
+  Taborder = 2
+  Caption = Select caches with recent Needs Archiving logs
+
+Name = Label5
+  Type = Label
+  Color = 32896
+  Container = Groupbox1
+  Height = 13
+  Left = 15
+  Style = bold
+  Top = 122
+  Width = 168
+  Caption = Select caches with more than
+
+Name = Label6
+  Type = Label
+  Color = 32896
+  Container = Groupbox1
+  Height = 13
+  Left = 265
+  Style = bold
+  Top = 123
+  Width = 52
+  Caption = DNF logs
+
+Name = ReportMin
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 212
+  Top = 119
+  Values = $LogList
+  Width = 45
+  Taborder = 3
+
+Name = Label7
+  Type = Label
+  Color = 32896
+  Height = 13
+  Left = 234
+  Style = bold
+  Top = 86
+  Width = 121
+  Caption = to search for a match
+
+Name = OmcDnf
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 162
+  Width = 311
+  Taborder = 4
+  Caption = Cancel DNF search on a Owner Maintenance log
+
+Name = CurrFil
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 20
+  Width = 18
+  Taborder = 6
+
+Name = FlcDnf
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 142
+  Width = 233
+  Taborder = 5
+  Caption = Cancel DNF search on a Found log
+
+Name = DisplayTheForm
+  Type = Checkbox
+  Fontcolor = 32768
+  Height = 17
+  Left = 31
+  Top = 394
+  Width = 326
+  Taborder = 5
+  Caption = Display this form next run - (silent running)
+
+Name = ChkUf
+  Type = Checkbox
+  Container = Groupbox2
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 16
+  Width = 84
+  Taborder = 0
+  Caption = User Flag
+
+Name = ChkUd
+  Type = Checkbox
+  Container = Groupbox2
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 37
+  Width = 82
+  Taborder = 1
+  Caption = UserData
+
+Name = ChkUd2
+  Type = Checkbox
+  Container = Groupbox2
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 58
+  Width = 88
+  Taborder = 2
+  Caption = UserData 2
+
+Name = ChkUd3
+  Type = Checkbox
+  Container = Groupbox2
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 125
+  Top = 37
+  Width = 91
+  Taborder = 3
+  Caption = UserData 3
+
+Name = NoFinds
+  Type = Checkbox
+  Container = Groupbox1
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 15
+  Top = 40
+  Width = 263
+  Taborder = 7
+  Caption = Don't select any caches that I have found
+
+Name = ChkUd4
+  Type = Checkbox
+  Container = Groupbox2
+  Fontcolor = 32896
+  Fontstyle = bold
+  Height = 17
+  Left = 125
+  Top = 58
+  Width = 86
+  Taborder = 4
+  Caption = User Data 4
+
+Name = Label3
+  Type = Label
+  Color = 32896
+  Container = Groupbox1
+  Height = 13
+  Left = 32
+  Style = bold
+  Top = 22
+  Width = 120
+  Caption = Use the current Filter
+
+<enddata>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

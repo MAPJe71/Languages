@@ -1,0 +1,13 @@
+001: PRINT "HI THERE"; $* Anything after the $* is a comment.
+002: $* This line is also a comment and does not print.
+003: IF 5<6 THEN PRINT "YES"; $* A comment; PRINT "PRINT ME"
+004: IF 5<6 THEN
+005:   PRINT "YES"; $* A comment
+006:   PRINT "PRINT ME"
+007: END
+
+REM This is the program output:
+REM     HI THERE
+REM     YES
+REM     YES
+REM     PRINT ME

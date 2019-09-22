@@ -1,0 +1,554 @@
+// Copyright (c) 2010-2014 BMC Software Inc.
+// All rights reserved.
+
+//
+// This module contains generic functions and patterns for the creation
+// and maintenance of the inferred mainframe model.
+//
+
+tpl $$TPLVERSION$$ module SupportingFiles.Mainframe.Support;
+
+metadata
+    origin := "TKU";
+    tkn_name := "Mainframe Model Support";
+
+#IFADDM 11.0+
+    tree_path := 'BMC Discovery Operation', 'Model Construction', 'Mainframe Model';
+#ELSE
+    tree_path := 'ADDM Operation', 'Model Construction', 'Mainframe Model';
+#ENDIFADDM
+end metadata;
+
+definitions MainframeModel 1.4
+
+    """
+    Functions for creating and maintaining the inferred mainframe model.
+
+    Change History:
+    2011-05-17 - Added createApplicationDetail function.
+    2012-09-21 - Improved efficiency of createDatabaseDetails function.
+    #IFADDM 10.0+
+    2012-11-30 - Added createTransactionProgram function.
+    #ENDIFADDM
+    2014-11-11 - Added short_name attribute (TKU-2353)
+    """
+    type := function;
+
+    define findMFParts(mfpart_ids) -> mfpart_nodes
+        """
+        Find the MFPart nodes with the provided ids.
+        """
+
+        mfparts := search(MFPart
+                          where __mfpart_id in %mfpart_ids%);
+        num_mfparts := size(mfparts);
+        num_mfpart_ids := size(mfpart_ids);
+        log.debug("Found %num_mfparts% of %num_mfpart_ids% MFPart nodes");
+        return mfparts; 
+    end define;
+
+    define findSoftwareInstances(si_keys) -> si_nodes
+        """
+        Find the SoftwareInstance nodes with the provided keys.
+        """
+
+        sis := search(SoftwareInstance
+                      where key in %si_keys%);
+        num_sis := size(sis);
+        num_si_keys := size(si_keys);
+        log.debug("Found %num_sis% of %num_si_keys% SoftwareInstance nodes");
+        return sis;
+    end define;
+
+    define findSysplex(sysplex_id) -> sysplex_node
+        """
+        Find the Sysplex Cluster node with the provided key.
+        """
+
+        results := search(Cluster where key = '%sysplex_id%');
+        if not results then
+            log.debug("No Sysplex Cluster node with key %sysplex_id% found");
+            return none;
+        end if;
+
+        log.debug("Found Sysplex Cluster node with key %sysplex_id%");
+        return results[0];
+    end define;
+
+    define findValidAppComponentList(primary_ddd) -> dac_list
+        """
+        Find related DiscoveredApplicationComponentList to the provided
+        primary DDD node from the same DiscoveryAccess. The found 
+        DiscoveredApplicationComponentList is only returned if it does not
+        contain a failure message.
+        """
+        dac_list_nodes := search(
+            in primary_ddd 
+            traverse Member:List:List:
+            traverse DiscoveryResult:DiscoveryAccessResult:DiscoveryAccess:DiscoveryAccess
+            traverse DiscoveryAccess:DiscoveryAccessResult:DiscoveryResult:DiscoveredApplicationComponentList);
+
+        if not dac_list_nodes then
+            log.debug("No DiscoveredApplicationComponentList to process");
+            return none;
+        end if;
+
+        dac_list := dac_list_nodes[0];
+
+        if dac_list.failure_reason then
+            log.debug("Problem obtaining DiscoveredApplicationComponents");
+            return none;
+        end if;
+
+        return dac_list;
+    end define;
+
+    define maintainStorageRelationships(storage, collection_type, mfparts)
+        """
+        Maintain the relationships for the provided storage node.
+        """
+
+        // Create the Storage relationship between the Storage node and all
+        // MFPart nodes, removing any relationships to MFParts no longer 
+        // using the storage.
+        model.uniquerel.Storage(Storage := storage,
+                                Host    := mfparts);
+                          
+        // Find the StorageCollection referenced by the Storage node
+        collection := search(StorageCollection
+                             where key = '%storage.__storage_collection_id%');
+
+        if not collection then
+            log.debug("No StorageCollection found for %storage.key%");
+            return;
+        end if;
+
+        log.debug("Found StorageCollection for %storage.key%");
+
+        // Create StorageContainment relationship between the Storage node 
+        // and the containing StorageCollection node, removing any 
+        // relationship to a previous StorageCollection node,
+        // i.e. check that the storage hasn't been moved.
+        model.uniquerel.StorageContainment(ContainedStorage := storage,
+                                           StorageContainer := collection);
+    end define; 
+
+    define createTapeStorage(dtd) -> storage_node
+        """
+        Takes a DiscoveredTapeDrive and creates or updates a corresponding 
+        Storage node and associated relationships.
+        """
+
+        // Find the related MFParts
+        mfparts := MainframeModel.findMFParts(dtd.mfpart_ids);
+
+        if not mfparts then
+            log.info("Failed to find any MFParts for " +
+                     "DiscoveredTapeDrive %dtd.name%, stopping");
+            return none;
+        end if;
+
+        // Create or update Storage node
+        storage := model.Storage(key := dtd.td_name,
+                                 name := dtd.name,
+                                 type := 'Mainframe Tape Drive',
+                                 vendor := dtd.vendor,
+                                 model := dtd.model,
+                                 device_id := dtd.device_id,
+                                 __cdm_component_alias := dtd.component_alias,
+                                 __storage_collection_id := dtd.ss_name);
+
+        // Create or maintain Storage relationships       
+        MainframeModel.maintainStorageRelationships(storage,
+                                                    'TapeSubsystem',
+                                                    mfparts);
+        // Return storage node
+        return storage;
+    end define; 
+
+    define createDiskStorage(dasd) -> storage_node
+        """
+        Takes a DiscoveredDiskDrive and creates or updates a corresponding 
+        Storage node and associated relationships.
+        """
+
+        // Find the related MFParts
+        mfparts := MainframeModel.findMFParts(dasd.mfpart_ids);
+
+        if not mfparts then
+            log.info("Failed to find any MFParts for " +
+                     "DiscoveredDiskDrive %dasd.name%, stopping");
+            return none;
+        end if;
+
+        // Create or update Storage node
+        storage := model.Storage(key := dasd.dd_name,
+                                 name := dasd.name,
+                                 type := 'Mainframe Emulated DASD Drive',
+                                 vendor := dasd.vendor,
+                                 model := dasd.model,
+                                 device_id := dasd.device_id,
+                                 volume_id := dasd.volume_id,
+                                 __cdm_component_alias := dasd.component_alias,
+                                 __storage_collection_id := dasd.ss_name);
+
+        // Create or maintain Storage relationships       
+        MainframeModel.maintainStorageRelationships(storage,
+                                                    'DASDSubsystem',
+                                                    mfparts);
+        // Return storage node
+        return storage;
+    end define; 
+
+    define createTransaction(trn) -> detail_node
+        """
+        Takes a DiscoveredTransaction and creates or updates a corresponding
+        Detail node and associated relationships.
+        """
+
+        server_type := 'Transaction';
+
+        // Find the related Server Software Instances
+        servers := MainframeModel.findSoftwareInstances(trn.parent_names);
+
+        if not servers then
+            log.info("Failed to find any %server_type% Servers for " +
+                     "DiscoveredTransaction %trn.name%, stopping");
+            return none;
+        end if;
+
+        // Create or update Transaction Detail node
+        trn_detail := model.Detail(name := trn.name,
+                                   type := trn.type,
+                                   short_name := trn.transaction_id,
+                                   key := trn.transaction_name,
+                                   instance := trn.transaction_id,
+                                   __cdm_component_alias := trn.component_alias,
+                                   __parent_names := trn.parent_names);
+
+        // Create or maintain relationships between Transaction Detail and
+        // the parent Transaction Servers
+        model.uniquerel.Detail(Detail := trn_detail,
+                               ElementWithDetail := servers);
+
+        // Return detail node
+        return trn_detail;
+    end define;
+
+#IFADDM 10.0+
+    define createTransactionProgram(ddd_trn, trn) -> detail_node
+        """
+        Takes a DiscoveredTransaction node and its corresponding inferred
+        Detail node representing a transaction and create or update a Detail
+        node that represents the first program used by the transaction.
+        """
+
+        discovery_access := discovery.access(ddd_trn);
+
+        // Find the DiscoveredProgram representing the first program used by
+        // the transaction.
+        dp_nodes := search(
+            in discovery_access
+            traverse DiscoveryAccess:DiscoveryAccessResult:DiscoveryResult:DiscoveredProgramList
+            traverse List:List:Member:DiscoveredProgram
+            where %ddd_trn.transaction_name% in parent_names);
+
+        if not dp_nodes then
+            log.info("Failed to find related program data for " +
+                     "transaction %trn.name%, stopping");
+            return none;
+        end if;
+
+        program := dp_nodes[0];
+
+        if size(program.parent_names) > 1 then
+            // Check whether this DiscoveredProgram has already been processed
+            // for another DiscoveredTransaction and any further updates are
+            // needed.
+            inferred := program.#Primary:Inference:InferredElement:Detail;
+
+            if inferred then
+                prog_detail := inferred[0];
+                trn_containers := prog_detail.#Contained:Containment:Container:Detail;    
+                if trn in trn_containers then
+                    log.info("Program %program.name% has already been " +
+                             "processed and is already linked to " +
+                             "transaction %trn.key%, skipping");
+                    return prog_detail;
+                end if;
+                
+            end if;
+        end if;
+
+        // Create or update Detail node representing the first program used
+        // by the transaction.
+        prog_detail := model.Detail(
+                             name := program.name,
+                             short_name := program.program_id,
+                             type := program.type,
+                             key := program.program_name,
+                             instance := program.program_id,
+                             __cdm_component_alias := program.component_alias,
+                             __parent_names := program.parent_names);
+
+        if size(program.parent_names) > 1 then
+            // This program is used by more than one transaction, so need to
+            // find the other transaction details.
+            trns := search(Detail where type = %trn.type% and
+                                        key in %program.parent_names%);
+
+            // Ensure the provided transaction is in the list.
+            if trn not in trns then
+                list.append(trns, trn);
+            end if;
+            
+        else
+            trns := [trn];
+        end if;
+
+        // Create or maintain primary inference to the DiscoveredProgram.
+        inference.primary(prog_detail, program);
+
+        // Create or maintain relationship with the transactions that use
+        // the program.
+        model.uniquerel.Containment(Contained := prog_detail,
+                                    Container := trns,
+                                    type      := program.type);
+
+        return prog_detail;
+    end define;
+#ENDIFADDM
+
+    define createMQDetail(dmq) -> detail_node
+        """
+        Takes a DiscoveredMQDetail and creates or updates a corresponding 
+        Detail node and associated relationships.
+        """
+
+        server_type := 'Message';
+            
+        // Find the related Server Software Instances
+        servers := MainframeModel.findSoftwareInstances(dmq.parent_names);
+
+        if not servers then
+            log.info("Failed to find any %server_type% Servers for " + 
+                     "DiscoveredMQDetail %dmq.name%, stopping");
+            return none;
+        end if;
+
+        // Create or update MQ Detail node
+        mq_detail := model.Detail(name := dmq.name,
+                                  short_name := dmq.instance,
+                                  type := dmq.type,
+                                  key := dmq.mq_name,
+                                  instance := dmq.instance,
+                                  detail_type := dmq.detail_type,
+                                  __cdm_component_alias := dmq.component_alias,
+                                  __parent_names := dmq.parent_names);
+
+        // Create or maintain relationships between MQ Detail and the
+        // parent Message Servers
+        model.uniquerel.Detail(Detail := mq_detail,
+                               ElementWithDetail := servers);
+
+        // Return Detail node
+        return mq_detail;
+    end define; 
+
+    define createDatabaseDetails(db_si, db_type, ignore_databases,
+                                 retrieve_details, detail_type)
+        """
+        Takes a SoftwareInstance node representing a Database Server and looks
+        for DiscoveredDatabases from the latest DiscoveryAccess that references
+        this Database Server and creates appropriate DatabaseDetail nodes and
+        containment relationships.
+        Optional details of each Database can be obtained from the same
+        DiscoveryAccess creating further contained DatabaseDetail nodes.
+        """
+
+        // Find databases related to this database server
+        discovered_databases := search(
+            in db_si
+            traverse InferredElement:Inference:
+                     Primary:DiscoveredSoftware
+            traverse Member:List:List:DiscoveredSoftwareList
+            traverse DiscoveryResult:DiscoveryAccessResult:
+                     DiscoveryAccess:DiscoveryAccess
+            traverse DiscoveryAccess:DiscoveryAccessResult:
+                     DiscoveryResult:DiscoveredDatabaseList
+            traverse List:List:Member:DiscoveredDatabase
+            where %db_si.key% in parent_names
+            show #node, db_name, type, instance, component_alias,
+                 parent_names, detail_type);
+
+        databases := []; // List to store created database detail nodes
+        databases_table := table(); // db_name -> database detail node
+
+        for db_data in discovered_databases do
+
+            db_name        := db_data[1];
+            db_instance    := db_data[3];
+            db_detail_type := db_data[6];
+
+            // Is this a database we should ignore?
+            if db_instance in ignore_databases then
+                log.info("Ignoring database %db_instance% in %db_si.name%");
+                continue;
+            end if;
+
+            // Find or create DatabaseDetail node and add it to the list
+            database := model.DatabaseDetail(
+                                key  := db_name,
+                                name := db_name,
+                                short_name := db_instance,
+                                type := db_data[2],
+                                instance := db_instance,
+                                __cdm_component_alias := db_data[4],
+                                __parent_names := db_data[5]);
+
+            // Store optional detail_type (reported for IMS)
+            if db_detail_type then
+                database.detail_type := db_detail_type;
+            end if;
+
+            list.append(databases, database);
+
+            inference.primary(inferred := database,
+                              evidence := db_data[0]);
+
+            if retrieve_details then
+                // Store database with its key to help the processing of
+                // database details 
+                databases_table[db_name] := database;
+            end if;
+        end for;
+
+        // Now update the containment relationships from the SI to all of these
+        // database nodes. This removes any relationships to databases that
+        // are no longer present (the old nodes and their child Detail nodes
+        // will be removed automatically)
+
+        containment_rels := model.uniquerel.Detail(
+            ElementWithDetail := db_si,
+            Detail            := databases,
+            type              := db_type);
+
+        // Should we look to build database details information?
+
+        if not retrieve_details then
+            log.info("Not configured to retrieve details for %db_si.name%");
+            return;
+        end if;
+
+        if databases then
+
+            // It is more efficient to perform one call to the datastore to
+            // obtain all DiscoveredDatabaseDetail nodes / data and store
+            // those that are children of the databases being processed.
+
+            db_children_table := table(); // db_name -> [child dbd_names]
+
+            for db_name in databases_table do
+                db_children_table[db_name] := [];
+            end for;
+
+            dbd_data_table := table(); // dbd_name -> [dbd_data]
+
+            discovery_access := discovery.access(discovered_databases[0][0]);
+
+            for dbd_data in search(
+                in discovery_access
+                traverse DiscoveryAccess:DiscoveryAccessResult:
+                         DiscoveryResult:DiscoveredDatabaseDetailList
+                traverse List:List:Member:DiscoveredDatabaseDetail
+                show #node, dbd_name, name, type, instance, component_alias,
+                     parent_names) do
+
+                dbd_name         := dbd_data[1];
+                dbd_parent_names := dbd_data[6];
+                
+                child := false;
+                for db_name in dbd_parent_names do
+                    if db_name in db_children_table then
+                        list.append(db_children_table[db_name], dbd_name);
+                        child := true;
+                    end if;
+                end for;
+                
+                if child then
+                    dbd_data_table[dbd_name] := dbd_data;
+                end if;
+            end for;
+
+            // Find database details related to this database
+
+            for db_name in databases_table do
+
+                child_details := db_children_table[db_name];
+                num_details := size(child_details);
+                log.info("Found %num_details% database details for %db_name%");
+
+                db_details := [];
+
+                for dbd_name in child_details do
+
+                    dbd_data := dbd_data_table[dbd_name];
+
+                    // ddb_data = [#node, dbd_name, name, type, instance,
+                    //             component_alias, parent_names];
+
+                    // Find or create DatabaseDetail node and add it to the list
+                    db_detail := model.DatabaseDetail(
+                                       key  := dbd_data[1],
+                                       name := dbd_data[2],
+                                       short_name := dbd_data[4],
+                                       type := dbd_data[3],
+                                       instance := dbd_data[4],
+                                       __cdm_component_alias := dbd_data[5],
+                                       __parent_names := dbd_data[6]);
+
+                    list.append(db_details, db_detail);
+
+                    inference.primary(inferred := db_detail,
+                                      evidence := dbd_data[0]);
+                end for;
+
+                // Link these details as the definitive set for this database
+                containment_rels := model.uniquerel.Containment(
+                    Container := databases_table[db_name],
+                    Contained := db_details,
+                    type      := detail_type);
+
+            end for;
+
+        end if;
+    end define;
+
+    define createApplicationDetail(si, dac, type) -> detail_node
+        """
+        Takes an SI node and a DiscoveredApplicationComponent node and 
+        creates or updates a corresponding Detail node and associated
+        relationships.
+        """
+
+        // Create or update Detail node
+        detail := model.Detail(key  := dac.application_name,
+                               name := dac.name,
+                               type := type,
+                               instance := dac.instance,
+                               __cdm_component_alias := dac.component_alias,
+                               __parent_names := dac.parent_names);
+
+        // Create or maintain relationships between Application Component
+        // Detail and the parent SoftwareInstance
+        model.uniquerel.Detail(Detail := detail,
+                               ElementWithDetail := si);
+
+        // Create primary inference
+        inference.primary(inferred := detail,
+                          evidence := dac);
+        // Return Detail node
+        return detail;
+    end define;
+
+end definitions;

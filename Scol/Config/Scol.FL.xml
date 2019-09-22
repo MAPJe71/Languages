@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="scol_function" userDefinedLangName="Scol" />
+		</associationMap>
+		<parsers>
+			<!--
+			|   http://redmine.scolring.org/projects/tutorials/wiki/Notepad++
+			\-->
+			<parser
+				displayName="Scol"
+				id         ="scol_function"
+				commentExpr="(?s-m:/\*.*?\*/)|(?m-s://.*?$)"
+			>
+				<function
+					mainExpr="^[\t\x20]*fun\s+(?!(?-i:if|while))\w+\("
+				>
+					<functionName>
+						<nameExpr expr="\w+\s*\(" />
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

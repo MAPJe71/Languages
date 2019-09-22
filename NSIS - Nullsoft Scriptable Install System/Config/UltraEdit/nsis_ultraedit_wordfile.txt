@@ -1,0 +1,67 @@
+/L7"NSIS Script" 
+
+    Line Comment = ; 
+    Line Comment Alt = # 
+    Escape Char = \ 
+    String Chars = ' 
+    File Extensions = NSI
+
+/Delimiters = ~@%^&*()-+=|\/{}[]:;"'<> ,	.?
+
+/Function String 1 = "%[ ^t]++Section[ ^t{]"
+
+/Function String 2 = "%[ ^t]++Function[ ^t{]"
+
+/C1"Keywords"
+
+    Section SectionEnd
+    Function FunctionEnd
+    !system !include !cd !packhdr !define !undef !ifdef !ifndef !endif !else !macro !macroend !insertmacro
+
+/C2"NSIS Keywords"
+
+    Abort ADdSize AllowRootDirInstall AutoCloseWindow
+    BGGradient BrandingText BringToFront
+    Call CallInstDLL Caption ClearErrors CompletedText ComponentText CopyFiles CRCCheck CreateDirectory CreateShortCut
+    Delete DeleteINISec DeleteINIStr DeleteRegKey DeleteRegValue DetailPrint DetailsButtonText DirShow DirText DisabledBitmap
+    EnabledBitmap EnumRegKey EnumRegValue Exch Exec ExecShell ExecWait ExpandEnvStrings
+    File FileClose FileErrorText FileOpen FileRead FileReadByte FileSeek FileWrite FileWriteByte FindClose FindFirst FindNext FindWindow
+    GetCurrentAddress GetDLLVersion GetDLLVersionLocal GetFileTime GetFileTimeLocal GetFullPathName GetFunctionAddress GetLabelAddress Goto
+    HideWindow
+    Icon IfErrors IfFileExists IfRebootFlag InstallButtonText InstallColors InstallDir InstallDirRegKey InstProgressFlags InstType IntCmp IntCmpU IntFmt IntOp IsWindow
+    LicenseData LicenseText
+    MessageBox MiscButtonText
+    Name
+    OutFile
+    Pop Push
+    ReadEnvStr  ReadINIStr ReadRegDWORD ReadRegStr Reboot RegDLL Rename Return RMDir
+    SearchPath SectionDivider SectionIn SendMessage SetAutoClose SetCompress SetDatablockOptimize SetDateSave SetDetailsPrint SetDetailsView SetErrors SetFileAttributes SetOutPath SetOverwrite SetRebootFlag ShowInstDetails ShowUninstDetails SilentInstall SilentUnInstall Sleep SpaceTexts StrCmp StrCpy StrLen SubCaption
+    UninstallButtonText UninstallCaption UninstallIcon UninstallSubCaption UninstallText UnRegDLL
+    WindowIcon WriteINIStr WriteRegBin WriteRegDWORD WriteRegExpandStr WriteRegStr WriteUninstaller
+
+/C4"SPECIAL"
+
+    HKCR HKEY_CLASSES_ROOT HKLM HKEY_LOCAL_MACHINE HKCU HKEY_CURRENT_USER HKCC HKEY_CURRENT_CONFIG HKDD HKEY_DYN_DATA HKPD HKEY_PERFORMANCE_DATA HIDDEN
+    NORMAL
+    FILE_ATTRIBUTE_NORMAL FILE_ATTRIBUTE_ARCHIVE FILE_ATTRIBUTE_HIDDEN FILE_ATTRIBUTE_OFFLINE FILE_ATTRIBUTE_READONLY FILE_ATTRIBUTE_SYSTEM FILE_ATTRIBUTE_TEMPORARY
+    ARCHIVE
+    OFFLINE
+    READONLY
+    SYSTEM SW_SHOWNORMAL SW_SHOWMAXIMIZED SW_SHOWMINIMIZED
+    TEMPORARY
+    MB_OK MB_OKCANCEL MB_ABORTRETRYIGNORE MB_RETRYCANCEL MB_YESNO MB_ICONEXCLAMATION MB_ICONINFORMATION MB_ICONQUESTION MB_ICONSTOP MB_TOPMOST MB_SETFOREGROUND MB_RIGHT MB_DEFBUTTON1 MB_DEFBUTTON2 MB_DEFBUTTON3 MB_DEFBUTTON4
+    IDABORT IDCANCEL IDIGNORE IDNO IDOK IDRETRY IDYES
+
+C5/"VARIABLES"
+
+    $INSTDIR $OUTDIR 
+    $0 $1 $2 $3 $4 $5 $6 $7 $8 $9 
+    $R0 $R1 $R2 $R3 $R4 $R5 $R6 $R7 $R8 $R9 
+    $CMDLINE $PROGRAMFILES $DESKTOP $EXEDIR $WINDIR $SYSDIR $TEMP 
+    $STARTMENU $SMPROGRAMS $SMSTARTUP $QUICKLAUNCH $HWNDPARENT
+
+/C6"Functions"
+    
+      .onInit   .onUserAbort   .onInstSuccess     .onInstFailed .onVerifyInstDir 
+    un.onInit un.onUserAbort un.onUninstSuccess un.onUninstFailed
+    

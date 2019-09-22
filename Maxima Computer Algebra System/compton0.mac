@@ -1,0 +1,191 @@
+/* compton0.mac 
+     E. L. Woollett
+   woollett@charter.net 
+   April 15, 2011
+   */
+
+
+" ======================================================"$
+ "  file compton0.mac "$
+ "  Maxima by Example, Ch. 12 "$
+ "  Dirac Algebra and Quantum Electrodynamics "$
+ "  Edwin L Woollett, woollett@charter.net "$
+ "  http://www.csulb.edu/~woollett  "$
+    print ("      ver: ",_binfo%,"  date: ",mydate )$
+    
+" COMPTON SCATTERING OF STRUCTURELESS SPIN 0 PARTICLES "$
+"  which we will call (pi,gamma) scattering "$
+"  gamma(k1,s1) + pi(p1) --> gamma(k2,s2) + pi(p2) "$
+" POPULATE THE LIST invarR OF 4-VEC DOT PRODUCT VALUES. "$
+" Express 4-vector dot products in terms of s, t, u, and m^2 "$
+" Using s = (p1+k1)^2 = (p2+k2)^2, t = (k2-k1)^2 = "$
+" (p2-p1)^2, u = (k2-p1)^2 = (p2-k1)^2, s + t + u = 2*m^2 "$ 
+    
+  invar (D(p1,p1) = m^2,
+         D(p1,k1) = (s-m^2)/2,
+         D(p1,k2) = -(u-m^2)/2,
+         D(p1,p2) = (s+u)/2,
+         D(p2,p2) = m^2,
+         D(p2,k1) = -(u-m^2)/2,
+         D(p2,k2) = (s-m^2)/2,
+         D(k1,k1) = 0,
+         D(k1,k2) = (s+u)/2 - m^2,
+         D(k2,k2) = 0)$
+         
+ " 1. UNPOLARIZED RESULT IN ARBITRARY FRAME (s,t,u form) "$
+   " amplitude is M_fi "$
+  " M_fi = -2*e^2*( D(e2_cc,e1) - D(e2_cc,p2)*D(e1,p1)/D(k1,p1) "$
+  "               + D(e2_cc,p1)*D(e1,p2)/D(k1,p2) ) "$
+  " The parenthesis expression can be written as the "$
+  " contraction (assume here real pol. vectors ) "$
+  "  sum (sum (e2[mu]*T[mu,nu]*e1[mu],mu,0,3),nu,0,3) "$
+  " where T[mu,nu] is the expression t_munu : "$     
+
+" -------------------------------------------------"$ 
+
+   t_munu:Gm(mu,nu)-UI(p1,nu)*UI(p2,mu)/D(k1,p1)
+                       +UI(p1,mu)*UI(p2,nu)/D(k1,p2)$
+                       
+ "========================================================="$
+ "  Note Schwinger's expression (3-12.93) used here, "$
+ "  which he derives on page 73, and further discusses p.294"$
+ " The Lorentz gauge photon polarization 4-vector always has"$
+ " the properties: 1). D(k,e(k,s)) = 0, "$
+ "  2). D(n,e(k,s)) = 0, 3). D(kbar,e(k,s)) = 0 "$
+ " 4). D(e(k,s)_cc,e(k,r)) = -kroneker-delta(s,r) "$
+ " Within the Lorentz gauge one still has gauge freedom "$
+ " since one can choose the unit timelike vector n^mu  to"$
+ " have any components, with kbar^mu = -k^mu + 2*n^mu*D(k,n). "$
+ " In an frame in which n = (1,0,0,0) (which --> D(n,n) = 1)"$
+ " the spatial components of kbar are the opposite of those "$
+ " of k. One can identify n with any convenient 4-vector in "$
+ " the problem "$
+ "==========================================================="$
+ " Evaluate Mssq = abs. value squared of M_fi."$
+ " pull out factor e^4 and sum over polarizations of both photons "$
+ " The result is : "$
+   
+                       
+   Mssq : ratsimp ( 4*(Con (t_munu^2) -2) );             
+ 
+ 
+  " LAB FRAME EVALUATION "$
+ " initial pion rest frame evaluation in terms of"$
+ " scattering angle of final photon relative to initial"$
+ " photon direction (z - x plane) "$
+ 
+ " kinematics with initial 'pion' p1 at rest. "$
+  " initial photon k1 moving along positive z axis. "$
+
+assume (m > 0, k > 0, kp > 0, th >= 0, th <= %pi )$
+   
+comp_def ( p1( m,0,0,0),
+           k1( k,0,0,k),
+           k2 (kp,kp*sin(th),0,kp*cos(th)),
+           p2 (m+k-kp,-kp*sin(th),0,k-kp*cos(th)) )$   
+           
+ 
+ " ---------------------------------------------------------"$
+ " conservation of relativistic energy gives "$
+ "  m + k = E_p2 + kp "$
+ " and conservation of 3 or 4-momentum implies "$
+ "  kp = m*k/(m + k*(1-cos(th)))    "$
+ " ---------------------------------------"$ 
+ 
+ " find replacement rule for kp using conservation of 4-mom"$
+ 
+ kp_rule : solve (
+          VP (p1+k1-k2,p1+k1-k2) = ev_invar (D(p2,p2)),   kp );
+          
+          
+  s_th : VP (p1+k1,p1+k1);
+  
+  t_th : ( VP (k1-k2,k1-k2),ev(%%,kp_rule));
+  
+  u_th : ( VP (k2-p1,k2-p1),ev(%%,kp_rule));
+  
+  " replace s by s_th, etc "$
+  
+  Mssq_lab : factor (sub_stu (Mssq));
+  
+  " having pulled out e^4 from Mssq "$
+  
+  
+   A : alpha^2*(kp/k)^2/(4*m^2);
+ 
+ " -------------------------------------- "$
+ " To get unpolarized differential cross section, "$
+ " divide sum over spins Mssq_lab by 2 from average "$
+ " over polarization of the  initial photon. "$ 
+ 
+ dsigdo_lab_unpol : (A/2)*Mssq_lab$
+ 
+ (display2d:true,display (dsigdo_lab_unpol),display2d:false)$
+ 
+ " which agrees with G/R QED p. 437 Eq.(14)  "$
+ " since r_0^2 = alpha^2/m^2 "$
+              
+  " ======================================="$
+  "---------------------------------------------------"$
+ " 2. LINEAR PHOTON POLARIZATION CASE     "$
+ " ------  lab frame, Coulomb gauge  --------------"$
+ " Leave real photon polarization 4-vectors e1,e2 in amplitude. "$
+ " replace p1 dot products using lab frame coulomb gauge."$
+ " replace p2 dot products with e1,e2 "$
+ "                 using 4-mom conservation relation. "$
+ " The D(p1,e1) and D(p1,e2) replacements depend on our "$
+ "               lab frame Coulomb gauge choices. "$
+ " Recall that D has property symmetric, so  "$
+ " D(a,b) = D(b,a). "$
+ " choose real polarization vectors => linear pol."$
+ 
+ invar (D(e1,e1) = -1,
+        D(k1,e1) = 0,
+        D(e2,e2) = -1,
+        D(k2,e2) = 0,
+        D(p1,e1) = 0,
+        D(p1,e2) = 0,
+        D(e1,p2) = -D(e1,k2),
+        D(e2,p2) = D(e2,k1))$ 
+        
+  Ampl : -2*D(e1,e2) + D(e2,a)*D(e1,b)/(s-m^2) + D(e2,c)*D(e1,d)/(u-m^2);
+  
+  " the amplitude is real so just need Ampl^2 for cross section "$
+  
+  Ampsq : expand (Ampl^2);  
+  
+  "  replace a,b,c,d "$
+  
+  Ampsq1 : subst ([a=2*p2+k2,b=2*p1+k1,c=2*p1-k2,d=2*p2-k1], Ampsq);   
+  
+  " expand dot products and use invariants list invarR "$
+        
+  Ampsq2 : ev_Ds (Ampsq1);
+ 
+ " we see that there is no further reference to s and u in this result"$
+ " multiply by A to get polarized cross section "$
+ 
+ dsigdo_lab_pol : A*Ampsq2$
+ 
+ (display2d:true,display (dsigdo_lab_pol),display2d:false)$
+ 
+ " which agrees with G/R QED p. 437, Eq.(12)  "$
+ " since r_0^2 = alpha^2/m^2 "$
+ " In Coulomb gauge lab frame the four vector dot product square "$
+ " D(e2,e1)^2 reduces to dot(e2_vec,e1_vec)^2 "$
+ " We recover the unpolarized result above if we sum over both "$
+ " e1 and e2 values and divide by 2 since we are averaging over "$
+ " the e1 values (see above section on transverse pol. vector sums)"$
+ "----------------------------------------------------------------"$
+ " If we only average over the polarization of the incident photon"$
+ " and leave the polarization of the final photon arbitrary, we "$
+ " replace (1+cos(th)^2) by ( 1 - dot(ku,e2_vec)^2) which gives "$
+ " 1 for e2_vec chosen perpendicular to the scattering plane, and "$
+ " gives sin(th)^2 for e2_vec chosen parallel to the scattering "$
+ " plane, leading to the scattered photons polarized preferentially"$
+ " in a direction perpendicular to the scattering plane."$
+ 
+ 
+ 
+ 
+ 

@@ -1,0 +1,11 @@
+{
+    "root":"example.1.bc",
+    "leaves":[
+        "func1of6",
+        "func2of6",
+        "func3of6",
+        "func4of6",
+        "func5of6",
+        "func6of6",
+    ]
+}

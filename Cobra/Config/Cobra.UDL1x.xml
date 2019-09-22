@@ -1,0 +1,36 @@
+1	<NotepadPlus>
+2	    <UserLang name="Cobra" ext="cobra">
+3	        <Settings>
+4	            <Global caseIgnored="no" escapeChar="\" />
+5	            <TreatAsSymbol comment="no" commentLine="yes" />
+6	            <Prefix words1="no" words2="no" words3="no" words4="no" />
+7	        </Settings>
+8	        <KeywordLists>
+9	            <Keywords name="Delimiters">&apos;&apos;0&apos;&apos;0</Keywords>
+10	            <Keywords name="Folder+"></Keywords>
+11	            <Keywords name="Folder-"></Keywords>
+12	            <Keywords name="Operators">- ! % &amp; ( ) * / ? [ \ ] ^ { | } ~ + &lt; = &gt;</Keywords>
+13	            <Keywords name="Comment">1&quot;&quot;&quot; 2&quot;&quot;&quot; 0#</Keywords>
+14	            <Keywords name="Words1">abstract fake internal new nonvirtual private protected public shared override partial virtual</Keywords>
+15	            <Keywords name="Words2">vari inout out adds all and any as assert body branch break callable catch class const continue cue def do dynamiceach else end ensure enum event every except extend finally for from get has if ignore implements implies in inherits inlined interface invariant is listen lock mixin must namespace not objc of old on or pass passthrough post print pro raise ref require return same set sig stop struct success test throw to trace try using var where while yield</Keywords>
+16	            <Keywords name="Words3">true false nil use import base this</Keywords>
+17	            <Keywords name="Words4">Array char Color decimal dynamic DateTime Dictionary Exception float float32 float64 int int8 int16 int32 int64 ICloneable IComparable IDictionary IEnumerable IList List number Object Queue Set Stack StreamReader StreamWriter String StringBuilder StringReader StringWriter TextReader TextWriter uint uint8 uint16 uint32 uint64</Keywords>
+18	        </KeywordLists>
+19	        <Styles>
+20	            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" colorStyle="0" fontName="" fontStyle="0" />
+21	            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="000000" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+22	            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+23	            <WordsStyle name="KEYWORD1" styleID="5" fgColor="FF00FF" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+24	            <WordsStyle name="KEYWORD2" styleID="6" fgColor="FF8040" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+25	            <WordsStyle name="KEYWORD3" styleID="7" fgColor="8080FF" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+26	            <WordsStyle name="KEYWORD4" styleID="8" fgColor="00D269" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+27	            <WordsStyle name="COMMENT" styleID="1" fgColor="808040" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+28	            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="808040" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+29	            <WordsStyle name="NUMBER" styleID="4" fgColor="00FF80" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+30	            <WordsStyle name="OPERATOR" styleID="10" fgColor="C78D8D" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+31	            <WordsStyle name="DELIMINER1" styleID="14" fgColor="00C4C4" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+32	            <WordsStyle name="DELIMINER2" styleID="15" fgColor="00C4C4" bgColor="FFFFFF" colorStyle="1" fontName="" fontStyle="0" />
+33	            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+34	        </Styles>
+35	    </UserLang>
+36	</NotepadPlus>

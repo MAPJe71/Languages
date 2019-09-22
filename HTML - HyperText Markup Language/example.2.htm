@@ -1,0 +1,98 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="AUTHOR" content="Jens Lorenz for VfL Uetze">
+   <title>VfL Uetze e.V. - Ticker</title>
+<script language="javascript" src="../auto.js">
+</script>
+<script language="javascript">
+Nb1 = new Image(); Nb1.src = "zur1.gif"; Ab1 = new Image(); Ab1.src = "zur0.gif";
+Nb2 = new Image(); Nb2.src = "vor1.gif"; Ab2 = new Image(); Ab2.src = "vor0.gif";
+Nb3 = new Image(); Nb3.src = "em1.gif"; Ab3 = new Image(); Ab3.src = "em0.gif";
+
+Bilder = new Array(window.document.images.length);
+for(i=0;i<window.document.images.length;i++)
+  Bilder[i] = window.document.images[i].src;
+
+function BildOut(Index,Altbild)
+{
+ window.document.images[Index].src = Altbild.src;
+}
+function BildOver(Index,Neubild)
+{
+ window.document.images[Index].src = Neubild.src;
+}
+
+function click(FKT)
+{
+	if (navigator.appName == 'Netscape')
+	if (FKT == 'back')
+	  back();
+	else
+	  forward();
+	else
+	if (FKT == 'back')
+	  history.back();
+	else
+	  history.forward();
+}
+
+var click2 = function()
+{
+	...
+}
+
+object.prototype.method = function()
+{ 
+	...
+}
+
+my.namespace.MyObj = function () {
+  this.var1 = 'abc';
+  this.var2 = 'xyz';
+  this.items = [];
+}
+
+my.namespace.MyObj.prototype {
+   getCount: function() {
+       return this.items.length;
+   }
+}
+
+</script>
+</head>
+
+<style type="text/css">
+<!--
+#Ticker { position:absolute; top:8px; left:100px; visability:visable }
+.Ticker { font-family:Arial; font-size:14px; color:black; }
+-->
+</style>
+
+<body text="#000000" bgcolor="#C0C0C0" link="#000000" vlink="#000000" alink="#000000" background="hintergr.gif" onload="start_ticker()">
+<div id="Ticker" class="Ticker"">&nbsp;</div>
+
+
+
+<address>
+</address>
+
+<center><table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" HEIGHT="35" >
+<tr>
+<td WIDTH="5"></td>
+
+<td ALIGN=LEFT VALIGN=CENTER WIDTH="80"><a href="javascript:click('back')" onMouseOver="BildOver(0,Nb1)" onMouseOut="BildOut(0,Ab1)"><img SRC="zur0.gif" ALT="Zurück" BORDER=0 height=22 width=24></a><a href="javascript:click('forward')" onMouseOver="BildOver(1,Nb2)" onMouseOut="BildOut(1,Ab2)"><img SRC="vor0.gif" ALT="Vor" BORDER=0 height=22 width=24></a><a href="mailto:webmaster@vfl-uetze.de" onMouseOver="BildOver(2,Nb3)" onMouseOut="BildOut(2,Ab3)"><img SRC="em0.gif" ALT="eMail: webmaster@vfl-uetze.de" BORDER=0 height=22 width=24></a></td>
+
+<td WIDTH="5"></td>
+
+<td ALIGN=LEFT VALIGN=CENTER WIDTH="80%"></td>
+
+<td ALIGN=RIGHT VALIGN=CENTER><img SRC="/cgi-bin/counter.pl" ALT="Besuchszähler" BORDER=0 ></td>
+</tr>
+</table></center>
+
+</body>
+<adresse>
+</adresse>
+</html>

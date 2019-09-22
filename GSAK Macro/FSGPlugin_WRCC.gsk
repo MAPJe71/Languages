@@ -1,0 +1,82 @@
+#*******************************************
+# MacDescription = FSG Plugin - generates a list of Well-Rounded Cacher Challenge
+# MacFileName = FSGPlugin_WRCC.gsk
+# MacAuthor = VeeN
+# MacVersion=1.04
+# MacUrl=http://gsak.net/board/index.php?showtopic=23274&st=0&#entry172447
+#*******************************************
+# v.1.0 - NEW ver.
+#
+# v. 1.01 correct images link 
+#
+# v. 1.02 correct second images link 
+#
+# v. 1.03 replace "." or "," for stars  
+#
+# v. 1.04 use routine for Heding color
+#
+IF $_MacroLevel = 1
+	RETURN msg="This macro is a FindStatGen plug-in and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLf <plugin>FSGPlugin_WRCC</plugin>"
+ENDIF
+
+SHOWSTATUS msg="Macro FSGPlugin_WRCC running" Width=350
+
+GOSUB Name=DeclareVariables
+
+SHOWSTATUS msg="FSGPlugin - Well-Rounded Cacher Challenge"
+
+$MyOut = "<br>" 
+$txtHeading="Well-Rounded Cacher Challenge"
+$MyOut = $MyOut + "<div style='" + $stSectHead + "'>"
+$MyOut = $MyOut + $txtHeading
+$MyOut = $MyOut + "</div>"
+
+$MyOut = $MyOut + "<br><table>"
+$MyOut = $MyOut + "<tr><td><font color='#808080'>difficulty</font></td><td><font color='#808080'>terrain</font></td><td><font color='#808080'>Waypoint</font></td><td><font color='#808080'>Cache Name</font></td><td><font color='#808080'>Date Found</font></td>"
+
+$difficulty = 1
+WHILE $difficulty <= 5
+    $terrain=1
+    WHILE $terrain <= 5
+    $xdifficulty=Replace(",","_",NumToStr($difficulty))
+#    $xdifficulty=Replace(".0","",$xdifficulty)
+    $xdifficulty=Replace(".5","_5",$xdifficulty)
+    $xterrain   =Replace(",","_",NumToStr($terrain))
+#    $xterrain   =Replace(".0","",$xterrain)
+    $xterrain   =Replace(".5","_5",$xterrain)
+#MSGOK msg="$difficulty/$terrain >> $xdifficulty/$xterrain"
+	 $_sql = "Select difficulty, Code, Name, FoundByMeDate, terrain from AllFinds where difficulty=$difficulty and terrain = $terrain order by ldate asc, usersort asc, llogid asc limit 1"
+	 $line = Sqlite("sql",$_sql)
+         $MyOut = $MyOut + "<tr><td><img src='http://www.geocaching.com/images/stars/stars$xdifficulty.gif'></td><td><img src='http://www.geocaching.com/images/stars/stars$xterrain.gif'></td>"
+	 if $line = ""
+	       $MyOut = $MyOut + "<td>&nbsp;</td><td><font color='RED'>Not Found yet</font></td><td>&nbsp;</td>"
+	 else
+	       $code   = Extract($line,";",2)
+	       $name   = Extract($line,";",3)
+	       $date   = Extract($line,";",4)
+	       $date   = Right($date,2)+"."+SubStr($date,6,2)+"."+Left($date,4) 
+	       $MyOut = $MyOut + "<td>$code</td><td>$name</td><td>$date</td>"
+#	       $MyOut = $MyOut + "<br>"  + $line
+	 endif		
+         $MyOut = $MyOut + "</tr>"
+         $terrain = $terrain+0.5
+    ENDWHILE
+    $difficulty = $difficulty+0.5
+ENDWHILE
+$MyOut = $MyOut + "</table>"
+$p_FSGData = $MyOut
+
+BEGINSUB Name=DeclareVariables
+	Declare Var=$MyOut Type=String
+	Declare Var=$difficulty Type=Numeric	
+	Declare Var=$terrain Type=Numeric
+	Declare Var=$xdifficulty Type=String	
+	Declare Var=$xterrain Type=String
+	Declare Var=$line Type=String
+	Declare Var=$date Type=String
+	Declare Var=$txtHeading Type=String
+ENDSUB
+
+<data> varname=$divstyle
+<div style='width:740px; background: #666699; font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;font-weight: bold; line-height: 20px; font-size: 13px; color: white; border: 1px solid #000000;   text-align: center; margin-bottom: 6px;; background: #CCCCD4; color: black'>
+<enddata>

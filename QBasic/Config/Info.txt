@@ -1,0 +1,56 @@
+'+---------------+---------------------------------------------------+
+'| ###### ###### |     .--. .         .-.                            |
+'| ##  ## ##   # |     |   )|        (   ) o                         |
+'| ##  ##  ##    |     |--' |--. .-.  `-.  .  .-...--.--. .-.        |
+'| ######   ##   |     |  \ |  |(   )(   ) | (   ||  |  |(   )       |
+'| ##      ##    |     '   `'  `-`-'  `-'-' `-`-`|'  '  `-`-'`-      |
+'| ##     ##   # |                            ._.'                   |
+'| ##     ###### |  Sources & Documents placed in the Public Domain. |
+'+---------------+---------------------------------------------------+
+'|                                                                   |
+'| === Info.txt ===                                                  |
+'|                                                                   |
+'| == How to setup default icons for your QB64 files and add N++ as  |
+'| == its default open tool.                                         |
+'|                                                                   |
+'+-------------------------------------------------------------------+
+'| Done by RhoSigma, R.Heyder, provided AS IS, use at your own risk. |
+'| Find me in the QB64 Forum or mail to support@rhosigma-cw.net for  |
+'| any questions or suggestions. Thanx for your interest in my work. |
+'+-------------------------------------------------------------------+
+
+WARNING! - These procedures may require admin access here and there!
+
+1.) Copy/move the provided .ico files into qb64\source, or find some
+    other icons you like and rename them according to the provided ones.
+
+2.) Go into FileTypes.txt and replace all occurences of the text
+    "C:\\your\\path\\to\\qb64" with the actual path to your QB64 folder,
+    also replace "C:\\your\\path\\to\\npp" with the path to your Notepad++
+    folder, make sure to use a double backslash as separator, save changes.
+    NOTE: You cannot use system environment variables such as %userprofile%,
+          %appdata% etc. here, type absolute paths instead, always begin
+          with the drive letter and end with the application folder. For
+          example, if you have installed QB64 in "C:\qb64" and Notepad++
+          in "C:\Program Files (x86)\Notepad++", then replace:
+            C:\\your\\path\\to\\qb64 with C:\\qb64
+        and C:\\your\\path\\to\\npp with C:\\Program Files (x86)\\Notepad++
+
+3.) Now run regedit.exe either by typing it into a command prompt or into
+    the program search field in the Start Menu. In RegEdit select menu
+    File > Import and select FileTypes.txt. When done, close RegEdit and
+    restart your system to make changes effective.
+    NOTE: If you already had other default icons assigned, and these
+          still show up instead of the new ones just installed, then it
+          could be a icon cache issue. Try to delete the hidden system
+          file %localappdata%\IconCache.db (Vista & newer) and restart
+          your system again.
+
+Optional, if you like to be able to search your source file contents
+for any text or keywords, using the search field of Windows Explorer.
+----------------------------------------------------------------------
+4.) Go into Controlpanel > Indexing Options, select Advanced Options
+    and then the Filetypes tab, check the extensions .bas, .bi, and
+    .bm (add them, if not in list), then select each and switch them to
+    fulltext search (ie. index file properties and contents), accept
+    all changes.

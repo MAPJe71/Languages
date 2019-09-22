@@ -1,0 +1,126 @@
+% Unendliche_Freude.abc    -*- abc -*-
+%
+% Written for abcm2ps and abc2midi:
+% http://abcplus.sourceforge.net
+% Tested with abcm2ps-8.12.3 and abcMIDI-2016.07.20
+%
+% Edited by Guido Gonzato <guido dot gonzato at gmail dot com>
+% September 16, 2016
+%
+% To typeset this file:
+%       abcm2ps -O= -c Unendliche_Freude.abc
+% To make a MIDI file:
+%       abc2midi Unendliche_Freude.abc
+
+%%format choral
+
+X: 1
+T: Unendliche Freude
+C: Franz Schubert (1797 - 1828)
+C: Text: Friedrich von Schiller (1759 - 1805)
+M: 6/8
+L: 1/8
+Q: "Allegretto" 3/8=70
+%%score [TI | TII | B]
+%%MIDI program 1 53 % voice ooh
+%%MIDI program 2 53
+%%MIDI program 3 53
+V: TI  clef=treble-8 name="T I"  sname="TI"
+V: TII clef=treble-8 name="T II" sname="TII"
+V: B   clef=bass name="B" octave=-2 sname="B"
+U: h=!breath!
+K: D
+%
+% 1 - 5
+%
+[V: TI] !pp!A|A> B A A d f|f/e/ dc d2 A |(B2 d) A2 A|^A> A A B c d|
+w: Un- end- li- che Freu- de durch- wal - let das Herz. \
+w: Hier man - gelt der Na- me dem trauern - den
+[V: TII]     F|F> G F F F A|A/G/ F E F2 F|G3 F2 F    |E> E E F ^A B|
+w: Un- end- li- che Freu- de durch- wal - let das Herz. \
+w: Hier man- gelt der Na- me dem trauern - den
+[V: B] d    |d> d d d d d|A A A d2 d   |(G2 B) d2 d|c> c c d c B |
+%
+% 5 - 7
+%
+[V: TI] c3 F z2 |!pp!c3 !f!c B c|(d3 d) B !p!G|
+w: Lei- de, sanf - tes Ent- z\"u - cken nur
+[V: TII] ^A3 F z2|=A3 G2 G       |F3 G z D     |
+w: Lei- de, sanf- tes Ent- z\"u- cken nur
+[V: B] f3 f z2 |f3 e2 e        |d3 B z B     |
+%
+% 8 - 10
+%
+[V: TI] F> G E D2 !ff!A|(d3 d>) c d|f3 d z d|
+w: hei- \sset man Schmerz. Un- en - li- che Freu- de durch-
+[V: TII] D> E C D2 A    |(D3 D>) C D|F3 D z2 |
+w: hei- \sset man Schmerz. Un- en - li- che Freu- de
+[V: B] A> A A d2 A    |(d3 d>) c d|f3 d z2|
+%
+% 11 - 13
+%
+[V: TI] (B3 B) ^A B|(c3 c) z !f!F|c3 d z d |
+w: wal - let das Herz. - Hier mangelt - der
+[V: TII] z2 F F F F |^A3 A z F    |^A3 B z B|
+w: durch- wal- let das Herz. - Hier mangelt - der
+[V: B] z2 d d d d |(f3 f) z f   |f3 b z B |
+%
+% 14 - 16
+%
+[V: TI] !ff!e3 f z !p!g|(d3 d) c B |B3 ^A z2|
+w: Na- me dem trau - ern- den Lei- de,
+[V: TII] =A3 A z A      |(F3 ^E) E E|F3 F z2 |
+w: Na- me dem trau - ern- den Lei- de,
+[V: B] A3 B z A       |(B2 F) G2 G|F3 F z2 |
+%
+% 17 - 18
+%
+[V: TI] (!p!B2 c) d2 ^d|(e2 =d) c2 c|
+w: sanf - tes Ent- z\"u - cken nur
+[V: TII] (F2 ^A) B2 B   |B3 =A2 A    |
+w: sanf - tes Ent- z\"u- cken nur
+[V: B] (d2 c) B2 A    |^G3 A2 A    |
+%
+% 19 - 21
+%
+[V: TI] {c//}B A ^G HA2 !pp!A|A> B A A d g|f/e/ d c d2 A|
+w: hei- \sset man Schmerz. Un- end- li- che Freu- de \
+w: durch wal - let das Herz. Hier
+[V: TII] E E E HE2 F          |F> G F F F A|A/G/ F E F2 F|
+w: hei- \sset man Schmerz. Un- end- li- che Freu- de \
+w: durch wal - let das Herz. Hier
+[V: B] d c B Hc2 d          |d> d d d d d|A A A d2 d   |
+%
+% 22 - 24
+%
+[V: TI] (B2 d) A2 A|c> c c d e f|e3 A z2|
+w: man - gelt der Na- me dem trauern - den Lei- de,
+[V: TII] G3 F2 A    |A> A A A c d|c3 A z2|
+w: man- gelt der Na- me dem trauern - den Lei- de,
+[V: B] (G2 B) d2 f|g> g g f e d|a3 a z2|
+%
+% 25 - 27
+%
+[V: TI] (!pp!c3 c) B c|(!f!d3 d) B !p!G|F> G F D2 !ff!d|
+w: sanf - tes Ent- z\"u - cken nur hei- \sset man Schmerz. Un
+[V: TII] (G3 G) G G    |(F3 G) z D      |D> E C D2 D    |
+w: sanf - tes Ent- z\"u- cken nur hei- \sset man Schmerz. Un
+[V: B] (G3 G) G G    |(d3 B) z B      |A> A A d2 d    |
+%
+% 28 - 30
+%
+[V: TI] (d3 d) c d | f3 d2 d| (B3 B) c d |
+w: end - li- che Freu- de durch wal - let das
+[V: TII] (D3 D) C D | F3 D2 z| z2 F F ^A B|
+w: end - li- che Freu- de durch wal- let das 
+[V: B] (d3 d) c d | f3 d2 z| z2 d d f b |
+%
+% 31 - 35
+%
+[V: TI] (c3 c) z !ff!d| (d3 d) c d | f3 d z d| (!p!A3 A) B c| d3 z2 z |]
+w: Herz, - un- end - li- che Freu- de durch- wal - let das Herz.
+[V: TII] (^A3 F) z D   | (D3 D) C D | F3 D z2 | z2 G G G G   | F3 z2 z |]
+w: Herz, - un- end - li- che Freu- de durch- wal- let das Herz.
+[V: B] (f3 f) z d    | (d3 d) c d | f3 d z2 | z2 A A A A   | d3 z2 z |]
+%
+% End of file Unendliche_Freude.abc

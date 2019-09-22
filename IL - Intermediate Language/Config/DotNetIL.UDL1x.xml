@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="IL" ext="il">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="no" commentLine="no" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;00&quot;00</Keywords>
+            <Keywords name="Folder+">{</Keywords>
+            <Keywords name="Folder-">}</Keywords>
+            <Keywords name="Operators">&apos; - ! &quot; # ( ) * . / : ; | + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 2 0//</Keywords>
+            <Keywords name="Words1">assembly extern module&#x000D;&#x000A;namespace class public&#x000D;&#x000A;auto ansi extends field static int32&#x000D;&#x000A;void cil managed entrypoint locals&#x000D;&#x000A;init ldstr call string ldsflda valuetype varargstloc int8 ldloc&#x000D;&#x000A;brfalse ldsfld and br brtrue ret&#x000D;&#x000A;data bytearray explicit method pinvokeimpl size cdecl at&#x000D;&#x000A;stloc ldloc brfalse try pop ldnull&#x000D;&#x000A;leave.s catch ver file hash mresource private nested&#x000D;&#x000A;family famandassem sequential interface abstract&#x000D;&#x000A;sealed specialname import serializable beforefieldinit&#x000D;&#x000A;unicode autochar rtspecialname value enum implements&#x000D;&#x000A;.pack ldloca instance runtime ctor object hidebysig&#x000D;&#x000A;unsigned int native virtual stind.i ldfntcalli newobj&#x000D;&#x000A;privatescope famorasssem initonly literal notserialized&#x000D;&#x000A;marshal ldtoken bool nullref float32 int16 tls stsfld&#x000D;&#x000A;unmanagedexp newslot reqsecobj optil forwardref&#x000D;&#x000A;preservesig internalcall synchronized noinlining param&#x000D;&#x000A;ldarg. castclass dup callvirt override ldind&#x000D;&#x000A;arglist typedref refanyval brtrue beq bne il&#x000D;&#x000A;bge bgt&#x000D;&#x000A;ble blt property&#x000D;&#x000A;switch break leave endfilter endfinally&#x000D;&#x000A;endfault nop ldc&#x000D;&#x000A;ldind stind&#x000D;&#x000A;add sub mul div rem&#x000D;&#x000A;neg add ovf&#x000D;&#x000A;or xor not shl shr sbr conv&#x000D;&#x000A;ceq cgt clt&#x000D;&#x000A;ckfinite cpblk initblk ldarg ldarga&#x000D;&#x000A;starg sldloc ldloc ldloca stloc&#x000D;&#x000A;unaligned volatile localloc ldfld ldsfld ldsflda stfld&#x000D;&#x000A;stsfld jmp call callvirt ldftn ldvirtftn calli tail ldnull ldobj&#x000D;&#x000A;stobj ldstr cpobj newobj initobj isinst box unbox&#x000D;&#x000A;mkrefany refanytype refanyval ldtoken sizeof throw&#x000D;&#x000A;rethrow newarr ldlen ldelema ldelem&#x000D;&#x000A;stelem subsystem&#x000D;&#x000A;corflags alignement imagebase vtfixup callmostderived&#x000D;&#x000A;fromunmanaged sequential import with char float32&#x000D;&#x000A;float64 unsigned native cdecl stdcall thiscall fastcall custom&#x000D;&#x000A;fixed sysstring array currency variantsyschar error&#x000D;&#x000A;decimal date bstr lpstr lpwstr lptstr objectref iunknown&#x000D;&#x000A;idispatch struct safearray byvalstr tbstr lpstruct null&#x000D;&#x000A;date decimal hresult carray userdefined record filetime&#x000D;&#x000A;blob streamstorage streamed_object stored_object cf&#x000D;&#x000A;clsid vector nomangle unmanagedexp lasterr winapi cdecl&#x000D;&#x000A;stdcall cctor emitbyte maxstack zeroinit export vtentry&#x000D;&#x000A;fault finally filter handler to set get addon removeon fire&#x000D;&#x000A;other event custom request demand assert deny&#x000D;&#x000A;permitonly linkcheck inheritcheck reqmin reqopt reqrefuse&#x000D;&#x000A;prejitgrant prejitdeny noncasdemand noncaslinkdemand&#x000D;&#x000A;noncasinheritance nometadata noappdomain noprocess&#x000D;&#x000A;nomachine algorithm ver locale publickey publickeytoken</Keywords>
+            <Keywords name="Words2"></Keywords>
+            <Keywords name="Words3"></Keywords>
+            <Keywords name="Words4"></Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="00007F" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="007F00" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="007F00" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="007F7F" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="7F007F" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

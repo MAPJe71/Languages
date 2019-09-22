@@ -1,0 +1,64 @@
+<NotepadPlus>
+    <UserLang name="HMG" ext="prg ch" udlVersion="3.1.5">
+        <Settings>
+            <Global caseIgnored="yes" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">03/* 04*/ 00&amp;&amp; 00// 00* 01 02</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">&gt;</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open">if do class text for while</Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close">endif endcase enddo endclass endtext next enddo</Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">AddColumn Args Assign AutoLite BackSpace BadDate Block Buffer CanDefault CanRetry CanSubstitute Cargo Clear Col ColCount ColorBlock ColorDisp ColorRect ColorSpec ColorSpec ColPos ColSep ColSep ColWidth Configure DecPos DefColor DeHilite DelColumn DelEnd Delete DelLeft DelRight DelWordLeft DelWordRight Description Display Down end End ExitState FileName Footing FootSep FootSep ForceStable Freeze GenCode GetColumn GoBottom GoBottomBlock GoTop GoTopBlock HasFocus Heading HeadSep HeadSep Hilite HitBottom HitTop Home Home Changed InsColumn Insert Invalidate killFocus Left Left LeftVisible Minus Name nBottom nLeft nRight nTop Operation Original OsCode OverStrike PageDown PageUp PanEnd PanHome PanLeft PanRight Picture Picture Pos PostBlock PreBlock Reader RefreshAll RefreshCurrent Rejected Reset Right Right RightVisible Row RowCount RowPos SetColumn SetFocus Severity SkipBlock Stabilize Stable SubCode SubScript SubSystem ToDecPos Tries Type TypeOut Undo UnTransform Up UpDateBuffer VarGet VarPut Width WordLeft WordRight activate all autosize backcolor blank bottom button buttonsize caption center clock combobox context datepicker dblclick DECLARE define editbox end field fields font fontcolor frame headers height hyperlink change checkbox icon init inplace item justify key label lock main maximize maxlength menu menuitem monthcalendar nocaption nomaximize noshow notoday notodaycircle numeric on popup previous readonly release save separator size statusbar statusitem textbox title toolbar tooltip top topmost undo validmessages value weeknumbers width widths window workarea action :=</Keywords>
+            <Keywords name="Keywords2">__Accept __AcceptStr __AtPrompt __CopyFile __dbApp __dbContinue __dbCopy __dbCopyStruct __dbCopyXStruct __dbCreate __dbDelim __dbJoin __dbList __dbLocate __dbPack __dbSDF __dbSort __dbTotal __dbUpdate __dbZap __Dir _errGetDescrip _errGetFileName _errGetFlags _errGetGenCode _errGetOperation _errGetOsCode _errGetSeverity _errGetSubCode _errGetSubSystem _errGetTries _errLaunch _errNew _errPutDescrip _errPutFileName _errPutFlags _errPutGenCode _errPutOperation _errPutOsCode _errPutSeverity _errPutSubCode _errPutSubSystem _errPutTries _errRelease _evalLaunch _evalNew _evalPutParam _evalRelease _fsClose _fsCommit _fsCreate _fsCurDir _fsCurDrv _fsDelete _fsError _fsExtOpen _fsChDir _fsChDrv _fsIsDrv _fsLock _fsMkDir _fsOpen _fsRead _fsRename _fsRmDir _fsSeek _fsWrite _gtBox _gtBoxD _gtBoxS _gtColorSelect _gtDispBegin _gtDispCount _gtDispEnd _gtGetColorStr _gtGetCursor _gtGetPos _gtIsColor _gtMaxCol _gtMaxRow _gtPostExt _gtPreExt _gtRectSize _gtRepChar _gtRest _gtSave _gtScrDim _gtScroll _gtSetBlink _gtSetColorStr _gtSetCursor _gtSetMode _gtSetPos _gtSetSnowFlag _gtWrite _gtWriteAt _gtWriteCon _itemArrayGet _itemArrayNew _itemArrayPut _itemCopyC _itemFreeC _itemGetC _itemGetDS _itemGetL _itemGetND _itemGetNL _itemNew _itemParam _itemPutC _itemPutCL _itemPutDS _itemPutL _itemPutND _itemPutNL _itemRelease _itemReturn _itemSize _itemType _parc _parclen _parcsiz _pards _parinfa _parinfo _parl _parnd _parni _parnl _ret _retc _retclen _retds _retl _retnd _retni _retnl _storc _storclen _stords _storl _stornd _storni _stornl _xalloc _xfree _xgrab _xvalloc _xvfree _xvheapalloc _xvheapdestroy _xvheapfree _xvheaplock _xvheapnew _xvheapresize _xvheapunlock _xvlock _xvlockcount _xvrealloc _xvsize _xvunlock _xvunwire _xvwire __Eject __Keyboard __LabelForm __MClear __MenuTo __MRelease __MRestore __MSave __MXRelease __Quit __ReportForm __Run __SetCentury __SetFormat __SetFunction __TextRestore __TextSave __TypeFile __Wait __XRestScreen __XSaveScreen ==</Keywords>
+            <Keywords name="Keywords3">#define #elseif #else #endif #if #ifdef #ifndef #include #pragma #undef #xcommand</Keywords>
+            <Keywords name="Keywords4">AADD ABS ACLONE ACOPY ADEL ADIR AEVAL AFIELDS AFILL ACHOICE AINS ALERT ALIAS ALLTRIM ALTD APPEND ARRAY ASC ASCAN ASIZE ASORT AT ATAIL BIN2IBIN2L BIN2W BOF BREAK BROWSE BROWSESYNC CDOW CENTURY CLOSE CMONTH COL COLOR COLORSELECT CONSTRUCTOR CREATE CTOD CURDIR DATE DAY DBAPPEND DBCLEARFILTER DBCLEARINDEX DBCLEARRELATION DBCLOSEALL DBCLOSEAREA DBCOMMIT DBCOMMITALL DBCREATE DBCREATEIND DBDELETE DBEDIT DBEVAL DBF DBFILTER DBGOBOTTOM DBGOTO DBGOTOP DBRECALL DBREINDEX DBRELATION DBRLOCK DBRLOCKLIST DBRSELECT DBRUNLOCK DBSEEK DBSELECTAREA DBSETDRIVER DBSETFILTER DBSETINDEX DBSETORDER DBSETRELATION DBSKIP DBSTRUCT DBTABLEEXT DBUNLOCK DBUNLOCKALL DBUSEAREA DEFERED DELETE DELETED DESCEND DESTRUCTOR DEVOUT DEVOUTPICT DEVPOS DIRECTORY DISKSPACE DISPBEGIN DISPBOX DISPCOUNT DISPEND DISPOUT DISPOUTAT DOSERROR DOW DTOC DTOS EDIT ELSE ELSEIF EMPTY EOF ERRORBLOCK ERRORLEVEL ErrorNew EVAL EXIT EXP EXPORT FCLOSE FCOUNT FCREATE FERASE FERROR FIELDBLOCK FIELDGET FIELDNAME FIELDPOS FIELDPUT FIELDWBLOCK FILE FKLABEL FKMAX FLOCK FOPEN FOR FOUND FREAD FREADSTR FRENAME FSEEK FUNCTION FWRITE GET GETACTIVE GETAPPLYKEY GETDOSETKEY GETENV GetNew GETPOSTVALIDATE GETPREVALIDATE GETREADER GO HARDCR HEADER CHR I2BIN ifdef IIF INCLUDE INDEX INDEXEXT INDEXKEY INDEXORD INKEY INT ISALPHA ISCOLOR ISDIGIT ISLOWER ISPRINTER ISUPPER L2BIN LASTKEY LASTREC LEFT LEN LOCAL LOG LOOP LOWER LTRIM LUPDATE MAX MAXCOL MAXROW MEMOEDIT MEMOLINE MEMOREAD MEMORY MEMOTRAN MEMOWRIT MEMVAR MEMVARBLOCK METHOD MIN MLCOUNT MLCTOPOS MLPOS MOD MONTH MPOSTOLC NETERR NETNAME NEXT NEXTKEY NIL NOSNOW ORDBAGEXT ORDBAGNAME ORDCONDSET ORDCREATE ORDDESTROY ORDFOR ORDKEY ORDLISTADD ORDLISTCLEAR ORDLISTREBUI ORDNAME ORDNUMBER ORDSETFOCUS OS OTHERWISE OUTERR OUTSTD PAD PARAMETERS PCOL PCOUNT PICT PICTURE PRIVATE PROCEDURE PROCLINE PROCNAME PROTECTED PROW PUBLIC QOUT QUIT RAT RDDLIST RDDLIST RDDNAME RDDNAME RDDREGISTER RDDSETDEFAULT READ READEXIT READFORMAT READINSERT READKEY READKILL READMODAL READUPDATED READVAR RECCOUNT RECNO RECSIZE REPLACE REPLICATE REQUEST RESTSCREEN RETURN RIGHT RLOCK ROUND ROW RTRIM SAVESCREEN SAY SCROLL SECONDS SELECT SET SET SETBLINK SETCANCEL SETCOLOR SETCURSOR SETKEY SETMODE SETPOS SETPOSBS SETPRC SOUNDEX SPACE SQRT STATIC STEP STORE STR STRTRAN STRZERO STUFF SUBSTR TBColumnNew TBrowseDB TBrowseNew TIME TO TONE TRANSFORM TYPE UPDATED UPPER USE USED VAL VALID VALTYPE VERSION WHEN WHILE WITH WORD YEAR ZAP</Keywords>
+            <Keywords name="Keywords5"></Keywords>
+            <Keywords name="Keywords6"></Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="0080FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="400000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="800040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

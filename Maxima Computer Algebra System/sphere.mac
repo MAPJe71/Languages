@@ -1,0 +1,324 @@
+/* file sphere.mac 
+    Edwin L Woollett, 2008,2010
+    woollett@charter.net
+    http://www.csulb.edu/~woollett
+    this file sets up and uses
+    spherical polar coordinates:
+    
+  batch("sphere.mac")  sets up environment and
+   calculates laplacian(f),  divergence(bvec),
+   and the (r,theta,phi) components of grad(f) 
+   and curl(bvec) 
+   
+   Note: A ver. 5.22.1 bug prevents the calculation
+   of the components of curl(bvec) by the methods
+   shown here: use ver. 5.21.1 instead.   
+
+*/
+
+" ------------  sphere.mac   ----------------------------"$
+"  spherical polar coordinates (r,theta,phi ) = (r,t,p)  "$
+   
+" replacement rules x,y,z to r,t,p  "$
+
+s3rule : [x = r*sin(t)*cos(p), y = r*sin(t)*sin(p), z = r*cos(t) ]$
+s3sub(expr) := (subst(s3rule,expr),trigsimp(%%) )$
+
+assume(r > 0, sin(t) > 0 )$
+
+
+rxyz : sqrt(x^2 + y^2 + z^2)$
+
+" partial derivatives of r, theta, and phi wrt x, y, and z "$
+
+drdx : (diff(rxyz,x),s3sub(%%) );
+drdy : (diff(rxyz,y),s3sub(%%) );
+drdz : (diff(rxyz,z),s3sub(%%) );
+
+dtdx : (diff( acos(z/rxyz),x ),s3sub(%%) );
+dtdy : (diff( acos(z/rxyz),y ),s3sub(%%) );
+dtdz : (diff( acos(z/rxyz),z ),s3sub(%%) );                    
+
+dpdx : (diff( atan(y/x) ,x),s3sub(%%) );
+dpdy : (diff( atan(y/x) ,y),s3sub(%%) );
+
+" tell Maxima r=r(x,y,z), t = t(x,y,z), "$
+" and p = p(x,y) "$
+
+
+( gradef(r,x,drdx),gradef(r,y,drdy),gradef(r,z,drdz) )$
+( gradef(t,x,dtdx),gradef(t,y,dtdy),gradef(t,z,dtdz) )$
+( gradef(p,x,dpdx),gradef(p,y,dpdy) )$
+
+   depends ([r,t],[x,y,z])$
+
+   depends(p,[x,y])$      
+
+ "------------------------------------------------"$
+ "  Laplacian of a scalar function f              "$
+ "------------------------------------------------"$
+" tell Maxima to treat scalar function f as an "$
+"    explicit function of (r,t,p) "$
+
+depends(f,[r,t,p]);
+
+"  calculate the Laplacian of the scalar function f(r,t,p) "$
+"  using the cartesian definition "$
+
+( diff(f,x,2) + diff(f,y,2) + diff(f,z,2),trigsimp(%%),
+                 scanmap('multthru,%%)  );
+                  
+grind(%)$                  
+
+"--------------------------------------------"$
+"            Unit Vectors                    "$
+"--------------------------------------------"$
+
+"         cartesian unit vectors              "$
+
+( xu : [1,0,0], yu : [0,1,0], zu : [0,0,1] )$   
+
+" spherical polar coordinate unit vectors    "$
+
+ru : sin(t)*cos(p)*xu + sin(t)*sin(p)*yu +
+              cos(t)*zu;
+tu : cos(t)*cos(p)*xu + cos(t)*sin(p)*yu - sin(t)*zu;
+pu : -sin(p)*xu + cos(p)*yu;
+
+"--------------------------------------------"$
+"        Gradient of a Scalar Function f     "$
+"--------------------------------------------"$
+
+" cartesian def. of gradient of scalar f "$
+
+fgradient : diff(f,x)*xu + diff(f,y)*yu + diff(f,z)*zu $
+
+" r, theta, and phi components of grad(f) "$
+
+fgradient_r : ( ru . fgradient, trigsimp(%%) );
+fgradient_t : ( tu . fgradient, trigsimp(%%) );
+fgradient_p : ( pu . fgradient, trigsimp(%%) );
+
+"-----------------------------------------------"$
+"      Divergence of a Vector bvec              "$
+"-----------------------------------------------"$
+
+bvec : bx*xu + by*yu + bz*zu;
+
+" three equations which relate spherical polar components"$
+"   of bvec to the cartesian components "$
+
+eq1 : br = ru.bvec;
+eq2 : bt = tu.bvec;
+eq3 : bp = pu.bvec;
+
+" invert these equations "$
+
+sol : (linsolve([eq1,eq2,eq3],[bx,by,bz]), trigsimp(%%) );
+
+[bx,by,bz] : map('rhs,sol)$
+
+" tell Maxima to treat spherical polar components as "$
+"   explicit functions of (r,t,p) "$
+
+ depends([br,bt,bp],[r,t,p])$
+
+
+"         divergence of bvec                              "$
+
+bdivergence : ( diff(bx, x) + diff(by, y) + diff(bz, z),trigsimp(%%),
+                                      scanmap('multthru,%%) );
+                                      
+ "--------------------------------------------------------"$
+ "   Spherical Polar Components of Curl(bvec)             "$
+ "--------------------------------------------------------"$
+                                      
+" cartesian curl(bvec) definition  "$
+
+bcurl : (diff(bz,y) - diff(by,z) )*xu + (diff(bx,z) - diff(bz,x) )*yu +
+                 (diff(by,x) - diff(bx,y) )*zu$
+                 
+" spherical polar components of curl(bvec) "$
+
+bcurl_r : (ru.bcurl,trigsimp(%%),scanmap('multthru,%%) );
+bcurl_t : (tu.bcurl,trigsimp(%%),scanmap('multthru,%%) );
+bcurl_p : (pu.bcurl,trigsimp(%%),scanmap('multthru,%%) );
+
+" -------------------------------------------------------"$
+
+/*
+Maxima 5.21.1 http://maxima.sourceforge.net
+using Lisp GNU Common Lisp (GCL) GCL 2.6.8 (a.k.a. GCL)
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+The function bug_report() provides bug reporting information.
+                                  2010-10-13
+
+(%i1) batch("sphere.mac")$
+read and interpret file: #pc:/work5/sphere.mac
+(%i2)       ------------  sphere.mac   ----------------------------
+(%i3)        spherical polar coordinates (r,theta,phi ) = (r,t,p)  
+(%i4)                  replacement rules x,y,z to r,t,p  
+(%i5)  s3rule : [x = r sin(t) cos(p), y = r sin(t) sin(p), z = r cos(t)]
+(%i6)         s3sub(expr) := (subst(s3rule, expr), trigsimp(%%))
+(%i7)                      assume(r > 0, sin(t) > 0)
+                                        2    2    2
+(%i8)                      rxyz : sqrt(z  + y  + x )
+(%i9)      partial derivatives of r, theta, and phi wrt x, y, and z 
+(%i10)                 drdx : (diff(rxyz, x), s3sub(%%))
+(%o10)                           cos(p) sin(t)
+(%i11)                 drdy : (diff(rxyz, y), s3sub(%%))
+(%o11)                           sin(p) sin(t)
+(%i12)                 drdz : (diff(rxyz, z), s3sub(%%))
+(%o12)                              cos(t)
+                                       z
+(%i13)              dtdx : (diff(acos(----), x), s3sub(%%))
+                                      rxyz
+                                 cos(p) cos(t)
+(%o13)                           -------------
+                                       r
+                                       z
+(%i14)              dtdy : (diff(acos(----), y), s3sub(%%))
+                                      rxyz
+                                 sin(p) cos(t)
+(%o14)                           -------------
+                                       r
+                                       z
+(%i15)              dtdz : (diff(acos(----), z), s3sub(%%))
+                                      rxyz
+                                     sin(t)
+(%o15)                             - ------
+                                       r
+                                       y
+(%i16)               dpdx : (diff(atan(-), x), s3sub(%%))
+                                       x
+                                     sin(p)
+(%o16)                            - --------
+                                    r sin(t)
+                                       y
+(%i17)               dpdy : (diff(atan(-), y), s3sub(%%))
+                                       x
+                                    cos(p)
+(%o17)                             --------
+                                   r sin(t)
+(%i18)               tell Maxima r=r(x,y,z), t = t(x,y,z), 
+(%i19)                          and p = p(x,y) 
+(%i20)   (gradef(r, x, drdx), gradef(r, y, drdy), gradef(r, z, drdz))
+(%i21)   (gradef(t, x, dtdx), gradef(t, y, dtdy), gradef(t, z, dtdz))
+(%i22)             (gradef(p, x, dpdx), gradef(p, y, dpdy))
+(%i23)                    depends([r, t], [x, y, z])
+(%i24)                        depends(p, [x, y])
+(%i25)         ------------------------------------------------
+(%i26)           Laplacian of a scalar function f              
+(%i27)         ------------------------------------------------
+(%i28)           tell Maxima to treat scalar function f as an 
+(%i29)                     explicit function of (r,t,p) 
+(%i30)                       depends(f, [r, t, p])
+(%o30)                           [f(r, t, p)]
+(%i31)      calculate the Laplacian of the scalar function f(r,t,p) 
+(%i32)                   using the cartesian definition 
+(%i33) (diff(f, z, 2) + diff(f, y, 2) + diff(f, x, 2), trigsimp(%%), 
+                                                        scanmap('multthru, %%))
+                                   2                2
+                                  d f              d f
+                   df             ---         df   ---
+                   -- cos(t)        2       2 --     2    2
+                   dt             dp          dr   dt    d f
+(%o33)             --------- + ---------- + ---- + --- + ---
+                    2           2    2       r      2      2
+                   r  sin(t)   r  sin (t)          r     dr
+(%i34)                             grind(%)
+'diff(f,t,1)*cos(t)/(r^2*sin(t))+'diff(f,p,2)/(r^2*sin(t)^2)+2*'diff(f,r,1)/r
+                                +'diff(f,t,2)/r^2+'diff(f,r,2)$
+(%i35)           --------------------------------------------
+(%i36)                       Unit Vectors                    
+(%i37)           --------------------------------------------
+(%i38)                    cartesian unit vectors              
+(%i39)         (xu : [1, 0, 0], yu : [0, 1, 0], zu : [0, 0, 1])
+(%i40)            spherical polar coordinate unit vectors    
+(%i41)       ru : cos(t) zu + sin(t) sin(p) yu + sin(t) cos(p) xu
+(%o41)              [cos(p) sin(t), sin(p) sin(t), cos(t)]
+(%i42)      tu : - sin(t) zu + cos(t) sin(p) yu + cos(t) cos(p) xu
+(%o42)             [cos(p) cos(t), sin(p) cos(t), - sin(t)]
+(%i43)                    pu : cos(p) yu - sin(p) xu
+(%o43)                       [- sin(p), cos(p), 0]
+(%i44)           --------------------------------------------
+(%i45)                   Gradient of a Scalar Function f     
+(%i46)           --------------------------------------------
+(%i47)              cartesian def. of gradient of scalar f 
+(%i48)     fgradient : diff(f, z) zu + diff(f, y) yu + diff(f, x) xu
+(%i49)              r, theta, and phi components of grad(f) 
+(%i50)           fgradient_r : (ru . fgradient, trigsimp(%%))
+                                      df
+(%o50)                                --
+                                      dr
+(%i51)           fgradient_t : (tu . fgradient, trigsimp(%%))
+                                      df
+                                      --
+                                      dt
+(%o51)                                --
+                                      r
+(%i52)           fgradient_p : (pu . fgradient, trigsimp(%%))
+                                      df
+                                      --
+                                      dp
+(%o52)                             --------
+                                   r sin(t)
+(%i53)          -----------------------------------------------
+(%i54)                Divergence of a Vector bvec              
+(%i55)          -----------------------------------------------
+(%i56)                   bvec : bz zu + by yu + bx xu
+(%o56)                           [bx, by, bz]
+(%i57)      three equations which relate spherical polar components
+(%i58)                 of bvec to the cartesian components 
+(%i59)                       eq1 : br = ru . bvec
+(%o59)       br = by sin(p) sin(t) + bx cos(p) sin(t) + bz cos(t)
+(%i60)                       eq2 : bt = tu . bvec
+(%o60)      bt = - bz sin(t) + by sin(p) cos(t) + bx cos(p) cos(t)
+(%i61)                       eq3 : bp = pu . bvec
+(%o61)                    bp = by cos(p) - bx sin(p)
+(%i62)                      invert these equations 
+(%i63)   sol : (linsolve([eq1, eq2, eq3], [bx, by, bz]), trigsimp(%%))
+(%o63) [bx = br cos(p) sin(t) + bt cos(p) cos(t) - bp sin(p), 
+by = br sin(p) sin(t) + bt sin(p) cos(t) + bp cos(p), 
+bz = br cos(t) - bt sin(t)]
+(%i64)                   [bx, by, bz] : map('rhs, sol)
+(%i65)        tell Maxima to treat spherical polar components as 
+(%i66)                    explicit functions of (r,t,p) 
+(%i67)                 depends([br, bt, bp], [r, t, p])
+(%i68)              divergence of bvec                              
+(%i69) bdivergence : (diff(bz, z) + diff(by, y) + diff(bx, x), trigsimp(%%), 
+                                                        scanmap('multthru, %%))
+                                  dbp      dbt
+                                  ---      ---
+                    bt cos(t)     dp       dt    2 br   dbr
+(%o69)              --------- + -------- + --- + ---- + ---
+                    r sin(t)    r sin(t)    r     r     dr
+(%i70)     --------------------------------------------------------
+(%i71)        Spherical Polar Components of Curl(bvec)             
+(%i72)     --------------------------------------------------------
+(%i73)                 cartesian curl(bvec) definition  
+(%i74) bcurl : (diff(by, x) - diff(bx, y)) zu + (diff(bx, z) - diff(bz, x)) yu
+                                               + (diff(bz, y) - diff(by, z)) xu
+(%i75)             spherical polar components of curl(bvec) 
+(%i76)   bcurl_r : (ru . bcurl, trigsimp(%%), scanmap('multthru, %%))
+                                        dbt      dbp
+                                        ---      ---
+                          bp cos(t)     dp       dt
+(%o76)                    --------- - -------- + ---
+                          r sin(t)    r sin(t)    r
+(%i77)   bcurl_t : (tu . bcurl, trigsimp(%%), scanmap('multthru, %%))
+                                dbr
+                                ---
+                                dp       bp   dbp
+(%o77)                        -------- - -- - ---
+                              r sin(t)   r    dr
+(%i78)   bcurl_p : (pu . bcurl, trigsimp(%%), scanmap('multthru, %%))
+                                     dbr
+                                     ---
+                                bt   dt    dbt
+(%o78)                          -- - --- + ---
+                                r     r    dr
+(%i79)      -------------------------------------------------------
+
+*/

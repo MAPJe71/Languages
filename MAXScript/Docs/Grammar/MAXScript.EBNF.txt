@@ -1,0 +1,269 @@
+
+MAXScript Grammar
+
+
+The following is the complete MAXScript grammar in EBNF form. It differs
+slightly in factoring from the syntax forms given in the online reference, so
+that all precedence is explicit in the rules.
+
+These rules, or syntax definitions, follow the standard EBNF notation (Extended
+Backus-Naur Form). The rules typically contain a number of characters with
+special meanings. For example, brackets enclose optional items, such as the
+minus sign in front of the number. Braces enclose items you can use repeatedly,
+and bars separate multiple items from which you can choose one. Sometimes,
+rules are given names so they can be referred to in the documentation or as
+parts of other rules. The special characters in the rules have the following
+meaning:
+
+    [...]           -- items inside the brackets are optional
+    (...|...|...)   -- choose one of the items separated by the bars
+    {...}           -- you can specify the braced item ZERO or more times
+    {...}+          -- you can specify the braced item ONE or more times
+    =               -- define a name for a syntax rule
+    rule            -- you can insert what is defined by the named rule
+
+    `...`           -- characters or token as written
+
+An example of an EBNF form is:
+
+    [-]{digit}[.{digit}][(e | E)[+ | -]{digit}+]
+
+which is interpreted as follows:
+
+    Syntax          Definition
+
+    [-]{digit}      an optional minus sign (the sign), followed by 0 or more
+                    digits (the integer part), followed by
+
+    .{digit}]       an optional sequence (the fraction part) comprised of: a
+                    period character, followed by 0 or more digits, followed by
+
+    [(e | E)[+ | -]{digit}+]
+                    an optional sequence (the exponent part) comprised of:
+                    either an ’e’ or 'E’, followed by an optional plus or minus
+                    sign, followed by one or more digits.
+
+
+
+program           = { expr }+ ;
+
+expr              = simple_expr
+                  | variable_decls
+                  | assignment
+                  | if_expr | case_expr | try_expr | context_expr
+                  | while_loop | do_loop | for_loop | loop_exit
+                  | struct_def | function_def | utility_def | rollout_def | tool_def | rcmenu_def | macroscript_def | plugin_def
+                  | function_return
+                  | max_command
+                  ;
+
+variable_decls    = ( `local` | [ `persistent` ] `global` ) decl { `,` decl } ;
+
+decl              = var_name [ `=` expr ] ;                                     -- name and optional initial value
+
+var_name          = { alphanumeric | `_` }
+                  | `'` { any_char_except_quote } `'`
+                  ;
+
+assignment        = destination ( `=` | `+=` | `-=` | `*=` | `/=` ) expr ;
+
+destination       = var_name | property | index ;
+
+if_expr           = `if` expr `then` expr [ `else` expr ]
+                  | `if` expr `do`   expr
+                  ;
+
+while_loop        = `while` expr `do`    expr ;
+
+do_loop           = `do`    expr `while` expr ;
+
+for_loop          = `for` name( `in` | `=` ) source ( `do` | `collect` ) expr ;
+
+source            = expr [ `to` expr [ `by` expr ] ] [ `where` expr ] ;
+
+loop_exit         = `exit` [ `with` expr ] ;
+
+loop_continue     = `continue` ;
+
+case_expr         = `case` [ expr ] `of (` { case_item } `)` ;
+
+case_item         = ( factor | `default` ) `:` expr ;
+
+struct_def        = `struct` var_name `(` member { `,` member } `)` ;
+
+member            = name [ `=` expr ]                                           -- name and optional initial value
+                  | function_def
+                  ;
+
+try_expr          = `try` expr `catch` expr ;
+
+function_def      = [ `mapped` ] ( `function` | `fn` ) var_name { arg } `=` expr ;
+
+arg               = var_name [ `:` [ operand ] ] ;
+
+function_return   = `return` expr ;
+
+context_expr      = context { `,` context } expr ;
+
+context           = [ `with` ] `animate` logical_expr
+                  | `at level` operand
+                  | `at time`  operand
+                  | `in`       operand
+                  | [ `in` ] `coordsys` ( `local` | `world` | `parent` | operand )
+                  | `about` ( `pivot` | `selection` | `coordsys` | operand )
+                  | [ `with` ] `undo` logical_expr
+                  ;
+
+set_context       = `set` context ;
+
+utility_def       = `utility` var_name string { var_name `:` operand } `(` { utility_clause }+ `)` ;
+
+utility_clause    = rollout | rollout_clause ;
+
+rollout_def       = `rollout` var_name string { var_name `:` operand } `(` { rollout_clause }+ `)` ;
+
+rollout_clause    = `local` decl { `,` decl }
+                  | function_def | struct_def
+                  | mousetool
+                  | item_group
+                  | rollout_item | rollout_handler
+                  ;
+
+item_group        = `group` string `(` { rollout_item } `)` ;
+
+rollout_handler   = `on` var_name var_name { var_name } `do` expr ;
+
+rollout_item      = item_type var_name [ string ] { var_name `:` operand } ;
+
+item_type         = `label` | `button` | `edittext` | `combobox` | `dropdownList`
+                        | `listbox` | `spinner` | `slider` | `pickbutton` | `radiobuttons`
+                        | `checkbox` | `checkbutton` | `colorPicker` | `mapbutton`
+                        | `materialbutton` | `progressbar` | `timer` | `bitmap` ;
+
+rcmenu_def        = `rcmenu` var_name `(` { rcmenu_clause }+ `)` ;
+
+rcmenu_clause     = `local` decl { `,` decl }
+                  | function_def | struct_def
+                  | rcmenu_item | rcmenu_handler
+                  ;
+
+rcmenu_handler    = `on` var_name var_name `do` expr ;
+
+rcmenu_item       = rcmenu_item_type var_name string { var_name `:` operand } ;
+
+rcmenu_item_type  = `menuitem` | `separator` | `submenu` ;
+
+macroscript_def   = `macroscript` var_name string { var_name `:` operand } `(` expr_seq `)` ;
+
+mousetool_def     = `tool` var_name { var_name `:` operand } `(` { tool_clause }+ `)` ;
+
+tool_clause       = `local` decl { `,` decl }
+                  | function_def | struct_def
+                  | tool_handler
+                  ;
+
+tool_handler      = `on` var_name var_name { var_name } `do` expr ;
+
+plugin_def        = `plugin` var_name var_name { var_name `:` operand } `(` { plugin_clause }+ `)` ;
+
+plugin_clause     = `local` decl { `,` decl }
+                  | function_def | struct_def | mousetool_def | rollout_def
+                  | parameters
+                  | plugin_handler
+                  ;
+
+parameters        = `parameters` var_name { var_name `:` operand } `(` { param_clause }+ `)` ;
+
+param_clause      = { param_defs }+
+                  | { param_handler }
+                  ;
+
+param_defs        = var_name { var_name `:` operand } ;
+
+param_handler     = `on` var_name var_name { var_name } `do` expr ;
+
+plugin_handler    = `on` var_name `do` expr ;
+
+simple_expr       = operand | math_expr | compare_expr | logical_expr | function_call | expr_seq ;
+
+math_expr         = math_operand `+` math_operand                               -- standard arithmetic addition
+                  | math_operand `-` math_operand                               -- standard arithmetic subtraction
+                  | math_operand `*` math_operand                               -- standard arithmetic multiplication
+                  | math_operand `/` math_operand                               -- standard arithmetic division
+                  | math_operand `^` math_operand                               -- exponential, raise to the power
+                  | math_operand `as` class                                     -- conversion between types
+                  ;
+
+math_operand      = operand | function_call | math_expr ;
+
+logical_expr      = ( logical_operand [ `or` | `and` ] | `not` ) logical_operand ;
+
+logical_operand   = operand | compare_expr | function_call | logical_expr ;
+
+compare_expr      = compare_operand [ `==` | `!=` | `>` | `<` | `>=` | `<=` ] compare_operand ;
+
+compare_operand   = math_expr | operand | function_call ;
+
+function_call     = operand ( `( )` | operand { parameter } ) ;                 -- up to an end of line or lower precedence token
+
+parameter         = [ name `:` ] operand ;
+
+operand           = factor | property | index ;
+
+property          = operand `.` var_name ;                                      -- properties and indexes left associate
+
+index             = operand [ expr ] ;
+
+factor            = number | string
+                  | path_name | var_name | `#` var_name
+                  | array | bitarray
+                  | box2 | point3 | point2
+                  | `true` | `false` | `on` | `off`
+                  | `ok`
+                  | `undefined` | `unsupplied`
+                  | `-` expr                                                    -- unary minus
+                  | expr_seq
+                  | `?`                                                         -- last Listener result
+                  ;
+
+expr_seq          = `(` expr { ( `;` | EOL ) expr } `)` ;
+
+number            = [ `-` ] { digit } [ `.` { digit } [ ( `e` | `E` ) [ `+` | `-` ] ] { digit }+ ]
+                                                                                -- decimal number
+                  | `0x` { hex_digit }+                                         -- hexadecimal number
+                  ;
+
+string            = `"` { any_char_except_quote | `\"` | `\n` | `\r` | `\t`
+                           | `\*` | `\?` | `\\` | `\%` | `\x` { hex_digit }+ } `"` ;
+
+time              = [ `-` ] { decimal_number [ `m` | `s` | `f` | `t` ] }+       -- minutes/sec/frames/ticks
+                  | [ `-` ] { digit } `:` { digit } [ `.` { digit } ]           -- SMPTE mins:secs.frame
+                  | [ `-` ] decimal_number `n`                                  -- active segment normalized time
+                  ;
+
+box2              = `[` expr `,` expr `,` expr `,` expr `]` ;
+
+point3            = `[` expr `,` expr `,` expr `]` ;
+
+point2            = `[` expr `,` expr `]` ;
+
+array             = `#(` [ expr { `,` expr } ] `)` ;
+
+bitarray          = `#{` [ [ expr | expr `. .` expr] { `,` [ expr | expr `. .` expr ] } ] `}` ;
+
+path_name         = `$`path | `$` ;
+
+path              = [ objectset ] [ `/` ] [ levels ] level_name ;
+
+levels            = level { `/` level } ;
+
+level             = level_name ;
+
+level_name        = { alphanumeric | `_` | `*` | `?` | `\` }
+                  | `'` { any_char_except_single_quote | `\*` | `\?` | `\\` } `'`
+                  ;
+
+tool_def          = ;
+
+max_command       = ;
+

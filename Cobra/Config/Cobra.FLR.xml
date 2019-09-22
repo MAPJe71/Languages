@@ -1,0 +1,34 @@
+<FunctionList>
+    <Language name="Cobra" imagelistpath="">
+        <Group name="classes" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^class [A-Z].*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="structures" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="struct .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="interfaces" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^interface .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="enums" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="enum .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="methods" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+def (.*)" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="fields" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+var .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="properties" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+pro .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="getters" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+get .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="setters" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+set .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+        <Group name="delegates" subgroup="" icon="0" child="0" autoexp="0" matchcase="0" fendtobbeg="" bbegtobend="" keywords="">
+            <Rules regexbeg="^\s+sig .*" regexfunc="" regexend="" bodybegin="" bodyend="" sep="" />
+        </Group>
+    </Language>
+</FunctionList>

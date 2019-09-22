@@ -1,0 +1,808 @@
+#-------------------------------------------------------------------------------
+# MacVersion = 1.04
+# MacDescription = FSG Plugin - Count streak length and frequency
+# MacAuthor = sbeelis
+# MacFileName = FSGPlugin_Streaks.gsk
+# MacUrl = http://gsak.net/board/index.php?showtopic=21368&view=findpost&p=157718
+#-------------------------------------------------------------------------------
+#
+# Changes:
+#   V1.00   2012-02-09  First version
+#   V1.01   2012-02-13  fixed error in current slump calculation
+#   V1.02   2012-03-07  including FSG to support "test mode"
+#   V1.03   2012-11-28  fixed centering issue
+#   V1.04   2013-03-05  renamed $StartDate to $StreakStartDate to allow the macro to work with FSG V4.4.06B
+#
+#-------------------------------------------------------------------------------
+#
+# todo:
+# - NLS support
+# - bar colour depends on size
+# - max bar colour depends on: longest/max/maxWithBelow
+#
+#-------------------------------------------------------------------------------
+# Usage:
+#   <plugin>FSGPlugin_Streaks</plugin>
+#   <plugin>FSGPlugin_Streaks?param=value</plugin>
+#   <plugin>FSGPlugin_Streaks?param=value&param=value[&...]</plugin>
+#
+# Parameters:
+#   sectionHeading=false
+#       Default value is "true"
+#       Suppress the output of the standard headers
+#   summary=false
+#       Default value is "true"
+#       Suppress the output of summary before histogram
+#   show=[both|streaks|slumps]
+#       Default value is "both"
+#       Define whether only streaks, only slumps or both are shown
+#   barWidth=<n>
+#       Default value is "150"
+#       Change the value of the widest (maximum value) bar
+#   threshold=<n>
+#       Default value is "0" (no threshold)
+#       Only show streaks longer than <n> days in detail
+#       Only show slumps longer than <n> days in detail
+#   streakThreshold=<n>
+#       Default value is "0" (no threshold)
+#       Only show streaks longer than <n> days in detail
+#   slumpThreshold=<n>
+#       Default value is "0" (no threshold)
+#       Only show slumps longer than <n> days in detail
+#   below=false
+#       Default value is "true"
+#       Suppress bars for below threshold collection
+#
+#-------------------------------------------------------------------------------
+
+IF $_MacroLevel = 1
+  RETURN msg="This macro is a FindStatGen PlugIn and cannot be run directly. $_CrLf To use the plugin, add the following line to one of the notes $_CrLf sections in the FindStatsGen macro: $_CrLf $_CrLF <plugin>FSGPlugin_Streaks</plugin>"
+ENDIF
+
+GOSUB Name=DeclareVariables
+GOSUB Name=InitVariables
+GOSUB Name=GetParameters
+GOSUB Name=Streaks
+
+# return data to FSG
+$p_FSGData = $MyOut
+
+RETURN
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=Streaks
+#-------------------------------------------------------------------------------
+  SHOWSTATUS msg="Macro FSGPlugin_Streaks looking for streaks" Width=400
+
+  $colWidth = $barWidth + 5
+  $list = list("LL_FP","create",$_CrLf)
+
+  # count number of finds
+  $sql = "select * from allfinds"
+  $work = Sqlite("sql",$sql)
+  $numEntries = $_SqlRows
+  IF $numEntries = 0
+    $p_FSGData = ""
+    RETURN msg="There are no found caches.$_CrLf PlugIn will terminate."
+  ENDIF
+
+  # get first and last found dates
+  $sql = "select max(foundbymedate) as max, min(foundbymedate) as min, julianday(max(foundbymedate))-julianday(min(foundbymedate))+1 as span, date('now', 'localtime') as today , date('now', '-1 day', 'localtime') as yesterday from allfinds"
+  $work = Sqlite("sql",$sql)
+  $work = list("LL_FP","replace",$work)
+  $entry = list("LL_FP","item","1")
+  $lastDay = Extract($entry,";",1)
+  $firstDay = Extract($entry,";",2)
+  $work = Extract($entry,";",3)
+  $maxInterval = Val($work)
+  $today = Extract($entry,";",4)
+  $yesterday = Extract($entry,";",5)
+
+  # initialise arrays for secondary statistics
+  array(1,0) = NumToStr($maxInterval+1) # streak: count
+  array(2,0) = NumToStr($maxInterval+1) # streak: begin
+  array(3,0) = NumToStr($maxInterval+1) # streak: end
+  array(4,0) = NumToStr($maxInterval+1) # slump: count
+  array(5,0) = NumToStr($maxInterval+1) # slump: begin
+  array(6,0) = NumToStr($maxInterval+1) # slump: end
+  array(1, -1) = "0"
+  array(2, -1) = ""
+  array(3, -1) = ""
+  array(4, -1) = "0"
+  array(5, -1) = ""
+  array(6, -1) = ""
+
+  # get found dates
+  $sql = "select foundbymedate as date from allfinds group by foundbymedate order by 1 asc"
+  $work = Sqlite("sql",$sql)
+  $numEntries = $_SqlRows
+  $work = list("LL_FP","replace",$work)
+
+  $PreviousDate = ""
+  $StreakStartDate = ""
+  $CurrentLength = 0
+  $MaxLength = 0
+  
+  $MaxSlump = 0
+  $CurrentSlump = 0
+
+  #$debugFile = "d:\log.txt"
+  #FILEERASE File=$debugFile OnError=Continue
+  #$work = PutFile($debugFile, "")
+
+  $count = 0
+  WHILE $count < $numEntries
+    $count = $count+1
+    $entry = list("LL_FP","item","$count")
+    $Date = Extract($entry,";",1)
+
+    IF $PreviousDate = ""
+      #initial streak
+      $PreviousDate = $Date
+      $StreakStartDate = $Date
+      $CurrentLength = 1
+    ELSE
+      $sql = "select date('$PreviousDate', '+1 day')"
+      $NextDate = Sqlite("sql",$sql)
+      IF $NextDate = $Date
+        # streak continues
+        $PreviousDate = $Date
+        $CurrentLength = $CurrentLength + 1
+      ELSE
+        # streak ends
+        array(1, $CurrentLength) = NumToStr(Val(array(1, $CurrentLength)) + 1)
+        IF array(2, $CurrentLength) = ""
+          array(2, $CurrentLength) = $StreakStartDate
+          array(3, $CurrentLength) = $PreviousDate
+        ENDIF
+        IF $CurrentLength > $MaxLength
+          $MaxLength = $CurrentLength
+        ENDIF
+        
+        $sql = "select date('$Date', '-1 day')"
+        $SlumpEnd = Sqlite("sql", $sql)
+        $sql = "select julianday('$Date')-julianday('$NextDate')"
+        $CurrentSlump = Val(Sqlite("sql", $sql))
+        array(4, $CurrentSlump) = NumToStr(Val(array(4, $CurrentSlump)) + 1)
+        IF array(5, $CurrentSlump) = ""
+          array(5, $CurrentSlump) = $NextDate
+          array(6, $CurrentSlump) = $SlumpEnd
+        ENDIF
+        IF $CurrentSlump > $MaxSlump
+          $MaxSlump = $CurrentSlump
+        ENDIF
+        #$work = AppendFile($debugFile, $_Quote+"Streak"+$_Quote+";$StreakStartDate;$PreviousDate;$CurrentLength;"+$_Quote+"Slump"+$_Quote+";$NextDate;$SlumpEnd;$CurrentSlump"+$_CrLf)
+
+        # prepare for new streak
+        $PreviousDate = $Date
+        $StreakStartDate = $Date
+        $CurrentLength = 1
+      ENDIF
+    ENDIF
+  ENDWHILE
+
+  # final streak
+  #$work = AppendFile($debugFile, $_Quote+"Streak"+$_Quote+";$StreakStartDate;$PreviousDate;$CurrentLength;;;;"+$_CrLf)
+  array(1, $CurrentLength) = NumToStr(Val(array(1, $CurrentLength)) + 1)
+  IF array(2, $CurrentLength) = ""
+    array(2, $CurrentLength) = $StreakStartDate
+    array(3, $CurrentLength) = $PreviousDate
+  ENDIF
+  IF $CurrentLength > $MaxLength
+    $MaxLength = $CurrentLength
+  ENDIF
+
+  # current streak
+  IF $Date <> $today AND $Date <> $yesterday
+    $CurrentLength = 0
+
+    # final slump    
+    $sql = "select date('$PreviousDate', '+1 day')"
+    $NextDate = Sqlite("sql",$sql)
+    $SlumpEnd = $today
+    $sql = "select julianday('$SlumpEnd')-julianday('$NextDate')+1"
+    $CurrentSlump = Val(Sqlite("sql", $sql))
+    array(4, $CurrentSlump) = NumToStr(Val(array(1, $CurrentSlump)) + 1)
+    IF array(5, $CurrentSlump) = ""
+      array(5, $CurrentSlump) = $NextDate
+      array(6, $CurrentSlump) = $SlumpEnd
+    ENDIF
+    IF $CurrentSlump > $MaxSlump
+      $MaxSlump = $CurrentSlump
+    ENDIF
+    #$work = AppendFile($debugFile, ";;;;"+$_Quote+"Slump"+$_Quote+";$NextDate;$SlumpEnd;$CurrentSlump"+$_CrLf)
+  ELSE
+    $CurrentSlump = 0
+  ENDIF
+  #$work = AppendFile($debugFile, $_CrLf + $_Quote+"Span"+$_Quote+";$firstDay;$lastDay;$maxInterval;;;;"+$_CrLf)
+
+  $count = 0
+  $countStreaks = 0
+  $daysBelow = 0
+  $countBelow = 0
+  $maxDays = 0
+  $maxCount = 0
+  $maxDaysCalc = 0
+  $maxCountCalc = 0
+
+  $countSlumps = 0
+  $slumpDays = 0
+  $daysBelowSlump = 0
+  $countBelowSlump = 0
+  $maxDaysSlump = 0
+  $maxCountSlump = 0
+  $maxDaysCalcSlump = 0
+  $maxCountCalcSlump = 0
+
+  WHILE $count < $maxInterval
+    $count = $count + 1
+    IF Array(1, $count) <> "0"
+      IF $count <= $thresholdStreaks
+        $daysBelow = $daysBelow + $count * Val(array(1, $count))
+        $countBelow = $countBelow + Val(array(1, $count))
+      ELSE
+        IF Val(array(1, $count)) > $maxCount
+          $maxCount = Val(array(1, $count))
+        ENDIF
+        IF ($count * Val(array(1, $count))) > $maxDays
+          $maxDays = $count * Val(array(1, $count))
+        ENDIF
+      ENDIF
+      $countStreaks = $countStreaks + Val(array(1, $count))
+    ENDIF
+    
+    IF Array(4, $count) <> "0"
+      IF $count <= $thresholdSlumps
+        $daysBelowSlump = $daysBelowSlump + $count * Val(array(4, $count))
+        $countBelowSlump = $countBelowSlump + Val(array(4, $count))
+      ELSE
+        IF Val(array(4, $count)) > $maxCountSlump
+          $maxCountSlump = Val(array(4, $count))
+        ENDIF
+        IF ($count * Val(array(4, $count))) > $maxDaysSlump
+          $maxDaysSlump = $count * Val(array(4, $count))
+        ENDIF
+      ENDIF
+      $countSlumps = $countSlumps + Val(array(1, $count))
+      $slumpDays = $slumpDays + $count * Val(array(4, $count))
+    ENDIF
+  ENDWHILE
+  
+  $maxCountCalc = $maxCount
+  $maxDaysCalc = $maxDays
+  IF $showBelow
+    IF $countBelow > $maxCountCalc
+      $maxCountCalc = $countBelow
+    ENDIF
+    IF $daysBelow > $maxDaysCalc
+      $maxDaysCalc = $daysBelow
+    ENDIF
+  ENDIF
+
+  $maxCountCalcSlump = $maxCountSlump
+  $maxDaysCalcSlump = $maxDaysSlump
+  IF $showBelow
+    IF $countBelowSlump > $maxCountCalcSlump
+      $maxCountCalcSlump = $countBelowSlump
+    ENDIF
+    IF $daysBelowSlump > $maxDaysCalcSlump
+      $maxDaysCalcSlump = $daysBelowSlump
+    ENDIF
+  ENDIF
+
+  #OPENFILE File=$debugFile
+
+  # output header (macro comment string)
+  $MyOut = $MyOut+"$_CrLf<!-- Macro FSGPlugin_Streaks - Version $MacroVersion - run date: $datestamp -->$_CrLf"
+  $MyOut = $MyOut+"<center><div style='width:740px; font-family: Verdana, Arial, sans-serif; font-size: 12px;'>$_CrLf"
+
+  IF $showHeader
+    IF $maxtablewidth=0
+      $maxtablewidth = 750
+    ENDIF
+
+    IF $showStreaks AND $showSlumps
+      $text=$LangStreaksAndSlumps
+    ELSE
+      IF $showStreaks
+        $text=$LangStreaks_
+      ELSE
+        $text=$LangSlumps_
+      ENDIF
+    ENDIF
+    GOSUB Name=SectionHead
+  ENDIF
+
+  IF $showSummary
+    $MyOut = $MyOut+"<table width='100%'>"+$_CrLf
+    $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangDaysTotal</td><td style='$st2c2 text-align: left'>$numEntries $LangDays</td></tr>"
+    $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangDaysTotalNot</td><td style='$st2c2 text-align: left'>"+NumToStr($maxInterval - $numEntries)+" $LangDays</td></tr>"
+    IF $showDebug
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangDaysSlump</td><td style='$st2c2 text-align: left'>$slumpDays $LangDays</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangDelta</td><td style='$st2c2 text-align: left'>"+NumToStr($maxInterval-$numEntries-$slumpDays)+" $LangDays</td></tr>"
+    ENDIF
+    $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangSpan</td><td style='$st2c2 text-align: left'>$maxInterval  $LangDays ($firstDay - $lastDay)</td></tr>"
+    IF $showStreaks
+      $MyOut = $MyOut+"<tr><td style='$stTab2cHead font-weight: bold; text-align: left' colspan='2'>$LangStreaks_</td></tr>"
+      IF $thresholdStreaks > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangThreshold</td><td style='$st2c2 text-align: left'>$thresholdStreaks $LangDays</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangThreshold</td><td style='$st2c2 text-align: left'>$LangNoThreshold</td></tr>"
+      ENDIF
+      IF $daysBelow > 0 OR $countBelow > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangBelow</td><td style='$st2c2 text-align: left'>$daysBelow $LangDays in $countBelow $LangStreaks</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangBelow</td><td style='$st2c2 text-align: left'>$LangNoThreshold</td></tr>"
+      ENDIF
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangAbove</td><td style='$st2c2 text-align: left'>" + NumToStr($numEntries-$daysBelow)+" $LangDays in " + NumToStr($countStreaks-$countBelow)+ " $LangStreaks</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangLongest</td><td style='$st2c2 text-align: left'>$MaxLength $LangDays (" + array(2, $MaxLength) + " - " + Array(3, $MaxLength) + ")</td></tr>"
+      IF $CurrentLength > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangCurrent</td><td style='$st2c2 text-align: left'>$CurrentLength $LangDays ($StreakStartDate - $PreviousDate)</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangCurrent</td><td style='$st2c2 text-align: left'>$LangNoCurrent</td></tr>"
+      ENDIF
+    ENDIF
+    IF $showSlumps
+      $MyOut = $MyOut+"<tr><td style='$stTab2cHead font-weight: bold; text-align: left' colspan='2'>$LangSlumps_</td></tr>"
+      IF $thresholdSlumps > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangThreshold</td><td style='$st2c2 text-align: left'>$thresholdSlumps $LangDays</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangThreshold</td><td style='$st2c2 text-align: left'>$LangNoThreshold</td></tr>"
+      ENDIF
+      IF $daysBelowSlump > 0 OR $countBelowSlump > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangBelow</td><td style='$st2c2 text-align: left'>$daysBelowSlump $LangDays in $countBelowSlump $LangSlumps</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangBelow</td><td style='$st2c2 text-align: left'>$LangNoThreshold</td></tr>"
+      ENDIF
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangAbove</td><td style='$st2c2 text-align: left'>" + NumToStr($slumpDays-$daysBelowSlump)+" $LangDays in " + NumToStr($countSlumps-$countBelowSlump)+ " $LangSlumps</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangLongestSlump</td><td style='$st2c2 text-align: left'>$MaxSlump $LangDays (" + array(5, $MaxSlump) + " - " + Array(6, $MaxSlump) + ")</td></tr>"
+      IF $CurrentSlump > 0
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangCurrentSlump</td><td style='$st2c2 text-align: left'>$CurrentSlump $LangDays ($NextDate - $SlumpEnd)</td></tr>"
+      ELSE
+        $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>$LangCurrentSlump</td><td style='$st2c2 text-align: left'>$LangNoCurrentSlump</td></tr>"
+      ENDIF
+    ENDIF
+    IF $showDebug
+      $MyOut = $MyOut+"<tr><td style='$stTab2cHead font-weight: bold; text-align: left' colspan='2'>Debug</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>Today</td><td style='$st2c2 text-align: left'>$today</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>Yesterday</td><td style='$st2c2 text-align: left'>$yesterday</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>Date</td><td style='$st2c2 text-align: left'>$Date</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>StartDate</td><td style='$st2c2 text-align: left'>$StreakStartDate</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>PreviousDate</td><td style='$st2c2 text-align: left'>$PreviousDate</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>NextDate</td><td style='$st2c2 text-align: left'>$NextDate</td></tr>"
+      $MyOut = $MyOut+"<tr><td style='$st2c1 font-weight: bold; text-align: left'>SlumpEnd</td><td style='$st2c2 text-align: left'>$SlumpEnd</td></tr>"
+    ENDIF
+    $MyOut = $MyOut+"</table>" + $_CrLf
+    $MyOut = $MyOut+"<br />" + $_CrLf
+  ENDIF
+
+  IF $showStreaks
+    # iterate over arrays to produce output
+    $MyOut = $MyOut+"<table width='100%'><tr>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangStreak</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangCount_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangFirst</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangDays_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left' width='$colWidth'>$LangCount_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left' width='$colWidth'>$LangDays_</td>"+$_CrLf
+    $MyOut = $MyOut+"</tr>" + $_CrLf
+  
+    $count = 0
+    WHILE $count < $maxInterval
+      $count = $count + 1
+      IF Array(1, $count) <> "0"
+        IF $count > $thresholdStreaks
+          $MyOut = $MyOut+"<tr>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$count $LangDays</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>" + array(1, $count) + "</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>" + Array(2, $count) + " - " + array(3, $count) + "</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>" + NumToStr($count * Val(Array(1, $count))) + " $LangDays</td>"+$_CrLf
+  
+          $fwidth = Round(Val(array(1, $count))/$maxCountCalc*$barWidth,0)
+          IF Val(array(1, $count)) = $maxCount
+            $image = "http://gsak.net/stats/red-h.png"
+          ELSE
+            $image = "http://gsak.net/stats/blue-h.png"
+          ENDIF
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+  
+          $fwidth = Round($count*Val(array(1, $count))/$maxDaysCalc*$barWidth,0)
+          IF $count*Val(array(1, $count)) = $maxDays
+            $image = "http://gsak.net/stats/red-h.png"
+          ELSE
+            $image = "http://gsak.net/stats/blue-h.png"
+          ENDIF
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+          $MyOut = $MyOut+"</tr>" + $_CrLf
+        ENDIF
+      ENDIF
+    ENDWHILE
+    IF $daysBelow>0 AND $countBelow>0
+      $MyOut = $MyOut+"<tr>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$LangBelow</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>$countBelow</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>$daysBelow $LangDays</td>"+$_CrLf
+  
+      IF $showBelow
+        $fwidth = Round($countBelow/$maxCountCalc*$barWidth,0)
+        #IF $countBelow = $maxCount
+        #  $image = "http://gsak.net/stats/red-h.png"
+        #ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        #ENDIF
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+  
+        $fwidth = Round($daysBelow/$maxDaysCalc*$barWidth,0)
+        #IF $daysBelow = $maxDays
+        #  $image = "http://gsak.net/stats/red-h.png"
+        #ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        #ENDIF
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+      ELSE
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+      ENDIF
+      $MyOut = $MyOut+"</tr>" + $_CrLf
+    ENDIF
+    $MyOut = $MyOut+"<tr>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangTotal</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: right'>$countStreaks</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: right'>$numEntries $LangDays</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"</tr>" + $_CrLf
+    $MyOut = $MyOut+"</table>" + $_CrLf
+    $MyOut = $MyOut+"<br />" + $_CrLf
+  ENDIF
+
+  IF $showSlumps
+    # iterate over arrays to produce output
+    $MyOut = $MyOut+"<table width='100%'><tr>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangSlump</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangCount_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangFirstSlump</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangDays_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left' width='$colWidth'>$LangCount_</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left' width='$colWidth'>$LangDays_</td>"+$_CrLf
+    $MyOut = $MyOut+"</tr>" + $_CrLf
+  
+    $count = 0
+    WHILE $count < $maxInterval
+      $count = $count + 1
+      IF Array(4, $count) <> "0"
+        IF $count > $thresholdSlumps
+          $MyOut = $MyOut+"<tr>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$count $LangDays</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>" + array(4, $count) + "</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>" + Array(5, $count) + " - " + array(6, $count) + "</td>"+$_CrLf
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>" + NumToStr($count * Val(Array(4, $count))) + " $LangDays</td>"+$_CrLf
+  
+          $fwidth = Round(Val(array(4, $count))/$maxCountCalcSlump*$barWidth,0)
+          IF Val(array(4, $count)) = $maxCountSlump
+            $image = "http://gsak.net/stats/red-h.png"
+          ELSE
+            $image = "http://gsak.net/stats/blue-h.png"
+          ENDIF
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+  
+          $fwidth = Round($count*Val(array(4, $count))/$maxDaysCalcSlump*$barWidth,0)
+          IF $count*Val(array(4, $count)) = $maxDaysSlump
+            $image = "http://gsak.net/stats/red-h.png"
+          ELSE
+            $image = "http://gsak.net/stats/blue-h.png"
+          ENDIF
+          $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+          $MyOut = $MyOut+"</tr>" + $_CrLf
+        ENDIF
+      ENDIF
+    ENDWHILE
+    IF $daysBelowSlump>0 AND $countBelowSlump>0
+      $MyOut = $MyOut+"<tr>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c1 text-align: left'>$LangBelow</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>$countBelowSlump</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+      $MyOut = $MyOut+"<td style='$st2c2 text-align: right'>$daysBelowSlump $LangDays</td>"+$_CrLf
+  
+      IF $showBelow
+        $fwidth = Round($countBelowSlump/$maxCountCalcSlump*$barWidth,0)
+        #IF $countBelowSlump = $maxCountSlump
+        #  $image = "http://gsak.net/stats/red-h.png"
+        #ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        #ENDIF
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+  
+        $fwidth = Round($daysBelowSlump/$maxDaysCalcSlump*$barWidth,0)
+        #IF $daysBelowSlump = $maxDaysSlump
+        #  $image = "http://gsak.net/stats/red-h.png"
+        #ELSE
+          $image = "http://gsak.net/stats/blue-h.png"
+        #ENDIF
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'><img src='$image' style='float:left;' height='15' width='$fwidth'></td>"+$_CrLf
+      ELSE
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+        $MyOut = $MyOut+"<td style='$st2c2 text-align: left'>&nbsp;</td>"+$_CrLf
+      ENDIF
+      $MyOut = $MyOut+"</tr>" + $_CrLf
+    ENDIF
+    $MyOut = $MyOut+"<tr>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>$LangTotal</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: right'>$countSlumps</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: right'>$slumpDays $LangDays</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"<td style='$stTab2cHead font-weight: bold; text-align: left'>&nbsp;</td>"+$_CrLf
+    $MyOut = $MyOut+"</tr>" + $_CrLf
+    $MyOut = $MyOut+"</table>" + $_CrLf
+    $MyOut = $MyOut+"<br />" + $_CrLf
+  ENDIF
+
+
+  # output trailer
+  #$MyOut = $MyOut+"<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/index.php?showtopic=20115&view=findpost&p=144229'>"+$_CrLf
+  $MyOut = $MyOut+"<a style='text-decoration:none; font-size: xx-small;' href='http://gsak.net/board/'>"+$_CrLf  #todo link
+  $MyOut = $MyOut+"FSGPlugin_Streaks $MacroVersion - $datestamp</a>"+$_CrLf
+  $MyOut = $MyOut+"</div></center>"+$_CrLf
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=SectionHead
+#-------------------------------------------------------------------------------
+  # This subroutine is called by all the stats generating routines.
+  # It writes the section header and also handles the half width sections
+  # intelligently .
+  # Add a couple of blank lines to the output variable
+  #  $MyOut = $MyOut + "<br /><br />" + $CR
+  $MyOut = $MyOut + "<!-- SectionHead CS=$colspan LCS=$lastcolspan C=$column -->" + $CR
+  IF $colspan = 1
+    # This is a full width section
+    # If the last section was a half width close the previous table off
+    IF $lastcolspan = 2
+      GOSUB Name=Close2col
+    ENDIF
+    $lastcolspan = 1
+    $column = 1
+    $width = $maxtablewidth
+  ELSE
+    # This is a half width section
+    IF $column = 1
+      # First Column
+      # If we're following another half width block, close the table off
+      IF $lastcolspan = 2
+        GOSUB Name=Close2col
+      ENDIF
+      GOSUB Name=Open2Col
+      $column = 2
+    ELSE
+      # Second Column
+      GOSUB Name=Mid2Col
+      $column = 1
+    ENDIF
+    $lastcolspan = 2
+    $width = $maxtablewidth/2
+  ENDIF
+  $tmpS = ""
+  IF $Placed
+    $tmpS = $stYearDataTit
+  ENDIF
+  # And add the header to the output variable
+  $MyOut = $MyOut + "<div style='width:$width" + "px; $stSectHead; $tmpS'>" + $CR
+  $MyOut = $MyOut + "<a name='$Srun'></a>"
+  #$MyOut = $MyOut + "    $text" + $CR + "</div><br />" + $CR
+  $MyOut = $MyOut + "    $text" + $CR + "</div>" + $CR
+ENDSUB #SectionHead
+
+#-------------------------------------------------------------------------------
+BEGINSUB name=GetParameters
+#-------------------------------------------------------------------------------
+  IF $_MacroParms <> ""
+    $count = RegExCount("&",$_MacroParms)+1
+    WHILE $count > 0
+      $Parameter = Extract($_MacroParms,"&",$count)
+      $ParamName = Upper(Extract($Parameter,"=",1))
+      $ParamValue = Upper(Extract($Parameter,"=",2))
+      #msgok msg="ParamName: *$ParamName* ParamValue: *$ParamValue*"
+      BEGINCASE
+        CASE $ParamName="SECTIONHEADING"
+          IF $ParamValue="FALSE"
+            $showHeader = FALSE
+          ENDIF
+        CASE $ParamName="SUMMARY"
+          IF $ParamValue="FALSE"
+            $showSummary = FALSE
+          ENDIF
+        CASE $ParamName="BELOW"
+          IF $ParamValue="FALSE"
+            $showBelow = FALSE
+          ENDIF
+        CASE $ParamName="DEBUG"
+          $showDebug = TRUE
+        CASE $ParamName="SHOW"
+          IF $ParamValue = "STREAKS"
+            $showStreaks = TRUE
+            $showSlumps = FALSE
+          ELSE
+            IF $ParamValue = "SLUMPS"
+            $showStreaks = FALSE
+            $showSlumps = TRUE
+            ELSE
+              IF $ParamValue = "BOTH"
+                $showStreaks = TRUE
+                $showSlumps = TRUE
+              ELSE
+                RETURN msg=Unknown value '$ParamValue' for parameter '$ParamName', macro will terminate
+              ENDIF
+            ENDIF
+          ENDIF
+        CASE $ParamName="BARWIDTH"
+          IF Val($ParamValue)>0
+            $barWidth = Val($ParamValue)
+          ENDIF
+        CASE $ParamName="STREAKTHRESHOLD"
+          IF Val($ParamValue)>0
+            $thresholdStreaks = Val($ParamValue)
+          ENDIF
+        CASE $ParamName="SLUMPTHRESHOLD"
+          IF Val($ParamValue)>0
+            $thresholdSlumps = Val($ParamValue)
+          ENDIF
+        CASE $ParamName="THRESHOLD"
+          IF Val($ParamValue)>0
+            $thresholdStreaks = Val($ParamValue)
+            $thresholdSlumps = Val($ParamValue)
+          ENDIF
+        OTHERWISE
+          RETURN msg=Unknown parameter '$ParamName', macro will terminate
+      ENDCASE
+      $count = $count - 1
+    ENDWHILE
+  ENDIF
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=DeclareVariables
+#-------------------------------------------------------------------------------
+Option Explicit=Yes
+
+Declare Var=$barWidth Type=Numeric
+Declare Var=$colWidth Type=Numeric
+Declare Var=$count Type=Numeric
+Declare Var=$countBelow Type=Numeric
+Declare Var=$countBelowSlump Type=Numeric
+Declare Var=$countSlumps Type=Numeric
+Declare Var=$countStreaks Type=Numeric
+Declare Var=$CurrentLength Type=Numeric
+Declare Var=$CurrentSlump Type=Numeric
+Declare Var=$Date Type=String
+Declare Var=$datestamp Type=String
+Declare Var=$daysBelow Type=Numeric
+Declare Var=$daysBelowSlump Type=Numeric
+Declare Var=$debugFile Type=String
+Declare Var=$entry Type=String
+Declare Var=$firstDay Type=String
+Declare Var=$fwidth Type=Numeric
+Declare Var=$image Type=String
+Declare Var=$LangAbove Type=String
+Declare Var=$LangBelow Type=String
+Declare Var=$LangCount_ Type=String
+Declare Var=$LangCurrent Type=String
+Declare Var=$LangCurrentSlump Type=String
+Declare Var=$LangDays Type=String
+Declare Var=$LangDays_ Type=String
+Declare Var=$LangDaysSlump Type=String
+Declare Var=$LangDaysTotal Type=String
+Declare Var=$LangDaysTotalNot Type=String
+Declare Var=$LangDelta Type=String
+Declare Var=$LangFirst Type=String
+Declare Var=$LangFirstSlump Type=String
+Declare Var=$LangLongest Type=String
+Declare Var=$LangLongestSlump Type=String
+Declare Var=$LangNoCurrent Type=String
+Declare Var=$LangNoCurrentSlump Type=String
+Declare Var=$LangNoThreshold Type=String
+Declare Var=$LangSlump Type=String
+Declare Var=$LangSlumps Type=String
+Declare Var=$LangSlumps_ Type=String
+Declare Var=$LangSpan Type=String
+Declare Var=$LangStreak Type=String
+Declare Var=$LangStreaks Type=String
+Declare Var=$LangStreaks_ Type=String
+Declare Var=$LangStreaksAndSlumps Type=String
+Declare Var=$LangThreshold Type=String
+Declare Var=$LangTotal Type=String
+Declare Var=$lastDay Type=String
+Declare Var=$list Type=String
+Declare Var=$MacroVersion Type=String
+Declare Var=$maxCount Type=Numeric
+Declare Var=$maxCountCalc Type=Numeric
+Declare Var=$maxCountCalcSlump Type=Numeric
+Declare Var=$maxCountSlump Type=Numeric
+Declare Var=$maxDays Type=Numeric
+Declare Var=$maxDaysCalc Type=Numeric
+Declare Var=$maxDaysCalcSlump Type=Numeric
+Declare Var=$maxDaysSlump Type=Numeric
+Declare Var=$maxInterval Type=Numeric
+Declare Var=$MaxLength Type=Numeric
+Declare Var=$MaxSlump Type=Numeric
+Declare Var=$MyOut Type=String
+Declare Var=$NextDate Type=String
+Declare Var=$numEntries Type=Numeric
+Declare Var=$p_FSGData Type=String
+Declare Var=$Parameter Type=String
+Declare Var=$ParamName Type=String
+Declare Var=$ParamValue Type=String
+Declare Var=$PreviousDate Type=String
+Declare Var=$showBelow Type=Boolean
+Declare Var=$showDebug Type=Boolean
+Declare Var=$showHeader Type=Boolean
+Declare Var=$showSlumps Type=Boolean
+Declare Var=$showStreaks Type=Boolean
+Declare Var=$showSummary Type=Boolean
+Declare Var=$slumpDays Type=Numeric
+Declare Var=$SlumpEnd Type=String
+Declare Var=$sql Type=String
+Declare Var=$StreakStartDate Type=String
+Declare Var=$thresholdSlumps Type=Numeric
+Declare Var=$thresholdStreaks Type=Numeric
+Declare Var=$today Type=String
+Declare Var=$work Type=String
+Declare Var=$yesterday Type=String
+
+ENDSUB
+
+#-------------------------------------------------------------------------------
+BEGINSUB Name=InitVariables
+#-------------------------------------------------------------------------------
+  $MacroVersion = MacHeader("MacVersion")
+  $datestamp = DateFormat($_Today)
+  $MyOut = ""
+  $showHeader = TRUE
+  $showBelow = TRUE
+  $showSummary = TRUE
+  $showStreaks = TRUE
+  $showSlumps = TRUE
+  $thresholdStreaks = 0
+  $thresholdSlumps = 0
+  $showDebug = FALSE
+  $barWidth = 150
+
+
+  $LangDaysTotal = "Total days cached"
+  $LangDaysTotalNot = "Total days not cached"
+  $LangSpan = "Cacher career length"
+  $LangDaysSlump = "Total days on slump"
+  $LangDelta = "Slump day to not cached delta"
+  $LangThreshold = "Threshold"
+  $LangNoThreshold = "No threshold"
+  $LangBelow = "Below threshold"
+  $LangAbove = "Above threshold"
+  $LangLongest = "Longest streak"
+  $LangCurrent = "Current streak"
+  $LangNoCurrent = "No current streak"
+  $LangTotal = "Total"
+  $LangStreak = "Streak"
+  $LangCount_ = "Count"
+  $LangFirst = "First streak"
+  $LangDays_ = "Total days"
+  $LangDays = "days"
+  $LangStreaks = "streaks"
+  $LangStreaks_ = "Streaks"
+  $LangSlump = "Slump"
+  $LangFirstSlump = "First slump"
+  $LangSlumps = "slumps"
+  $LangSlumps_ = "Slumps"
+  $LangLongestSlump = "Longest slump"
+  $LangCurrentSlump = "Current slump"
+  $LangNoCurrentSlump = "No current slump"
+  $LangStreaksAndSlumps = "Streaks and Slumps"
+
+  # todo: handle translations
+ENDSUB
+
+INCLUDE File=FindStatGen43Beta.gsk FileCheck=N
+INCLUDE File=Dummy.gsk FileCheck=N
+
+

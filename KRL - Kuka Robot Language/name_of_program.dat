@@ -1,0 +1,6 @@
+
+DEFDAT MAIN_PROGRAM
+int num=0
+bool true=false
+…code…
+ENDDAT

@@ -1,0 +1,29 @@
+Notepad++ User Defined Language - Assembly for PIC16F628A Microcontroller
+
+PIC's are microcontrollers from Microchip. Since PIC16F628A is one the most used PIC's by the hobbyst community (me included) I decided
+to make this file and share it with all.
+
+---
+
+ALL Assembly Intructions for ALL Midrange PIC's are covered.
+ALL Microchip Assembler Compiler (MPASM) directives are covered.
+ALL Assembly Operators are covered.
+
+This way, this 'User Defined Language' file can be used to easily code Assembly for ALL Midrange PIC Microcontrollers.
+
+PIC Registers, Register Bits and Configuration Bits are very device depended.
+Because of this I only added 100% coverage of PIC16F628A (and PIC16F628).
+
+---
+
+The best way to add this 'User Defined Language' to your Notepad++ installation is to use the User Language Define Dialog
+'Menu -> View -> User-Defined Dialogue' and then click 'Import' and select the .xml file I supply. Restart Notepad++ and the
+PIC Assembly Language will be added at the end of the 'Language' menu.
+
+
+Hope it is useful.
+
+
+
+
+Paulo Oliveira.

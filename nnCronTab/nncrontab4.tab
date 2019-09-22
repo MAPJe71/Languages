@@ -1,0 +1,17 @@
+#( test_task
+\ this is a comment
+Action:
+    \ and here are short lines which will be treated 
+    \ by the parser like a single long one
+    START-APP: c:\very\very\long\\
+path\to\the\file.exe \
+-run my-script -exit \
+-nowarning
+)#
+   
+#( test_task1
+\ this is a comment
+Action:
+    \ and this is a long string:
+    START-APP: c:\very\very\long\path\to\the\file.exe -run my-script -exit -nowarning
+)#

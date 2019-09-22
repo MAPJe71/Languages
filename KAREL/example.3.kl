@@ -1,0 +1,24 @@
+ROUTINE get_int(prog_name : STRING[16]; var_name : STRING[16]) : INTEGER
+  VAR
+    entry  : INTEGER
+    i      : INTEGER
+    status : INTEGER
+  BEGIN
+    GET_VAR(entry, prog_name, var_name, i, status0
+    IF status<>0 THEN
+      WRITE('Could not get int [',prog_name,']',var_name,'status:',status,CR)
+    ENDIF
+
+    RETURN(i)
+  END get_int
+
+
+-- which option looks better?
+-- option 1:
+GET_VAR(entry,'test_prog','test_int',my_int,status)
+IF status<>0 THEN
+  WRITE('Could not get [test_prog]test_int status:',status,CR)
+ENDIF
+
+-- option 2:
+my_int = get_int('test_prog','test_int')

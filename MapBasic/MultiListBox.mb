@@ -1,0 +1,228 @@
+'************************************************************************************
+'**  MultiListBox
+'**  
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		2 October 2010
+'**  Version:	AppVersion (see below)
+'************************************************************************************
+Include "MAPBASIC.DEF"
+Include "ICONS.DEF"
+Include "MENU.DEF"
+
+Declare Sub Main
+Declare Sub MLB
+Declare Sub MLBOKButton
+Declare Sub HighLightSelectedRegions
+Declare Sub PopulateRegionsArray
+Declare Sub About
+Declare Sub End_Program
+
+'Function to check whether a table is open or not
+Declare Function TableIsOpen (ByVal sTabName As String) As Logical
+
+Define AppName "MultiListBox Sample Code"
+Define AppNameMenu "&MultiListBox"
+Define AppVersion 0.82
+
+'Defining Dialog Width and Height
+'This allows you to specify with and height clauses in terms of characters (i.e., Width 30dW, Height 10dH).
+Define dW *4	'Four dialog units equals one character in width
+Define dH *8	'Eight dialog units equals one character in height
+
+Global sRegionsArray() as String
+Global iRegionsSelectedArray() as Integer
+Global sRegionsSelected as String
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"&" + AppName
+		HelpMsg AppName
+		Calling MLB,
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+	
+End Sub Main
+
+'*********************************************************************************************
+Sub MLB
+'*********************************************************************************************
+
+' Processing a MultiListBox control 
+'
+' To read what items the user selected from a MultiListBox control, assign a handler procedure
+' that is called when the user dismisses the dialog box (for example, assign a handler to the
+' OKButton control). Within the handler procedure, set up a loop to call the ReadControlValue( )
+' function repeatedly. 
+'
+' The first call to the ReadControlValue( ) function returns the number of the first selected
+' item; the second call to the ReadControlValue( ) function returns the number of the second
+' selected item; etc. When the ReadControlValue( ) function returns zero, you have exhausted the
+' list of selected items. If the first call to the ReadControlValue( ) function returns zero,
+' there are no list items selected. 
+
+If Not TableIsOpen("FR_Départements2006") Then
+	Call PopulateRegionsArray
+End If
+
+If Ubound(iRegionsSelectedArray) = 0 Then
+	Call PopulateRegionsArray
+End If
+	
+Dim l as Integer
+sRegionsSelected = ""
+
+	Dialog
+		Title AppName
+		Calling HighLightSelectedRegions
+		Control StaticText Title "Please select one or" Position 3dW, 1dH
+		Control StaticText Title "more French regions:" Position 10dW, 2dH
+		Control MultiListBox Title from variable sRegionsArray Width 35dW Height 25dH Position 28dW, 2dH ID 1001
+		Control OKButton Calling MLBOKButton
+		Control CancelButton
+
+	If CommandInfo(CMD_INFO_DLG_OK) Then
+	
+	For l = 1 To Ubound(iRegionsSelectedArray)
+		If sRegionsSelected = "" Then
+			sRegionsSelected = """" + sRegionsArray(iRegionsSelectedArray(l)) + """"
+		Else
+			sRegionsSelected = sRegionsSelected + "," + """" + sRegionsArray(iRegionsSelectedArray(l)) + """"
+		End if
+	Next
+
+	Run Command "Select * From FR_Départements2006 Where Nom_Région in (" + sRegionsSelected + ")  order by Nom_Région, Nom_Département into RegionsSelected"
+	Browse * From RegionsSelected
+		Position (3.59375,0) Units "in"
+		Width 6.52083 Units "in" Height 3.54167 Units "in" 
+	
+	End If	
+		
+		
+End Sub MLB
+
+'*********************************************************************************************
+Sub MLBOKButton
+'*********************************************************************************************
+
+Dim iSel, j As Integer
+
+j = 0
+iSel = ReadControlValue(1001)
+
+If iSel = 0 Then
+	Note "Please select a Region"
+	Dialog Preserve
+End If
+
+Do Until iSel = 0
+	j = j + 1
+	Redim iRegionsSelectedArray(j)
+	iRegionsSelectedArray(j) = iSel
+	iSel = ReadControlValue(1001)
+Loop
+
+End Sub MLBOKButton
+
+'*********************************************************************************************
+Sub HighLightSelectedRegions
+'*********************************************************************************************
+
+Dim k As Integer
+
+For k = 1 To Ubound(iRegionsSelectedArray)
+	Alter Control 1001 Value iRegionsSelectedArray(k)
+Next
+
+End Sub HighLightSelectedRegions
+
+'*********************************************************************************************
+Sub PopulateRegionsArray
+'*********************************************************************************************
+
+Dim iNumRegions, i as Integer
+
+Close All Interactive
+Open Table ApplicationDirectory$() + "Tables\FR_Départements2006.TAB" Interactive
+
+Map From FR_Départements2006
+	Position (0,0) Units "in"
+	Width 3.51042 Units "in" Height 3.54167 Units "in" 
+Set Map Window FrontWindow() Zoom Entire
+
+Select Nom_Région from FR_Départements2006 group by Nom_Région order by Nom_Région into FR_Régions
+
+iNumRegions = TableInfo(FR_Régions, TAB_INFO_NROWS)
+Redim sRegionsArray(iNumRegions)
+
+For i = 1 to iNumRegions
+	Fetch Rec i from FR_Régions
+	sRegionsArray(i) = FR_Régions.Nom_Région
+Next
+
+Close Table FR_Régions
+
+End Sub PopulateRegionsArray
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to use a MultiListBox control" Position 3dW, 1dH
+		Control StaticText title "in your MapBasic application" Position 3dW, 2dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 35dW, 6dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************
+Function TableIsOpen (
+	ByVal sTabName As String)
+As Logical
+
+	Dim iCounter, iNumberOfTables As Integer
+
+	iNumberOfTables = NumTables()
+	If iNumberOfTables = 0 Then
+		Goto no_tables_open
+	End If
+
+	For iCounter = 1 to iNumberOfTables
+		If TableInfo(iCounter, TAB_INFO_NAME) = sTabName Then
+			TableIsOpen = TRUE
+			Exit Function
+		End If
+	Next
+
+	no_tables_open:
+	TableIsOpen = FALSE
+
+End Function
+
+'*********************************************************************************************

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="plsql_funcproc" userDefinedLangName="PL-SQL" />
+			<association id="plsql_funcproc" ext="bdy" />
+			<association id="plsql_funcproc" ext="spc" />
+		</associationMap>
+		<parsers>
+			<!-- http://qaoverflow.com/question/notepad-function-list-for-plsql/ -->
+			<parser
+				id         ="plsql_funcproc"
+				displayName="PL/SQL"
+				commentExpr="(?s-m:/\*.*?\*/)|(?:--.*$)"
+			>
+				<function
+					mainExpr="^[\t\x20]*(?-i:FUNCTION|PROCEDURE)\s+\w+(?:\s*\(|\s+IS|\s+AS)"
+				>
+					<functionName>
+						<nameExpr expr="(?-i:FUNCTION|PROCEDURE)\s+\K\w+\s*(?:\(|IS|AS)" />
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

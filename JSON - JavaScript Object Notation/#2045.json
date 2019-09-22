@@ -1,0 +1,10 @@
+{
+	"Objects": [{
+			"_id": "MyObj1",
+			"property": {}
+		}, {
+			"_id": "MyObj2",
+			"property": {}
+		}
+	]
+}

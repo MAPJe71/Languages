@@ -1,0 +1,69 @@
+'************************************************************************************
+'**  Project
+'**  
+'**  User Interface Module
+'**  
+'**  Author:	Egge-Jan Pollé
+'**  Date:		23 October 2010
+'************************************************************************************
+Include "Project.def"
+
+'*********************************************************************************************
+Sub Main
+'*********************************************************************************************
+
+	Create Menu AppNameMenu as
+		"Module &1: Current Date"
+		HelpMsg "Show Current Date"
+		Calling ModuleOne,
+		"Module &2: Current Time"
+		HelpMsg "Show Current Time"
+		Calling ModuleTwo,
+		"&About " + AppName
+		HelpMsg "Information about the application " + AppName
+		Calling About
+	
+	Alter Menu Bar Remove ID 7
+	Alter Menu "&SampleCode" Add
+		AppNameMenu As AppNameMenu
+	Alter Menu Bar Add "&SampleCode"
+	Alter Menu Bar Add ID 7
+
+End Sub Main
+
+'*********************************************************************************************
+Sub About
+'*********************************************************************************************
+	Dialog 
+		Title "About " + AppName + " (Version " + AppVersion + ")" 
+		Control StaticText title "This application demonstrates how to set up a MapBasic project consisting of" Position 3dW, 1dH
+		Control StaticText title "several modules." Position 3dW, 2dH
+		Control StaticText title "The actual application - showing current date and current time - is not that" Position 3dW, 4dH
+		Control StaticText title "exciting at all. It is the source files you should be after:" Position 3dW, 5dH
+		Control StaticText title "  - Project.mbp" Position 3dW, 6dH
+		Control StaticText title "  - ProjectUI.mb, Functions.mb, ModuleOne.mb and ModuleTwo.mb" Position 3dW, 7dH
+		Control StaticText title "  - Project.def" Position 3dW, 8dH
+		Control StaticText title "You can compile the source files (*.mb) to become object files (*.mbo) and" Position 3dW, 10dH
+		Control StaticText title "you can link the object files to become an executable application file (*.mbx)" Position 3dW, 11dH
+		Control StaticText title "This little app is purely meant to be an example on how to set up your own projects." Position 3dW, 13dH
+		Control StaticText title Chr$(169) + " 2010 - Egge-Jan Pollé" Position 50dW, 16dH
+		Control OKButton Title "&Exit" Calling End_Program
+		Control CancelButton
+	
+End Sub About
+
+'*********************************************************************************************
+Sub End_Program
+'*********************************************************************************************
+
+	Dim Finished as Logical
+	
+	Finished = Ask("Are you sure you want to remove the application " + AppName + "?", "&Yes", "&No")
+	if not Finished then Dialog Preserve
+	Else
+	End Program
+	End if
+
+End Sub End_Program
+
+'*********************************************************************************************

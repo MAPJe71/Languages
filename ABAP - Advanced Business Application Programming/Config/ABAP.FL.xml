@@ -1,0 +1,23 @@
+<!-- ABAP -->
+			<parser
+				id         ="abap_syntax"
+                displayName="ABAP (lala)"
+                commentExpr="(?m:((?&lt;=&quot;).*?$)|((?i:\*)([\t\x20].*?)?$))"
+                >
+				<classRange
+					mainExpr    ="(?&lt;=^class ).*?(?=\n\S|\Z|endclass\.)"
+                    >
+					<className>
+                    <nameExpr expr=".*?(?=\n\S|\Z|\.)" />
+					</className>
+					<function
+						mainExpr="(?&lt;=method ).+?(?=\.)"
+                        >
+						<functionName>
+                        <funcNameExpr expr="\w+" />
+						</functionName>
+                        </function>
+                        </classRange>
+                        <function
+					mainExpr="((?&lt;=^form ).*?(?=\n\S|\Z|\.)|(?&lt;=^define ).*?(?=\n\S|\Z|\.))" />
+                    </parser>
