@@ -3,10 +3,14 @@
 
 ## Description
 
+Nim a.k.a. Nimrod
 
 ## Links
 
 _WWW_
+
+https://nim-lang.org/
+https://nim-lang.org/docs/manual.html
 
 _Wiki_
 
@@ -18,66 +22,6 @@ _Wiki_
        \b(?!(?-i:
        )\b)
 ~~~
-
-
-## Identifiers
-
-
-## String Literals
-
-### Single quoted
-
-### Double quoted
-
-### Document String - Double or Single Triple-Quoted
-
-### Backslash quoted
-
-
-## Comment
-
-### Single line comment
-
-### Multi line comment
-
-### Block comment
-
-### Java Doc
-
-### Here Doc
-
-### Now Doc
-
-
-## Classes & Methods
-
-
-## Function
-
-
-## Grammar
-
-BNF | ABNF | EBNF | XBNF
-[NIM] --------------------------------------------------------------------------
-@=
-
-Nim a.k.a. Nimrod
-
-
-_WWW_=https://nim-lang.org/
-
-https://nim-lang.org/docs/manual.html
-
-
-_Wiki_=
-
-Keywords=
-
-   A RegEx to find them all:
-
-       \b(?!(?-i:
-       )\b)
-
 addr and as asm atomic
 bind block break
 case cast concept const continue converter
@@ -101,16 +45,24 @@ xor
 yield
 
 
-Identifiers=
+## Identifiers
 
 letter ::= 'A'..'Z' | 'a'..'z' | '\x80'..'\xff'
 digit ::= '0'..'9'
 IDENTIFIER ::= letter ( ['_'] (letter | digit) )*
 
+## String Literals
 
-StringLiterals=
+### Single quoted
 
-Comment=
+### Double quoted
+
+### Document String - Double or Single Triple-Quoted
+
+### Backslash quoted
+
+
+## Comment
 
 Comments start anywhere outside a string or character literal with the hash character #. Comments consist of a concatenation of comment pieces. A comment piece starts with # and runs until the end of the line. The end of line characters belong to the piece. If the next line only consists of a comment piece with no other tokens between it and the preceding one, it does not start a new comment:
 
@@ -141,12 +93,28 @@ proc foo =
   here.
   ]##
 
+### Single line comment
 
-Classes_and_Methods=
+### Multi line comment
 
-Function=
+### Block comment
 
-Grammar=
+### Java Doc
+
+### Here Doc
+
+### Now Doc
+
+
+## Classes & Methods
+
+
+## Function
+
+
+## Grammar
+
+BNF | ABNF | EBNF | XBNF
 
 module = stmt ^* (';' / IND{=})
 comma = ',' COMMENT?

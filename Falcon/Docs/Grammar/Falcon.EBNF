@@ -1,0 +1,373 @@
+/* converted on Thu Oct 11, 2018, 17:00 (UTC+10) by bison-to-w3c v0.43 which is Copyright (c) 2011-2017 by Gunther Rademacher <grd@gmx.net> */
+
+input    ::= line*
+line     ::= toplevel_statement
+           | ( END | CASE error ) EOL
+toplevel_statement
+         ::= load_statement
+           | directive_statement
+           | func_statement
+           | class_decl
+           | object_decl
+           | enum_statement
+           | statement
+           | const_statement
+           | export_statement
+           | import_statement
+INTNUM_WITH_MINUS
+         ::= MINUS? INTNUM
+load_statement
+         ::= LOAD ( SYMBOL | STRING | error ) EOL
+statement
+         ::= base_statement
+           | attribute_statement
+           | ( ( FUNCDECL | OBJECT | CLASS )? error )? EOL
+base_statement
+         ::= ( expression | expression_list OP_EQ expression ( COMMA expression_list )? ) EOL
+           | def_statement
+           | while_statement
+           | loop_statement
+           | forin_statement
+           | switch_statement
+           | select_statement
+           | if_statement
+           | break_statement
+           | continue_statement
+           | try_statement
+           | raise_statement
+           | return_statement
+           | global_statement
+           | launch_statement
+           | fordot_statement
+           | self_print_statement
+           | outer_print_statement
+assignment_def_list_element
+         ::= atomic_symbol ( OP_EQ expression )?
+def_statement
+         ::= DEF ( assignment_def_list_element ( COMMA assignment_def_list_element )* | error ) EOL
+while_statement
+         ::= while_decl statement_list END EOL
+           | while_short_decl statement
+while_decl
+         ::= WHILE ( expression | error ) EOL
+while_short_decl
+         ::= WHILE ( expression | error ) COLON
+loop_statement
+         ::= LOOP ( ( EOL statement_list END loop_terminator | error ) EOL | COLON statement )
+loop_terminator
+         ::= expression?
+if_statement
+         ::= if_decl statement_list elif_or_else END EOL
+           | if_short_decl statement
+if_decl  ::= IF ( expression | error ) EOL
+if_short_decl
+         ::= IF ( expression | error ) COLON
+elif_or_else
+         ::= ( elif_statement | else_decl statement_list )?
+else_decl
+         ::= ELSE error? EOL
+elif_statement
+         ::= elif_decl statement_list elif_or_else
+elif_decl
+         ::= ELIF ( expression | error ) EOL
+statement_list
+         ::= statement*
+break_statement
+         ::= BREAK error? EOL
+continue_statement
+         ::= CONTINUE ( DROPPING | error )? EOL
+forin_header
+         ::= FOR ( symbol_list OP_IN ( expression | error EOL ) | atomic_symbol OP_EQ for_to_expr | error EOL )
+forin_statement
+         ::= forin_header ( COLON statement | EOL forin_statement_elem* END EOL )
+for_to_expr
+         ::= expression OP_TO ( expression ( for_to_step_clause | error ) | error )
+for_to_step_clause
+         ::= ( COMMA ( expression | error ) )?
+forin_statement_elem
+         ::= statement
+           | first_loop_block
+           | last_loop_block
+           | middle_loop_block
+fordot_statement
+         ::= FORDOT ( expression | error ) EOL
+self_print_statement
+         ::= ( SHR | GT ) ( expression_list | error )? EOL
+outer_print_statement
+         ::= OUTER_STRING
+first_loop_block
+         ::= FORFIRST ( ( EOL statement_list END | error ) EOL | COLON statement )
+last_loop_block
+         ::= FORLAST ( ( EOL statement_list END | error ) EOL | COLON statement )
+middle_loop_block
+         ::= FORMIDDLE ( ( EOL statement_list END | error ) EOL | COLON statement )
+switch_statement
+         ::= switch_decl ( case_statement | error EOL )* default_statement END EOL
+switch_decl
+         ::= SWITCH ( expression | error ) EOL
+case_statement
+         ::= EOL
+           | CASE ( case_expression_list | error ) ( EOL statement_list | COLON statement )
+default_statement
+         ::= ( default_decl default_body )?
+default_decl
+         ::= ( DEFAULT error? )?
+default_body
+         ::= EOL statement_list
+           | COLON statement
+case_expression_list
+         ::= case_element ( COMMA case_element )*
+case_element
+         ::= NIL
+           | INTNUM_WITH_MINUS ( OP_TO INTNUM_WITH_MINUS )?
+           | STRING
+           | SYMBOL
+select_statement
+         ::= select_decl ( selcase_statement | error EOL )* default_statement END EOL
+select_decl
+         ::= SELECT ( expression | error ) EOL
+selcase_statement
+         ::= EOL
+           | CASE ( selcase_expression_list | error ) ( EOL statement_list | COLON statement )
+selcase_expression_list
+         ::= selcase_element ( COMMA selcase_element )*
+selcase_element
+         ::= ( INTNUM | SYMBOL )?
+try_statement
+         ::= TRY COLON statement
+           | try_decl statement_list catch_statements END EOL
+try_decl ::= TRY error? EOL
+catch_statements
+         ::= catch_statement*
+catch_statement
+         ::= catch_decl statement_list
+catch_decl
+         ::= CATCH ( catchcase_element_list? ( OP_IN atomic_symbol )? | error ) EOL
+catchcase_element_list
+         ::= catchcase_element ( COMMA catchcase_element )*
+catchcase_element
+         ::= INTNUM
+           | SYMBOL
+raise_statement
+         ::= RAISE ( expression | error ) EOL
+func_statement
+         ::= func_decl static_block statement_list END EOL
+           | func_decl_short statement
+func_decl
+         ::= func_begin ( OPENPAR param_list error? CLOSEPAR | error ) EOL
+func_decl_short
+         ::= func_begin OPENPAR ( param_list | error ) CLOSEPAR COLON
+func_begin
+         ::= FUNCDECL SYMBOL
+param_list
+         ::= param_symbol? ( COMMA param_symbol )*
+param_symbol
+         ::= SYMBOL
+static_block
+         ::= ( static_decl statement_list END EOL | static_short_decl statement )?
+static_decl
+         ::= STATIC error? EOL
+static_short_decl
+         ::= STATIC error? COLON
+launch_statement
+         ::= LAUNCH ( func_call | error ) EOL
+const_statement
+         ::= CONST_KW ( SYMBOL OP_EQ ( const_atom | error ) | error ) EOL
+export_statement
+         ::= EXPORT ( SYMBOL ( COMMA SYMBOL )* | error )? EOL
+import_statement
+         ::= IMPORT ( import_symbol_list ( error | FROM ( SYMBOL | STRING ) ( ( OP_AS | OP_IN ) SYMBOL )? )? | SYMBOL? error | FROM ( SYMBOL | STRING ) ( OP_IN SYMBOL )? ) EOL
+attribute_statement
+         ::= SYMBOL COLON ( const_atom | error ) EOL
+import_symbol_list
+         ::= SYMBOL ( COMMA SYMBOL )*
+directive_statement
+         ::= DIRECTIVE ( directive_pair ( COMMA directive_pair )* | error ) EOL
+directive_pair
+         ::= SYMBOL OP_EQ ( SYMBOL | STRING | INTNUM_WITH_MINUS )
+class_decl
+         ::= CLASS SYMBOL class_def_inner class_statement* END EOL
+class_def_inner
+         ::= ( class_param_list from_clause | error ) EOL
+class_param_list
+         ::= ( OPENPAR param_list error? CLOSEPAR )?
+from_clause
+         ::= ( FROM inherit_token ( COMMA inherit_token )* )?
+inherit_token
+         ::= SYMBOL inherit_call
+inherit_call
+         ::= ( OPENPAR expression_list? CLOSEPAR )?
+class_statement
+         ::= EOL
+           | func_statement
+           | property_decl
+           | state_decl
+           | init_decl
+           | attribute_statement
+init_decl
+         ::= INIT EOL static_block statement_list END EOL
+property_decl
+         ::= ( STATIC SYMBOL OP_EQ const_atom | SYMBOL OP_EQ expression ) EOL
+state_decl
+         ::= state_heading state_statement* END EOL
+state_heading
+         ::= OPENSQUARE ( SYMBOL | INIT ) CLOSESQUARE EOL
+state_statement
+         ::= EOL
+           | func_statement
+enum_statement
+         ::= ENUM SYMBOL EOL enum_item_decl* END EOL
+enum_item_decl
+         ::= EOL
+           | SYMBOL ( OP_EQ const_atom )? enum_item_terminator
+           | attribute_statement
+enum_item_terminator
+         ::= EOL
+           | COMMA
+object_decl
+         ::= OBJECT SYMBOL object_decl_inner object_statement* END EOL
+object_decl_inner
+         ::= ( from_clause | error ) EOL
+object_statement
+         ::= EOL
+           | func_statement
+           | property_decl
+           | init_decl
+           | attribute_statement
+global_statement
+         ::= GLOBAL ( globalized_symbol error? | error ) ( COMMA ( globalized_symbol | error ) )* EOL
+globalized_symbol
+         ::= SYMBOL
+return_statement
+         ::= RETURN ( expression | error )? EOL
+const_atom_non_minus
+         ::= NIL
+           | UNB
+           | TRUE_TOKEN
+           | FALSE_TOKEN
+           | INTNUM
+           | DBLNUM
+           | STRING
+const_atom
+         ::= NIL
+           | UNB
+           | TRUE_TOKEN
+           | FALSE_TOKEN
+           | INTNUM_WITH_MINUS
+           | DBLNUM
+           | STRING
+atomic_symbol
+         ::= SYMBOL
+var_atom ::= atomic_symbol
+           | SELF
+           | FSELF
+OPT_EOL  ::= EOL?
+expression
+         ::= const_atom_non_minus
+           | var_atom
+           | AMPER SYMBOL
+           | AMPER INTNUM
+           | AMPER SELF
+           | AMPER DOT SYMBOL
+           | AMPER DOT INTNUM
+           | AMPER DOT SELF
+           | MINUS expression
+           | SYMBOL VBAR expression
+           | expression PLUS OPT_EOL expression
+           | expression MINUS OPT_EOL expression
+           | expression STAR OPT_EOL expression
+           | expression SLASH OPT_EOL expression
+           | expression PERCENT OPT_EOL expression
+           | expression POW OPT_EOL expression
+           | expression AMPER_AMPER OPT_EOL expression
+           | expression VBAR_VBAR OPT_EOL expression
+           | expression CAP_CAP OPT_EOL expression
+           | expression SHL OPT_EOL expression
+           | expression SHR OPT_EOL expression
+           | TILDE expression
+           | expression NEQ expression
+           | expression INCREMENT
+           | INCREMENT expression
+           | expression DECREMENT
+           | DECREMENT expression
+           | expression EEQ expression
+           | expression OP_EXEQ expression
+           | expression GT expression
+           | expression LT expression
+           | expression GE expression
+           | expression LE expression
+           | expression AND expression
+           | expression OR expression
+           | NOT expression
+           | expression OP_IN expression
+           | expression OP_NOTIN expression
+           | expression PROVIDES SYMBOL
+           | DOLLAR atomic_symbol
+           | DOLLAR INTNUM
+           | ATSIGN expression
+           | DIESIS expression
+           | CAP_EVAL expression
+           | CAP_OOB expression
+           | CAP_DEOOB expression
+           | CAP_ISOOB expression
+           | CAP_XOROOB expression
+           | nameless_func
+           | nameless_block
+           | innerfunc
+           | func_call
+           | iif_expr
+           | dotarray_decl
+           | expression range_decl
+           | array_decl
+           | expression OPENSQUARE expression CLOSESQUARE
+           | expression OPENSQUARE STAR expression CLOSESQUARE
+           | expression DOT SYMBOL
+           | dict_decl
+           | range_decl
+           | expression OP_EQ expression
+           | expression OP_EQ expression COMMA expression_list
+           | expression ASSIGN_ADD expression
+           | expression ASSIGN_SUB expression
+           | expression ASSIGN_MUL expression
+           | expression ASSIGN_DIV expression
+           | expression ASSIGN_MOD expression
+           | expression ASSIGN_POW expression
+           | expression ASSIGN_BAND expression
+           | expression ASSIGN_BOR expression
+           | expression ASSIGN_BXOR expression
+           | expression ASSIGN_SHL expression
+           | expression ASSIGN_SHR expression
+           | OPENPAR expression CLOSEPAR
+range_decl
+         ::= OPENSQUARE ( COLON expression? | expression COLON ( expression ( COLON expression )? )? ) CLOSESQUARE
+func_call
+         ::= expression OPENPAR ( expression_list error? )? CLOSEPAR
+nameless_func
+         ::= FUNCDECL nameless_func_decl_inner static_block statement_list END
+nameless_block
+         ::= OPEN_GRAPH nameless_block_decl_inner static_block statement_list CLOSE_GRAPH
+nameless_func_decl_inner
+         ::= OPENPAR param_list ( CLOSEPAR EOL | error )
+           | error EOL
+nameless_block_decl_inner
+         ::= param_list ( ARROW | error )
+           | error ARROW
+innerfunc
+         ::= INNERFUNC nameless_func_decl_inner static_block statement_list END
+iif_expr ::= expression QUESTION ( expression ( COLON ( expression | error ) | error ) | error )
+array_decl
+         ::= OPENSQUARE ( CLOSESQUARE | expression_list ( CLOSESQUARE | error ) )
+dotarray_decl
+         ::= LISTPAR ( CLOSESQUARE | listpar_expression_list ( CLOSESQUARE | error ) )
+dict_decl
+         ::= OPENSQUARE ( ARROW | expression_pair_list error? ) CLOSESQUARE
+expression_list
+         ::= expression ( COMMA expression )*
+listpar_expression_list
+         ::= expression ( listpar_comma expression )*
+listpar_comma
+         ::= COMMA?
+symbol_list
+         ::= atomic_symbol ( COMMA atomic_symbol )*
+expression_pair_list
+         ::= expression ARROW expression ( COMMA expression ARROW expression )*

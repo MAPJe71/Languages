@@ -3,6 +3,8 @@
 
 ## Description
 
+https://spec.commonmark.org/0.29/
+
 
 ## Links
 
@@ -58,108 +60,117 @@ _Wiki_
 ## Grammar
 
 BNF | ABNF | EBNF | XBNF
-[MARKDOWN] ---------------------------------------------------------------------
-@=
-
-_WWW_=
-
-_Wiki_=
-
-Keywords=
-
-   A RegEx to find them all:
-
-       \b(?!(?-i:
-       )\b)
-
-Identifiers=
-
-StringLiterals=
-
-Comment=
-
-https://spec.commonmark.org/0.29/
 
 ---
 
-## ATX headings
+## ATX-style headings
 
-An ATX heading consists of a string of characters, parsed as inline content, between an opening 
-sequence of 1–6 unescaped # characters and an optional closing sequence of any number of 
-unescaped # characters. The opening sequence of # characters must be followed by a space or by 
-the end of line. The optional closing sequence of #s must be preceded by a space and may be 
-followed by spaces only. The opening # character may be indented 0-3 spaces. The raw contents of 
-the heading are stripped of leading and trailing spaces before being parsed as inline content. 
-The heading level is equal to the number of # characters in the opening sequence.
+An ATX heading consists of a string of characters, parsed as inline content, 
+between an opening sequence of 1–6 unescaped `#` characters and an optional 
+closing sequence of any number of unescaped `#` characters. The opening 
+sequence of `#` characters must be followed by a space or by the end of 
+line. The optional closing sequence of `#`s must be preceded by a space and 
+may be followed by spaces only. The opening `#` character may be indented 0-3 
+spaces. The raw contents of the heading are stripped of leading and trailing 
+spaces before being parsed as inline content. The heading level is equal to 
+the number of `#` characters in the opening sequence.
 
 Simple headings:
 
-# foo bar
-## foo bar
-### foo bar
-#### foo bar
-##### foo bar
-###### foo bar
+# ATX-style heading level 1 (ATX1)
+## ATX-style heading level 2 (ATX2)
+### ATX-style heading level 3 (ATX3)
+#### ATX-style heading level 4 (ATX4)
+##### ATX-style heading level 5 (ATX5)
+###### ATX-style heading level 6 (ATX6)
 
-At least one space is required between the # characters and the heading’s contents, unless the heading is empty.
+At least one space is required between the `#` characters and the heading's 
+contents, unless the heading is empty (this is followed by an empty heading).
 
 ###
 
-This is not a heading, because the first # is escaped:
-\## foo bar
+This is not a heading, because the first `#` is escaped:
+
+\## first hash escaped, not a heading
 
 Contents are parsed as inlines:
-# foo *bar* \*baz\*
+
+#### ATX4: foo *bar* \*baz\*
 
 Leading and trailing whitespace is ignored in parsing inline content:
-#                  foo bar                     
-    
+
+####                  ATX4: foo bar                     
+
 One to three spaces indentation are allowed:
- ### foo bar
-  ## foo bar
-   # foo bar
-   
-A closing sequence of # characters is optional:
-## foo bar
-  ###   bar   
-  
+
+ ### ATX3: 1 space indent
+  ## ATX2: 2 space indent
+   # ATX1: 3 space indent
+
+A closing sequence of `#` characters is optional:
+
+#### ATX4: closing sequence is optional
+#### ATX4: closing sequence is optional ####
+  #####   ATX4: closing sequence is optional   
+  #####   ATX4: closing sequence is optional ####   
+
 It need not be the same length as the opening sequence:
-# foo bar ### bar
-##### foo bar
+
+#### ATX4: opening and closing sequence can have differnet length ###
+##### ATX5: opening and closing sequence can have differnet length #
 
 Spaces are allowed after the closing sequence:
-### foo bar ###     
 
-A sequence of # characters with anything but spaces following it is not a closing sequence, but counts as part of the contents of the heading:
-### foo bar ### b
+### ATX3: spaces allowed after closing sequence ###     
+
+A sequence of `#` characters with anything but spaces following it is not a 
+closing sequence, but counts as part of the contents of the heading:
+
+### ATX3: not followed by closing-sequence ### b
 
 The closing sequence must be preceded by a space:
-# foo#
 
-Backslash-escaped # characters do not count as part of the closing sequence:
-### foo \###
-## foo #\##
-# foo \#
+### ATX3: space must preceed closing sequence#
+
+Backslash-escaped `#` characters do not count as part of the closing sequence:
+
+### ATX3: backslash-escaped hashes are not closing-sequence \###
+### ATX3: foo #\##
+### ATX3: backslash-escaped hashes are not closing-sequence \#
 
 ---
 
-## Setext headings
+## Setext-style headings
 
-A setext heading consists of one or more lines of text, each containing at least one non-whitespace character, with no more than 3 spaces indentation, followed by a setext heading underline. The lines of text must be such that, were they not followed by the setext heading underline, they would be interpreted as a paragraph: they cannot be interpretable as a code fence, ATX heading, block quote, thematic break, list item, or HTML block.
+A setext heading consists of one or more lines of text, each containing at least
+one non-whitespace character, with no more than 3 spaces indentation, followed 
+by a setext heading underline. The lines of text must be such that, were they 
+not followed by the setext heading underline, they would be interpreted as a 
+paragraph: they cannot be interpretable as a code fence, ATX heading, block 
+quote, thematic break, list item, or HTML block.
 
-A setext heading underline is a sequence of = characters or a sequence of - characters, with no more than 3 spaces indentation and any number of trailing spaces. If a line containing a single - can be interpreted as an empty list items, it should be interpreted this way and not as a setext heading underline.
+A setext heading underline is a sequence of `=` characters or a sequence of `-` 
+characters, with no more than 3 spaces indentation and any number of trailing 
+spaces. If a line containing a single - can be interpreted as an empty list 
+items, it should be interpreted this way and not as a setext heading underline.
 
-The heading is a level 1 heading if = characters are used in the setext heading underline, and a level 2 heading if - characters are used. The contents of the heading are the result of parsing the preceding lines of text as CommonMark inline content.
+The heading is a level 1 heading if `=` characters are used in the setext 
+heading underline, and a level 2 heading if `-` characters are used. The 
+contents of the heading are the result of parsing the preceding lines of text 
+as CommonMark inline content.
 
-In general, a setext heading need not be preceded or followed by a blank line. However, it cannot interrupt a paragraph, so when a setext heading comes after a paragraph, a blank line is needed between them.
+In general, a setext heading need not be preceded or followed by a blank line. 
+However, it cannot interrupt a paragraph, so when a setext heading comes after 
+a paragraph, a blank line is needed between them.
 
-Simple examples:
+Setext-style heading level 1
+============================
 
+Setext-style heading level 2
+----------------------------
 
+---
 
-Classes_and_Methods=
-
-Function=
 
 Grammar=
 
