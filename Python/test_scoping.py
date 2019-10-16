@@ -1,13 +1,12 @@
 
 class ClassZero ( ClassParent ):
-    pass
+    pass # empty class (i.e. no methods) will not show
 
 def SpacedFunctionOne:
     pass
 
 def	TabbedFunctionOne:
     pass
-
 
 class ClassOne():
 
