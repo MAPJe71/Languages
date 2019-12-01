@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id="skill_function" userDefinedLangName="skill" />
+			<association id="skill_function" ext=".il"                   />
+		</associationMap>
+		<parsers>
+			<parser
+				displayName="skill source"
+				id         ="skill_function"
+			>
+				<function
+					mainExpr="^(procedure|defun)\(\s*([^\n\r]*)"
+				>
+					<functionName>
+						<nameExpr expr="(?m)(?&lt;=\bprocedure\(\s).*$|(?m)(?&lt;=\bdefun\(\s).*$" />
+					</functionName>
+				</function>
+			</parser>
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,24 @@
+<NotepadPlus>
+    <UserLang name="PASM" ext="p hp asm">
+        <Settings>
+            <Global caseIgnored="yes" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comment">1 2 0// 1 2 0;</Keywords>
+            <Keywords name="Words1">adc add sub suc rsb rsc lsl lsr and or xor not min max clr set scan lmbd</Keywords>
+            <Keywords name="Words2">mov ldi lbbo sbbo lbco sbco lfc stc zero mvib mviw mvid xin xout xchg sxin sxout sxchg fill ldi32 </Keywords>
+            <Keywords name="Words3">jmp jal call ret qbgt qbge qblt qble qbeq qbne qba qbbs qbbc wbs wbc halt slp loop iloop nop</Keywords>
+            <Keywords name="Words4">#ifdef #ifndef #else #endif #define #include #undef #error .entrypoint .origin .main .end .proc .ret .struct .ends .u8 .u16 .u32 .assign .setcallreg .macro .mparam .endm .codeword .enter .leave .using .include .copy   .sect .retain .retainrefs .global .if .else .elseif .endif .loop .break .endloop .equ .define .unasg .bss .data .text .usect .mlib .mexit .var .emsg .mmsg .wmsg .asmfunc .endasmfunc .cstruct .cunion .emember .endenum .endstruct .endunion .enum .union .sassign .struct .tag .eval .elfsym .newblock .unasg .undefine .set .asg .setsect .setsym .cdecls .end .common .def .global .ref .symdepend .weak .align .bes .space .drlist .drnolist .fclist .fcnolist .length .list .mlist .mnolist .nolist .option .page .sslist .ssnolist .tab .title .width  .bits .byte .char .cstring .double .field .float .half .int .long .short .string .ubyte .uchar .uhalf .uint .ulong .ushort .uword .word $isdefed $symlen $symcmp $firstch $lastch $ismember $iscons $isname $isreg</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="1" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="1" />
+        </Styles>
+    </UserLang>	
+</NotepadPlus>

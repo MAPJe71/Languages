@@ -1,0 +1,80 @@
+'scopeName': 'text.apmonitor'
+'name': 'APMonitor'
+'fileTypes': [
+  'apm'
+]
+'firstLineMatch': '^#!/.*\\bapm\\b'
+'patterns': [
+  {
+    'include': '#line_comments'
+  }
+  ##############################################################################
+  # Numeric types
+  ##############################################################################
+  {
+    'match': '\\b(?i:(\\d+\\.\\d*(e[\\-\\+]?\\d+)?))(?=[^a-zA-Z_])'
+    'name': 'constant.numeric.float.apmonitor'
+  }
+  {
+    'match': '(?<=[^0-9a-zA-Z_])(?i:(\\.\\d+(e[\\-\\+]?\\d+)?))'
+    'name': 'constant.numeric.float.apmonitor'
+  }
+  {
+    'match': '\\b(?i:(\\d+e[\\-\\+]?\\d+))'
+    'name': 'constant.numeric.float.apmonitor'
+  }
+  {
+    'match': '\\b(?i:([1-9]+[0-9]*|0)L)'
+    'name': 'constant.numeric.integer.long.decimal.apmonitor'
+  }
+  {
+    'match': '\\b([1-9]+[0-9]*|0)'
+    'name': 'constant.numeric.integer.decimal.apmonitor'
+  }
+  ##############################################################################
+  # Keywords
+  ##############################################################################
+  {
+    'comment': 'keywords that delimit sections of the file'
+    'name': 'keyword.section.apmonitor'
+    'match': '\\b(Model|Constants|Parameters|Variables|Intermediates|Equations|Objects|Compounds|Connections|File|End)\\b'
+  }
+  {
+    'comment': 'keywords that identify objectives'
+    'name': 'entity.name.function.apmonitor'
+    'match': '\\b(minimize|maximize)\\b'
+  }
+  {
+    'comment': 'built-in functions'
+    'name': 'support.function.builtin.apmonitor'
+    'match': '\\b(abs|exp|log10|log|sqrt|sinh|cosh|tanh|sin|cos|tan|asin|acos|atan|erf|erfc)\\b'
+  }
+  {
+    'match': '>\\=|<\\=|<|>|\\='
+    'name': 'keyword.operator.comparison.apmonitor'
+  }
+  {
+    'match': '\\+|\\-|\\*|\\^'
+    'name': 'keyword.operator.arithmetic.apmonitor'
+  }
+]
+'repository':
+  ##############################################################################
+  # Comments
+  ##############################################################################
+  'line_comments':
+    'begin': '(^[ \\t]+)?(?=(#|!|%))'
+    'beginCaptures':
+      '1':
+        'name': 'punctuation.whitespace.comment.leading.apmonitor'
+    'end': '(?!\\G)'
+    'patterns': [
+      {
+        'begin': '(#|!|%)'
+        'beginCaptures':
+          '0':
+            'name': 'punctuation.definition.comment.apmonitor'
+        'end': '\\n'
+        'name': 'comment.line.number-sign.apmonitor'
+      }
+    ]

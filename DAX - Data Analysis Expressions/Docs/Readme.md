@@ -1,5 +1,5 @@
 
-# DAX
+# DAX - Data Analysis Expressions
 
 ## Description
 
@@ -7,6 +7,9 @@
 ## Links
 
 _WWW_
+
+https://docs.microsoft.com/en-gb/dax/
+https://docs.microsoft.com/en-gb/dax/dax-function-reference
 
 _Wiki_
 

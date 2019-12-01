@@ -1,0 +1,36 @@
+<NotepadPlus>
+    <UserLang name="Dynare" ext="mod">
+        <Settings>
+            <Global caseIgnored="no" />
+            <TreatAsSymbol comment="no" commentLine="yes" />
+            <Prefix words1="no" words2="no" words3="no" words4="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Delimiters">&quot;00&quot;00</Keywords>
+            <Keywords name="Folder+">/* @#for @#if conditional_forecast_paths endval estimated_params estimated_params_bounds estimated_params_init histval homotopy_setup initval model mshocks observation_trends optim_weights shocks steady_state_model svar_identification&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
+            <Keywords name="Folder-">end @#endif @#endfor */</Keywords>
+            <Keywords name="Operators">- ( ) , . ; ^ + &lt; = &gt;</Keywords>
+            <Keywords name="Comment">1 1 2 2 0// 0%</Keywords>
+            <Keywords name="Words1">beta_pdf change_type corr gamma_pdf inv_gamma_pdf INV_GAMMA_PDF inv_gamma1_pdf inv_gamma2_pdf normal_pdf NORMAL_PDF parameters predetermined_variables stderr trend_var uniform_pdf values var varexo varexo_det varobs BETA_PDF GAMMA_PDF</Keywords>
+            <Keywords name="Words2">@#define @#echo @#else @#error @#ifdef @#ifndef @#include bvar_density bvar_forecast bvar_forecastcompute_mh_covariance_matrix calib_smoother calib_smootherexternal_function check conditional_forecast conditional_forecastload_params_and_steady_state conditional_forecastsave_params_and_steady_state discretionary_policy dsample dynare_sensitivity dynasave dynatype estimation extended_path external_function forecast identification initval_file markov_switching model_comparison model_diagnostics model_info ms_compute_mdd ms_compute_probabilities ms_estimation ms_forecast ms_irf ms_simulation ms_variance_decomposition osr osr_params planner_objective posterior_analysis prior_analysis ramsey_policy resid rplot sbvar set_dynare_seed shock_decomposition simul steady stoch_simul svar trace_plot write_latex_dynamic_model write_latex_static_model global&#x000D;&#x000A;</Keywords>
+            <Keywords name="Words3">adaptive_mh_draws advanced aim_solver alpha alpha_rmse alpha2_redform alpha2_rmse alpha2_stab analytic_derivation ar bayesian_irf beta block bvar_prior_train bvar_replic bytecode chain coefficients_prior_hyperparameters conditional_variance_decomposition conf_sig constant contemp_reduced_form controlled_varexo convergence_ending_value convergence_increment_value convergence_starting_value cova_compute cross_restrictions cutoff data_obs_nbr datafile deflator diffuse_filter discretionary_tol dr dr_algo dr_cycle_reduction_tol dr_logarithmic_reduction_maxiter dr_logarithmic_reduction_tol drop dsge_var dsge_varlag duration error_band_percentiles exclusion expectation file_tag filename filter_covariance filter_decomposition filter_step_ahead filtered_probabilities filtered_vars final_year first_deriv_provided first_obs forecast free_parameters freq function_convergence_criterion graph_format growth_factor gsa_sample_file gsig2_lmdm homotopy_force_continue homotopy_mode homotopy_steps horizon hp_filter hp_ngrid ilptau initial_subperiod initial_year instruments F irf irf_shocks istart_rmse k_order_solver kalman_algo kalman_tol ksstat ksstat_redform labels lik_init lik_only linear load_ident_files load_mh_file load_redform load_rmse load_stab loglinear logtrans_redform lower_cholesky lyapunov lyapunov_doubling_tol lyapunov_fixed_point_tol markowitz max_block_iterations max_dim_cova_group max_iterations_increment_value max_iterations_starting_value max_number_of_stages max_repeated_optimization_runs maxit mdd_proposal_draws median method mfs mh_drop mh_init_scale mh_jscale mh_mode mh_nblocks mh_recover mh_replic minimal_solving_periods mode_check mode_compute mode_file moments_varendo morris morris_nliv morris_ntra name namendo namexo namlagendo nargs neighborhood_width nlags no_bayesian_prior no_create_init no_error_bands no_static nobs nocheck noconstant nocorr nodiagnostic nodisplay nofunctions nograph nomoments noprint nsam number_of_large_perturbations number_of_posterior_draws_after_perturbation number_of_regimes number_of_small_perturbations number_of_states optim order output_file_tag parameter_convergence_criterion parameter_set parameter_uncertainty partial_information periods pfilt_rmse planner_discount plot_priors ppost pprior prefilter presample print prior_mc prior_range prior_trunc proposal_lower_bound proposal_type proposal_upper_bound pruning pvalue_corr pvalue_ks qz_criterium random_function_convergence_criterion random_parameter_convergence_criterion real_time_smoothed redform regime regimes relative_irf replic restriction rmse second_deriv_provided selected_variables_only shock_draws shocks_per_parameter simul simul_replic simul_seed simulation_file_tag smoother solve_algo solve_maxit solver_periods sparse sparse_dll specification stab stack_solve_algo state sub_draws sylvester sylvester_fixed_point_tol tex thinning_factor threshold_redform upper_cholesky use_dll useautocorr var_rmse variances xls_range xls_sheet&#x000D;&#x000A;</Keywords>
+            <Keywords name="Words4">exp log ln log10 sin cos tan asin acos atan normcdf sqrt max min M_ estim_params_ oo_ options_ warning_old_state eps fig pdf abs sign normpdf inf erf sign *sign lik_algo</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="FOLDEROPEN" styleID="12" fgColor="0000FF" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="FOLDERCLOSE" styleID="13" fgColor="0000FF" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="0080FF" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="KEYWORD2" styleID="6" fgColor="0000FF" bgColor="FFFFFF" fontName="Courier New" fontStyle="1" />
+            <WordsStyle name="KEYWORD3" styleID="7" fgColor="A36FD2" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="KEYWORD4" styleID="8" fgColor="F30A21" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="8080C0" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="00BF00" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="DELIMINER1" styleID="14" fgColor="808000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="DELIMINER2" styleID="15" fgColor="000000" bgColor="FFFFFF" fontName="Courier New" fontStyle="0" />
+            <WordsStyle name="DELIMINER3" styleID="16" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

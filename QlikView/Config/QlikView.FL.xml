@@ -10,8 +10,8 @@
 			|   https://github.com/MattFryer/QlikView-Notepad-plus-plus
 			\-->
 			<parser
-				id         ="qlikview"
 				displayName="QlikView"
+				id         ="qlikview"
 				commentExpr="(?s-m:/\*.*?\*/)|(?m-s://.*?$)"
 			>
 				<function
