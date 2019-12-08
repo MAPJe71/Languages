@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=      "golang_syntax"        userDefinedLangName="Go"                 />
+			<association id=      "golang_syntax"        ext=".go"                                />
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ Go/GoLang ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/henkman/notepadplusplus.go/blob/master/functionList.xml
+			|
+			|		\b(?!(-i:                                                   # keywords (case-sensitive), not to be used as identifier
+			|			break
+			|		|	c(?:ase|han|on(?:st|tinue))
+			|		|	def(?:ault|er)
+			|		|	else
+			|		|	f(?:allthrough|or|unc)
+			|		|	go(?:to)?
+			|		|	i(?:f|mport|nterface)
+			|		|	map
+			|		|	package
+			|		|	r(?:ange|eturn)
+			|		|	s(?:elect|truct|witch)
+			|		|	type
+			|		|	var
+			|		)\b)
+			\-->
+			<parser
+				displayName="[TODO] Go / GoLang"
+				id         ="golang_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+					"
+			>
+				<classRange
+					mainExpr    ="^type\s+\w+\s+interface\s*\{"
+					openSymbole ="\{"
+					closeSymbole="\}"
+				>
+					<className>
+						<nameExpr expr="type\s+\w+" />
+						<nameExpr expr="\s+\w+" />
+						<nameExpr expr="\w+" />
+					</className>
+					<function
+						mainExpr="^\s+\w+\s*\("
+					>
+						<functionName>
+							<funcNameExpr expr="\w+" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="          (?x) ^ func \s+ \w+ | ^ func \s* \( \s* \w* \s* \*? \s* \w+ \s* \) \s* \w+"
+				>
+					<functionName>
+						<nameExpr expr="(?x)   func \s+ \w+ |                                           \) \s* \w+" />
+						<nameExpr expr="(?x)        \s+ \w+ |                                           \) \s* \w+" />
+						<nameExpr expr="\w+" />
+					</functionName>
+					<className>
+						<nameExpr expr="(?x)                                                    \w+ \s* \)        " />
+						<nameExpr expr="\w+" />
+					</className>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

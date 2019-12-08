@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "caml_syntax"        langID="41"                              />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ CAML ] -->
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/16501/function-list-for-caml
+			\-->
+			<parser
+				displayName="[#5 TODO] CAML - Categorical Abstract Machine Language"
+				id         ="caml_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:                                                     # Multi Line Comment
+							\(\*+
+							(?:[^*]|\*(?!\)))*
+							\*\)
+						)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							let                                                 # start-of-function indicator...
+							\s+                                                 # ...should be followed by at least one white-space
+							(?:rec\s+)?
+							\K                                                  # discard text matched so far
+							[a-z_]\w*                                           # valid character combination for identifiers
+							\s*\(                                               # start-of-parameters indicator
+							(?:
+								\s*[a-z_]\w*
+								(?:
+									\s*,                                        # parameter separator
+									\s*[a-z_]\w*
+								)*                                              # more parameters are optional
+							)?                                                  # parameters are optional
+							\s*\)                                               # end-of-parameters indicator
+							\s*=                                                # function-header-body separator
+							.+                                                  # whatever, until...
+							\s+in\b                                             # ...end-of-function indicator
+						"
+				>
+					<functionName>
+						<nameExpr expr="[a-z_]\w*" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "vsoc_syntax"        userDefinedLangName="VSoC"               />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ VSoC ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/11027/multiple-function-types-in-functionlist
+			\-->
+			<parser
+				displayName="[TODO] VSOC v1"
+				id         ="vsoc_function_v1"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?&lt;!
+								\x23
+							)
+							\s*
+							(?:	pre
+							|	post
+							)
+							processor
+							\s+[\w-]+
+							(?:	\s*
+								\(
+								[^()]*
+								\)
+							)?
+							\s*\{
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?:	(?:	pre
+									|	post
+									)
+									processor
+									\s+
+								)?
+								[\w-]+
+								-
+								\K                                              # discard text matched so far
+								\w+
+							"
+						/>
+					</functionName>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								[\w-]+
+								(?=
+									-
+								)
+							"
+						/>
+					</className>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			\-->
+			<parser
+				displayName="[TODO] VSOC v2"
+				id         ="vsoc_function_v2"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							Label
+							\s*
+							=
+							\s*
+							\x22
+							[^\x22]+
+							\x22
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								Label
+								\s*
+								=
+								\s*
+								\x22
+								\K                                              # discard text matched so far
+								[^\x22]+
+							"
+						/>
+					</functionName>
+					<className>
+						<nameExpr expr="Label" />
+					</className>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			\-->
+			<parser
+				displayName="[TODO] VSOC v1+2"
+				id         ="vsoc_function_v1+2"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?&lt;!
+								\x23
+							)
+							\s*
+							(?:	(?:	pre
+								|	post
+								)
+								processor
+							|	Label
+							)
+							\s+
+							(?:	[\w-]
+							|	=
+							)+
+							\s*
+							(?:	(?:	\(
+									[^()]*
+									\)
+								)?
+								\s*\{
+							|	\x22
+								[^\x22]+
+								\x22
+							)
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?:	Label
+									\s*=\s*
+									\x22
+									\K                                          # discard text matched so far
+									[^\x22]+
+								|	(?:	(?:	pre
+										|	post
+										)
+										processor
+										\s+
+									)?
+									[\w-]+
+									-
+									\K                                          # discard text matched so far
+									\w+
+								)
+							"
+						/>
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=       "lingo_function"      userDefinedLangName="Lingo"              />
+			<association id=       "lingo_function"      ext=".ls"                                />
+			<association id=       "lingo_function"      ext=".lsw"                               />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ Lingo ] -->
+
+			<!--
+			|   Based on:
+			|       http://valentin.dasdeck.com/lingo/lsw/editor_lingo_support/NotePad++/
+			\-->
+			<parser
+				displayName="[TODO] Lingo [original]"
+				id         ="lingo_function_v1"
+			>
+				<!-- [ \t]*on[ \t]+([%a%d_]+) -->
+				<function
+					mainExpr="^on\s+\w*\s*[\w(),]*.*?$"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								on
+								\s+
+								\K                                              # discard text matched so far
+								\w+
+							"
+						/>
+					</functionName>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<parser
+				displayName="[TODO] Lingo v2"
+				id         ="lingo_function"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^
+							on\s+
+							\w*\s*
+							[\w(),]*
+							.*?$
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								on
+								\s+
+								\K                                              # discard text matched so far
+								\w+
+							"
+						/>
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

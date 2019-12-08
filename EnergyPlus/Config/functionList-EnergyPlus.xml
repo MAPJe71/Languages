@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=  "energyplus_class"         userDefinedLangName="EnergyPlus"         />
+			<association id=  "energyplus_class"         ext=".idf"                               />
+		</associationMap>
+		<parsers>
+			<!-- ================================================== [ EnergyPlus ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/jmarrec/notepad/blob/master/EnergyPlus%20Only/EPlus-Npp-functionList.xml
+			\-->
+			<parser
+				displayName="[TODO] EnergyPlus IDF Classes"
+				id         ="energyplus_class"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:![^-][\w\x20]+$)
+					"
+			>
+				<!--
+				|   Find The entire Class (from one "!- == ALL OBJECTS..." to another.
+				|   We look until we find another !- = and exclude it with (?=)
+				\-->
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							^                                                   # NO leading white-space at start-of-line
+							!-\x20{3}=
+							.*?
+							(?=
+								^!-\x20{3}=
+							)
+						"
+				>
+					<!-- Here we return just the Class name, here an E+ Object Class -->
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								^                                               # NO leading white-space at start-of-line
+								(?:
+									!-\x20{3}={11}
+									\x20{2}
+									ALL
+									\x20
+									OBJECTS
+									\x20
+									IN
+									\x20
+									CLASS
+									:
+									\x20
+								)
+								[\w:]+
+								\x20
+								(?:
+									={11}
+								)
+							"
+						/>
+						<nameExpr expr="(?x) : \x20 [\w:]+ \x20" />
+						<nameExpr expr="(?x)   \x20 [\w:]+     " />
+						<nameExpr expr="(?x)        [\w:]+     " />
+					</className>
+					<!-- Here we find the "function" - here it's an E+ object - Name -->
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								^                                               # NO leading white-space at start-of-line
+								\w
+								[^!]+
+								.*?
+								Name
+							"
+					>
+						<functionName>
+							<!-- We only want to return the "Name" of the object, which is on the second line -->
+							<funcNameExpr expr="(?x) ^ [\t\x20]+ [\w\x20]+ ," />
+							<funcNameExpr expr="(?x)    \w       [\w\x20]+  " />
+						</functionName>
+					</function>
+				</classRange>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

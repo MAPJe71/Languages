@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "abap_syntax"        userDefinedLangName="ABAP"               />
+			<association id=        "abap_syntax"        ext=".abap"                              />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ ABAP ] -->
+
+			<!--
+			|   http://scn.sap.com/community/abap/testing-and-troubleshooting/blog/2016/04/22/abap-function-list-in-notepad
+			\-->
+			<parser
+				displayName="[TODO] ABAP - Advanced Business Application Programming"
+				id         ="abap_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:^\x2A(?:\h.*)?$)                              # Single Line Comment 1
+						|	(?m-s:\x22.*$)                                      # Single Line Comment 2
+					"
+			>
+				<classRange
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?&lt;=
+								^
+								class
+								\h
+							)
+							.*?
+							(?=
+								(?:\r?\n|\n?\r)\S
+							|
+								\Z
+							|
+								endclass
+								\.
+							)
+						"
+				>
+					<className>
+						<nameExpr expr=".*?(?=(?:\r?\n|\n?\r)\S|\Z|\.)" />
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?&lt;=
+									method
+									\h
+								)
+								.+?
+								(?=
+									\.
+								)
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="\w+" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?&lt;=
+								^
+								form
+								\h
+							)
+							.*?
+							(?=
+								(?:\r?\n|\n?\r)\S
+							|
+								\Z
+							|
+								\.
+							)
+						|
+							(?&lt;=
+								^
+								define
+								\h
+							)
+							.*?
+							(?=
+								(?:\r?\n|\n?\r)\S
+							|
+								\Z
+							|
+								\.
+							)
+						"
+				>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

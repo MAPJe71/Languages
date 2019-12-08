@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=     "clojure_function"      userDefinedLangName="Clojure"            />
+			<association id=     "clojure_function"      ext=".clj"                               />
+		</associationMap>
+		<parsers>
+			<!-- ===================================================== [ Clojure ] -->
+
+			<!--
+			|   https://github.com/linpengcheng/ClojureBoxNpp
+			\-->
+			<parser
+				displayName="[TODO] Clojure [original]"
+				id         ="clojure_function_v1"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:;.*?$)
+						|	(?m-s:;.*?$)
+						|	((;.)?$)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+								(^(\(\s*(def[^\{\}\[\]\(\)\^\.\s:#@/\\']*))\s+(\^.*)*\s*(\^\{[^{}]+\})?\s*[^\{\}\[\]\(\)\^\.\s:#@/\\']+([\(\)\[\]\s \t]$))
+							|	(^(\(\s*(def[^\{\}\[\]\(\)\^\.\s:#@/\\']*))\s+(\^.*)*\s*(\^\{[^{}]+\})?\s*([-[:alnum:]*+!_:\/.?]+))
+							|	(\(\s*intern\s+(\^.*)*([-[:alnum:]*+!_:\/.?]+))
+						"
+				/>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			\-->
+			<parser
+				displayName="[TODO] Clojure"
+				id         ="clojure_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:;.*?$)                                            # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+								^  \(  \s*  def  [^{}[\]()\^.\s:#@/\\']*  \s+  (?:  \^  .*  )*  \s*  (?:  \^  \{  [^{}]+  \}  )?  \s*  (?:  [^{}[\]()\^.\s:#@/\\']+  [()[\]\s]  $  )
+							|	^  \(  \s*  def  [^{}[\]()\^.\s:#@/\\']*  \s+  (?:  \^  .*  )*  \s*  (?:  \^  \{  [^{}]+  \}  )?  \s*  [\w\-*+!:/.?]+
+							|	   \(  \s*  intern                        \s+  (?:  \^  .*  )*                                         [\w\-*+!:/.?]+
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

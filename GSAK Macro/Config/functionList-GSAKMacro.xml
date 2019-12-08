@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=   "gsakmacro_syntax"        userDefinedLangName="GSAK Macro"         />
+			<association id=   "gsakmacro_syntax"        ext=".gsk"                               />
+			<association id=   "gsakmacro_syntax"        ext=".gsak"                              />
+		</associationMap>
+		<parsers>
+			<!-- ================================================== [ GSAK Macro ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/15246/functionlist-xml-more-different-function-definitions
+				id         ="gsak_syntax"
+			\-->
+			<parser
+				displayName="[TODO] GSAK Macro - Geocaching Swiss Army Knife [original]"
+				id         ="gsakmacro_syntax_org"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?ms)                                               # - ^, $ and dot match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							(?:beginsub\s+)?
+							name\s*=\s*
+							\K                                                  # discard text matched so far
+							[\w.^+-]+
+						"
+				/>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			\-->
+			<parser
+				displayName="[TODO] GSAK Macro - Geocaching Swiss Army Knife"
+				id         ="test_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:\x23.*$)                                      # Single Line Comment
+						|	(?s:\x22[^\x22]*\x22)                               # String Literal - Double Quoted
+					"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?im)                                               # case-insensitive, ^ and $ match at line-breaks
+							^\h*
+							\x3C\h*DATA\h*\x3E\s+VarName\s*=
+							(?s:.*?)
+							\x3C\h*ENDDATA\h*\x3E
+						"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								\s*VarName\s*=\s*
+								\K                                              # discard text matched so far
+								[A-Za-z_$]\w+
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?im)                                           # case-insensitive, ^ and $ match at line-breaks
+								^\h*                                            # optional leading white-space at start-of-line
+								NAME\s*=\s*
+								\K                                              # discard text matched so far
+								[\w.^+-]+
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="[\w.^+-]+" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m)                                                # ^ and $ match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							(?i:BEGINSUB\s+)
+							NAME\s*=\s*
+							\K                                                  # discard text matched so far
+							[\w.^+-]+
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=   "freebasic_syntax"        langID="69"                              />
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ FreeBASIC ] -->
+
+			<!--
+			|   Based on:
+			|       http://www.freebasic.net/forum/viewtopic.php?t=22849
+			-->
+			<parser
+				displayName="[TODO] FreeBASIC"
+				id         ="freebasic_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*\x27.*?$
+						|	/\x27.*?./
+					"
+			>
+				<function
+					mainExpr="(sub|function)\h+[a-z0-9_]*"
+				>
+					<functionName>
+						<nameExpr expr="(sub|function)\h+[a-z0-9_]+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

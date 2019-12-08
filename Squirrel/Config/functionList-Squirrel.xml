@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=    "squirrel_syntax"        userDefinedLangName="Squirrel"           />
+			<association id=    "squirrel_syntax"        ext=".nut"                               />
+		</associationMap>
+		<parsers>
+			<!-- ==================================================== [ Squirrel ] -->
+
+			<!--
+			|   https://community.notepad-plus-plus.org/topic/12128/function-list-i-can-t-get-function-list-to-recognize-file-extension
+			\-->
+			<parser
+				displayName="[TODO] Squirrel"
+				id         ="squirrel_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

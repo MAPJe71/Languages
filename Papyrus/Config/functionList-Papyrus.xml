@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=     "papyrus_funcevent"     userDefinedLangName="Papyrus"            />
+		</associationMap>
+		<parsers>
+			<!-- ===================================================== [ Papyrus ] -->
+
+			<!--
+			|   Based on:
+			|       http://schnellzugs.blogspot.nl/2013/11/papyrus-function-list-in-notepad.html
+			|       http://www.creationkit.com/index.php?title=Notepad%2B%2B_Setup
+			\-->
+			<parser
+				displayName="[TODO] Papyrus"
+				id         ="papyrus_funcevent"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:;.*$)                                             # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^
+							\h*
+							(?:
+								[\w[\]]+
+								\h+
+							)?
+							(?-i:function|event)
+							\h+
+							\w+
+							\h*
+							\(
+							.*?
+							\)
+						"
+				>
+					<functionName>
+						<nameExpr expr="\w+\h*\(.*?\)" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

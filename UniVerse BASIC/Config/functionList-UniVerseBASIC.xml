@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=    "universe_basic"         userDefinedLangName="UniVerse BASIC"     />
+			<association id=    "universe_basic"         ext=".bas"                               />
+		</associationMap>
+		<parsers>
+			<!-- ============================================== [ UniVerse BASIC ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/12742/functionlist-different-results-with-different-line-endings
+			\-->
+			<parser
+				displayName="UniVerse BASIC"
+				id         ="universe_basic"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?:                                                 # Single Line Comment (SLC)
+								(?m-s)                                          # - ^ and $ match at line-breaks, dot does not
+								(?:^|;)                                         # - at start-of-line or after end-of-statement
+								\h*                                             # - optional leading white-space
+								(?-i:                                           # - case-sensitive start-of-comment indicator...
+									REM\b                                       #   ...for SLC Type 1,
+								|	\x24\x2A                                    #   ...for SLC Type 2,
+								|	[\x21\x2A]                                  #   ...for SLC Type 3 and 4
+								)
+								[^\r\n]*\R                                      # - whatever, until end-of-line
+							)
+						|	(?:\x22[^\r\n\x22]*\x22)                            # String Literal - Double Quoted
+						|	(?:\x27[^\r\n\x27]*\x27)                            # String Literal - Single Quoted
+						|	(?:\x5C[^\r\n\x5C]*\x5C)                            # String Literal - Backslash Quoted
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-i)                                              # ^ and $ match at line-breaks, case-sensitive
+							^                                                   # NO leading white-space at start-of-line
+							(?:
+								\d+\b(?=:?)                                     # completely numeric label, colon optional + discarded
+							|	[A-Za-z_][\w.$%]*(?=:)                          # alphanumeric label, colon required + discarded
+							|	(?:FUNCTION|SUBROUTINE)\h+
+								\K                                              # discard text matched so far
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+								(?:\h*\([^()\r\n]*\))?                          # parentheses and parameters optional
+							)
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

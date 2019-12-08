@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "ruby_syntax"        langID="36"                              />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ Ruby ] -->
+
+			<parser
+				displayName="[TODO] Ruby"
+				id         ="ruby_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?ms:                                               # Multi Line Comment
+								^(?-i:=begin\b)(?:\h[^\r\n]+)?$                 # - begin mark at first column
+								.*?                                             # - whatever
+								^(?-i:=end\b)                                   # - end mark at first column
+							)
+						|	(?m-s:\x23[^{].*$)                                  # Single Line Comment
+					"
+			>
+				<classRange
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							\h*
+							(?-i:\bclass\b)
+							\h+
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									BEGIN|END
+								|	__(?:ENCODING|FILE|LINE)__
+								|	a(?:lias|nd)
+								|	b(?:egin|reak)
+								|	c(?:ase|lass)
+								|	d(?:ef(?:ined\?)?|o)
+								|	e(?:ls(?:e|if)|n(?:d|sure))
+								|	f(?:alse|or)
+								|	i[fn]
+								|	module
+								|	n(?:ext|il|ot)
+								|	or
+								|	re(?:do|scue|t(?:ry|urn))
+								|	s(?:elf|uper)
+								|	t(?:hen|rue)
+								|	un(?:def|less|til)
+								|	wh(?:en|ile)
+								|	yield
+								)\b)
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+							)
+							[^\r\n]*(?:\r?\n|\n?\r)
+							(?:
+								\h*
+								(?m-s:\x23[^{].*$)                              # Single Line Comment - Embedded
+							|
+								(?ms:                                           # Multi Line Comment - Embedded
+									^(?-i:=begin\b)(?:\h[^\r\n]+)?$             # - begin mark at first column
+									.*?                                         # - whatever
+									^(?-i:=end\b)                               # - end mark at first column
+								)
+							|
+								(?'BLANKLINE'
+									\h*
+									(?:\r?\n|\n?\r)
+								)
+							|
+								(?'VARIABLELINE'
+									\h*
+									\b
+									(?'VARIABLE_ID'
+										\$
+										(?:
+											(?&amp;VALID_ID)
+										|
+											-.
+										|
+											.
+										)
+									|
+										@{0,2}
+										(?&amp;VALID_ID)
+									)
+									\b
+									[^\r\n]*(?:\r?\n|\n?\r)
+								)
+							|
+								(?'METHOD'
+									\h*
+									(?-i:\bdef\b)
+									\h+
+									(?'METHOD_ID'
+										(?&amp;VALID_ID)[?!=]?
+									|
+										:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?
+									)
+									[^\r\n]*(?:\r?\n|\n?\r)
+									(?:
+										[^\r\n]*(?:\r?\n|\n?\r)
+									)*?
+									\h*
+									(?-i:\bend\b)
+									[^\r\n]*(?:\r?\n|\n?\r)
+								)
+							)*?
+							\h*
+							(?-i:\bend\b)
+							[^\r\n]*
+							(?:
+								(?:\r?\n|\n?\r)
+							|
+								$
+							)
+						"
+				>
+					<className>
+						<nameExpr expr="(?-i:\bclass\b)\h+[A-Za-z_]\w*\b" />
+						<nameExpr expr="\h+[A-Za-z_]\w*" />
+						<nameExpr expr="[A-Za-z_]\w*" />
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?-i:\bdef\b)
+								\h+
+								(?:
+									[A-Za-z_]\w*[?!=]?
+								|
+									:{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?
+								)
+								[^\r\n]*
+								(?:\r?\n|\n?\r)
+								(?:
+									[^\r\n]*
+									(?:\r?\n|\n?\r)
+								)*?
+								\h*
+								(?-i:\bend\b)
+								[^\r\n]*
+								(?:\r?\n|\n?\r)
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="(?&lt;=def)\h+(?:[A-Za-z_]\w*[?!=]?(?:\h*\()?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?)\h*\()" />
+							<!-- comment out the following node to display the method with its parameters -->
+							<funcNameExpr expr="(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?))" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							\h*
+							(?-i:\balias\b)
+							(?:
+								\h+
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									\b(?!(?-i:                                  # keywords (case-sensitive), not to be used as identifier
+										BEGIN|END
+									|	__(?:ENCODING|FILE|LINE)__
+									|	a(?:lias|nd)
+									|	b(?:egin|reak)
+									|	c(?:ase|lass)
+									|	d(?:ef(?:ined\?)?|o)
+									|	e(?:ls(?:e|if)|n(?:d|sure))
+									|	f(?:alse|or)
+									|	i[fn]
+									|	module
+									|	n(?:ext|il|ot)
+									|	or
+									|	re(?:do|scue|t(?:ry|urn))
+									|	s(?:elf|uper)
+									|	t(?:hen|rue)
+									|	un(?:def|less|til)
+									|	wh(?:en|ile)
+									|	yield
+									)\b)
+									[A-Za-z_]\w*                                # valid character combination for identifiers
+								)
+							){2}
+							[^\r\n]*
+							(?:
+								(?:\r?\n|\n?\r)
+							|
+								$
+							)
+						|
+							\h*
+							(?-i:\bdef\b)
+							\h+
+							(?:
+								(?&amp;VALID_ID)[?!=]?
+								(?:
+									\h*
+									\(
+									[^()]*
+									\)
+								)?
+							|
+								(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?)
+								\h*
+								\(
+								[^()]*
+								\)
+							)
+							(?:
+								[^\r\n]*
+								(?:\r?\n|\n?\r)
+							)+?
+							\h*
+							(?-i:\bend\b)
+							[^\r\n]*
+							(?:
+								(?:\r?\n|\n?\r)
+							|
+								$
+							)
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?-i:\balias\b)(?:\h+(?:[A-Za-z_]\w*)){2}|(?-i:\bdef\b)\h+(?:[A-Za-z_]\w*[?!=]?(?:\h*\()?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?)\h*\()" />
+						<nameExpr expr="(?&lt;=alias)\h+[A-Za-z_]\w*|(?&lt;=def)\h+(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?))" />
+						<nameExpr expr="(?:[A-Za-z_]\w*[?!=]?|(?::{2}|\*{1,2}|![=~]?|=(?:~|={1,2})?|[~+\-/%\x26|\^]|\x3C(?:\x3C|=\x3E?)?|\x3E[\x3E=]?|\[]=?))" />
+					</functionName>
+				</function>
+			</parser>
+			<!--
+			|   Based on:
+			|       https://gist.github.com/monban/6133403
+			\-->
+			<parser
+				displayName="[TODO] Ruby v2"
+				id         ="ruby_function_v2"
+			>
+				<!-- within a class-->
+				<classRange
+					mainExpr    ="(?&lt;=^class\x20).*?(?=\n\S|\Z)"
+				>
+					<className>
+						<nameExpr expr="\w+" />
+					</className>
+					<function
+						mainExpr="^\s*def\s+\w+"
+					>
+						<functionName>
+							<funcNameExpr expr="(?&lt;=def\s)\w+" />
+						</functionName>
+					</function>
+				</classRange>
+				<!-- without class-->
+				<function
+					mainExpr="^\s*def\s+\w+"
+				>
+					<functionName>
+						<nameExpr expr="(?&lt;=def\s)\w+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

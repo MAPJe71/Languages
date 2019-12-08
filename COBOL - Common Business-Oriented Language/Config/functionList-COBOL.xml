@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=       "cobol_section"       langID="50"                              />
+<!--		<association id=       "cobol_fixedform"     langID="50"                              /> -->
+<!--		<association id=       "cobol_freeform"      langID="50"                              /> -->
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ COBOL ] -->
+
+			<parser
+				displayName="[TODO] COBOL - COmmon Business-Oriented Language"
+				id         ="cobol_section"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:(?:^[\d\h]{6}\*|\*\x3E).*$)                       # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s-m)                                              # dot matches at line-breaks, ^ and $ do not
+							[\d\h]{6}
+							[D\x20]
+							\h{0,3}
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									exit
+								)\b)
+								[\w\-]+                                         # valid character combination for identifiers
+							)
+							\s+
+							section
+							(?:
+								\s+
+								\w+
+							)?
+							\s*
+							(?=\.)
+						"
+				/>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			|   Based on:
+			|       https://github.com/notepad-plus-plus/notepad-plus-plus/pull/282
+			\-->
+			<parser
+				displayName="[TODO] COBOL Fixed-form Reference Format - COmmon Business-Oriented Language"
+				id         ="cobol_fixedform"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:                                                  # Single Line Comment
+							(?:
+								^[\d\h]{6}\*                                    #
+							|	\*\x3E                                          #
+							)
+							.*$                                                 # ...whatever, until end-of-line
+						)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							^.{6}
+							[D\x20]
+							\h{0,3}
+							\K                                                  # discard text matched so far
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									exit
+								)\b)
+								[\w\-]+                                         # valid character combination for identifiers
+							)
+							(?:
+								(?'SEPARATORS'
+									(?:
+										\h+
+									|
+										(?:\r?\n|\n?\r)+
+										(?:
+											.{6}[D\x20]
+										|	\x20.{0,6}$
+										)
+									)+
+								)
+								section
+								(?:
+									(?&amp;SEPARATORS)
+									[\w\-]*
+								)?
+							)?
+							(?=\.)
+						"
+				/>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			|   Based on:
+			|       https://github.com/notepad-plus-plus/notepad-plus-plus/pull/282
+			\-->
+			<parser
+				displayName="[TODO] COBOL Free-form Reference Format - COmmon Business-Oriented Language"
+				id         ="cobol_freeform"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:\*\x3E.*$)                                        # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							\.
+							\s*
+							\K                                                  # discard text matched so far
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									exit
+								)\b)
+								[\w\-]+                                         # valid character combination for identifiers
+							)
+							(?:
+								\s+
+								section
+								\s+
+								[\w\-]*
+							)?
+							(?=\.)
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

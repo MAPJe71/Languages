@@ -1,0 +1,15 @@
+MODULE CIRCLEMOVEIMPL(SYSMODULE, NOVIEW)
+    VAR errnum ERR_CIRCLE:= -1;
+    VAR num errorid := 5001;
+    PROC MoveCircleImpl(
+        robtarget pCenter,
+        num Radius,
+        speeddata Speed,
+        zonedata Zone,
+        PERS tooldata Tool\
+        PERS wobjdata WObj)
+        
+        ...
+        
+    ENDPROC
+ENDMODULE

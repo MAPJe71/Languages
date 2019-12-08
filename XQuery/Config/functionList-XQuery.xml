@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+
+		</associationMap>
+		<parsers>
+			<!-- ====================================================== [ XQuery ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/robwhitby/NotepadPlusPlus-XQuery
+			-->
+			<parser
+				displayName="[TODO] XQuery"
+				id         ="xquery_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:\(:.*?\))                                            # Multi Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							function[\s\x26]+
+							\K                                                  # discard text matched so far
+							[\x22\w\-]+
+							\s*\(.*\)
+							\s*\{
+						"
+				>
+					<functionName>
+						<nameExpr expr="[\x22\w\-]+\s*\(.*\)" />
+						<!-- comment out the following node to display the method with its parameters -->
+						<nameExpr expr="[\x22\w\-]+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

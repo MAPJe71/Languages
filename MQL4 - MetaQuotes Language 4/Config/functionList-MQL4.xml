@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=        "mql4_syntax"        userDefinedLangName="MQL4"               />
+			<association id=        "mql4_syntax"        ext=".mq4"                               />
+			<association id=        "mql4_syntax"        ext=".mqh"                               />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================== [ MQL4 ] -->
+
+			<!--
+			|   Based on:
+			|       https://forum.mql4.com/66417
+			\-->
+			<parser
+				displayName="[TODO] MQL4 - MetaQuotes Language 4"
+				id         ="mql4_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m)                                                # ^ and $ match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							[\w:]+
+							(?:\s+\w+)?
+							(?:\s+|\*\s+|\s+\*|\s+\*\s+)
+							(\w+\s*::)?
+							\b(?!(?-i:                                          # keywords (case-sensitive), not to be used as identifier
+								if|while|for
+							)\b)
+							[\w~]+
+							\s*\([^()]*\)
+							(?:
+								\s*
+								\bconst\b
+							)?
+							\s*\{
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?!(?:if|while|for)\b)[\w~]+\s*\(" />
+						<nameExpr expr="(?!(?:if|while|for)\b)[\w~]+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

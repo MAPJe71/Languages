@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=         "mox_syntax"        userDefinedLangName="MOX"                />
+			<association id=         "mox_syntax"        ext=".mox"                               />
+		</associationMap>
+		<parsers>
+			<!-- ========================================================= [ MOX ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/13675/trouble-making-functionlist-parser-for-user-defined-language-mox
+			\-->
+			<parser
+				displayName="MOX"
+				id         ="mox_syntax"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m)                                                # ^ and $ match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							(?i:FUNCTION|METHOD|MACRO)                          # start-of indicator, case-insensitive
+							\s+                                                 # trailing white-space required
+							\K                                                  # discard text matched so far
+							(?:(?&amp;VALID_ID)\.)*                             # optional class identifier prefix
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+							)
+							\s*\(                                               # start-of-parameter-list indicator
+							[^)]*                                               # optional parameters
+							\)                                                  # end-of-parameter-list indicator
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?:(?&amp;VALID_ID)\.)*                         # optional class identifier prefix
+								\K                                              # discard text matched so far
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									[A-Za-z_]\w*                                # valid character combination for identifiers
+								)
+								\s*\(                                           # start-of-parameter-list indicator
+								[^)]*                                           # optional parameters
+								\)                                              # end-of-parameter-list indicator
+							"
+						/>
+						<!-- comment out the following node to display the function with its parameters -->
+<!--						<nameExpr expr="[A-Za-z_]\w*" /> -->
+					</functionName>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									[A-Za-z_]\w*                                # valid character combination for identifiers
+								)
+								(?:\.(?&amp;VALID_ID))*                         # optional sub-class-name(s)
+								(?=\.)                                          # exclude last (sub-)class-method-name separator
+							"
+						/>
+					</className>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

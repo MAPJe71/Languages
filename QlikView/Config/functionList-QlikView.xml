@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=    "qlikview_function"      userDefinedLangName="QlikView"           />
+			<association id=    "qlikview_function"      ext=".qvs"                               />
+		</associationMap>
+		<parsers>
+			<!-- ==================================================== [ QlikView ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/MattFryer/QlikView-Notepad-plus-plus/blob/master/functionList.xml
+			\-->
+			<parser
+				displayName="[TODO] QlikView"
+				id         ="qlikview_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?:
+								sub					\s+
+								[\w._\-[\]$()]+	\s*
+								\(
+								[^()]*
+								\)
+							|
+								store				\s+
+								[\w._\-[\]$()]+		\s+
+								into				\s+
+								[\w._\-[\]$()/:]+	\s*
+								(?:	\(qvd\)
+								|	\(txt\)				)*
+								;
+							|
+								[\w._\-[\]$()]+
+								:					\s+
+								(?:	mapping			\s+
+								|	noconcatenate	\s+	)?
+								load\b
+							|
+								(?:	left			\s+
+								|	right			\s+
+								|	inner			\s+
+								|	outer			\s+	)?
+								(?:	join			\s+
+								|	keep			\s+
+								|	concatenate		\s+	)
+								\(
+								[\w._\-[\]$()]+
+								\)					\s+
+								load\b
+							|
+								(?:	bundle			\s+	)?
+								info				\s+
+								load				\s+
+								[\w._\-[\]$()]+
+								,
+							|
+								(?:un)?qualify		\s+
+								[\w._\-[\]$(),\s\*\x22]+
+								;
+							)
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?:
+									sub					\s+
+									[\w._\-[\]$()]+
+								|
+									store				\s+
+									[\w._\-[\]$()]+		\s+
+								|
+									[\w._\-[\]$()]+
+									:					\s+
+									(?:	mapping			\s+
+									|	noconcatenate	\s+	)?
+									load
+								|
+									(?:	left			\s+
+									|	right			\s+
+									|	inner			\s+
+									|	outer			\s+	)?
+									(?:	join			\s+
+									|	keep			\s+
+									|	concatenate		\s+	)
+									\(
+									[\w._\-[\]$()]+
+									\)
+								|
+									(?:	bundle			\s+	)?
+									info				\s+
+									load				\s+
+									[\w._\-[\]$()]+)
+								|
+									(?:un)?qualify		\s+
+									[\w._\-[\]$(),\s\*\x22]+
+							"
+						/>
+					</functionName>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								into				\s+
+								[\w._\-[\]$()/:]+	\s*
+								(?:	\(qvd\)
+								|	\(txt\)				)*
+							"
+						/>
+					</className>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

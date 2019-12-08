@@ -1,0 +1,14 @@
+MODULE CIRCLEMOVE(SYSMODULE, NOSTEPIN)
+    PROC MoveCircle(
+        robtarget pCenter,
+        num Radius,
+        speeddata Speed,
+        zonedata Zone,
+        PERS tooldata Tool\
+        PERS wobjdata WObj)
+
+            MoveCirecleImpl pCenter, Radius, Speed, Zone, Tool\
+            WObj?WObj;
+
+    ENDPROC
+ENDMODULE

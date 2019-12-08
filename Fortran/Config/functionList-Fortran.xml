@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=     "fortran_freeform"      langID="25"                              />
+			<association id=     "fortran_fixedform"     langID="59"                              />
+		</associationMap>
+		<parsers>
+			<!-- ===================================================== [ Fortran ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/11059/custom-functions-list-rules
+			|       https://community.notepad-plus-plus.org/topic/13553/functionlist-xml-regular-expressions-not-parsing-properly
+			\-->
+			<parser
+				displayName="Fortran Free Form style - FORmula TRANslation"
+				id         ="fortran_freeform"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:!.*$)                                             # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?im-s)                                             # case-insensitive, ^ and $ match at line-breaks, dot does not
+							^\h*                                                # optional leading white-space at start-of-line
+							(?:
+								(?:
+									ELEMENTAL
+								|	(?:IM)?PURE
+								|	MODULE
+								|	(?:NON_)?RECURSIVE
+								)
+								\s+
+							)*
+							(?:FUNCTION|SUBROUTINE)\s+
+							\K                                                  # discard text matched so far
+							[A-Z]\w{0,62}                                       # valid character combination for identifiers
+							(?:\s*\([^()]*\))?                                  # optional parameter list
+						"
+				>
+					<!-- comment out the following node to display the method with its parameters -->
+					<functionName>
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<parser
+				displayName="Fortran Fixed Form style - FORmula TRANslation"
+				id         ="fortran_fixedform"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:(?:!|^[Cc*].*$)                                   # Single Line Comment 1..3
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?im-s)                                             # case-insensitive, ^ and $ match at line-breaks, dot does not
+							^\h*                                                # optional leading white-space at start-of-line
+							(?:FUNCTION|SUBROUTINE)\s+
+							\K                                                  # discard text matched so far
+							[A-Z]\w{0,62}                                       # valid character combination for identifiers
+							(?:\s*\([^()]*\))?                                  # optional parameter list
+						"
+				>
+					<!-- comment out the following node to display the method with its parameters -->
+					<functionName>
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- =================================================== [ Fortran77 ] -->
+
+			<parser
+				displayName="[#4] Fortran77 (see Fortran Fixed Form style / fortran_fixedform)"
+				id         ="fortran77_syntax"
+			/>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

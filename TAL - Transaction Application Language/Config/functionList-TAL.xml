@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=         "tal_syntax"        userDefinedLangName="TAL"                />
+			<association id=         "tal_syntax"        ext=".tal"                               />
+		</associationMap>
+		<parsers>
+			<!-- ========================================================= [ TAL ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/14773/user-defined-language-functionlist-parser-only-displays-first-function
+			\-->
+			<parser
+				displayName="[#4] TAL - Transaction Application Language"
+				id         ="tal_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:\x96{2}.*$)                                   # Single Line Comment 1
+						|	(?m:\x21[^\r\n\x21]*(?:\x21|$))                     # Single Line Comment 2
+						|	(?:\x22(?:[^\r\n\x22]|\x22{2})*\x22)                # String Literal - Double Quoted
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?ims)                                              # case-insensitive, ^, $ and dot match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							(?:                                                 # optional function type specifier
+								(?:
+									INT(?:\(\d{2}\))?                           # strict: INT(?:\((?:16|32|64)\))?              i.e. `INT`, `INT(16)`, `INT(32)` or `INT(64)`
+								|	REAL(?:\(\d{2}\))?                          # strict: REAL(?:\((?:32|64)\))?                i.e. `REAL`, `REAL(32)` or `REAL(64)`
+								|	STRING
+								|	UNSIGNED\(\d{1,2}\)                         # strict: UNSIGNED\((?:31|[1-3]0|[12]?[1-9])\)  i.e. `UNSIGNED(1)`..`UNSIGNED(31)`
+								|	FIXED(?:\((?:-?\d{1,2}|\x2A)\))?            # strict: FIXED(?:\((?:-?1?[0-9]|\x2A)\))?      i.e. `FIXED`, `FIXED(-19)`..`FIXED(19)` or `FIXED(*)`
+								)
+								\s+
+							)?
+							(?:SUB)?PROC
+							\s+
+							\K                                                  # discard text matched so far
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?i:                                       # keywords (case-insensitive), not to be used as identifier
+									A(?:ND|SSERT)
+								|	B(?:EGIN|Y)
+								|	C(?:A(?:LL(?:ABLE)?|SE)?|ODE)
+								|	D(?:EFINE|O(?:WNTO)?|ROP)
+								|	E(?:LSE|N(?:D|TRY)|XTERNAL)
+								|	F(?:IXED|OR(?:WARD)?)
+								|	GOTO
+								|	I(?:F|NT(?:ERRUPT)?)
+								|	L(?:A(?:BEL|ND)|ITERAL|OR)
+								|	MAIN
+								|	NOT
+								|	O(?:[FR]|THERWISE)
+								|	PR(?:IV|OC)?
+								|	R(?:E(?:AL|SIDENT|TURN)|SCAN)
+								|	S(?:CAN|T(?:ACK|ORE|R(?:ING|UCT))|UBPROC)
+								|	T(?:HEN|O)
+								|	U(?:N(?:SIGNED|TIL)|SE)
+								|	VARIABLE
+								|	WHILE
+								|	XOR
+								)\b)
+								[A-Za-z_^][\w^]{0,30}                           # valid character combination for identifiers
+							)
+							(?:                                                 # optional public name
+								\s*=
+								\s*\x22(?&amp;VALID_ID)\x22
+							)?
+							(?:                                                 # optional parameter list
+								\s*\(                                           # - start-of-parameter-list indicator
+								[^()]+                                          # - parameters
+								\)                                              # - end-of-parameter-list indicator
+							)?
+							[^;]*                                               # whatever, until...
+							;                                                   # ...end-of-function-header indicator
+						"
+				>
+					<functionName>
+						<nameExpr expr="[\w^]+(?:\s*=\s*\x22[\w^]+\x22)?(?:\s*\([^()]+\))?" />
+						<!-- comment out the following node to display the method with its parameters -->
+<!--						<nameExpr expr="[\w^]+(?:\s*=\s*\x22[\w^]+\x22)?" /> -->
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

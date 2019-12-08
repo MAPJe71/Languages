@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id= "openedgeabl_function"      userDefinedLangName="OpenEdgeABL"        />
+			<association id= "openedgeabl_function"      userDefinedLangName="Progress"           />
+		</associationMap>
+		<parsers>
+			<!-- ================================================ [ OpenEdge ABL ] -->
+			<!-- also known as: PROGRESS / Progress 4GL                            -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/ccleaud/ProgressABL-for-Notepad-plusplus/blob/master/config/FunctionList-delta.xml
+			-->
+			<parser
+				displayName="[TODO] OpenEdge ABL - OpenEdge Advanced Business Language"
+				id         ="openedgeabl_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?s:\x2F\x2A[^\x2F]*\x2A\x2F)                           # Multi Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(
+								&amp;ANALYZE-SUSPEND
+								[^\r\n]*
+								(	_MAIN-BLOCK
+								|	_DEFINITIONS
+								|	_PROCEDURE-SETTINGS
+								)
+								[^\r\n]*
+							|
+								procedure \s*
+								[\w-]*
+								[^:.]*
+								[\w-]*    \s*
+								[^:.(\x20]*
+							|
+								function  \s*
+								[\w-]*    \s*
+								[^:.(]*   \s*
+								[\w-]*    \s*
+								[^:.(\x20]*
+							|
+								on        \s*
+								[\w-]*    \s*
+								(	of    \s*    menu-item
+								|	of    \s* (?!menu-item)
+								)         \s*
+								[\w-]*    \s*
+							)
+						"
+				>
+					<functionName>
+						<nameExpr expr="\w+.*?[^:]*" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

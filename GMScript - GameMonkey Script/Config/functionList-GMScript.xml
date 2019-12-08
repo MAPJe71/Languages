@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=    "gmscript_syntax"        userDefinedLangName="GameMonkey Script"  />
+			<association id=    "gmscript_syntax"        ext=".gm"                                />
+			<association id=    "gmscript_syntax"        ext=".gms"                               />
+		</associationMap>
+		<parsers>
+			<!-- ==================================================== [ GMScript ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/16803/function-list-help-for-adding-a-custom-language
+			-->
+			<parser
+				displayName="[TODO] GMScript / GM - GameMonkey Script"
+				id         ="gmscript_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+						|	(?s:\x22(?:[^\x22\x5C]|\x5C.)*\x22)                 # String Literal - Double Quoted
+						|	(?s:\x27(?:[^\x27\x5C]|\x5C.)*\x27)                 # String Literal - Single Quoted
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*
+							(?:
+								(?:global|member)
+								\h+
+							)?
+							\K                                                  # discard text matched so far
+							\w+(?:\.\w+)*
+							\h*  =
+							\h*  function\b
+							\h*  \(
+							(?:
+								\h*  \w+
+								(?:
+									\h*  ,
+									\h*  \w+
+								)*
+							)?
+							\h*  \)
+						"
+				>
+					<functionName>
+						<nameExpr expr="\w+(?:\.\w+)*" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

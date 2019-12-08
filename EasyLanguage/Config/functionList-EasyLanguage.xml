@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=    "easylang_method"        userDefinedLangName="EasyLanguage"       />
+			<association id=    "easylang_method"        ext=".eltxt"                             />
+		</associationMap>
+		<parsers>
+			<!-- ================================================ [ EasyLanguage ] -->
+			<!-- TradeStation's EasyLanguage                                       -->
+
+			<!--
+			|   https://community.notepad-plus-plus.org/topic/9725/trouble-adding-userdefinedlanguage-parser-to-notepad-v6-8-2
+			\-->
+			<parser
+				displayName="[TODO] EasyLanguage"
+				id         ="easylang_method"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\{[^{}]*?})                                     # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?i)                                                # case-insensitive
+							METHOD
+							\s+
+							(?-i:bool|double|int|void)
+							\s+
+							(?'NAME'
+								\w+
+							)
+							\s*
+							(?'PARAMETERS'
+								\(
+								[^()]*
+								\)
+							)
+							[^\r\n]*(?:\r?\n|\n?\r)
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?i)
+								METHOD
+								\s+
+								\K                                              # discard text matched so far
+								[^()]+
+								\)
+							"
+						/>
+						<!-- comment out the following node to display the method with its parameters -->
+<!--						<nameExpr expr="[^(]+" /> -->
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

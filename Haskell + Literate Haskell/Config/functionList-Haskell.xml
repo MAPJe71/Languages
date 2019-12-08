@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=     "haskell_function"      langID="45"                              />
+<!--		<association id=     "haskell_literate"      langID="45"                              /> -->
+<!--		<association id=     "haskell_literatelatex" langID="45"                              /> -->
+		</associationMap>
+		<parsers>
+			<!-- ===================================================== [ Haskell ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/12972/trouble-with-defining-a-function-list-entry/7
+			|
+			|   By convention, the style of comment is indicated by the file extension,
+			|   with ".hs"  indicating a "usual"  Haskell file
+			|   and  ".lhs" indicating a literate Haskell file.
+			|
+			|		\b(?!(?-i:
+			|			as
+			|		|	c(?:ase|lass)
+			|		|	d(?:ata|e(?:fault|riving)|o)
+			|		|	else
+			|		|	f(?:amily|or(?:all|eign))
+			|		|	hiding
+			|		|	i(?:f|mport|n(?:fix[lr]?|stance)?)
+			|		|	let
+			|		|	m(?:do|mdule)
+			|		|	newtype
+			|		|	of
+			|		|	proc
+			|		|	qualified
+			|		|	rec
+			|		|	t(?:hen|ype)
+			|		|	where
+			|		|	_
+			|		)\b)
+			|
+			\-->
+			<parser
+				displayName="Haskell"
+				id         ="haskell_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:                                                # Multi Line Comment (nesting allowed)
+								\{-                                             # - start-of-comment indicator
+								(?>                                             # - followed by zero or more characters...
+									[^{-]                                       #   ...not part of the start indicator,
+								|	\{(?!-)                                     #   ...not being a start-of-comment indicator,
+								|	-(?!\})                                     #   ...not being an end-of-comment indicator and
+								|	(?R)                                        #   ...balancing through recursion (nesting)
+								)*
+								-\}                                             # - end-of-comment indicator
+							)
+						|	(?m-s:-{2}.*?$)                                     # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							^                                                   # NO leading white-space at start-of-line
+							[A-Za-z][\w\x27]*                                   # valid character combination for identifiers
+							\x20+::\x20
+							.*?$                                                # whatever, until end-of-line
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z][\w\x27]*" />
+					</functionName>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			|   The literate style encourages comments by making them the default.
+			|   A line in which ">" is the first character is treated as part of
+			|   the program; all other lines are comments.
+			\-->
+			<parser
+				displayName="Haskell - Literate Style"
+				id         ="haskell_literate"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:                                                     # Single Line Comment
+							(?m-s)                                              # - ^ and $ match at line-breaks, dot does not
+							^(?!\x3E)                                           # - NO greater-than at start-of-line
+							.+$                                                 # - whatever, until end-of-line
+						)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							^\x3E\h*                                            # greater-than at start-of-line indicates program line
+							\K                                                  # discard text matched so far
+							[A-Za-z][\w\x27]*                                   # valid character combination for identifiers
+							\x20+::\x20
+							.*?$                                                # whatever, until end-of-line
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z][\w\x27]*" />
+					</functionName>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			|   An alternative style of literate programming is particularly
+			|   suitable for use with the LaTeX text processing system. In this
+			|   convention, only those parts of the literate program that are
+			|   entirely enclosed between \begin{code}...\end{code} delimiters
+			|   are treated as program text; all other lines are comments.
+			\-->
+			<parser
+				displayName="Haskell - Literate Style for LaTeX"
+				id         ="haskell_literatelatex"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?:                                                     # Multi Line Comment
+							(?s)                                                # - dot matches at line-breaks
+							(?:	\A                                              # - from start-of-text...
+							|	\\end\{code\}                                   #   ...or end-of-program indicator
+							)
+							.*?                                                 # - whatever, until...
+							(?:	\\begin\{code\}                                 #   ...start-of-program indicator
+							|	\Z                                              #   ...or end-of-text
+							)
+						)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s)                                              # ^ and $ match at line-breaks, dot does not
+							[A-Za-z][\w\x27]*                                   # valid character combination for identifiers
+							\x20+::\x20
+							.*?$                                                # whatever, until end-of-line
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z][\w\x27]*" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=   "maxscript_syntax"        userDefinedLangName="MAXScript"          />
+			<association id=   "maxscript_syntax"        ext=".ms"                                />
+<!--		<association id=   "maxscript_syntax"        ext=".mcr"                               /> -->
+			<association id=   "maxscript_macrosyntax"   userDefinedLangName="MAXScript Macro"    />
+			<association id=   "maxscript_macrosyntax"   ext=".mcr"                               />
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ MAXScript ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/13443/need-help-to-make-maxscript-functions-recognized-by-function-list
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:-{2}.*$)                                      # Single Line Comment
+						|	(?:                                                 # String Literal - Double Quoted
+								@?\x22                                          # - start-of-double-quoted-(meta-)string indicator
+								(?:	[^\x22\x5C]                                 # - skip invalid string characters,
+								|	\x5C                                        #   ...allow backslash escape sequence for...
+									(?:	[\x22\x25\x2A\x3F\x5Cnrt]               #   ...a double-quote, %, *, ?, \, newline, carriage-return, tab...
+									|	x[A-Fa-f\d]+                            #   ...or a character code sequence;
+									)
+								)*                                              #   ...string can be empty
+								\x22                                            # - end-of-double-quoted-(meta-)string indicator
+							)
+					"
+
+							(?:
+								\s+
+								[A-Za-z_]\w*                                    # parameter name
+								(?:                                             # optional parameter value
+									\s*                                         # optional leading white-space for
+									:                                           # ...parameter name-value separator
+									(?:	\s*                                     # optional leading white-space for
+										(?:
+											\b\w+\b                             # ...name
+										|	\x22[^\x22\r\n]*\x22                # ...double quoted
+										|	\x23\([^)\r\n]*\)                   # ...array
+										)
+									)?
+								)?
+							)*
+			\-->
+			<parser
+				displayName="[#5 >] MAXScript - Scripting language for AutoDesk 3ds Max"
+				id         ="maxscript_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?s:\x2F\x2A.*?\x2A\x2F)                                # Multi Line Comment
+					"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?i:struct|macroscript)\s+
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									a(?:bout|n(?:d|imate)|[st])
+								|	by
+								|	c(?:a(?:se|tch)|o(?:llect|ntinue|ordsys))
+								|	do
+								|	e(?:lse|xit)
+								|	f(?:n|or|rom|unction)
+								|	global
+								|	i[fn]
+								|	local
+								|	ma(?:croscript|pped|x)
+								|	not
+								|	o(?:ff?|[nr])
+								|	p(?:arameters|ersistent|lugin)
+								|	r(?:cmenu|eturn|ollout)
+								|	s(?:et|truct)
+								|	t(?:hen|hrow|o(?:ol)?|ry)
+								|	u(?:ndo|tility)
+								|	w(?:h(?:e(?:n|re)|ile)|ith)
+								)\b)
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+							)
+							(?:	[^(]                                            # no open/left parenthesis (i.e. start-of-body indicator)
+							|	(?&lt;=\x23)\(                                  # ...unless part of start-of-array indicator
+							)*                                                  # ...zero or more times until
+							(?:\(|\Z)                                           # ...start-of-body indicator or end-of-text
+						"
+					openSymbole ="\("
+					closeSymbole="\)"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?i:struct|macroscript)
+								\s+
+								\K                                              # discard text matched so far
+								[A-Za-z_]\w*
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								^\h*                                            # optional leading white-space at start-of-line
+								(?i:fn|function|macroscript)\s+
+								\K                                              # discard text matched so far
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									\b(?!(?-i:                                  # keywords (case-sensitive), not to be used as identifier
+										a(?:bout|n(?:d|imate)|[st])
+									|	by
+									|	c(?:a(?:se|tch)|o(?:llect|ntinue|ordsys))
+									|	do
+									|	e(?:lse|xit)
+									|	f(?:n|or|rom|unction)
+									|	global
+									|	i[fn]
+									|	local
+									|	ma(?:croscript|pped|x)
+									|	not
+									|	o(?:ff?|[nr])
+									|	p(?:arameters|ersistent|lugin)
+									|	r(?:cmenu|eturn|ollout)
+									|	s(?:et|truct)
+									|	t(?:hen|hrow|o(?:ol)?|ry)
+									|	u(?:ndo|tility)
+									|	w(?:h(?:e(?:n|re)|ile)|ith)
+									)\b)
+									[A-Za-z_]\w*                                # valid character combination for identifiers
+								)
+								(?:	[^(]                                        # no open/left parenthesis (i.e. start-of-body indicator)
+								|	(?&lt;=\x23)\(                              # ...unless part of start-of-array indicator
+								)*                                              # ...zero or more times until
+								(?:\(|\Z)                                       # ...start-of-body indicator or end-of-text
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="[A-Za-z_]\w*[^=]*?(?=\s*=)" />
+							<!-- comment out the following node to display the function with its parameters -->
+<!--							<funcNameExpr expr="[A-Za-z_]\w*" /> -->
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?i:fn|function|macroscript)\s+
+							\K                                                  # discard text matched so far
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									a(?:bout|n(?:d|imate)|[st])
+								|	by
+								|	c(?:a(?:se|tch)|o(?:llect|ntinue|ordsys))
+								|	do
+								|	e(?:lse|xit)
+								|	f(?:n|or|rom|unction)
+								|	global
+								|	i[fn]
+								|	local
+								|	ma(?:croscript|pped|x)
+								|	not
+								|	o(?:ff?|[nr])
+								|	p(?:arameters|ersistent|lugin)
+								|	r(?:cmenu|eturn|ollout)
+								|	s(?:et|truct)
+								|	t(?:hen|hrow|o(?:ol)?|ry)
+								|	u(?:ndo|tility)
+								|	w(?:h(?:e(?:n|re)|ile)|ith)
+								)\b)
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+							)
+							(?:	[^(]                                            # no open/left parenthesis (i.e. start-of-body indicator)
+							|	(?&lt;=\x23)\(                                  # ...unless part of start-of-array indicator
+							)*                                                  # ...zero or more times until
+							(?:\(|\Z)                                           # ...start-of-body indicator or end-of-text
+						"
+				>
+					<functionName>
+						<nameExpr expr="[A-Za-z_]\w*[^=]*?(?=\s*=)" />
+						<!-- comment out the following node to display the function with its parameters -->
+<!--						<nameExpr expr="[A-Za-z_]\w*" /> -->
+					</functionName>
+				</function>
+			</parser>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<parser
+				displayName="[#5 >] MAXScript Macro - Scripting language for AutoDesk 3ds Max"
+				id         ="maxscript_macrosyntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?s:\x2F\x2A.*?\x2A\x2F)                                # Multi Line Comment
+					"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?i:struct|macroscript)\s+
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									a(?:bout|n(?:d|imate)|[st])
+								|	by
+								|	c(?:a(?:se|tch)|o(?:llect|ntinue|ordsys))
+								|	do
+								|	e(?:lse|xit)
+								|	f(?:n|or|rom|unction)
+								|	global
+								|	i[fn]
+								|	local
+								|	ma(?:croscript|pped|x)
+								|	not
+								|	o(?:ff?|[nr])
+								|	p(?:arameters|ersistent|lugin)
+								|	r(?:cmenu|eturn|ollout)
+								|	s(?:et|truct)
+								|	t(?:hen|hrow|o(?:ol)?|ry)
+								|	u(?:ndo|tility)
+								|	w(?:h(?:e(?:n|re)|ile)|ith)
+								)\b)
+								[A-Za-z_]\w*                                    # valid character combination for identifiers
+							)
+							(?:	[^(]                                            # no open/left parenthesis (i.e. start-of-body indicator)
+							|	(?&lt;=\x23)\(                                  # ...unless part of start-of-array indicator
+							)*                                                  # ...zero or more times until
+							(?:\(|\Z)                                           # ...start-of-body indicator or end-of-text
+						"
+					openSymbole ="\("
+					closeSymbole="\)"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?i:struct|macroscript)
+								\s+
+								\K                                              # discard text matched so far
+								[A-Za-z_]\w*
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								^\h*                                            # optional leading white-space at start-of-line
+								(?i:fn|function)\s+
+								\K                                              # discard text matched so far
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									\b(?!(?-i:                                  # keywords (case-sensitive), not to be used as identifier
+										a(?:bout|n(?:d|imate)|[st])
+									|	by
+									|	c(?:a(?:se|tch)|o(?:llect|ntinue|ordsys))
+									|	do
+									|	e(?:lse|xit)
+									|	f(?:n|or|rom|unction)
+									|	global
+									|	i[fn]
+									|	local
+									|	ma(?:croscript|pped|x)
+									|	not
+									|	o(?:ff?|[nr])
+									|	p(?:arameters|ersistent|lugin)
+									|	r(?:cmenu|eturn|ollout)
+									|	s(?:et|truct)
+									|	t(?:hen|hrow|o(?:ol)?|ry)
+									|	u(?:ndo|tility)
+									|	w(?:h(?:e(?:n|re)|ile)|ith)
+									)\b)
+									[A-Za-z_]\w*                                # valid character combination for identifiers
+								)
+								(?:	[^(]                                        # no open/left parenthesis (i.e. start-of-body indicator)
+								|	(?&lt;=\x23)\(                              # ...unless part of start-of-array indicator
+								)*                                              # ...zero or more times until
+								(?:\(|\Z)                                       # ...start-of-body indicator or end-of-text
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="[A-Za-z_]\w*[^=]*?(?=\s*=)" />
+							<!-- comment out the following node to display the function with its parameters -->
+<!--							<funcNameExpr expr="[A-Za-z_]\w*" /> -->
+						</functionName>
+					</function>
+				</classRange>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

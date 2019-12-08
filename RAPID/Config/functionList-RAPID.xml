@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=       "rapid_syntax"        userDefinedLangName="RAPID"              />
+			<association id=       "rapid_syntax"        ext=".sys"                               />
+			<association id=       "rapid_syntax"        ext=".mod"                               />
+			<association id=       "rapid_syntax"        ext=".cfg"                               />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ RAPID ] -->
+
+			<!--
+			|   http://new.abb.com/products/robotics
+			|
+			|   Based on:
+			|       https://sourceforge.net/projects/abb-rapid-function-list/
+			|       https://community.notepad-plus-plus.org/topic/10725/functionlist-for-rapid-abb-robots
+			|       https://community.notepad-plus-plus.org/topic/12264/function-list-for-new-language
+			\-->
+			<parser
+				displayName="RAPID - ABB Robot Programming Language"
+				id         ="rapid_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?m-s:!.*$)                                         # Single Line Comment
+						|	(?:                                                 # String Literal - Double Quoted
+								\x22                                            # - start-of-double-quoted-string indicator
+								(?:	[^\x22\x5C]                                 # - skip invalid string characters,
+								|	\x22{2}                                     #   ...allow double quote escape sequence,
+								|	\x5C{2}                                     #   ...backslash escape sequence and
+								|	\x5C\d{2}                                   #   ...character code sequence;
+								)*                                              #   ...string can be empty
+								\x22                                            # - end-of-double-quoted-string indicator
+							)
+					"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s)                                                # dot matches at line-breaks
+							\b(?-i:MODULE)\h+                                   # start-of-module indicator (case-sensitive)
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									A(?:LIAS|ND)
+								|	BACKWARD
+								|	C(?:ASE|ON(?:NECT|ST))
+								|	D(?:EFAULT|IV|O)
+								|	E(?:LSE(?:IF)?|ND(?:F(?:OR|UNC)|IF|MODULE|PROC|RECORD|T(?:EST|RAP)|WHILE)|RROR|XIT)
+								|	F(?:ALSE|OR|ROM|UNC)
+								|	GOTO
+								|	I(?:F|NOUT)
+								|	LOCAL
+								|	MOD(?:ULE)?
+								|	NO(?:STEPIN|T|VIEW)
+								|	X?OR
+								|	P(?:ERS|ROC)
+								|	R(?:AISE|E(?:ADONLY|CORD|T(?:RY|URN)))
+								|	S(?:TEP|YSMODULE)
+								|	T(?:EST|HEN|O|R(?:AP|UE|YNEXT))
+								|	UNDO
+								|	V(?:AR|IEWONLY)
+								|	W(?:HILE|ITH)
+								)\b)
+								[A-Za-zÀ-ÖØ-öø-ÿ][\wÀ-ÖØ-öø-ÿ]{0,31}            # valid character combination for identifiers
+							)
+							.+?                                                 # whatever (incl. line-breaks) until...
+							\b(?-i:ENDMODULE)\b                                 # end-of-module indicator (case-sensitive)
+						"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								\b(?-i:MODULE)\h+
+								[A-Za-zÀ-ÖØ-öø-ÿ][\wÀ-ÖØ-öø-ÿ]{0,31}
+								(?:\h*\([^()]*\))?                              # optional list of attributes
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								(?-i:
+									PROC
+								|	FUNC
+									\h+[a-z]+                                   # data type
+								)
+								\h+
+								(?'VALID_ID'                                    # valid identifier, use as subroutine
+									\b(?!(?-i:                                  # keywords (case-sensitive), not to be used as identifier
+										A(?:LIAS|ND)
+									|	BACKWARD
+									|	C(?:ASE|ON(?:NECT|ST))
+									|	D(?:EFAULT|IV|O)
+									|	E(?:LSE(?:IF)?|ND(?:F(?:OR|UNC)|IF|MODULE|PROC|RECORD|T(?:EST|RAP)|WHILE)|RROR|XIT)
+									|	F(?:ALSE|OR|ROM|UNC)
+									|	GOTO
+									|	I(?:F|NOUT)
+									|	LOCAL
+									|	MOD(?:ULE)?
+									|	NO(?:STEPIN|T|VIEW)
+									|	X?OR
+									|	P(?:ERS|ROC)
+									|	R(?:AISE|E(?:ADONLY|CORD|T(?:RY|URN)))
+									|	S(?:TEP|YSMODULE)
+									|	T(?:EST|HEN|O|R(?:AP|UE|YNEXT))
+									|	UNDO
+									|	V(?:AR|IEWONLY)
+									|	W(?:HILE|ITH)
+									)\b)
+									[A-Za-zÀ-ÖØ-öø-ÿ][\wÀ-ÖØ-öø-ÿ]{0,31}        # valid character combination for identifiers
+								)
+								\h*\([^()]*\)                                   # parentheses required, parameters optional
+							|	(?-i:
+									TRAP
+								|	RECORD
+								)
+								\h+(?&amp;VALID_ID)
+							"
+					>
+						<!-- comment out the following node to display the method with its parameters -->
+						<functionName>
+							<funcNameExpr expr=".+(?=\()" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?-i:
+								PROC
+							|	FUNC
+								\h+[a-z]+                                       # data type
+							)
+							\h+
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?-i:                                      # keywords (case-sensitive), not to be used as identifier
+									A(?:LIAS|ND)
+								|	BACKWARD
+								|	C(?:ASE|ON(?:NECT|ST))
+								|	D(?:EFAULT|IV|O)
+								|	E(?:LSE(?:IF)?|ND(?:F(?:OR|UNC)|IF|MODULE|PROC|RECORD|T(?:EST|RAP)|WHILE)|RROR|XIT)
+								|	F(?:ALSE|OR|ROM|UNC)
+								|	GOTO
+								|	I(?:F|NOUT)
+								|	LOCAL
+								|	MOD(?:ULE)?
+								|	NO(?:STEPIN|T|VIEW)
+								|	X?OR
+								|	P(?:ERS|ROC)
+								|	R(?:AISE|E(?:ADONLY|CORD|T(?:RY|URN)))
+								|	S(?:TEP|YSMODULE)
+								|	T(?:EST|HEN|O|R(?:AP|UE|YNEXT))
+								|	UNDO
+								|	V(?:AR|IEWONLY)
+								|	W(?:HILE|ITH)
+								)\b)
+								[A-Za-zÀ-ÖØ-öø-ÿ][\wÀ-ÖØ-öø-ÿ]{0,31}            # valid character combination for identifiers
+							)
+							\h*\([^()]*\)                                       # parentheses required, parameters optional
+						|	(?-i:
+								TRAP
+							|	RECORD
+							)
+							\h+
+							(?&amp;VALID_ID)
+						"
+				>
+					<!-- comment out the following node to display the function with its parameters -->
+					<functionName>
+						<nameExpr expr=".+(?=\()" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

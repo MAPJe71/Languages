@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=       "corba_syntax"        userDefinedLangName="CORBA"              />
+			<association id=       "corba_syntax"        ext=".idl"                               />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ CORBA ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/14328/user-defined-functionlist-no-working
+			\-->
+			<parser
+				displayName="[TODO] CORBA - Common Object Request Broker Architecture"
+				id         ="corba_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment
+					"
+			>
+				<classRange
+					mainExpr    ="interface\s+\w+\s*(:\s+\w+\s*)?\{"
+					openSymbole ="\{"
+					closeSymbole="\}"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								interface
+								\h+
+								\K                                              # discard text matched so far
+								\w+
+							"
+						/>
+					</className>
+					<function
+						mainExpr="\w+\s+\w+\s*\("
+					>
+						<functionName>
+							<funcNameExpr expr="\w+\s*\(" />
+							<funcNameExpr expr="\w+" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(struct|enum)\s+\w+\s*(:\s+\w+\s*)?\{"
+				>
+					<functionName>
+						<nameExpr expr="(struct|enum)\s+\w+" />
+					</functionName>
+				</function>>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

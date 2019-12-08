@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=  "cimplicity_syntax"        userDefinedLangName="CimPlicity"         />
+			<association id=  "cimplicity_syntax"        ext=".ctx"                               />
+		</associationMap>
+		<parsers>
+			<!-- ==================================== [ CimEdit Text File Format ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/13724/request-help-defining-classes-for-a-user-defined-language
+			|
+			|   Note(s):
+			|   1)  Boost::Regex 1.58-1.59 do not correctly handle quantifiers on subroutine calls
+			|       therefore the additional non-capturing group e.g. "(?:(?&amp;STRING_CHAR))?" instead
+			|       of simply "(?&amp;STRING_CHAR)?"
+			\-->
+			<parser
+				displayName="[#4] CimEdit Text File Format"
+				id         ="cimplicity_syntax"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?(DEFINE)                                          # definition of sub-routine(s)
+								(?'NAMED_CHAR'                                  # Named character sub-routine
+									\b                                          # - ensure leading word boundary
+									(?i:                                        # - case-insensitive
+										B(?:ackspace|ell)
+									|	C(?:arriageReturn|haracterTabulation)
+									|	Delete
+									|	Escape
+									|	FormFeed
+									|	L(?:eft(?:Brace|CurlyBracket)|ine(?:Feed|Tabulation))
+									|	N(?:ewLine|ull)
+									|	QuotationMark
+									|	R(?:eturn|ight(?:Brace|CurlyBracket))
+									|	Tab
+									)
+									\b                                          # - ensure trailing word boundary
+								)
+								(?'STRING_CHAR'                                 # String character sub-routine
+									[^\r\n\x22\x7B]                             # - invalid string characters
+								|	\{                                          # - start-of-escaped-character indicator
+									(?:	\d+                                     #   ...using a positive decimal value
+									|	\x26[Hh][A-Fa-f0-9]+                    #   ...using a hexadecimal value
+									|	\x26[Oo][0-7]+                          #   ...using an octal value
+									|	(?&amp;NAMED_CHAR)                      #   ...using a named character
+									)
+									\}                                          # - end-of-escaped-character indicator
+								)
+								(?'STRING'                                      # String sub-routine
+									\x22                                        # - start-of-string indicator
+									(?:(?&amp;STRING_CHAR))*
+									\x22                                        # - end-of-string indicator
+									(?:                                         # - optional string continuation
+										\s+\x26                                 #   ...string continuation indicator
+										\s+(?&amp;STRING)                       #   ...remainder of string
+									)*
+								)
+							)
+							\(GmmiObject\s+                                     # start-of-object-node
+							(?&amp;STRING)                                      # object identifier
+							(?:                                                 # whatever, as long as it's
+								[^(]                                            # - not a start-of-node indicator
+							|	\((?!Gmmi(?:Object|Script)\b)                   # - not a start-of-object-/script-node
+							)*
+							\(GmmiScript\s+                                     # start-of-script-node
+							(?&amp;STRING)                                      # script
+							\s*\)                                               # end-of-script-node
+						"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								\(GmmiObject\s+                                 # start-of-object-node
+								\x22                                            # start-of-string indicator
+								\K                                              # discard text matched so far
+								[^\r\n\x22]+                                    # object identifier
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								\x22                                            # start-of-string indicator
+								(?:Function|Sub)\h+
+								\K                                              # discard text matched so far
+								\w+                                             # valid identifier
+								[^\r\n\x22]*                                    # parameter list, return type
+								\x22                                            # end-of-string indicator
+							"
+					>
+						<functionName>
+							<funcNameExpr expr="[^\x22\x7B]+" />
+						</functionName>
+					</function>
+				</classRange>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

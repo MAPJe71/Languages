@@ -1,0 +1,830 @@
+MODULE modGfxShapeData(SYSMODULE)
+  !Copyright (c) <2018> FRAIPONT Denis <SICA2M>
+  !
+  !Permission is hereby granted, free of charge, to any person obtaining a copy
+  !of this software and associated documentation files (the "Software"), to deal
+  !in the Software without restriction, including without limitation the rights
+  !to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  !copies of the Software, and to permit persons to whom the Software is
+  !furnished to do so, subject to the following conditions:
+  !
+  !The above copyright notice and this permission notice shall be included in all
+  !copies or substantial portions of the Software.
+  !
+  !THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  !IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  !FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  !AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  !LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  !OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  !SOFTWARE.
+  !-----------------------------------------------------------------------------
+  ! Record for GfxShapeData
+  ! nType: Shape Data could be two types: 1: Capsule, 2: Box
+  ! nParentAxis: Number of parent axis where shape is attached.
+  ! poseCurrentAxis: Current position of axis (use PlaceGfxShapeData to update it).
+  ! poseShift: Start position in parent axis frame.
+  ! posSize:
+  !   For Capsule: X=Radius, Y=Height and Z=Not used
+  !   For Box: X=Length, Y=Height and Z=width
+  ! V---------B
+  ! |\        |\
+  ! | \       | \
+  ! Y--\------A  \
+  !  \  \      \  \
+  !   \  Z---------U
+  !    \ |       \ |
+  !     \|        \|
+  !      O---------X
+  !O: Origine
+  !X: in X axis
+  !Y: in Y axis
+  !Z: in Z axis
+  !A: X and Y
+  !U: X with Z
+  !V: Y with Z
+  !B: U and V
+  !-----------------------------------------------------------------------------
+  RECORD GfxShapeData
+    num nType;
+    num nParentAxis;
+    pose poseCurrentAxis;
+    pose poseShift;
+    pos posSize;
+    dnum dnColor;
+  ENDRECORD
+
+  RECORD DHParameter
+    num offset;
+    num rotation;
+    num twist;
+    num lenght;
+  ENDRECORD
+
+  !---------------------------------------
+  !Denavit-Hartenberg parameters
+  !Depends your Robot
+  CONST DHParameter dhp1:=[320,0,0,0];
+  CONST DHParameter dhp2:=[460,-180,90,-320];
+  CONST DHParameter dhp3:=[-70,90,0,1280];
+  CONST DHParameter dhp4:=[70,0,-90,200];
+  CONST DHParameter dhp5:=[1592,0,90,0];
+  CONST DHParameter dhp6:=[0,180,90,0];
+  !---------------------------------------
+  !
+  !---------------------------------------
+  !Debug constants
+  ! To enable text wrote in TP
+  CONST bool DEBUG_MODGfxShapeData:=TRUE;
+  ! To enable text wrote in TP even if condition is false
+  CONST bool DEBUG_MODGfxShapeDataFALSE:=FALSE;
+  !---------------------------------------
+  !
+  !---------------------------------------
+  ! To disable each face check
+  LOCAL PERS bool bNoFaceOXAY:=FALSE;
+  LOCAL PERS bool bNoFaceOXUZ:=FALSE;
+  LOCAL PERS bool bNoFaceXABU:=FALSE;
+  LOCAL PERS bool bNoFaceAYVB:=FALSE;
+  LOCAL PERS bool bNoFaceYOZV:=FALSE;
+  LOCAL PERS bool bNoFaceZUBV:=FALSE;
+  !---------------------------------------
+  !
+  !---------------------------------------
+  !To know when RobotStudio finished update components
+  PERS bool GfxShapeDataUpdateDone:=TRUE;
+  !---------------------------------------
+  !
+  !---------------------------------------
+  !Debug robtarget: to see result in RobotStudio
+  ! You could remove them and all there references in production mode.
+  PERS robtarget pCap_O:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pCap_Z:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  !
+  PERS robtarget pBox_O:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_X:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_Y:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_Z:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_A:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_U:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_V:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget pBox_B:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  !
+  PERS robtarget p_ResultLig1:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_ResultLig2:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_ResultLig3:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_ResultLig4:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_ResultLig5:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_ResultLig6:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result01:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result02:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result03:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result04:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result05:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result06:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result07:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result08:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result09:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result10:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result11:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result12:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result13:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result14:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result15:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result16:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result17:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result18:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result19:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result20:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result21:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result22:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result23:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result24:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result25:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result26:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result27:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result28:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result29:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result30:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result31:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result32:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result33:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result34:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result35:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result36:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result37:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result38:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result39:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result40:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result41:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result42:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result43:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result44:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result45:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result46:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result47:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result48:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result49:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result50:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result51:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result52:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result53:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result54:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result55:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result56:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result57:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result58:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  PERS robtarget p_Result59:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+  !---------------------------------------
+
+  !----------------------------------------------------------------------
+  ! Place GfxShapeData depends axis position and its origin and axis parent.
+  !----------------------------------------------------------------------
+  PROC PlaceGfxShapeData(INOUT GfxShapeData sd,jointtarget jtCurrent\switch ResetColor)
+    IF Present(ResetColor) sd.dnColor:=0x80808080;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_1,dhp1,[[0,0,0],[1,0,0,0]]);
+    IF sd.nParentAxis=1 RETURN ;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_2,dhp2,sd.poseCurrentAxis);
+    IF sd.nParentAxis=2 RETURN ;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_3,dhp3,sd.poseCurrentAxis);
+    IF sd.nParentAxis=3 RETURN ;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_4,dhp4,sd.poseCurrentAxis);
+    IF sd.nParentAxis=4 RETURN ;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_5,dhp5,sd.poseCurrentAxis);
+    IF sd.nParentAxis=5 RETURN ;
+    sd.poseCurrentAxis:=GetCurrentAxis(jtCurrent.robax.rax_6,dhp6,sd.poseCurrentAxis);
+    IF sd.nParentAxis=6 RETURN ;
+  ENDPROC
+
+  !---------------------------------------------------------
+  ! Return Current Axis position
+  !---------------------------------------------------------
+  LOCAL FUNC pose GetCurrentAxis(num nAxisAngle,DHParameter dhpAxisParam,pose poseShapeOrigin)
+    VAR pose poseTmp:=[[0,0,0],[1,0,0,0]];
+    VAR pose poseRes:=[[0,0,0],[1,0,0,0]];
+
+    poseTmp:=[[0,0,dhpAxisParam.offset],OrientZYX(dhpAxisParam.rotation,0,0)];
+    poseRes:=PoseMult(poseShapeOrigin,poseTmp);
+    poseTmp:=[[dhpAxisParam.lenght,0,0],OrientZYX(0,0,dhpAxisParam.twist)];
+    poseRes:=PoseMult(poseRes,poseTmp);
+    poseTmp:=[[0,0,0],OrientZYX(nAxisAngle,0,0)];
+    poseRes:=PoseMult(poseRes,poseTmp);
+    RETURN poseRes;
+  ENDFUNC
+
+
+  !---------------------------------------------------------
+  ! Return true if Capsule collides with Box
+  !---------------------------------------------------------
+  FUNC bool IsOnCollision(GfxShapeData sdCapsule,GfxShapeData sdBox)
+    VAR pose poseCapsuleOrig:=[[0,0,0],[1,0,0,0]];
+    VAR pose poseBoxOrig:=[[0,0,0],[1,0,0,0]];
+    VAR pos posCap_O:=[0,0,0];
+    VAR pos posCap_Z:=[0,0,0];
+    VAR pos posBox_O:=[0,0,0];
+    VAR pos posBox_X:=[0,0,0];
+    VAR pos posBox_Y:=[0,0,0];
+    VAR pos posBox_Z:=[0,0,0];
+    VAR pos posBox_A:=[0,0,0];
+    VAR pos posBox_U:=[0,0,0];
+    VAR pos posBox_V:=[0,0,0];
+    VAR pos posBox_B:=[0,0,0];
+    VAR pos posResult:=[0,0,0];
+    VAR bool res:=FALSE;
+
+    !For now only Capsule can be checked with Box
+    IF (sdCapsule.nType<>1) THEN
+      TPWrite "Error Capsule is not a Capsule";
+      Stop;
+      RETURN FALSE;
+    ENDIF
+    IF (sdBox.nType<>2) THEN
+      TPWrite "Error Box is not a Box";
+      Stop;
+      RETURN FALSE;
+    ENDIF
+
+    !Calculate Real shape origine (CurrentAxis shifted)
+    poseCapsuleOrig:=PoseMult(sdCapsule.poseCurrentAxis,sdCapsule.poseShift);
+    poseBoxOrig:=PoseMult(sdBox.poseCurrentAxis,sdBox.poseShift);
+
+    !Get corners in Capsule frame to see if x=y=0 is in box.
+    posCap_O:=PoseVect(poseCapsuleOrig,[0,0,0]);
+    posCap_Z:=PoseVect(poseCapsuleOrig,[0,0,sdCapsule.posSize.y]);
+    posBox_O:=PoseVect(poseBoxOrig,[0,0,0]);
+    posBox_X:=PoseVect(poseBoxOrig,[sdBox.posSize.x,0,0]);
+    posBox_Y:=PoseVect(poseBoxOrig,[0,sdBox.posSize.y,0]);
+    posBox_Z:=PoseVect(poseBoxOrig,[0,0,sdBox.posSize.z]);
+    posBox_A:=PoseVect(poseBoxOrig,[sdBox.posSize.x,sdBox.posSize.y,0]);
+    posBox_U:=PoseVect(poseBoxOrig,[sdBox.posSize.x,0,sdBox.posSize.z]);
+    posBox_V:=PoseVect(poseBoxOrig,[0,sdBox.posSize.y,sdBox.posSize.z]);
+    posBox_B:=PoseVect(poseBoxOrig,[sdBox.posSize.x,sdBox.posSize.y,sdBox.posSize.z]);
+
+    pCap_O.trans:=posCap_O;
+    pCap_Z.trans:=posCap_Z;
+    pBox_O.trans:=posBox_O;
+    pBox_X.trans:=posBox_X;
+    pBox_Y.trans:=posBox_Y;
+    pBox_Z.trans:=posBox_Z;
+    pBox_A.trans:=posBox_A;
+    pBox_U.trans:=posBox_U;
+    pBox_V.trans:=posBox_V;
+    pBox_B.trans:=posBox_B;
+
+    IF NOT (res OR bNoFaceOXAY) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_O,posBox_X,posBox_A,posBox_Y,posResult\pInterLig:=p_ResultLig1\pLAB:=p_Result01\pAB:=p_Result02\pLBC:=p_Result03\pBC:=p_Result04\pLCD:=p_Result05\pCD:=p_Result06\pLDA:=p_Result07\pDA:=p_Result08);
+      PrintDebug res,"Collision FACE OXAY.";
+      p_Result25.trans:=posResult;
+    ENDIF
+    IF NOT (res OR bNoFaceOXUZ) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_O,posBox_X,posBox_U,posBox_Z,posResult\pInterLig:=p_ResultLig2\pLAB:=p_Result09\pAB:=p_Result10\pLBC:=p_Result11\pBC:=p_Result12\pLCD:=p_Result13\pCD:=p_Result14\pLDA:=p_Result15\pDA:=p_Result16);
+      PrintDebug res,"Collision FACE OXUZ.";
+      p_Result26.trans:=posResult;
+    ENDIF
+    IF NOT (res OR bNoFaceXABU) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_X,posBox_A,posBox_B,posBox_U,posResult\pInterLig:=p_ResultLig3\pLAB:=p_Result17\pAB:=p_Result18\pLBC:=p_Result19\pBC:=p_Result20\pLCD:=p_Result21\pCD:=p_Result22\pLDA:=p_Result23\pDA:=p_Result24);
+      PrintDebug res,"Collision FACE XABU.";
+      p_Result27.trans:=posResult;
+    ENDIF
+    IF NOT (res OR bNoFaceAYVB) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_A,posBox_Y,posBox_V,posBox_B,posResult\pInterLig:=p_ResultLig4\pLAB:=p_Result25\pAB:=p_Result26\pLBC:=p_Result27\pBC:=p_Result28\pLCD:=p_Result29\pCD:=p_Result30\pLDA:=p_Result31\pDA:=p_Result32);
+      PrintDebug res,"Collision FACE AYVB.";
+      p_Result28.trans:=posResult;
+    ENDIF
+    IF NOT (res OR bNoFaceYOZV) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_Y,posBox_O,posBox_Z,posBox_V,posResult\pInterLig:=p_ResultLig5\pLAB:=p_Result33\pAB:=p_Result34\pLBC:=p_Result35\pBC:=p_Result36\pLCD:=p_Result37\pCD:=p_Result38\pLDA:=p_Result39\pDA:=p_Result40);
+      PrintDebug res,"Collision FACE YOZV.";
+      p_Result29.trans:=posResult;
+    ENDIF
+    IF NOT (res OR bNoFaceZUBV) THEN
+      res:=IsCapsuleInFace(posCap_O,posCap_Z,sdCapsule.posSize.x,sdCapsule.posSize.y,posBox_Z,posBox_U,posBox_B,posBox_V,posResult\pInterLig:=p_ResultLig6\pLAB:=p_Result41\pAB:=p_Result42\pLBC:=p_Result43\pBC:=p_Result44\pLCD:=p_Result45\pCD:=p_Result46\pLDA:=p_Result47\pDA:=p_Result48);
+      PrintDebug res,"Collision FACE ZUBV.";
+      p_Result30.trans:=posResult;
+    ENDIF
+
+    RETURN res;
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Return true if Capsule collides with face
+  !
+  ! p1: Start position of Capsule
+  ! p2: End position of Capsule
+  ! radius: Capsule radius
+  ! lenght: Capsule lenght. radius is added to lenght at each extremities
+  ! pA, pB, pC, pD: Position of each face corners
+  ! pInter: Intersection position
+  ! pLxy: nearest position between line and segment xy in line
+  ! pxy: nearest position between line and segment xy in segment
+  !---------------------------------------------------------
+  FUNC bool IsCapsuleInFace(pos p1,pos p2,num radius,num lenght,pos pA,pos pB,pos pC,pos pD,INOUT pos pInter\INOUT robtarget pInterLig\INOUT robtarget pLAB\INOUT robtarget pAB\INOUT robtarget pLBC\INOUT robtarget pBC\INOUT robtarget pLCD\INOUT robtarget pCD\INOUT robtarget pLDA\INOUT robtarget pDA)
+    VAR bool res:=FALSE;
+    VAR num mua:=-9999;
+    VAR num mub:=-9999;
+    VAR pos posVerif:=[0,0,0];
+    VAR pos posResult1:=[0,0,0];
+    VAR pos posResult2:=[0,0,0];
+    VAR pos posResult3:=[0,0,0];
+    VAR pos posResult4:=[0,0,0];
+    VAR bool bRes1Inside:=FALSE;
+    VAR bool bRes2Inside:=FALSE;
+    VAR bool bRes3Inside:=FALSE;
+    VAR bool bRes4Inside:=FALSE;
+    VAR num distLig:=-9999;
+    VAR num distAB:=-9999;
+    VAR num distBC:=-9999;
+    VAR num distCD:=-9999;
+    VAR num distDA:=-9999;
+
+    IF Present(pInterLig) pInterLig:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pLAB) pLAB:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pLBC) pLBC:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pLCD) pLCD:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pLDA) pLDA:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pAB) pAB:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pBC) pBC:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pCD) pCD:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    IF Present(pDA) pDA:=[[0,0,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+    ! Test Direct intersection with capsule line and face facet
+    res:=IsLineInFacet(p1,p2,pA,pB,pC,pInter,mua\p1Proj:=posResult1\p2Proj:=posResult2\p1ProjInside:=bRes1Inside\p2ProjInside:=bRes2Inside);
+    PrintDebug res,"Collision with 1rst Face ABC at:"+ValToStr(pInter);
+    IF (NOT res) THEN
+      res:=IsLineInFacet(p1,p2,pA,pC,pD,posVerif,mub\p1Proj:=posResult3\p2Proj:=posResult4\p1ProjInside:=bRes3Inside\p2ProjInside:=bRes4Inside);
+      PrintDebug res,"Collision with 2nd Face ACD at:"+ValToStr(pInter);
+    ENDIF
+
+    IF ((pInter<>[0,0,0]) AND (posVerif<>[0,0,0])) THEN
+      IF (Abs(pInter.x-posVerif.x)>(1E-2*(Abs(pInter.x)+1))) OR (Abs(pInter.y-posVerif.y)>(1E-2*(Abs(pInter.y)+1))) OR (Abs(pInter.z-posVerif.z)>(1E-2*(Abs(pInter.z)+1))) OR (Abs(mua-mub)>(1E-2*(Abs(mua)+1))) THEN
+        IF (Abs(pInter.x)<1E6) AND (Abs(pInter.y)<1E6) AND (Abs(pInter.z)<1E6) AND (Abs(posVerif.x)<1E6) AND (Abs(posVerif.y)<1E6) AND (Abs(posVerif.z)<1E6) THEN
+          !This normaly never occurs if A, B, C and D is in the same plane.
+          TPWrite "IsCapsuleInFace is in Error with IsLineInFacet.";
+          TPWrite "Is Facet in the same Face?";
+          TPWrite "pInter.x-posVerif.x:="+ValToStr(pInter.x-posVerif.x);
+          TPWrite "pInter.y-posVerif.y:="+ValToStr(pInter.y-posVerif.y);
+          TPWrite "pInter.z-posVerif.z:="+ValToStr(pInter.z-posVerif.z);
+          TPWrite "mua-mub:="+ValToStr(mua-mub);
+          !Stop;
+          !EXIT;
+          RETURN TRUE;
+        ENDIF
+      ENDIF
+    ENDIF
+
+    IF ((NOT res) AND (pInter<>[0,0,0]) AND (bRes1Inside OR bRes2Inside OR bRes3Inside OR bRes4Inside)) THEN
+      !No direct intersection, test with projected points on face
+      IF ((mua<0) AND bRes1Inside) THEN
+        distLig:=Distance(p1,posResult1);
+        pInter:=posResult1;
+      ENDIF
+      IF ((mua<0) AND bRes3Inside) THEN
+        distLig:=Distance(p1,posResult3);
+        pInter:=posResult3;
+      ENDIF
+      IF ((mua>1) AND bRes2Inside) THEN
+        distLig:=Distance(p2,posResult2);
+        pInter:=posResult2;
+      ENDIF
+      IF ((mua>1) AND bRes4Inside) THEN
+        distLig:=Distance(p2,posResult4);
+        pInter:=posResult4;
+      ENDIF
+      res:=(Abs(distLig)<=radius);
+      PrintDebug res,"Distance to Face:"+ValToStr(distLig);
+    ENDIF
+
+    IF ((NOT res) AND (pInter<>[0,0,0])) THEN
+      !Line collides with plane but not directly in face
+      !Check with each segment
+      IF (NOT res) AND IsLineLineIntersect(p1,p2,pA,pB,posResult1,posResult2\nMUA:=mua\nMUB:=mub) THEN
+        IF (mua<0) posResult1:=p1;
+        IF (mua>1) posResult1:=p2;
+        IF (mub<0) posResult2:=pA;
+        IF (mub>1) posResult2:=pB;
+        distAB:=Distance(posResult1,posResult2);
+        IF Present(pLAB) pLAB.trans:=posResult1;
+        IF Present(pAB) pAB.trans:=posResult2;
+        res:=(distAB<=radius);
+        PrintDebug res,"Collision Line AB:"+ValToStr(distAB);
+        IF (NOT res) AND ((mua<0) OR (mua>1) OR (mub<0) OR (mub>1)) THEN
+          distAB:=GetMinDistancePointToLine(posResult1,pA,pB);
+          res:=(distAB<=radius);
+          PrintDebug res,"Collision Extremitie Line AB:"+ValToStr(distAB);
+        ENDIF
+      ENDIF
+
+      IF (NOT res) AND IsLineLineIntersect(p1,p2,pB,pC,posResult1,posResult2\nMUA:=mua\nMUB:=mub) THEN
+        IF (mua<0) posResult1:=p1;
+        IF (mua>1) posResult1:=p2;
+        IF (mub<0) posResult2:=pB;
+        IF (mub>1) posResult2:=pC;
+        distBC:=Distance(posResult1,posResult2);
+        IF Present(pLBC) pLBC.trans:=posResult1;
+        IF Present(pBC) pBC.trans:=posResult2;
+        res:=(distBC<=radius);
+        PrintDebug res,"Collision Line BC:"+ValToStr(distBC);
+        IF (NOT res) AND ((mua<0) OR (mua>1) OR (mub<0) OR (mub>1)) THEN
+          distBC:=GetMinDistancePointToLine(posResult1,pB,pC);
+          res:=(distBC<=radius);
+          PrintDebug res,"Collision Extremitie Line BC:"+ValToStr(distBC);
+        ENDIF
+      ENDIF
+
+      IF (NOT res) AND IsLineLineIntersect(p1,p2,pC,pD,posResult1,posResult2\nMUA:=mua\nMUB:=mub) THEN
+        IF (mua<0) posResult1:=p1;
+        IF (mua>1) posResult1:=p2;
+        IF (mub<0) posResult2:=pC;
+        IF (mub>1) posResult2:=pD;
+        distCD:=Distance(posResult1,posResult2);
+        IF Present(pLCD) pLCD.trans:=posResult1;
+        IF Present(pCD) pCD.trans:=posResult2;
+        res:=(distCD<=radius);
+        PrintDebug res,"Collision Line CD:"+ValToStr(distCD);
+        IF (NOT res) AND ((mua<0) OR (mua>1) OR (mub<0) OR (mub>1)) THEN
+          distCD:=GetMinDistancePointToLine(posResult1,pC,pD);
+          res:=(distCD<=radius);
+          PrintDebug res,"Collision Extremitie Line CD:"+ValToStr(distCD);
+        ENDIF
+      ENDIF
+
+      IF (NOT res) AND IsLineLineIntersect(p1,p2,pD,pA,posResult1,posResult2\nMUA:=mua\nMUB:=mub) THEN
+        IF (mua<0) posResult1:=p1;
+        IF (mua>1) posResult1:=p2;
+        IF (mub<0) posResult2:=pD;
+        IF (mub>1) posResult2:=pA;
+        distDA:=Distance(posResult1,posResult2);
+        IF Present(pLDA) pLDA.trans:=posResult1;
+        IF Present(pDA) pDA.trans:=posResult2;
+        res:=(distDA<=radius);
+        PrintDebug res,"Collision Line DA:"+ValToStr(distDA);
+        IF (NOT res) AND ((mua<0) OR (mua>1) OR (mub<0) OR (mub>1)) THEN
+          distDA:=GetMinDistancePointToLine(posResult1,pD,pA);
+          res:=(distDA<=radius);
+          PrintDebug res,"Collision Extremitie Line DA:"+ValToStr(distDA);
+        ENDIF
+      ENDIF
+
+    ENDIF
+    RETURN res;
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Determine whether or not the line segment p1,p2
+  ! Intersects the 3 vertex facet bounded by pa,pb,pc
+  ! Return true/false and the intersection point p
+  !
+  ! The equation of the line is p = p1 + mu (p2 - p1)
+  ! The equation of the plane is a x + b y + c z + d = 0
+  !                              n.x x + n.y y + n.z z + d = 0
+  ! From: http://paulbourke.net/geometry/polygonmesh/
+  !     Determining whether a line segment intersects a 3 vertex facet
+  !---------------------------------------------------------
+  FUNC bool IsLineInFacet(pos p1,pos p2,pos pA,pos pB,pos pC,INOUT pos pInter,INOUT num mu\INOUT pos p1Proj\INOUT pos p2Proj\INOUT bool p1ProjInside\INOUT bool p2ProjInside)
+    VAR num EPS:=1E-4;
+    VAR num d;
+    VAR num a1;
+    VAR num a2;
+    VAR num a3;
+    VAR num total;
+    VAR num denom;
+    VAR pos n;
+    VAR pos pa1;
+    VAR pos pa2;
+    VAR pos pa3;
+    VAR num sn;
+    VAR num sd;
+    VAR num sb;
+    VAR bool bOnNode;
+
+    !Reset Intersection point
+    pInter:=[0,0,0];
+    mu:=0;
+    !Calculate the parameters for the plane
+    n.x:=(pB.y-pA.y)*(pC.z-pA.z)-(pB.z-pA.z)*(pC.y-pA.y);
+    n.y:=(pB.z-pA.z)*(pC.x-pA.x)-(pB.x-pA.x)*(pC.z-pA.z);
+    n.z:=(pB.x-pA.x)*(pC.y-pA.y)-(pB.y-pA.y)*(pC.x-pA.x);
+    n:=PosNorm(n);
+    d:=-n.x*pA.x-n.y*pA.y-n.z*pA.z;
+    !Calculate Projections
+    !http://geomalgorithms.com/a04-_planes.html
+    sd:=DotProd(n,n);
+    IF Present(p1Proj) THEN
+      sn:=-(DotProd(n,p1-pA));
+      sb:=sn/sd;
+      p1Proj:=p1+sb*n;
+      IF Present(p1ProjInside) THEN
+        total:=CalcAngle3Points(p1Proj,pA,pB,bOnNode);
+        IF (NOT bOnNode) total:=total+CalcAngle3Points(p1Proj,pB,pC,bOnNode);
+        IF (NOT bOnNode) total:=total+CalcAngle3Points(p1Proj,pC,pA,bOnNode);
+        p1ProjInside:=(bOnNode OR (total=360));
+      ENDIF
+    ENDIF
+    IF Present(p2Proj) THEN
+      sn:=-(DotProd(n,p2-pA));
+      sb:=sn/sd;
+      p2Proj:=p2+sb*n;
+      IF Present(p2ProjInside) THEN
+        total:=CalcAngle3Points(p2Proj,pA,pB,bOnNode);
+        IF (NOT bOnNode) total:=total+CalcAngle3Points(p2Proj,pB,pC,bOnNode);
+        IF (NOT bOnNode) total:=total+CalcAngle3Points(p2Proj,pC,pA,bOnNode);
+        p2ProjInside:=(bOnNode OR (total=360));
+      ENDIF
+    ENDIF
+
+    !Calculate the position on the line that intersects the plane
+    denom:=n.x*(p2.x-p1.x)+n.y*(p2.y-p1.y)+n.z*(p2.z-p1.z);
+    !Line and plane don't intersect
+    IF (Abs(denom)<EPS) RETURN FALSE;
+
+    mu:=-(d+n.x*p1.x+n.y*p1.y+n.z*p1.z)/denom;
+    pInter.x:=p1.x+mu*(p2.x-p1.x);
+    pInter.y:=p1.y+mu*(p2.y-p1.y);
+    pInter.z:=p1.z+mu*(p2.z-p1.z);
+    !Intersection not along line segment
+    IF ((mu<0) OR (mu>1)) RETURN FALSE;
+
+    !Determine whether or not the intersection point is bounded by pa,pb,pc
+    pa1.x:=pA.x-pInter.x;
+    pa1.y:=pA.y-pInter.y;
+    pa1.z:=pA.z-pInter.z;
+    pa1:=PosNorm(pa1);
+    pa2.x:=pB.x-pInter.x;
+    pa2.y:=pB.y-pInter.y;
+    pa2.z:=pB.z-pInter.z;
+    pa2:=PosNorm(pa2);
+    pa3.x:=pC.x-pInter.x;
+    pa3.y:=pC.y-pInter.y;
+    pa3.z:=pC.z-pInter.z;
+    pa3:=PosNorm(pa3);
+
+    a1:=pa1.x*pa2.x+pa1.y*pa2.y+pa1.z*pa2.z;
+    a2:=pa2.x*pa3.x+pa2.y*pa3.y+pa2.z*pa3.z;
+    a3:=pa3.x*pa1.x+pa3.y*pa1.y+pa3.z*pa1.z;
+    !Fix num real value (1 could be greater than 1)
+    IF (a1 < -1) a1:=-1;
+    IF (a2 < -1) a2:=-1;
+    IF (a3 < -1) a3:=-1;
+    IF (a1 >  1) a1:= 1;
+    IF (a2 >  1) a2:= 1;
+    IF (a3 >  1) a3:= 1;
+    total:=(ACos(a1)+ACos(a2)+ACos(a3));
+    !ACos is in degree. *(180/pi);
+    total:=total-360;
+    IF (Abs(total)>EPS) RETURN FALSE;
+
+    RETURN (TRUE);
+  ENDFUNC
+
+  !From http://paulbourke.net/geometry/polygonmesh/
+  !  Determining if a point lies on the interior of a polygon
+  !  Solution 4 (3D)
+  FUNC num CalcAngle3Points(pos pQ,pos pA,pos pB,INOUT bool onNode)
+    VAR num EPS:=1E-4;
+    VAR num m1;
+    VAR num m2;
+    VAR num cosTheta;
+    VAR pos p1;
+    VAR pos p2;
+
+    onNode:=FALSE;
+    p1.x:=pA.x-pQ.x;
+    p1.y:=pA.y-pQ.y;
+    p1.z:=pA.z-pQ.z;
+    p2.x:=pB.x-pQ.x;
+    p2.y:=pB.y-pQ.y;
+    p2.z:=pB.z-pQ.z;
+
+    m1:=Sqrt((p1.x*p1.x)+(p1.y*p1.y)+(p1.z*p1.z));
+    m2:=Sqrt((p2.x*p2.x)+(p2.y*p2.y)+(p2.z*p2.z));
+
+    IF (m1*m2)<=EPS THEN
+      onNode:=TRUE;
+      RETURN 2*pi;
+    ENDIF
+    cosTheta:=((p1.x*p2.x)+(p1.y*p2.y)+(p1.z*p2.z))/(m1*m2);
+    !Check range due to num approximation
+    IF (cosTheta<-1) cosTheta:=-1;
+    IF (cosTheta>1) cosTheta:=1;
+    RETURN ACos(cosTheta);
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Return a Normalized pos (lenght = 1)
+  !---------------------------------------------------------
+  FUNC pos PosNorm(pos p)
+    VAR num m;
+    m:=VectMagn(p);
+    IF m<=0 RETURN [0,0,0];
+
+    p.x:=p.x/m;
+    p.y:=p.y/m;
+    p.z:=p.z/m;
+    RETURN p;
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Calculate the line segment pA-pB that is the shortest route between
+  ! two lines p1-p2 and p3-p4. Calculate also the values of mua and mub where
+  !    pA = p1 + mua (p2 - p1)
+  !    pB = p3 + mub (p4 - p3)
+  ! Return FALSE if no solution exists.
+  ! From: http://paulbourke.net/geometry/pointlineplane/lineline.c
+  !---------------------------------------------------------
+  FUNC bool IsLineLineIntersect(pos p1,pos p2,pos p3,pos p4,INOUT pos pA,INOUT pos pB\INOUT num nMUA\INOUT num nMUB)
+    VAR num EPS:=0.0000001;
+    VAR pos p13:=[0,0,0];
+    VAR pos p43:=[0,0,0];
+    VAR pos p21:=[0,0,0];
+    VAR num d1343:=0;
+    VAR num d4321:=0;
+    VAR num d1321:=0;
+    VAR num d4343:=0;
+    VAR num d2121:=0;
+    VAR num numer:=0;
+    VAR num denom:=0;
+    VAR num mua:=0;
+    VAR num mub:=0;
+
+    p13.x:=p1.x-p3.x;
+    p13.y:=p1.y-p3.y;
+    p13.z:=p1.z-p3.z;
+    p43.x:=p4.x-p3.x;
+    p43.y:=p4.y-p3.y;
+    p43.z:=p4.z-p3.z;
+    IF (Abs(p43.x)<EPS) AND (Abs(p43.y)<EPS) AND (Abs(p43.z)<EPS) RETURN FALSE;
+    p21.x:=p2.x-p1.x;
+    p21.y:=p2.y-p1.y;
+    p21.z:=p2.z-p1.z;
+    IF (Abs(p21.x)<EPS) AND (Abs(p21.y)<EPS) AND (Abs(p21.z)<EPS) RETURN FALSE;
+
+    d1343:=p13.x*p43.x+p13.y*p43.y+p13.z*p43.z;
+    d4321:=p43.x*p21.x+p43.y*p21.y+p43.z*p21.z;
+    d1321:=p13.x*p21.x+p13.y*p21.y+p13.z*p21.z;
+    d4343:=p43.x*p43.x+p43.y*p43.y+p43.z*p43.z;
+    d2121:=p21.x*p21.x+p21.y*p21.y+p21.z*p21.z;
+
+    denom:=d2121*d4343-d4321*d4321;
+    IF (Abs(denom)<EPS) RETURN (FALSE);
+
+    numer:=d1343*d4321-d1321*d4343;
+
+    mua:=numer/denom;
+    IF Present(nMUA) nMUA:=mua;
+    mub:=(d1343+d4321*(mua))/d4343;
+    IF Present(nMUB) nMUB:=mub;
+
+    pA.x:=p1.x+mua*p21.x;
+    pA.y:=p1.y+mua*p21.y;
+    pA.z:=p1.z+mua*p21.z;
+    pB.x:=p3.x+mub*p43.x;
+    pB.y:=p3.y+mub*p43.y;
+    pB.z:=p3.z+mub*p43.z;
+
+    RETURN TRUE;
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Return Minimal Distance between point and segment
+  !
+  ! pC is point to control
+  ! p1 and p2 are the end of segment to check distance.
+  !
+  ! Returns distance from the line, or if the intersecting point on the line nearest
+  ! the point tested is outside the endpoints of the line, the distance to the
+  ! nearest endpoint.
+  !
+  ! Returns 9999 on 0 denominator conditions.
+  ! From: http://paulbourke.net/geometry/pointlineplane/source.vba
+  !---------------------------------------------------------
+  FUNC num GetMinDistancePointToLine(pos pC,pos p1,pos p2\INOUT robtarget pResult)
+    VAR num magn:=0;
+    VAR num u:=0;
+    VAR pos i:=[0,0,0];
+
+    !Intersecting point
+    IF Present(pResult) pResult:=[[0,0,0],[1,0,0,0],[-1,3,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    magn:=Distance(p1,p2);
+    IF (magn<0.0000001) RETURN 9999;
+
+    u:=(((pC.x-p1.x)*(p2.x-p1.x))+((pC.y-p1.y)*(p2.y-p1.y))+((pC.z-p1.z)*(p2.z-p1.z)));
+    u:=u/Pow(magn,2);
+
+    IF (u<0.00001) OR (u>1) THEN
+      ! Closest point does not fall within the line segment, take the shorter distance
+      ! to an endpoint
+      i.x:=Distance(pC,p1);
+      i.y:=Distance(pC,p2);
+      IF i.x>i.y THEN
+        RETURN i.y;
+      ELSE
+        RETURN i.x;
+      ENDIF
+    ELSE
+      ! Intersecting point is on the line, use the formula
+      i.x:=p1.x+u*(p2.x-p1.x);
+      i.y:=p1.y+u*(p2.y-p1.y);
+      i.z:=p1.z+u*(p2.z-p1.z);
+      IF Present(pResult) pResult.trans:=i;
+      RETURN Distance(pC,i);
+    ENDIF
+  ENDFUNC
+
+  !---------------------------------------------------------
+  ! Write in TP If on Debug mode and bCond is TRUE.
+  !---------------------------------------------------------
+  LOCAL PROC PrintDebug(bool bCond,string sText)
+    IF (DEBUG_MODGfxShapeData AND (bCond OR DEBUG_MODGfxShapeDataFALSE)) TPWrite sText;
+  ENDPROC
+
+  !---------------------------------------------------------
+  ! Update RobotStudio components if in simulation mode.
+  !---------------------------------------------------------
+  PROC UpdateRSComp()
+    GfxShapeDataUpdateDone:=RobOS();
+    ErrWrite\I, "Update RSDrawGraphics.","A collision has been calculated.";
+    WaitUntil GfxShapeDataUpdateDone\MaxTime:=20;
+  ENDPROC
+
+  !---------------------------------------------------------
+  !ONLY FOR ROBOTSTUDIO TARGET SYNC
+  LOCAL PROC DontCallIt()
+    MoveJ pCap_O,v1000,z50,tool0;
+    MoveJ pCap_Z,v1000,z50,tool0;
+    MoveJ pBox_O,v1000,z50,tool0;
+    MoveJ pBox_X,v1000,z50,tool0;
+    MoveJ pBox_A,v1000,z50,tool0;
+    MoveJ pBox_Y,v1000,z50,tool0;
+    MoveJ pBox_O,v1000,z50,tool0;
+    MoveJ pBox_Z,v1000,z50,tool0;
+    MoveJ pBox_U,v1000,z50,tool0;
+    MoveJ pBox_B,v1000,z50,tool0;
+    MoveJ pBox_V,v1000,z50,tool0;
+    MoveJ pBox_Z,v1000,z50,tool0;
+    MoveJ pBox_O,v1000,z50,tool0;
+    MoveJ p_ResultLig1,v1000,z50,tool0;
+    MoveJ p_ResultLig2,v1000,z50,tool0;
+    MoveJ p_ResultLig3,v1000,z50,tool0;
+    MoveJ p_ResultLig4,v1000,z50,tool0;
+    MoveJ p_ResultLig5,v1000,z50,tool0;
+    MoveJ p_ResultLig6,v1000,z50,tool0;
+    MoveJ p_Result01,v1000,z50,tool0;
+    MoveJ p_Result02,v1000,z50,tool0;
+    MoveJ p_Result03,v1000,z50,tool0;
+    MoveJ p_Result04,v1000,z50,tool0;
+    MoveJ p_Result05,v1000,z50,tool0;
+    MoveJ p_Result06,v1000,z50,tool0;
+    MoveJ p_Result07,v1000,z50,tool0;
+    MoveJ p_Result08,v1000,z50,tool0;
+    MoveJ p_Result09,v1000,z50,tool0;
+    MoveJ p_Result10,v1000,z50,tool0;
+    MoveJ p_Result11,v1000,z50,tool0;
+    MoveJ p_Result12,v1000,z50,tool0;
+    MoveJ p_Result13,v1000,z50,tool0;
+    MoveJ p_Result14,v1000,z50,tool0;
+    MoveJ p_Result15,v1000,z50,tool0;
+    MoveJ p_Result16,v1000,z50,tool0;
+    MoveJ p_Result17,v1000,z50,tool0;
+    MoveJ p_Result18,v1000,z50,tool0;
+    MoveJ p_Result19,v1000,z50,tool0;
+    MoveJ p_Result20,v1000,z50,tool0;
+    MoveJ p_Result21,v1000,z50,tool0;
+    MoveJ p_Result22,v1000,z50,tool0;
+    MoveJ p_Result23,v1000,z50,tool0;
+    MoveJ p_Result24,v1000,z50,tool0;
+    MoveJ p_Result25,v1000,z50,tool0;
+    MoveJ p_Result26,v1000,z50,tool0;
+    MoveJ p_Result27,v1000,z50,tool0;
+    MoveJ p_Result28,v1000,z50,tool0;
+    MoveJ p_Result29,v1000,z50,tool0;
+    MoveJ p_Result30,v1000,z50,tool0;
+    MoveJ p_Result31,v1000,z50,tool0;
+    MoveJ p_Result32,v1000,z50,tool0;
+    MoveJ p_Result33,v1000,z50,tool0;
+    MoveJ p_Result34,v1000,z50,tool0;
+    MoveJ p_Result35,v1000,z50,tool0;
+    MoveJ p_Result36,v1000,z50,tool0;
+    MoveJ p_Result37,v1000,z50,tool0;
+    MoveJ p_Result38,v1000,z50,tool0;
+    MoveJ p_Result39,v1000,z50,tool0;
+    MoveJ p_Result40,v1000,z50,tool0;
+    MoveJ p_Result41,v1000,z50,tool0;
+    MoveJ p_Result42,v1000,z50,tool0;
+    MoveJ p_Result43,v1000,z50,tool0;
+    MoveJ p_Result44,v1000,z50,tool0;
+    MoveJ p_Result45,v1000,z50,tool0;
+    MoveJ p_Result46,v1000,z50,tool0;
+    MoveJ p_Result47,v1000,z50,tool0;
+    MoveJ p_Result48,v1000,z50,tool0;
+    MoveJ p_Result49,v1000,z50,tool0;
+    MoveJ p_Result50,v1000,z50,tool0;
+    MoveJ p_Result51,v1000,z50,tool0;
+    MoveJ p_Result52,v1000,z50,tool0;
+    MoveJ p_Result53,v1000,z50,tool0;
+    MoveJ p_Result54,v1000,z50,tool0;
+    MoveJ p_Result55,v1000,z50,tool0;
+    MoveJ p_Result56,v1000,z50,tool0;
+    MoveJ p_Result57,v1000,z50,tool0;
+    MoveJ p_Result58,v1000,z50,tool0;
+    MoveJ p_Result59,v1000,z50,tool0;
+  ENDPROC
+ENDMODULE

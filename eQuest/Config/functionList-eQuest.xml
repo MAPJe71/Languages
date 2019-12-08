@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=      "equest_syntax"        userDefinedLangName="eQuest"             />
+			<association id=      "equest_syntax"        ext=".sim"                               />
+		</associationMap>
+		<parsers>
+			<!-- ====================================================== [ eQuest ] -->
+
+			<!--
+			|   Based on:
+			|       https://github.com/jmarrec/notepad/blob/master/eQuest%20Only/eQuest-Npp-functionList.xml
+			-->
+			<parser
+				displayName="[TODO] eQuest"
+				id         ="equest_syntax"
+			>
+				<classRange
+					mainExpr    ="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+							\$
+							\x20
+							.*?
+							(?:\r?\n|\n?\r){2}
+							.*?
+							(?=
+								\$
+								\x20
+							)
+						"
+				>
+					<className>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								\w
+								(?:
+									\w
+								|	-
+								|	/
+								|	\x20
+									(?!\x20)
+								)+
+							"
+						/>
+					</className>
+					<function
+						mainExpr="(?x)                                          # free-spacing (see `RegEx - Pattern Modifiers`)
+								^
+								\x22
+								.*?
+								\x22
+								\x20
+								=
+								\x20
+								[^\x20]+
+							"
+					>
+						<functionName>
+							<funcNameExpr expr=".*" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							\$
+							.*?
+							(?:\r?\n|\n?\r){2}
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)                                    # free-spacing (see `RegEx - Pattern Modifiers`)
+								\w
+								(?:
+									\w
+								|	-
+								|	/
+								|	\x20
+									(?!\x20)
+								)+
+							"
+						/>
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

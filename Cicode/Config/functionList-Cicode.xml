@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=      "cicode_function"      userDefinedLangName="Cicode"             />
+			<association id=      "cicode_function"      ext=".ci"                                />
+		</associationMap>
+		<parsers>
+			<!-- ====================================================== [ Cicode ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/17950/purpose-of-nameexpr-in-functionlist-xml/
+			|
+			\-->
+			<parser
+				displayName="[TODO] Cicode"
+				id         ="cicode_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x2F\x2A.*?\x2A\x2F)                            # Multi Line Comment
+						|	(?m-s:\x2F{2}.*$)                                   # Single Line Comment 1
+						|	(?m-s:!.*$)                                         # Single Line Comment 2
+						|	(?s:\x22(?:[^\x22\x5C]|\x5C.)*\x22)                 # String Literal - Double Quoted
+						|	(?s:\x27(?:[^\x27\x5C]|\x5C.)*\x27)                 # String Literal - Single Quoted
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?-i)                                               # ignore case
+							FUNCTION\s+                                         #
+							\K                                                  # discard text matched so far
+							\w+?                                                # valid identifier
+							\s*\(                                               # start-of-parameter-list indicator
+							[^)]*                                               # optional parameters
+							\)                                                  # end-of-parameter-list indicator
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

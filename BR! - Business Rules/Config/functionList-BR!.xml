@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=          "br_function"      userDefinedLangName="BR! Source"         />
+			<association id=          "br_function"      ext=".brs"                               />
+		</associationMap>
+		<parsers>
+			<!-- ========================================================= [ BR! ] -->
+
+			<!--
+			|   https://community.notepad-plus-plus.org/topic/12126/regex-for-function-list-in-user-defined-language-business-rules
+			\-->
+			<parser
+				displayName="[TODO] BR! - Business Rules!"
+				id         ="br_function"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?i)                                                # case-insensitive
+							(?:
+								\d{3,5}
+								\h+
+							)?
+							DEF
+							(?:
+								\h+
+								LIBRARY
+							)?
+							\h+
+							FN
+							\w+
+							\$?
+							\h*
+							(?:
+								\(
+								[^()]*
+								\)
+							|
+								=
+							)?
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?i)FN\w+\$?\h*(\([^()]*\))?" />
+						<!-- comment out the following node to display the method with its parameters -->
+<!--						<nameExpr expr="(?i)FN\w+\$?" /> -->
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

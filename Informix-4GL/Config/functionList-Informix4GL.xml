@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=    "informix_function"      userDefinedLangName="Informix-4GL"       />
+			<association id=    "informix_function"      ext=".4gl"                               />
+			<association id=    "informix_function"      ext=".apl"                               />
+			<association id=    "informix_function"      ext=".per"                               />
+<!--		<association id=    "informix_function"      ext=".sql"                               /> -->
+		</associationMap>
+		<parsers>
+			<!-- ==================================================== [ Informix ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/11304/functionlist-with-file-informix-4gl
+			\-->
+			<parser
+				displayName="[TODO] Informix-4GL"
+				id         ="informix_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:\x23.?$)
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							function\s+
+							\K                                                  # discard text matched so far
+							\w+
+							(?: \s* \( [^()]* \) )
+							(?s: .*? )
+							^ \h* end \s+ function
+						"
+				>
+					<functionName>
+						<nameExpr expr="\w+(?:\s*\([^()]*\))" />
+						<!-- comment out the following node to display the function with its parameters -->
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

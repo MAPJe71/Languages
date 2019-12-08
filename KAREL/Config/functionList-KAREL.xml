@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=       "karel_syntax"        userDefinedLangName="KAREL"              />
+			<association id=       "karel_syntax"        ext=".kl"                                />
+		</associationMap>
+		<parsers>
+			<!-- ======================================================= [ KAREL ] -->
+
+			<!--
+			|   http://www.fanuc.com/
+			\-->
+			<parser
+				displayName="[#4] KAREL - FANUC Robot Programming Language"
+				id         ="karel_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:-{2}.*$)                                          # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?im)                                               # case-insensitive, ^ and $ match at line-breaks
+							^\h*                                                # optional leading white-space at start-of-line
+							ROUTINE
+							\h+                                                 # required white-space separator
+							\K                                                  # discard text matched so far
+							(?'VALID_ID'                                        # valid identifier, use as subroutine
+								\b(?!(?i:                                       # keywords (case-insensitive), not to be used as identifier
+									A(?:B(?:O[RU]T|S)|FTER|L(?:ONG|SO)|ND|RRAY(?:_LEN)?|T(?:TACH)?|WAY|XIS)
+								|	B(?:E(?:FORE|GIN)|OOLEAN|Y(?:NAME|TE)?)
+								|	C(?:A(?:M_SETUP|NCEL|SE)|LOSE|MOS|O(?:MM(?:AND|ON_ASSOC)|N(?:DITION|FIG|NECT|ST|TINUE)|ORDINATED)|R)
+								|	D(?:ELAY|I(?:S(?:ABLE|CONNECT)|V)|O(?:WNTO)?|RAM)
+								|	E(?:LSE|N(?:ABLE|D(?:CONDITION|FOR|IF|MOVE|S(?:ELECT|TRUCTURE)|USING|WHILE)?)|RROR|V(?:AL|ENT))
+								|	F(?:ILE|OR|ROM)
+								|	G(?:ET_VAR|O(?:TO)?|ROUP(?:_ASSOC)?)
+								|	H(?:AN|OL)D
+								|	I(?:F|N(?:DEPENDENT|TEGER)?)
+								|	JOINTPOS[1-9]?
+								|	MO(?:D(?:EL)?|VE)
+								|	N(?:EAR|O(?:ABORT|DE(?:DATA)?|MESSAGE|PAUSE|T|WAIT))
+								|	O(?:[FR]|PEN)
+								|	P(?:A(?:TH(?:HEADER)?|USE)|O(?:SITION|WERUP)|ROGRAM|U(?:LS|RG)E)
+								|	R(?:E(?:A[DL]|L(?:A(?:TIVE|X)|EASE)|PEAT|S(?:TOR|UM)E|TURN)|OUTINE)
+								|	S(?:E(?:LECT|MAPHORE|T_VAR)|HORT|IGNAL|T(?:OP|R(?:ING|UCTURE)))
+								|	T(?:HEN|IMER?|O|PENABLE|YPE)
+								|	U(?:N(?:HOLD|INIT|PAUSE|TIL)|SING)
+								|	V(?:AR|ECTOR|I(?:A|S_PROCESS))
+								|	W(?:AIT|H(?:EN|ILE)|ITH|RITE)
+								|	XYZWPR(?:EXT)?
+								)\b)
+								[A-Za-z]\w{0,11}                                # valid character combination for identifiers
+							)
+							(?:\s*\([^()]*\))?                                  # parentheses and parameters optional
+						"
+				>
+					<!-- comment out the following node to display the method with its parameters -->
+					<functionName>
+						<nameExpr expr="[A-Za-z]\w{0,11}" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

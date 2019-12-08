@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<!-- =============================================================================== -->
+			<association id=      "pbasic_function"      userDefinedLangName="PBASIC"             />
+			<association id=      "pbasic_function"      ext=".bs2"                               />
+		</associationMap>
+		<parsers>
+			<!-- ====================================================== [ PBASIC ] -->
+
+			<!--
+			|   Based on:
+			|       http://stackoverflow.com/questions/27046002/notepad-custom-function-list-basic
+			\-->
+			<parser
+				displayName="[TODO] PBASIC - Parallax BASIC"
+				id         ="pbasic_function"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+						(?m-s:\x27.*$)                                          # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="^[A-Za-z]\w*:"
+				>
+					<functionName>
+						<nameExpr expr="\w+" />
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>
