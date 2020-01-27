@@ -200,11 +200,11 @@ or
                             \b(?!(?-i:(do(ne)?)|(el(if|se)|esac)|(f(i|or|unction))|(if|in)|(select)|(t(hen|ime))|(until)|(while))\b)
                             [A-Za-z_]\w*                # valid identifier
                         )
-                        (?:\s*\([^)]*?\))?              # parentheses and arguments optional
+                        (?:\s*\([^()]*?\))?             # parentheses and arguments optional
                         [^{}]*?\{                       # start of body
                     |
                         (?&amp;VALID_ID)
-                        (?:\s*\([^)]*?\))               # parentheses required, arguments optional
+                        (?:\s*\([^()]*?\))              # parentheses required, arguments optional
                         [^{}]*?\{                       # start of body
 					"
 
