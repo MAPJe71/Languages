@@ -1,0 +1,15 @@
+
+# https://github.com/notepad-plus-plus/notepad-plus-plus/issues/7870
+
+# This function is extracted correctly
+thisFunctionIsVisible()
+{
+...
+}
+
+# This function is NOT extracted 
+#
+thisFunctionIsNotVisible()
+{
+...
+}
