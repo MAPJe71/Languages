@@ -1,0 +1,16 @@
+## https://community.notepad-plus-plus.org/topic/19098/function-list-parser-for-user-defined-language-velocity/2
+
+#macro(Macro_ShowNotes)
+##single-line comment
+#set($dummy = true)
+#if($dummy)
+ #set($dummy = false)
+#end
+#*
+ multi-line comment
+ multi-line comment
+*#
+#if(!$dummy)
+ #set($dummy = true)
+#end
+#end ##end of macro

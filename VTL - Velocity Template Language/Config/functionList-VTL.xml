@@ -1,0 +1,45 @@
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+			<association id=         "vtl_syntax"        userDefinedLangName="VTL"                />
+			<association id=         "vtl_syntax"        userDefinedLangName="Velocity"           />
+			<association id=         "vtl_syntax"        ext=".vm"                                />
+		</associationMap>
+		<parsers>
+			<!-- ============================================== [ VTL / Velocity ] -->
+
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/19098/function-list-parser-for-user-defined-language-velocity
+			\-->
+			<parser
+				displayName="VTL - Velocity Template Language"
+				id         ="vtl_syntax"
+				commentExpr="(?x)                                               # free-spacing (see `RegEx - Pattern Modifiers`)
+							(?s:\x23\x2A(?!\x2A).*?\x2A\x23)                    # Multi Line Comment
+						|	(?m-s:\x23{2}.*$)                                   # Single Line Comment
+						|	(?s:\x23\x2A{2}.*?\x2A\x23)                         # Java Doc Comment
+					"
+			>
+				<function
+					mainExpr="(?x)                                              # free-spacing (see `RegEx - Pattern Modifiers`)
+							^\h*                                                # optional leading white-space at start-of-line
+							(?:\x23macro)
+							\K                                                  # discard text matched so far
+							\(
+							(?'VALID_ID'
+								[A-Za-z][\w-]*
+							)
+							(?:
+								\h+
+								\$(?&amp;VALID_ID)
+							)*
+							\)
+						"
+				/>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

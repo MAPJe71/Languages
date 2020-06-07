@@ -1,0 +1,105 @@
+/*
+ * TODO:
+ *    - Something something.
+ *
+ *
+ *  Current Output:
+ *
+ *      navigate
+ *      OnEnter
+ *      Test
+ *      Test2
+ *      OnMapLoad
+ *      OnBotJoin
+ *      InitializeRoutes
+ *
+ *  Expected Output:
+ *
+ *      Map
+ *      Navigation
+ *      jump
+ *      navigate
+ *      Roles
+ *      Axis
+ *      DEFENDER
+ *      DEFENDER1
+ *      AxisBridgeSuicide
+ *      OnEnter
+ *      Test0
+ *      Test
+ *      Test2
+ *      OnMapLoad
+ *      OnBotJoin
+ *      InitializeRoutes
+ *
+ */
+
+global Map =
+{
+    Navigation =
+    {
+        jump =
+        {
+            navigate = function( _this )
+            {
+            },
+        },
+    },
+
+    Roles =
+    {
+        AXIS = // Team
+        {
+            AllBots = true, // Each bot is considered for a role
+
+            DEFENDER =
+            {
+                voice = "Defending the Bridge!",    // Signals voice chat to randomly announce
+                spawnpt = 2,                        // Users of this role will choose spawnpt 2
+                numbots = 4,                        // Maximum of 4 bots
+                //crucialClass = CLASS.FIELDOPS,      // First bot
+            },
+
+            DEFENDER1 =
+            {
+                voice = "Defending the Main Entrance!", // Signals voice chat to randomly announce
+                spawnpt = 2,                            // Users of this role will choose spawnpt 2
+                numbots = 4,                            // Maximum of 4 bots
+                //crucialClass = CLASS.ENGINEER,          // First bot
+            },
+        },
+    },
+
+    Axis_Bridge_Suicide =
+    {
+        Name = "Axis_Bridge_Suicide",
+        TriggerOnClass = CLASS.ANYPLAYER,
+        OnEnter = function( ent )
+        {
+        },
+    },
+
+    Test0 =
+    {
+    },
+
+    Test = function()
+    {
+    },
+
+    Test2 = function( trigger )
+    {
+    },
+};
+
+global OnMapLoad = function()
+{
+};
+
+global OnBotJoin = function( bot )
+{
+};
+
+global InitializeRoutes = function()
+{
+};

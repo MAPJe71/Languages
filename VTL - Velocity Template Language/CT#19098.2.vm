@@ -1,0 +1,5 @@
+## https://community.notepad-plus-plus.org/topic/19098/function-list-parser-for-user-defined-language-velocity/2
+
+#macro(Macro_ShowTable $RowItems $ColItems)
+<body of macro>
+#end

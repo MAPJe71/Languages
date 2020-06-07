@@ -27,15 +27,49 @@ https://en.wikipedia.org/wiki/Abstract_Syntax_Notation_One#Exemple
        )\b)
 ~~~
 
+BEGIN
+DEFINITIONS
+DESCRIPTION
+DISPLAY-HINT
+END
+FROM
+IDENTIFIER
+IMPORTS
+INDEX
+MAX-ACCESS
+MODULE-IDENTITY
+NOTIFICATION-TYPE
+OBJECT
+OBJECT-TYPE
+OF
+SEQUENCE
+SIZE
+STATUS
+SYNTAX
+TEXTUAL-CONVENTION
 
 ## Identifiers
+
+IgnoreCase = No
+InitKeyWordChars = A-Za-z_
+KeyWordChars = A-Za-z0-9_-
+
+('a'..'z'|'A'..'Z') ('0'..'9'|'a'..'z'|'A'..'Z')*
 
 
 ## String Literals
 
+StringAlt = !
+StringEsc = \
+
+
 ### Single quoted
 
 ### Double quoted
+
+StringStart = "
+StringEnd = "
+
 
 ### Document String - Double or Single Triple-Quoted
 
@@ -46,9 +80,17 @@ https://en.wikipedia.org/wiki/Abstract_Syntax_Notation_One#Exemple
 
 ### Single line comment
 
+SingleComment = --
+'--' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
+
+
 ### Multi line comment
 
 ### Block comment
+
+CommentStartAlt = "
+CommentEndAlt = "
+
 
 ### Java Doc
 

@@ -8,18 +8,54 @@
 \=========================================================================== -->
 <NotepadPlus>
 	<functionList>
+
 		<associationMap>
 			<association id=        "asn1_syntax"        langID="65"                             />
 		</associationMap>
+
 		<parsers>
+
 			<!-- ======================================================= [ ASN.1 ] -->
 
 			<parser
 				displayName="[N/A] ASN.1 - Abstract Syntax Notation One"
 				id         ="asn1_syntax"
 			/>
+			<!--
+			|   Based on:
+			|       https://community.notepad-plus-plus.org/topic/18374/mib-file-snmp-syntax-highlighting-user-defined-language/5
+			\-->
+			<parser
+				displayName="ASN.1"
+				id         ="asn1_syntax"
+				commentExpr="(?x)
+						(?m-s:\-\-.*$)                                          # Single Line Comment
+					"
+			>
+				<classRange
+					mainExpr    ="^\s*\w+\s+:{2}=\s+[\w-]+\s*"
+				>
+					<className>
+						<nameExpr expr="\s*\K\w+" />
+					</className>
+					<function
+						mainExpr="^\s*\w+\s+"
+					>
+						<functionName>
+							<funcNameExpr expr="\s*\K\w+" />
+						</functionName>
+					</function>
+				</classRange>
+				<function
+					mainExpr="^\s*\w+\s+OBJECT-\w+\s*"
+				>
+					<functionName>
+						<nameExpr expr="\s*\K\w+" />
+					</functionName>
+				</function>
+			</parser>
 
-			<!-- ================================================================= -->
+		<!-- ================================================================= -->
 		</parsers>
 	</functionList>
 </NotepadPlus>

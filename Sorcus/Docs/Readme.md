@@ -58,29 +58,3 @@ _Wiki_
 ## Grammar
 
 BNF | ABNF | EBNF | XBNF
-[SORCUS] -----------------------------------------------------------------------
-@=
-
-_WWW_=
-
-_Wiki_=
-
-Keywords=
-
-   A RegEx to find them all:
-
-       \b(?!(?-i:
-       )\b)
-
-Identifiers=
-
-StringLiterals=
-
-Comment=
-
-Classes_and_Methods=
-
-Function=
-
-Grammar=
-
