@@ -8,6 +8,9 @@
 
 _WWW_
 
+https://www.citect.schneider-electric.com/webhelp/citect800/Subsystems/CicodeReferenceCitectHTML/Content/Cicode_Programming_Reference.html
+
+
 _Wiki_
 
 
