@@ -1,21 +1,25 @@
 
-# PlantUML
+# Raku
 
 ## Description
+
+Raku is a member of the Perl family of programming languages.[6] Formerly known 
+as Perl 6, it was renamed in October 2019.[7][8] Raku introduces elements of 
+many modern and historical languages. Compatibility with Perl was not a goal, 
+though a compatibility mode is part of the specification. The design process 
+for Raku began in 2000.
 
 
 ## Links
 
 WWW
 
-https://plantuml.com/
-https://github.com/brianmaher84/PlantUML_Notepad-_UDL
-https://github.com/Spitfire1900/npp-plantuml-language
-
+https://www.raku.org/
+https://docs.raku.org/language.html
 
 Wiki
 
-https://en.wikipedia.org/wiki/PlantUML
+https://en.wikipedia.org/wiki/Raku_(programming_language)
 
 
 ## Keywords

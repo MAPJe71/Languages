@@ -3,12 +3,22 @@
 
 ## Description
 
+Stata is a general-purpose statistical software package created in 1985 by 
+StataCorp. Most of its users work in research, especially in the fields of 
+economics, sociology, political science, biomedicine, and epidemiology.
+
+The name Stata is a syllabic abbreviation of the words statistics and data.
+
 
 ## Links
 
 _WWW_
 
+https://www.stata.com/
+
 _Wiki_
+
+https://en.wikipedia.org/wiki/Stata
 
 
 ## Keywords

@@ -1,0 +1,14 @@
+interface Ethernet1
+   switchport access vlan 280
+   switchport trunk allowed vlan 280-281
+   switchport mode trunk
+!
+interface Ethernet2
+   switchport access vlan 281
+   switchport trunk allowed vlan 280-281
+   switchport mode trunk
+!
+interface Ethernet3
+!
+interface Ethernet4
+!

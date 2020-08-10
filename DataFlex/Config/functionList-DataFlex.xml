@@ -9,15 +9,10 @@
 <NotepadPlus>
 	<functionList>
 		<associationMap>
-			<association id=        "asn1_syntax"        langID="65"                             />
+
 		</associationMap>
 		<parsers>
-			<!-- ======================================================= [ ASN.1 ] -->
-
-			<parser
-				displayName="[N/A] ASN.1 - Abstract Syntax Notation One"
-				id         ="asn1_syntax"
-			/>
+			<!-- ================================================================= -->
 
 			<!-- ================================================================= -->
 		</parsers>

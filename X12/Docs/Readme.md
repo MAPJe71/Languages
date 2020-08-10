@@ -8,8 +8,12 @@
 
 WWW
 
+https://www.xtranslator.com/prod/beginguidex12.pdf
+https://docs.mulesoft.com/x12-edi-connector/2.4/x12-edi-schema-language-reference
+
 Wiki
 
+https://en.wikipedia.org/wiki/ASC_X12
 
 
 ## Keywords

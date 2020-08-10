@@ -193,20 +193,19 @@ architecture_declarative_part
 architecture_statement
   : block_statement
   | (( label_colon )? ( POSTPONED )? PROCESS)=>
-    process_statement
+        process_statement
   | (( label_colon )? ( POSTPONED )? procedure_call SEMI)=>
-    concurrent_procedure_call_statement
+        concurrent_procedure_call_statement
   | (( label_colon )? ( POSTPONED )? ASSERT)=>
-    concurrent_assertion_statement
-  | (( label_colon )? ( POSTPONED )?
-      ( conditional_signal_assignment | selected_signal_assignment ))=>
-    concurrent_signal_assignment_statement
+        concurrent_assertion_statement
+  | (( label_colon )? ( POSTPONED )? ( conditional_signal_assignment | selected_signal_assignment ))=>
+        concurrent_signal_assignment_statement
   | (label_colon instantiated_unit)=>
-    component_instantiation_statement
+        component_instantiation_statement
   | (label_colon generation_scheme GENERATE)=>
-    generate_statement
+        generate_statement
   | (( label_colon )? BREAK ( break_list )? ( sensitivity_clause )?)=>
-    concurrent_break_statement
+        concurrent_break_statement
   | simultaneous_statement
   ;
 
@@ -1503,8 +1502,8 @@ waveform_element
 
 //------------------------------------------Lexer-----------------------------------------
 BASE_LITERAL
-   :  ( '#' EXTENDED_DIGIT ( '.' EXTENDED_DIGIT )? '#' ( EXPONENT )? )
-   {$setType(BASED_LITERAL);}
+   : ( '#' EXTENDED_DIGIT ( '.' EXTENDED_DIGIT )? '#' ( EXPONENT )? )
+        {$setType(BASED_LITERAL);}
    ;
 
 BIT_STRING_LITERAL
@@ -1512,7 +1511,7 @@ BIT_STRING_LITERAL
   ;
 
 DECIMAL_LITERAL
-   :	INTEGER ( ( '.' INTEGER )? ( EXPONENT )? )
+   : INTEGER ( ( '.' INTEGER )? ( EXPONENT )? )
    ;
 
 EXTENDED_DIGIT
@@ -1520,7 +1519,7 @@ EXTENDED_DIGIT
    ;
 
 BASIC_IDENTIFIER
-   :   LETTER ( '_' | LETTER | DIGIT )*
+   : LETTER ( '_' | LETTER | DIGIT )*
    ;
 
 EXTENDED_IDENTIFIER
@@ -1543,33 +1542,31 @@ LETTER
   ;
 
 COMMENT
-  : '--' ( ~'\n' )* {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
+  : '--' ( ~'\n' )*  {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
   ;
 
 TAB
-  : ( '\t' )+ {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
+  : ( '\t' )+        {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
   ;
 
 SPACE
-  : ( ' ' )+ {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
+  : ( ' ' )+         {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
   ;
 
 NEWLINE
-  : '\n' {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP); newline();}
+  : '\n'             {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP); newline();}
   ;
 
 CR
-  : '\r' {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
+  : '\r'             {$setType(ANTLR_USE_NAMESPACE(antlr)Token::SKIP);}
   ;
 
 CHARACTER_LITERAL
-   : '\'' .* '\''
-   {$setType(CHARACTER_LITERAL);}
+   : '\'' .* '\''    {$setType(CHARACTER_LITERAL);}
    ;
 
 STRING_LITERAL
-  : '\"' .* '\"'
-  {$setType(STRING_LITERAL)}
+  : '\"' .* '\"'     {$setType(STRING_LITERAL)}
   ;
 
 OTHER_SPECIAL_CHARACTER
@@ -1589,33 +1586,33 @@ OTHER_SPECIAL_CHARACTER
   ;
 
 
-DOUBLESTAR    : '**'  ;
-ASSIGN        : '=='  ;
-LE            : '<='  ;
-GE            : '>='  ;
-ARROW         : '=>'  ;
-NEQ           : '/='  ;
-VARASGN       : ':='  ;
-BOX           : '<>'  ;
-DBLQUOTE      : '\"'  ;
-SEMI          : ';'   ;
-COMMA         : ','   ;
 AMPERSAND     : '&'   ;
-LPAREN        : '('   ;
-RPAREN        : ')'   ;
-LBRACKET      : '['   ;
-RBRACKET      : ']'   ;
-COLON         : ':'   ;
-MUL           : '*'   ;
-DIV           : '/'   ;
-PLUS          : '+'   ;
-MINUS         : '-'   ;
-LOWERTHAN     : '<'   ;
-GREATERTHAN   : '>'   ;
-EQ            : '='   ;
-BAR           : '|'   ;
-DOT           : '.'   ;
+ARROW         : '=>'  ;
+ASSIGN        : '=='  ;
 BACKSLASH     : '\\'  ;
+BAR           : '|'   ;
+BOX           : '<>'  ;
+COLON         : ':'   ;
+COMMA         : ','   ;
+DBLQUOTE      : '\"'  ;
+DIV           : '/'   ;
+DOT           : '.'   ;
+DOUBLESTAR    : '**'  ;
+EQ            : '='   ;
+GE            : '>='  ;
+GREATERTHAN   : '>'   ;
+LBRACKET      : '['   ;
+LE            : '<='  ;
+LOWERTHAN     : '<'   ;
+LPAREN        : '('   ;
+MINUS         : '-'   ;
+MUL           : '*'   ;
+NEQ           : '/='  ;
+PLUS          : '+'   ;
+RBRACKET      : ']'   ;
+RPAREN        : ')'   ;
+SEMI          : ';'   ;
+VARASGN       : ':='  ;
 
 
 EXPONENT

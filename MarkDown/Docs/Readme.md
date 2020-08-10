@@ -3,12 +3,27 @@
 
 ## Description
 
-https://spec.commonmark.org/0.29/
+| Flavour                        | Abbreviation | Description |
+|:------------------------------ |:------------ | --- |
+| Markdown                       | MD           | email-style writing for the web by John Gruber and Aaron Swartz |
+| CommonMark                     | CM           | A strongly specified, highly compatible implementation of Markdown |
+| MultiMarkdown                  | MMD          | Markdown extensions by Fletcher Penney adding footnotes, tables, definition lists, document metadata (e.g. title, author, date, etc.) and more; first added to MultiMarkdown.pl |
+| Github-flavoured Markdown      | GFM          | CommonMark with GitHub Extensions |
+| PanDoc's Markdown              | PDMD         |
+| Markdown Extra                 | MDX          | Markdown extensions by Michel Fortin; first added to PHP Markdown (Extra) |
+| PHP Markdown (Extra)           | PHPMD        |
+| Markdown Extended              | MDE          |
+| Vanilla Flavored Markdown      | VFMD         | A variant of Markdown with an unambiguous specification of its syntax |
 
 
 ## Links
 
 _WWW_
+
+https://github.com/mundimark/awesome-markdown
+
+https://spec.commonmark.org/0.29/
+
 
 _Wiki_
 
@@ -66,7 +81,7 @@ BNF | ABNF | EBNF | XBNF
 ## ATX-style headings
 
 An ATX heading consists of a string of characters, parsed as inline content, 
-between an opening sequence of 1–6 unescaped `#` characters and an optional 
+between an opening sequence of 1â€“6 unescaped `#` characters and an optional 
 closing sequence of any number of unescaped `#` characters. The opening 
 sequence of `#` characters must be followed by a space or by the end of 
 line. The optional closing sequence of `#`s must be preceded by a space and 
@@ -176,21 +191,21 @@ Grammar=
 
 ```
 	public static $rules = array (
-		'/(#+)(.*)/' => 'self::header',                           // headers
-		'/\[([^\[]+)\]\(([^\)]+)\)/' => '<a href=\'\2\'>\1</a>',  // links
-		'/(\*\*|__)(.*?)\1/' => '<strong>\2</strong>',            // bold
-		'/(\*|_)(.*?)\1/' => '<em>\2</em>',                       // emphasis
-		'/\~\~(.*?)\~\~/' => '<del>\1</del>',                     // del
-		'/\:\"(.*?)\"\:/' => '<q>\1</q>',                         // quote
-		'/`(.*?)`/' => '<code>\1</code>',                         // inline code
-		'/\n\*(.*)/' => 'self::ul_list',                          // ul lists
-		'/\n[0-9]+\.(.*)/' => 'self::ol_list',                    // ol lists
-		'/\n(&gt;|\>)(.*)/' => 'self::blockquote ',               // blockquotes
-		'/\n-{5,}/' => "\n<hr />",                                // horizontal rule
-		'/\n([^\n]+)\n/' => 'self::para',                         // add paragraphs
-		'/<\/ul>\s?<ul>/' => '',                                  // fix extra ul
-		'/<\/ol>\s?<ol>/' => '',                                  // fix extra ol
-		'/<\/blockquote><blockquote>/' => "\n"                    // fix extra blockquote
+		'/(#+)(.*)/'                   => 'self::header',          // headers
+		'/\[([^\[]+)\]\(([^\)]+)\)/'   => '<a href=\'\2\'>\1</a>', // links
+		'/(\*\*|__)(.*?)\1/'           => '<strong>\2</strong>',   // bold
+		'/(\*|_)(.*?)\1/'              => '<em>\2</em>',           // emphasis
+		'/\~\~(.*?)\~\~/'              => '<del>\1</del>',         // del
+		'/\:\"(.*?)\"\:/'              => '<q>\1</q>',             // quote
+		'/`(.*?)`/'                    => '<code>\1</code>',       // inline code
+		'/\n\*(.*)/'                   => 'self::ul_list',         // ul lists
+		'/\n[0-9]+\.(.*)/'             => 'self::ol_list',         // ol lists
+		'/\n(&gt;|\>)(.*)/'            => 'self::blockquote ',     // blockquotes
+		'/\n-{5,}/'                    => "\n<hr />",              // horizontal rule
+		'/\n([^\n]+)\n/'               => 'self::para',            // add paragraphs
+		'/<\/ul>\s?<ul>/'              => '',                      // fix extra ul
+		'/<\/ol>\s?<ol>/'              => '',                      // fix extra ol
+		'/<\/blockquote><blockquote>/' => "\n"                     // fix extra blockquote
 	);
 
 

@@ -1,17 +1,20 @@
 
-# ZPL - Zebra Programming Language
+# CIL - Common Intermediate Language
 
 ## Description
+
+formerly known as MSIL (Micrsoft Intermediate Language) or IL (Intermediate Language)
 
 
 ## Links
 
-_WWW_
+WWW
 
-https://zpldesigner.com/
-https://sourceforge.net/projects/zpldesigner/
+http://www.ecma-international.org/publications/standards/Ecma-335.htm
 
-_Wiki_
+Wiki
+
+https://en.wikipedia.org/wiki/Common_Intermediate_Language
 
 
 
@@ -62,3 +65,4 @@ _Wiki_
 ## Grammar
 
 BNF | ABNF | EBNF | XBNF
+

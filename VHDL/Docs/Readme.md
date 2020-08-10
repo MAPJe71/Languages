@@ -8,6 +8,9 @@
 
 _WWW_
 
+https://tams.informatik.uni-hamburg.de/vhdl/tools/grammar/vhdl93-bnf.html#basic_graphic_character
+https://www.hdlworks.com/hdl_corner/vhdl_ref/index.html
+
 _Wiki_
 
 

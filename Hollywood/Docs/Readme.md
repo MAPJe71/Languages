@@ -1,18 +1,20 @@
 
-# ZPL - Zebra Programming Language
+# Hollywood
 
 ## Description
+
+Hollywood is a multimedia-oriented programming language that can be used to create applications and games very easily.
 
 
 ## Links
 
-_WWW_
+WWW
 
-https://zpldesigner.com/
-https://sourceforge.net/projects/zpldesigner/
+https://www.hollywood-mal.com/
 
-_Wiki_
+Wiki
 
+https://en.wikipedia.org/wiki/Hollywood_(programming_language)
 
 
 ## Keywords
@@ -62,3 +64,4 @@ _Wiki_
 ## Grammar
 
 BNF | ABNF | EBNF | XBNF
+

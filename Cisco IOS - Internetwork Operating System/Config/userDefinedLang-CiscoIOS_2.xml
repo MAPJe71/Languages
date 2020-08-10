@@ -1,0 +1,64 @@
+<NotepadPlus>
+    <UserLang name="CiscoIOS_2" ext="" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="yes" allowFoldOfComments="yes" foldCompact="yes" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="yes" Keywords3="no" Keywords4="no" Keywords5="yes" Keywords6="yes" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00remark 00!remark 01 02((EOF)) 03 04</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range">:</Keywords>
+            <Keywords name="Operators1">. /</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open"></Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code2, open">interface &quot;ip access-list&quot; &quot;router ospf&quot; &quot;router rip&quot; &quot;router bgp&quot; &quot;router eigrp&quot; policy-map</Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close">! &quot; permit ip any any&quot; policy-map class-default</Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">group clock server radius new-model domain name subnet-zero upgrade system timestamps debug datetime msec log version secret pad ssid open guest-mode address route-cache mode wep optional ciphers tkip wep128 change membership-termination capability-change local cck ofdm client station-role root fallback threshold subscriber-loop-control block-unknown-source source-learning unicast-flooding password authorization authentication login community contact cdp advertise-v2 host missing Service-Type acct-port auth-port key vsa send route con vty run http help-path source-interface logging trap source-learning spanning-disabled Guest Access dot1Q dhcp client-id access-group traps tty udp eq bootps tcp tftp accounting network start-stop session-id common exec irb key-management wpa eap dot11d country PT indoor v3 auth write view iso included location chassis-id ap authentication-server wds infrastructure priority wnm excluded-address passwords min-length auth-proxy conflict h-node pool range trunk native aes-ccm snmp linkdown linkup coldstart warmstart entity disassociate deauthenticate authenticate-fail dot11-qos switch-over rogue-ap wlan-wep config syslog cpu aaa_server udp-port timezone summer-time Z recurring broadcast nat inside source static extendable translation translations tcp-timeout finrst-timeout flow ingress forward-protocol classless time netbios-ns netbios-dgm tacacs bootpc next-hop secure-server cache flow-export destination flow-aggregation entries helper-address redirects secondary traffic-filter allocation policy ascending access-log ratelimit extended cs4 icmp admission proxy page file connection resource console uptime localtime password-encryption counters max age compress-config general-prefix unicast-routing netflow usage crypto pki trustpoint certificate chain enrollment selfsigned subject-name revocation-check rsakeypair cef action device tracking rp nde-address qos self-signed list bootup level minimal flowcontrol bus auto pvst redundancy main-cpu auto-sync running-config sso snmptrap ipsec nat-transparency udp-encaps control-plane dial-peer cor custom update-calendar prefer basic- summary-address nonegotiate dead-criteria tries update newinfo passive</Keywords>
+            <Keywords name="Keywords2">aaa vtp udld hostname username ip boot service dot11 mbssid interface encryption broadcast-key speed power channel rts dot1x reauth-period bridge-group description encapsulation access-list snmp-server radius-server bridge line duplex world-mode wlccp security domain-name dns-server netbios-name-server netbios-node-type default-router client-identifier mls diagnostic spanning-tree switchport sntp route-map set ntp service-policy policy-map class police class-map router bfd redistribute offset-list transport privilege errdisable</Keywords>
+            <Keywords name="Keywords3">no deny timeout inactive exec-timeout session-timeout output outside out exceed-action drop expired failure stop-record boot-end-marker error reset shutdown system-shutdown end License cause</Keywords>
+            <Keywords name="Keywords4">permit RW enable gt any full match active in conform-action transmit established success boot-start-marker load neighbor</Keywords>
+            <Keywords name="Keywords5">Fast Gigabit Ethernet Vlan BVI Dot11Radio crypto controller Serial Loopback hello hold sparse dense default terminal srr-queue queue-set map</Keywords>
+            <Keywords name="Keywords6">www smtp telnet ipv6 ftp echo dscp isakmp nntp gopher pop3 ident ftp-data eigrp sonet default log-input ospf bgp pim recovery passive</Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFF80" fontName="" fontStyle="0" nesting="117702655" />
+            <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="F2F2F2" fontName="" fontStyle="0" nesting="117702655" />
+            <WordsStyle name="NUMBERS" fgColor="C60000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="804040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="E64A00" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="004080" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="804040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="FF80C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>

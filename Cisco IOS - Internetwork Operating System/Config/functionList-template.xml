@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ==========================================================================\
+|
+|   To learn how to make your own language parser, please check the following
+|   link:
+|       http://notepad-plus-plus.org/features/function-list.html
+|
+\=========================================================================== -->
+<NotepadPlus>
+	<functionList>
+		<associationMap>
+
+		</associationMap>
+		<parsers>
+			<!-- =================================================== [ Cisco IOS ] -->
+
+			<!--
+			|   https://community.notepad-plus-plus.org/topic/19634/function-list-with-comments-after-function-name
+			\-->
+			<parser
+				displayName="Cisco IOS"
+				id         ="ciscoios"
+				commentExpr="(?x)
+						(?m-s:\!.*$)                                            # Single Line Comment
+					"
+			>
+				<function
+					mainExpr="(?x)
+							(?:
+								(?:
+									^
+									interface
+									\s+
+									\w+
+									(?:
+										/
+										\d+
+									)*
+								)
+							|
+								(?:
+									^
+									router
+									\s+
+									\w+
+									(?:
+										\s+
+										\d+
+									)*
+								)
+							)
+						"
+				>
+					<functionName>
+						<nameExpr expr="(?x)
+								(?:
+									(?:
+										^
+										interface
+										\s+
+									)
+								|
+									(?:
+										^
+										router
+										\s+
+									)
+								)
+								\K
+								(
+									(\w)
+								|
+									(\.)
+								)+
+							"
+						/>
+						<nameExpr expr="(?x)
+								(
+									(\w)
+								|
+									(\.)
+								)+
+							"
+						/>
+					</functionName>
+				</function>
+			</parser>
+
+			<!-- ================================================================= -->
+		</parsers>
+	</functionList>
+</NotepadPlus>

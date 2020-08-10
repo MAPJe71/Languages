@@ -1,0 +1,321 @@
+(?'binding_indication'
+    (?:
+        \b  use                 \s+
+        (?&entity_aspect)       \s*
+    )?
+    (?:
+        \b  generic             \s+
+        \b  map                 \s*
+        \(                      \s*
+        (?&association_list)    \s*
+        \)                      \s*
+    )? 
+    (?:
+        \b  port                \s+
+        \b  map                 \s*
+        \(                      \s*
+        (?&association_list)    \s*
+        \)                      \s*
+    )?
+)
+
+(?'entity_aspect'
+    \b  entity                  \s+
+    (?&name)
+    (?:
+        \s*  \(
+        \s*  (?:
+            (?&BASIC_IDENTIFIER)
+        |   (?&EXTENDED_IDENTIFIER)
+        )
+        \s*  \)
+    )?
+|   \b  configuration           \s+
+    (?&name)
+|   \b  open  \b
+)
+
+(?'association_list'
+    (?&association_element)(?:\s*,\s*(?&association_element))*
+)
+
+(?'association_element'
+    (?'formal_part'
+        (?&name)
+        (?:
+            \s*  \(
+            \s*  (?&name)    
+            \s*  \)          
+        )?
+        \s*  =\x3E 
+    )? 
+    (?'actual_part'
+        \s*  (?&name)                
+        \s*  \(
+        \s*  (?&actual_designator)   
+        \s*  \)
+    |   \s*  (?&actual_designator)
+    )
+)
+
+(?'actual_designator'
+    (?&simple_expression)
+|   \b  open  \b
+)
+
+(?'simple_expression'
+    [+-]?
+    (?:
+        (?&literal)(?:\*{2}(?&literal))?
+    |   \b  abs  \s+  (?&literal)
+    |   \b  not  \s+  (?&literal)
+    )
+)
+
+(?'literal'
+    \b  null  \b
+|   (?&BIT_STRING_LITERAL)
+|   (?&STRING_LITERAL)
+|   (?&enumeration_literal)
+|   (?&numeric_literal)
+)
+
+(?'BIT_STRING_LITERAL'
+    [box]
+    \x27
+    (?&EXTENDED_DIGIT)
+    \x27
+)
+
+(?'enumeration_literal'
+    (?&BASIC_IDENTIFIER)
+|   (?&EXTENDED_IDENTIFIER)
+|   (?&CHARACTER_LITERAL)
+)
+
+(?'numeric_literal'
+    (?&abstract_literal)
+|   (?&physical_literal)
+)
+
+(?'element_association'
+    (?:
+        (?&choice)
+        (?:
+            \x7C
+            (?&choice)
+        )*
+        =\x3E
+    )?
+    (?&simple_expression)
+)
+
+(?'abstract_literal'
+    (?&DECIMAL_LITERAL)
+|   (?&BASE_LITERAL)
+)
+
+(?'physical_literal'
+    (?:(?&abstract_literal))?
+    (?&name)
+)
+
+
+
+(?'choice'
+    (?&BASIC_IDENTIFIER)
+|   (?&EXTENDED_IDENTIFIER)
+|   (?&discrete_range)
+|   (?&simple_expression)
+|   \b  others  \b
+)
+
+(?'discrete_range'
+    (?&range)
+|   (?&subtype_indication)
+)
+
+(?'range'
+  : (?&simple_expression)  \s+  (?:down)?to  \s+  (?&simple_expression)
+  | (?&name)
+)
+
+(?'subtype_indication'
+    (?&name) 
+    (?:
+        (?&name) 
+    )? 
+    (?: 
+        (?&constraint) 
+    )? 
+    (?: 
+        \b  tolerance  \b
+        (?&simple_expression) 
+    )?
+)
+
+(?'constraint'
+    \b  range  \s+  (?&range)
+|   \(
+    \s*  (?&discrete_range) 
+    (?: 
+        \s*  ,
+        \s*  (?&discrete_range)
+    )* 
+    \s*  \)
+)
+
+
+(?'name'
+    (?:
+        (?&BASIC_IDENTIFIER)
+    |   (?&EXTENDED_IDENTIFIER)
+    |   (?&STRING_LITERAL) 
+    )
+    (?:
+        \s*  \.  \s*  (?&suffix)
+    |   
+        (?&CHARACTER_LITERAL)
+        (?&aggregate)
+    |   
+        (?:(?&signature))?
+        (?&CHARACTER_LITERAL)
+        (?&attribute_designator)
+    |   
+        \s*  \( 
+        \s*  (?&simple_expression) 
+        (?:
+            \s*  ,
+            \s*  (?&simple_expression) 
+        )* 
+        \s*  \)
+    )*
+)
+
+(?'suffix'
+    (?&BASIC_IDENTIFIER)
+|   (?&EXTENDED_IDENTIFIER)
+|   (?&CHARACTER_LITERAL)
+|   (?&STRING_LITERAL)
+|   \b  all  \b
+)
+
+(?'signature'
+    \x5B
+        (?:
+            \s*  (?&name)
+            (?:
+                \s*  ,
+                \s*  (?&name) 
+            )* 
+        )? 
+        (?:
+            \s*  return 
+            \s+  (?&name)
+        )? 
+    \s*  \x5D
+)
+
+(?'aggregate'
+    \(
+        \s*  (?&element_association)
+        (?:
+            \s*  ,
+            \s*  (?&element_association)
+        )* 
+    \s*  \)
+)
+
+(?'attribute_designator'
+    (?&BASIC_IDENTIFIER)
+|   (?&EXTENDED_IDENTIFIER)
+|   \b(?:
+        range
+    |   across
+    |   through
+    |   reference
+    |   tolerance
+    )/b
+)
+
+
+
+(?'BASE_LITERAL'
+    \x23
+    (?&EXTENDED_DIGIT)(?:\.(?&EXTENDED_DIGIT))?
+    \x23
+    ((?&EXPONENT))?
+)
+(?'DECIMAL_LITERAL'
+    (?&INTEGER)(?:\.(?&INTEGER))?
+    ((?&EXPONENT))?
+)
+(?'INTEGER'
+    \d[_\d]*
+)
+(?'EXTENDED_DIGIT'
+    (?&INTEGER)
+|   [A-Za-z]
+)
+(?'BASIC_IDENTIFIER'
+    [A-Za-z]\w*
+)
+(?'EXPONENT'
+    e[+-]?(?&INTEGER)
+)
+
+(?'EXTENDED_IDENTIFIER'
+    \x5C{2} 
+    ( 
+        'a'..'z' 
+    |   '0'..'9' 
+    |   '&' 
+    |   '\'' 
+    |   '(' 
+    |   ')'
+    |   '+' 
+    |   ',' 
+    |   '-' 
+    |   '.' 
+    |   '/' 
+    |   ':' 
+    |   ';' 
+    |   '<' 
+    |   '=' 
+    |   '>' 
+    |   '|'
+    |   ' ' 
+    |   OTHER_SPECIAL_CHARACTER 
+    |   '\\'
+    |   '#' 
+    |   '[' 
+    |   ']' 
+    |   '_' 
+    )+ 
+    \x5C{2} 
+  )
+
+(?'CHARACTER_LITERAL'
+    \x27.*\x27
+)
+(?'STRING_LITERAL'
+    \x22.*\x22
+)
+
+(?'OTHER_SPECIAL_CHARACTER'
+  : '!' | '$' | '%' | '@' | '?' | '^' | '`' | '{' | '}' | '~'
+  | ' ' | '¡' | '¢' | '£' | '¤' | '¥' | '¦' | '§'
+  | '¨' | '©' | 'ª' | '«' | '¬' | '­' | '®' | '¯'
+  | '°' | '±' | '²' | '³' | '´' | 'µ' | '¶' | '·'
+  | '¸' | '¹' | 'º' | '»' | '¼' | '½' | '¾' | '¿'
+  | 'À' | 'Á' | 'Â' | 'Ã' | 'Ä' | 'Å' | 'Æ' | 'Ç'
+  | 'È' | 'É' | 'Ê' | 'Ë' | 'Ì' | 'Í' | 'Î' | 'Ï'
+  | 'Ð' | 'Ñ' | 'Ò' | 'Ó' | 'Ô' | 'Õ' | 'Ö' | '×'
+  | 'Ø' | 'Ù' | 'Ú' | 'Û' | 'Ü' | 'Ý' | 'Þ' | 'ß'
+  | 'à' | 'á' | 'â' | 'ã' | 'ä' | 'å' | 'æ' | 'ç'
+  | 'è' | 'é' | 'ê' | 'ë' | 'ì' | 'í' | 'î' | 'ï'
+  | 'ð' | 'ñ' | 'ò' | 'ó' | 'ô' | 'õ' | 'ö' | '÷'
+  | 'ø' | 'ù' | 'ú' | 'û' | 'ü' | 'ý' | 'þ' | 'ÿ'
+  ;
+
+

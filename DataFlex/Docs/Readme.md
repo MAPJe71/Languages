@@ -1,17 +1,19 @@
 
-# ZPL - Zebra Programming Language
+# DataFlex
 
 ## Description
 
 
 ## Links
 
-_WWW_
+WWW
 
-https://zpldesigner.com/
-https://sourceforge.net/projects/zpldesigner/
+http://www.dataaccess.com/DataFlex
+https://www.dataaccess.eu/products/dataflex/overview/the-dataflex-language-223
 
-_Wiki_
+Wiki
+
+https://en.wikipedia.org/wiki/DataFlex
 
 
 
@@ -62,3 +64,4 @@ _Wiki_
 ## Grammar
 
 BNF | ABNF | EBNF | XBNF
+
